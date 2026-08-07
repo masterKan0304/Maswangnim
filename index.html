@@ -1419,8 +1419,11 @@ document.getElementById('startBtn').addEventListener('click', function(){
     });
   }
 
+  var CARD_GRADES = ['gray', 'blue', 'yellow', 'purple'];
+
   function preloadImages(){
-    var urls = ['agents/agents_back.webp'];
+    var urls = ['agents/agents_back.webp', 'cards/awake.png'];
+    var videoUrls = [];
     Object.keys(ROSTERS).forEach(function(key){
       ROSTERS[key].data.forEach(function(a){
         urls.push(a.illust);
@@ -1429,11 +1432,28 @@ document.getElementById('startBtn').addEventListener('click', function(){
       });
     });
     JOBS.forEach(function(j){ urls.push(j.icon); });
-    ATTRS.forEach(function(a){ urls.push(a.icon); });
+    ATTRS.forEach(function(a){ urls.push(a.icon); urls.push('cards/card_ego_'+a.id+'.webp'); });
     GRADES_ALL.forEach(function(g){ urls.push('agents/grade_'+g.id+'.png'); });
+    CARD_GRADES.forEach(function(g){ urls.push('cards/card_'+g+'.webp'); });
+    if (window.AGENTS_CARDS) {
+      Object.keys(window.AGENTS_CARDS).forEach(function(id){
+        window.AGENTS_CARDS[id].forEach(function(card){
+          if (!card.media) return;
+          if (isVideoSrc(card.media)) videoUrls.push(card.media);
+          else urls.push(card.media);
+        });
+      });
+    }
     urls.forEach(function(src){
       var img = new Image();
       img.src = src;
+    });
+    videoUrls.forEach(function(src){
+      var video = document.createElement('video');
+      video.preload = 'auto';
+      video.muted = true;
+      video.src = src;
+      video.load();
     });
   }
 
