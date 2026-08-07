@@ -1053,7 +1053,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
 
   function toggleCardMode(){
     if (state.roster !== 'combatant') return;
-    var fadeOutEls = state.cardMode ? [cardInfoEl] : [illustImg, infoEl];
+    var fadeOutEls = state.cardMode ? [cardInfoEl] : [illustImg];
     var myToken = ++cardModeToken;
     fadeOutEls.forEach(function(el){ el.style.transition = 'opacity .3s'; el.style.opacity = '0'; });
     setTimeout(function(){
@@ -1066,10 +1066,14 @@ document.getElementById('startBtn').addEventListener('click', function(){
   function applyCardModeUI(animateIn){
     cardToggleBtn.textContent = state.cardMode ? '전투원 정보' : '카드 정보';
     cardInfoEl.classList.toggle('visible', state.cardMode);
+    renderInfo();
     if (state.cardMode) renderCardInfo();
+    else cardInfoEl.innerHTML = '';
     hideCardZoom();
 
-    var fadeInEls = state.cardMode ? [cardInfoEl] : [illustImg, infoEl];
+    var fadeInEls = state.cardMode ? [cardInfoEl] : [illustImg];
+    var fadeOutEls = state.cardMode ? [illustImg] : [cardInfoEl];
+    fadeOutEls.forEach(function(el){ el.style.transition = 'none'; el.style.opacity = '0'; });
     fadeInEls.forEach(function(el){ el.style.transition = 'none'; el.style.opacity = '0'; });
     fadeInEls.forEach(function(el){ void el.offsetWidth; });
     if (animateIn) {
@@ -1113,14 +1117,16 @@ document.getElementById('startBtn').addEventListener('click', function(){
     }
     var a = agents.filter(function(x){ return x.id === state.selectedId; })[0] || agents[0];
     var job = jobById[a.job], attr = attrById[a.attribute];
+    var tagline = (state.cardMode && a.cardTagline) ? a.cardTagline : a.tagline;
+    var description = (state.cardMode && a.cardDescription) ? a.cardDescription : a.description;
     infoEl.innerHTML =
       '<div class="agent-info-badges">' +
         (job ? '<img src="'+job.icon+'" alt="'+job.label+'" title="'+job.label+'">' : '') +
         (attr ? '<img src="'+attr.icon+'" alt="'+attr.label+'" title="'+attr.label+'">' : '') +
       '</div>' +
       '<div class="agent-name">'+a.name+'</div>' +
-      (a.tagline ? '<div class="agent-tagline" style="color:'+(attr ? attr.color : '#ff5714')+'">'+a.tagline+'</div>' : '') +
-      (a.description ? '<div class="agent-desc">'+a.description+'</div>' : '');
+      (tagline ? '<div class="agent-tagline" style="color:'+(attr ? attr.color : '#ff5714')+'">'+tagline+'</div>' : '') +
+      (description ? '<div class="agent-desc">'+description+'</div>' : '');
     illustImg.src = a.illust;
     illustImg.alt = a.name;
   }
