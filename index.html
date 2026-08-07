@@ -329,7 +329,7 @@
   .card-toggle-btn:hover{background:rgba(255,255,255,.24);}
 
   /* 카드 정보 그리드 */
-  .agent-cardinfo{position:absolute;top:16px;right:40px;bottom:36px;width:min(58%,600px);z-index:5;
+  .agent-cardinfo{position:absolute;top:16px;right:40px;bottom:36px;aspect-ratio:1.38;max-width:600px;z-index:5;
     display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:1fr;gap:28px 8px;
     opacity:0;pointer-events:none;user-select:none;-webkit-user-select:none;}
   .agent-cardinfo.visible{pointer-events:auto;}
@@ -339,10 +339,10 @@
     user-select:none;-webkit-user-select:none;-webkit-user-drag:none;}
   .agent-cardinfo .card:hover{transform:scale(1.05);}
   .card-media{position:absolute;inset:0;}
-  .card-media img,.card-media video{width:100%;height:100%;object-fit:cover;object-position:calc(50% + 7.9cqw) center;display:block;-webkit-user-drag:none;}
+  .card-media img,.card-media video{width:100%;height:100%;object-fit:cover;object-position:center;display:block;-webkit-user-drag:none;}
   .card-top-grad{position:absolute;top:0;left:0;right:0;height:42%;background:linear-gradient(to bottom, rgba(0,0,0,.8) 0%, transparent 100%);}
   .card-ego{position:absolute;left:0;top:0;bottom:0;width:9.45%;background-repeat:no-repeat;background-size:100% 100%;}
-  .card-grade-star{position:absolute;top:2%;left:-7.9cqw;width:19%;aspect-ratio:1/2;background-repeat:no-repeat;background-size:contain;background-position:top center;}
+  .card-grade-star{position:absolute;top:2%;left:-4.58cqw;width:19%;aspect-ratio:1/2;background-repeat:no-repeat;background-size:contain;background-position:top center;}
   .card-bottom-grad{position:absolute;bottom:0;left:0;right:0;height:58%;background:linear-gradient(to top, rgba(0,0,0,.88) 0%, transparent 100%);}
 
   .card-content{position:absolute;inset:0;padding:7% 7% 6% calc(9.45% + 5px);}
@@ -367,7 +367,7 @@
 
   .card-zoom-preview{position:fixed;z-index:9999;width:260px;border-radius:10px;overflow:hidden;
     box-shadow:0 10px 34px rgba(0,0,0,.65);display:none;pointer-events:none;}
-  .card-zoom-preview.card-zoom-plus{z-index:9998;}
+  .card-zoom-preview.card-zoom-plus{z-index:9998;width:208px;}
   .card-zoom-preview.visible{display:block;}
   .card-zoom-preview .card{border-radius:10px;aspect-ratio:5/7;}
 
@@ -1017,7 +1017,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
     var left = mainRect.left - plusRect.width - 12;
     if (left < 8) left = mainRect.right + 12;
     cardZoomPlusEl.style.left = left + 'px';
-    cardZoomPlusEl.style.top = mainRect.top + 'px';
+    cardZoomPlusEl.style.top = (mainRect.bottom - plusRect.height) + 'px';
   }
   function hideCardZoomPlus(){
     cardZoomPlusEl.classList.remove('visible');
