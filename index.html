@@ -388,7 +388,7 @@
     opacity:0;pointer-events:none;}
   .awaken-overlay.visible{pointer-events:auto;}
 
-  .awaken-header{display:flex;flex-direction:column;align-items:center;gap:8px;transform:translateY(-10px);}
+  .awaken-header{display:flex;flex-direction:column;align-items:center;gap:8px;transform:translateY(-25px);}
   .awaken-title{color:#fff;font-family:var(--font-display);font-weight:900;font-size:20px;letter-spacing:3px;}
   .awaken-divider{display:flex;align-items:center;width:260px;}
   .awaken-divider-line{flex:1;height:1px;background:linear-gradient(to right, transparent, rgba(255,255,255,.8));}
@@ -399,7 +399,7 @@
     box-shadow:0 0 8px 2px rgba(255,255,255,.9),0 0 18px 5px rgba(255,255,255,.5);}
   .awaken-subtitle{color:#a9a9a9;font-size:12.5px;font-weight:600;}
 
-  .awaken-cards{display:flex;gap:19px;align-items:center;justify-content:center;height:49.9%;}
+  .awaken-cards{display:flex;gap:19px;align-items:center;justify-content:center;height:49.9%;transform:translateY(-15px);}
   .awaken-cards .card{height:100%;width:auto;aspect-ratio:5/7;flex:none;cursor:default;}
   .awaken-cards .card:hover{transform:scale(1.05);}
   .awaken-close-btn{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);
@@ -1039,6 +1039,14 @@ document.getElementById('startBtn').addEventListener('click', function(){
     return (card.grade === 'blue' || card.grade === 'yellow') && !!(card.awakenings && card.awakenings.length);
   }
 
+  function agentHasCards(id){
+    return !!(window.AGENTS_CARDS && window.AGENTS_CARDS[id] && window.AGENTS_CARDS[id].length);
+  }
+
+  function updateCardToggleVisibility(){
+    cardToggleBtn.style.display = (state.roster === 'combatant' && agentHasCards(state.selectedId)) ? '' : 'none';
+  }
+
   var COST_GLOW_RGB = {
     '#C2FFAA': '120,255,140',
     '#FFBA91': '255,120,90'
@@ -1336,7 +1344,9 @@ document.getElementById('startBtn').addEventListener('click', function(){
         renderInfo();
         renderIconRow();
         if (changed) {
-          if (state.cardMode) playCardSwapEffect();
+          updateCardToggleVisibility();
+          if (state.cardMode && !agentHasCards(newId)) toggleCardMode();
+          else if (state.cardMode) playCardSwapEffect();
           else playEntranceEffect();
         }
       });
@@ -1435,7 +1445,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
       state.cardMode = false;
       applyCardModeUI(false);
     }
-    cardToggleBtn.style.display = (key === 'combatant') ? '' : 'none';
+    updateCardToggleVisibility();
     renderInfo();
     renderIconRow();
     renderFilterTags();
@@ -1444,6 +1454,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
   rosterTabCombatant.addEventListener('click', function(){ switchRoster('combatant'); });
   rosterTabPartner.addEventListener('click', function(){ switchRoster('partner'); });
 
+  updateCardToggleVisibility();
   renderInfo();
   renderIconRow();
   renderFilterTags();
