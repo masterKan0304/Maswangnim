@@ -324,6 +324,49 @@
   .grade-tag-btn[data-grade="4"]{background-image:url('agents/grade_4.png');}
   .grade-tag-btn[data-grade="3"]{background-image:url('agents/grade_3.png');}
 
+  /* 카드 정보 토글 버튼 */
+  .card-toggle-btn{position:absolute;left:40px;bottom:32px;z-index:6;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.4);color:#fff;font-size:12.5px;font-weight:700;padding:7px 16px;border-radius:20px;cursor:pointer;transition:background .15s;}
+  .card-toggle-btn:hover{background:rgba(255,255,255,.24);}
+
+  /* 카드 정보 그리드 */
+  .agent-cardinfo{position:absolute;top:36px;right:40px;bottom:36px;width:min(58%,600px);z-index:5;
+    display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:1fr;gap:8px;
+    opacity:0;pointer-events:none;user-select:none;-webkit-user-select:none;}
+  .agent-cardinfo.visible{pointer-events:auto;}
+
+  .card{position:relative;aspect-ratio:5/7;border-radius:8px;overflow:hidden;background:#0c0c10;cursor:pointer;
+    user-select:none;-webkit-user-select:none;-webkit-user-drag:none;}
+  .card-media{position:absolute;inset:0;}
+  .card-media img,.card-media video{width:100%;height:100%;object-fit:cover;object-position:center;display:block;-webkit-user-drag:none;}
+  .card-top-grad{position:absolute;top:0;left:0;right:0;height:42%;background:linear-gradient(to bottom, rgba(0,0,0,.8) 0%, transparent 100%);}
+  .card-ego{position:absolute;left:0;top:0;bottom:0;width:26%;background-repeat:no-repeat;background-size:100% 100%;}
+  .card-grade-star{position:absolute;top:2%;left:3%;width:19%;aspect-ratio:1/2;background-repeat:no-repeat;background-size:contain;background-position:top center;}
+  .card-bottom-grad{position:absolute;bottom:0;left:0;right:0;height:58%;background:linear-gradient(to top, rgba(0,0,0,.88) 0%, transparent 100%);}
+
+  .card-content{position:absolute;inset:0;display:flex;flex-direction:column;padding:7% 7% 6% calc(26% + 5px);}
+  .card-header{display:flex;align-items:flex-start;gap:5px;}
+  .card-cost{flex:none;display:flex;flex-direction:column;align-items:center;}
+  .card-cost-num{font-family:var(--font-display);font-weight:900;font-size:14px;line-height:1;color:#eaf7ff;
+    text-shadow:0 0 4px #2ab6ff,0 0 9px #2ab6ff,0 0 16px rgba(42,182,255,.8);}
+  .card-cost-line{width:13px;height:2px;background:#2ab6ff;margin-top:3px;box-shadow:0 0 4px #2ab6ff,0 0 8px #2ab6ff;}
+  .card-title{min-width:0;flex:1;}
+  .card-name{font-size:10.5px;font-weight:800;line-height:1.28;word-break:keep-all;}
+  .card-type{display:flex;align-items:center;gap:3px;margin-top:3px;}
+  .card-type .card-type-icon{width:10px;height:10px;flex:none;border-radius:2px;object-fit:cover;display:block;}
+  .card-type span{font-size:8.5px;color:#fff;font-weight:700;}
+  .card-tooltip{margin-top:auto;font-size:9.5px;line-height:1.45;color:#f2f2f2;font-weight:600;
+    text-shadow:0 1px 3px #000,0 0 5px #000,0 0 10px rgba(0,0,0,.8);}
+
+  .card[data-grade="gray"] .card-name{color:#a8a7aa;}
+  .card[data-grade="blue"] .card-name{color:#60c8ff;}
+  .card[data-grade="yellow"] .card-name{color:#ffba74;}
+  .card[data-grade="purple"] .card-name{color:#d181ff;}
+
+  .card-zoom-preview{position:fixed;z-index:9999;width:260px;border-radius:10px;overflow:hidden;
+    box-shadow:0 10px 34px rgba(0,0,0,.65);display:none;pointer-events:none;}
+  .card-zoom-preview.visible{display:block;}
+  .card-zoom-preview .card{border-radius:10px;}
+
   footer{background:var(--cover-bg);color:#b7b0ac;padding:34px 0 46px;margin-top:8px;}
   .foot-links{display:flex;gap:18px;font-size:12.5px;color:#b7b0ac;flex-wrap:wrap;margin-bottom:18px;}
   .foot-links a:hover{color:#fff;}
@@ -569,7 +612,10 @@ document.getElementById('startBtn').addEventListener('click', function(){
           <div class="agent-showcase-illust"><img id="agentIllustImg" alt="" draggable="false" ondragstart="return false"></div>
           <div class="agent-showcase-scrim"></div>
           <div class="agent-info" id="agentInfo"></div>
+          <div class="agent-cardinfo" id="agentCardInfo"></div>
+          <button type="button" class="card-toggle-btn" id="cardToggleBtn">카드 정보</button>
         </div>
+        <div class="card-zoom-preview" id="cardZoomPreview"></div>
 
         <div class="agent-icon-pager">
           <div class="agent-icon-viewport">
@@ -756,6 +802,8 @@ document.getElementById('startBtn').addEventListener('click', function(){
 <script src="agents/agents-data.js"></script>
 <!-- 파트너 정보 데이터 (partner/partner-data.js 파일에서 직접 수정) -->
 <script src="partner/partner-data.js"></script>
+<!-- 전투원 카드 정보 데이터 (cards/cards-data.js 파일에서 직접 수정) -->
+<script src="cards/cards-data.js"></script>
 <script>
 (function(){
   var JOBS = [
@@ -788,6 +836,13 @@ document.getElementById('startBtn').addEventListener('click', function(){
 
   var PAGE_SIZE = 10;
 
+  var TYPE_ICONS = {
+    attack: 'cards/attack.png',
+    skill: 'cards/skill.png',
+    upgrade: 'cards/upgrade.png'
+  };
+  var TYPE_LABELS = { attack: '공격', skill: '스킬', upgrade: '강화' };
+
   var iconRow = document.getElementById('agentIconRow');
   var infoEl = document.getElementById('agentInfo');
   var illustImg = document.getElementById('agentIllustImg');
@@ -800,11 +855,14 @@ document.getElementById('startBtn').addEventListener('click', function(){
   var iconNextBtn = document.getElementById('agentIconNext');
   var rosterTabCombatant = document.getElementById('rosterTabCombatant');
   var rosterTabPartner = document.getElementById('rosterTabPartner');
+  var cardToggleBtn = document.getElementById('cardToggleBtn');
+  var cardInfoEl = document.getElementById('agentCardInfo');
+  var cardZoomEl = document.getElementById('cardZoomPreview');
 
   var agents = ROSTERS.combatant.data;
   if (!agents.length || !iconRow) return;
 
-  var state = { roster: 'combatant', selectedId: agents[0].id, job: null, attribute: null, grade: null, iconPage: 0 };
+  var state = { roster: 'combatant', selectedId: agents[0].id, job: null, attribute: null, grade: null, iconPage: 0, cardMode: false };
 
   function setIconCountVars(){
     iconRow.style.setProperty('--icon-count', Math.max(agents.length, 1));
@@ -833,7 +891,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
   var entranceToken = 0;
 
   function applyHoverScale(){
-    if (illustEntering) return;
+    if (illustEntering || state.cardMode) return;
     illustImg.style.transition = 'transform .2s';
     illustImg.style.transform = 'scale(' + (isHovering ? 1.1 : 1) + ')';
   }
@@ -866,6 +924,136 @@ document.getElementById('startBtn').addEventListener('click', function(){
   if (showcaseEl) {
     showcaseEl.addEventListener('mouseenter', function(){ isHovering = true; applyHoverScale(); });
     showcaseEl.addEventListener('mouseleave', function(){ isHovering = false; applyHoverScale(); });
+  }
+
+  function parseTooltip(str){
+    return String(str)
+      .replace(/<color=(#[0-9a-fA-F]{3,8})>/g, '<span style="color:$1">')
+      .replace(/<\/color>/g, '</span>')
+      .replace(/\n/g, '<br>');
+  }
+
+  function isVideoSrc(src){ return /\.(webm|mp4)$/i.test(src); }
+
+  function cardMedia(card){
+    if (isVideoSrc(card.media)) {
+      return '<video src="'+card.media+'" autoplay muted loop playsinline disablepictureinpicture></video>';
+    }
+    return '<img src="'+card.media+'" alt="'+card.name+'" draggable="false" ondragstart="return false">';
+  }
+
+  function renderCardHTML(card, attrId){
+    var typeIcon = TYPE_ICONS[card.type] || '';
+    var typeLabel = TYPE_LABELS[card.type] || '';
+    return '' +
+    '<div class="card" data-grade="'+card.grade+'">' +
+      '<div class="card-media">'+cardMedia(card)+'</div>' +
+      '<div class="card-top-grad"></div>' +
+      '<div class="card-ego" style="background-image:url(\'cards/card_ego_'+attrId+'.webp\')"></div>' +
+      '<div class="card-grade-star" style="background-image:url(\'cards/card_'+card.grade+'.webp\')"></div>' +
+      '<div class="card-bottom-grad"></div>' +
+      '<div class="card-content">' +
+        '<div class="card-header">' +
+          '<div class="card-cost"><div class="card-cost-num">'+card.cost+'</div><div class="card-cost-line"></div></div>' +
+          '<div class="card-title">' +
+            '<div class="card-name">'+card.name+'</div>' +
+            '<div class="card-type"><img class="card-type-icon" src="'+typeIcon+'" alt="'+typeLabel+'"><span>'+typeLabel+'</span></div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="card-tooltip">'+parseTooltip(card.tooltip)+'</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function getCurrentCards(){
+    if (state.roster !== 'combatant') return [];
+    return (window.AGENTS_CARDS && window.AGENTS_CARDS[state.selectedId]) || [];
+  }
+
+  function showCardZoom(cardHTML, x, y){
+    cardZoomEl.innerHTML = cardHTML;
+    cardZoomEl.classList.add('visible');
+    positionCardZoom(x, y);
+  }
+  function positionCardZoom(x, y){
+    var rect = cardZoomEl.getBoundingClientRect();
+    var left = x - rect.width - 16;
+    var top = y - rect.height - 16;
+    if (left < 8) left = x + 16;
+    if (top < 8) top = y + 16;
+    cardZoomEl.style.left = left + 'px';
+    cardZoomEl.style.top = top + 'px';
+  }
+  function hideCardZoom(){
+    cardZoomEl.classList.remove('visible');
+    cardZoomEl.innerHTML = '';
+  }
+
+  function renderCardInfo(){
+    var a = agents.filter(function(x){ return x.id === state.selectedId; })[0];
+    var cards = getCurrentCards();
+    if (!a || !cards.length) {
+      cardInfoEl.innerHTML = '<div class="agent-desc" style="grid-column:1/-1;align-self:center;">아직 등록된 카드 정보가 없습니다.</div>';
+      return;
+    }
+    cardInfoEl.innerHTML = cards.map(function(card){ return renderCardHTML(card, a.attribute); }).join('');
+    Array.prototype.forEach.call(cardInfoEl.querySelectorAll('.card'), function(cardEl, i){
+      cardEl.addEventListener('mouseenter', function(e){
+        showCardZoom(renderCardHTML(cards[i], a.attribute), e.clientX, e.clientY);
+      });
+      cardEl.addEventListener('mousemove', function(e){
+        positionCardZoom(e.clientX, e.clientY);
+      });
+      cardEl.addEventListener('mouseleave', hideCardZoom);
+    });
+  }
+
+  var cardModeToken = 0;
+
+  function toggleCardMode(){
+    if (state.roster !== 'combatant') return;
+    var fadeOutEls = state.cardMode ? [cardInfoEl] : [illustImg, infoEl];
+    var myToken = ++cardModeToken;
+    fadeOutEls.forEach(function(el){ el.style.transition = 'opacity .3s'; el.style.opacity = '0'; });
+    setTimeout(function(){
+      if (myToken !== cardModeToken) return;
+      state.cardMode = !state.cardMode;
+      applyCardModeUI(true);
+    }, 300);
+  }
+
+  function applyCardModeUI(animateIn){
+    cardToggleBtn.textContent = state.cardMode ? '전투원 정보' : '카드 정보';
+    cardInfoEl.classList.toggle('visible', state.cardMode);
+    if (state.cardMode) renderCardInfo();
+    hideCardZoom();
+
+    var fadeInEls = state.cardMode ? [cardInfoEl] : [illustImg, infoEl];
+    fadeInEls.forEach(function(el){ el.style.transition = 'none'; el.style.opacity = '0'; });
+    fadeInEls.forEach(function(el){ void el.offsetWidth; });
+    if (animateIn) {
+      fadeInEls.forEach(function(el){ el.style.transition = 'opacity .4s'; el.style.opacity = '1'; });
+    } else {
+      fadeInEls.forEach(function(el){ el.style.opacity = '1'; });
+    }
+    if (!state.cardMode) applyHoverScale();
+  }
+
+  cardToggleBtn.addEventListener('click', toggleCardMode);
+
+  function playCardSwapEffect(){
+    var myToken = ++cardModeToken;
+    cardInfoEl.style.transition = 'opacity .2s';
+    cardInfoEl.style.opacity = '0';
+    setTimeout(function(){
+      if (myToken !== cardModeToken) return;
+      renderCardInfo();
+      cardInfoEl.style.transition = 'none';
+      cardInfoEl.style.opacity = '0';
+      void cardInfoEl.offsetWidth;
+      cardInfoEl.style.transition = 'opacity .4s';
+      cardInfoEl.style.opacity = '1';
+    }, 200);
   }
 
   function matchesFilter(a){
@@ -921,7 +1109,10 @@ document.getElementById('startBtn').addEventListener('click', function(){
         state.selectedId = newId;
         renderInfo();
         renderIconRow();
-        if (changed) playEntranceEffect();
+        if (changed) {
+          if (state.cardMode) playCardSwapEffect();
+          else playEntranceEffect();
+        }
       });
     });
     updateIconPager(ordered.length);
@@ -1014,6 +1205,11 @@ document.getElementById('startBtn').addEventListener('click', function(){
     rosterTabCombatant.classList.toggle('active', key === 'combatant');
     rosterTabPartner.classList.toggle('active', key === 'partner');
     setIconCountVars();
+    if (state.cardMode) {
+      state.cardMode = false;
+      applyCardModeUI(false);
+    }
+    cardToggleBtn.style.display = (key === 'combatant') ? '' : 'none';
     renderInfo();
     renderIconRow();
     renderFilterTags();

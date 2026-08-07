@@ -23,15 +23,13 @@
 
 window.PARTNER_DATA = [
   {
-    // 예시로 채워둔 항목 — 아직 파트너 전용 이미지가 없어서 힐데 이미지를 임시로 재사용 중입니다.
-    // 실제 파트너 이미지가 준비되면 illust/icon 경로만 partner 폴더 파일로 교체하면 됩니다.
-    id: 'nova',
-    name: '노바',
-    job: 'controller',
-    grade: 3,
-    illust: 'agents/힐데_B.webp',
-    icon: 'agents/힐데_A.webp',
-    tagline: '함선 시스템을 관리하는 보조 AI',
-    description: '함장의 곁을 지키며 함선의 각종 시스템과 데이터를 관리하는 보조 인공지능.\n담담한 말투 뒤에 은근한 장난기를 숨기고 있다.\n예시로 넣어둔 항목이니 자유롭게 수정하거나 지워도 됩니다.'
+    id: 'yuni',
+    name: '유니',
+    job: 'ranger',
+    grade: 5,
+    illust: 'partner/유니_B.png',
+    icon: 'partner/유니_A.webp',
+    tagline: '폭스 소대의 브레이크 담당',
+    description: '아이언 레인 폭스 소대 소속.\n소대장을 향한 충성심이 대단하며, 그 충섬심을 정론과 잔소리로 표현한다.\n힐데가 무모한 작전을 가져오면 누구보다 먼저 나서서 반대하고\n정론으로 받아 치지만, 작전 수행 중에는 맡은 역할을 완벽하게 해낸다.'
   }
 ];
