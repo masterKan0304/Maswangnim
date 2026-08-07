@@ -59,13 +59,13 @@ window.AGENTS_CARDS = {
       grade: 'blue',
       plus_card: '호밍 애로우',
       media: 'cards/힐데/blue1.webp',
-      tooltip: '[주도]\n뽑을 카드에 "호밍 애로우" 3장 생성',
+      tooltip: '[ 주도 ]\n뽑을 카드에 "호밍 애로우" 3장 생성',
       awakenings: [
-        { cost: 1, type: 'skill', tooltip: '[주도]\n뽑을 카드에 "호밍 애로우" 3장 생성', plus_card: '호밍 애로우' },
-        { cost: 1, type: 'skill', tooltip: '[주도]\n뽑을 카드에 "호밍 애로우" 4장 생성', plus_card: '호밍 애로우' },
-        { cost: 0, type: 'skill', tooltip: '[주도]\n뽑을 카드에 "호밍 애로우" 4장 생성' },
-        { cost: 0, type: 'skill', tooltip: '[주도]\n뽑을 카드에 "호밍 애로우" 5장 생성\n실드 50%', plus_card: '호밍 애로우' },
-        { cost: 0, type: 'upgrade', tooltip: '[유일 / 주도]\n뽑을 카드에 "호밍 애로우" 5장 생성\n실드 100%', plus_card: '호밍 애로우' }
+        { cost: 1, type: 'skill', tooltip: '[ 주도 ]\n뽑을 카드에 "호밍 애로우" |4|장 생성, |그 카드 중 1장 드로우|', plus_card: '호밍 애로우' },
+        { cost: 1, type: 'skill', tooltip: '[ 주도 ]\n뽑을 카드에 |"호밍 애로우(균열)"| 3장 생성', plus_card: '호밍 애로우(균열)' },
+        { cost: 1, type: 'skill', tooltip: '[ 주도 ]\n뽑을 카드에 |"호밍 애로우(특대)"| \1\장 생성', plus_card: '호밍 애로우(특대)' },
+        { cost: 1, type: 'upgrade', tooltip: '|[ 유일 / 주도 ]|\n뽑을 카드에 "호밍 애로우" \2\장 생성\n|적 처치 시 뽑을 카드에 "호밍 애로우" 2장 생성 (턴당 5회)|', plus_card: '호밍 애로우' },
+        { cost: 1, type: 'upgrade', tooltip: '|[ 유일 / 개막 ]|\n|턴 시작 시| 뽑을 카드에 "호밍 애로우" 3장 생성\n|"호밍 애로우"가 턴 드로우 대상이 되지 않음|', plus_card: '호밍 애로우' }
       ]
     },
     {
@@ -74,7 +74,23 @@ window.AGENTS_CARDS = {
       type: 'attack',
       grade: '',
       media: 'cards/힐데/blue1_1.webp',
-      tooltip: '[사용불가 / 소멸]\n체력이 가장 낮은 적 추가 공격 120%\n드로우 1\n감응: 이 카드 발동'
+      tooltip: '[ 사용불가 / 소멸 ]\n체력이 가장 낮은 적 추가 공격 120%\n드로우 1\n감응: 이 카드 발동'
+    },
+    {
+      name: '호밍 애로우(균열)',
+      cost: '-',
+      type: 'attack',
+      grade: '',
+      media: 'cards/힐데/blue1_2.webp',
+      tooltip: '[ 사용불가 / 소멸 ]\n모든 적 추가 공격 50%\n균열 1\n드로우 1\n감응: 이 카드 발동'
+    },
+    {
+      name: '호밍 애로우(특대)',
+      cost: '-',
+      type: 'attack',
+      grade: '',
+      media: 'cards/힐데/blue1_3.webp',
+      tooltip: '[ 사용불가 / 소멸 ]\n체력이 가장 높은 적 추가 공격 500%\n드로우 1\n감응: 이 카드 발동'
     },
     {
       name: '플라즈마 레인',
@@ -82,7 +98,14 @@ window.AGENTS_CARDS = {
       type: 'attack',
       grade: 'blue',
       media: 'cards/힐데/blue2.webp',
-      tooltip: '모든 적 피해 60%, 이온화 2'
+      tooltip: '모든 적 피해 60%, 이온화 2',
+      awakenings: [
+        { cost: 1, type: 'attack', tooltip: '|[ 주도 ]|\n모든 적 피해 |100|%, 이온화 2\n|감응: 무작위 적 이온화 2|' },
+        { cost: 1, type: 'skill', tooltip: '|[ 주도 ]|\n|모든 적| 이온화 |3|\n|드로우 1|' },
+        { cost: 1, type: 'attack', tooltip: '모든 적 피해 |100|%, 이온화 |3|\n|처치: 모든 적 균열 3 (최대 1회)|' },
+        { cost: 3, type: 'attack', tooltip: '|[ 점화 ]|\n모든 적 |관통 피해 180|%, 이온화 |3|' },
+        { cost: 1, type: 'attack', tooltip: '모든 적 피해 |120|%\n|자신의 공격 카드 드로우 1|\n|연속: 비용 1 감소|' }
+      ]
     },
     {
       name: '드로우 & 릴리즈',
@@ -90,7 +113,14 @@ window.AGENTS_CARDS = {
       type: 'skill',
       grade: 'blue',
       media: 'cards/힐데/blue3.webp',
-      tooltip: '자신의 공격 카드 드로우 2\n1턴간 사용 시까지 그 카드 피해량 +50%'
+      tooltip: '자신의 공격 카드 드로우 2\n1턴간 사용 시까지 그 카드 피해량 +50%',
+      awakenings: [
+        { cost: 1, type: 'skill', tooltip: '|[ 주도 ]|\n자신의 공격 카드 드로우 2\n1턴간 사용 시까지 그 카드 피해량 +50%' },
+        { cost: 1, type: 'skill', tooltip: '|[ 주도 ]|\n|드로우| 2\n|다음 3번 자신의 추가 공격 시 모든 적 균열 1|' },
+        { cost: 0, type: 'skill', tooltip: '|핸드의 모든 카드 뽑을 카드로 이동, 그 수만큼 드로우|' },
+        { cost: 1, type: 'skill', tooltip: '|주도| 카드 드로우 2\n1턴간 사용 시까지 그 카드 |비용 1 감소|' },
+        { cost: 2, type: 'skill', tooltip: '|이번 턴 능력으로 드로우한 카드 수만큼 다음 자신의 공격 카드 피해량 30% 증가 (최대 300%)|' }
+      ]
     },
     {
       name: '빅 게임 레인저',
@@ -98,13 +128,13 @@ window.AGENTS_CARDS = {
       type: 'upgrade',
       grade: 'yellow',
       media: 'cards/힐데/yellow.webp',
-      tooltip: '[유일 / 주도]\n타격 시 일점 조준 2',
+      tooltip: '[ 유일 / 주도 ]\n타격 시 일점 조준 2',
       awakenings: [
-        { cost: 1, type: 'upgrade', tooltip: '[유일 / 주도]\n타격 시 일점 조준 2' },
-        { cost: 1, type: 'upgrade', tooltip: '[유일 / 주도]\n타격 시 일점 조준 3' },
-        { cost: 0, type: 'upgrade', tooltip: '[유일 / 주도]\n타격 시 일점 조준 3' },
-        { cost: 0, type: 'upgrade', tooltip: '[유일 / 주도]\n타격 시 일점 조준 4\n이온화 2' },
-        { cost: 0, type: 'upgrade', tooltip: '[유일 / 주도]\n타격 시 일점 조준 5\n이온화 3' }
+        { cost: 1, type: 'upgrade', tooltip: '[ 유일 / 주도 ]\n타격 시 일점 조준 |3|' },
+        { cost: 0, type: 'upgrade', tooltip: '|[ 유일 / 개전 ]|\n|드로우 2|\n타격 시 일점 조준 2' },
+        { cost: 1, type: 'upgrade', tooltip: '[ 유일 / 주도 ]\n타격 시 일점 조준 2\n|감응 효과 발동 시 일점 조준 2|' },
+        { cost: 1, type: 'upgrade', tooltip: '[ 유일 / 주도 ]\n|능력으로 해로운 효과 부여 시| 일점 조준 |5|' },
+        { cost: 1, type: 'upgrade', tooltip: '[ 유일 / 주도 ]\n|턴 시작 시| 일점 조준 |30|\n|자신의 공격 카드 사용 불가|' }
       ]
     },
     {

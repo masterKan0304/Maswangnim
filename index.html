@@ -343,7 +343,7 @@
   .card-media img,.card-media video{width:100%;height:100%;object-fit:cover;object-position:calc(50% + 4cqw) center;display:block;-webkit-user-drag:none;}
   .card-top-grad{position:absolute;top:0;left:0;right:0;height:42%;background:linear-gradient(to bottom, rgba(0,0,0,.5) 0%, transparent 100%);}
   .card-ego{position:absolute;left:0;top:0;bottom:0;width:9.45%;background-repeat:no-repeat;background-size:100% 105%;background-position:center;}
-  .card-grade-star{position:absolute;top:2%;left:-0.58cqw;width:15.2%;aspect-ratio:1/2;background-repeat:no-repeat;background-size:contain;background-position:top center;}
+  .card-grade-star{position:absolute;top:2%;left:-2.18cqw;width:15.2%;aspect-ratio:1/2;background-repeat:no-repeat;background-size:contain;background-position:top center;}
   .card-bottom-grad{position:absolute;bottom:0;left:0;right:0;height:58%;background:linear-gradient(to top, rgba(0,0,0,.58) 0%, transparent 100%);}
 
   .card-content{position:absolute;inset:0;padding:7% 7% 6% calc(9.45% + 5px);}
@@ -379,15 +379,14 @@
     background:rgba(0,0,0,.45);pointer-events:none;}
   .card[data-awaken="1"]:hover .card-awaken-hint{opacity:1;}
   .card-awaken-icon{width:40%;display:block;filter:drop-shadow(0 0 5px #fff) drop-shadow(0 0 9px #fff);}
-  .card-awaken-label{color:#fff;font-size:7.2cqw;font-weight:700;text-align:center;line-height:1.4;padding:0 8%;
-    text-shadow:0 0 5px #fff,0 0 9px #fff,0 0 14px rgba(255,255,255,.8);}
+  .card-awaken-label{color:#fff;font-size:7.2cqw;font-weight:700;text-align:center;line-height:1.4;padding:0 8%;}
 
   .awaken-overlay{position:absolute;inset:0;z-index:10;background:rgba(0,0,0,.55);
     -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
     display:flex;align-items:center;justify-content:center;
     opacity:0;pointer-events:none;}
   .awaken-overlay.visible{pointer-events:auto;}
-  .awaken-cards{display:flex;gap:14px;align-items:center;justify-content:center;height:66%;}
+  .awaken-cards{display:flex;gap:14px;align-items:center;justify-content:center;height:46.2%;}
   .awaken-cards .card{height:100%;width:auto;aspect-ratio:5/7;flex:none;cursor:default;}
   .awaken-cards .card:hover{transform:scale(1.05);}
   .awaken-close-btn{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);
@@ -963,14 +962,46 @@ document.getElementById('startBtn').addEventListener('click', function(){
     showcaseEl.addEventListener('mouseleave', function(){ isHovering = false; applyHoverScale(); });
   }
 
-  function parseTooltip(str){
-    var withInline = String(str).replace(/\[([^\]]*)\]|"([^"]*)"|(\d+)/g, function(match, bracketInner, quoteInner, digits){
-      if (bracketInner !== undefined) return '<span style="color:#EAAA00">[' + bracketInner + ']</span>';
-      if (quoteInner !== undefined) return '<span style="color:#7EE4FF;text-decoration:underline">' + quoteInner + '</span>';
-      if (digits !== undefined) return '<span style="color:#7EE4FF">' + digits + '</span>';
+  function parseNormalInline(str, bracketColor, quoteColor, digitColor){
+    return String(str).replace(/\[([^\]]*)\]|"([^"]*)"|(\d+)/g, function(match, bracketInner, quoteInner, digits){
+      if (bracketInner !== undefined) return '<span style="color:'+bracketColor+'">[' + bracketInner + ']</span>';
+      if (quoteInner !== undefined) return '<span style="color:'+quoteColor+';text-decoration:underline">' + quoteInner + '</span>';
+      if (digits !== undefined) return '<span style="color:'+digitColor+'">' + digits + '</span>';
       return match;
     });
-    return withInline.replace(/\n/g, '<br>');
+  }
+
+  function parseTooltip(str, awakenMode){
+    var s = String(str);
+    if (!awakenMode) {
+      return parseNormalInline(s, '#EAAA00', '#7EE4FF', '#7EE4FF').replace(/\n/g, '<br>');
+    }
+
+    var placeholders = [];
+    function stash(html){
+      placeholders.push(html);
+      return 'PH' + String.fromCharCode(65 + placeholders.length - 1) + '';
+    }
+
+    // \텍스트\ -> flat CE4A5F, delimiters removed
+    var step1 = s.replace(/\\([^\\]*)\\/g, function(m, inner){
+      return stash('<span style="color:#CE4A5F">' + inner + '</span>');
+    });
+
+    // |텍스트| -> normal-rule colors remapped (orange/skyblue -> 99D81F, plain -> E1FFD2), delimiters removed
+    var step2 = step1.replace(/\|([^|]*)\|/g, function(m, inner){
+      var innerHtml = parseNormalInline(inner, '#99D81F', '#99D81F', '#99D81F');
+      return stash('<span style="color:#E1FFD2">' + innerHtml + '</span>');
+    });
+
+    // everything outside | | and \ \ still gets the normal bracket/quote/digit coloring
+    var step3 = parseNormalInline(step2, '#EAAA00', '#7EE4FF', '#7EE4FF');
+
+    var restored = step3.replace(/PH([A-Z])/g, function(m, letter){
+      return placeholders[letter.charCodeAt(0) - 65];
+    });
+
+    return restored.replace(/\n/g, '<br>');
   }
 
   function isVideoSrc(src){ return /\.(webm|mp4)$/i.test(src); }
@@ -1005,13 +1036,13 @@ document.getElementById('startBtn').addEventListener('click', function(){
       '<div class="card-bottom-grad"></div>' +
       '<div class="card-content">' +
         '<div class="card-header">' +
-          '<div class="card-cost"><div class="card-cost-num">'+card.cost+'</div><div class="card-cost-line"></div></div>' +
+          '<div class="card-cost"><div class="card-cost-num"'+(card._costColor ? ' style="color:'+card._costColor+'"' : '')+'>'+card.cost+'</div><div class="card-cost-line"></div></div>' +
           '<div class="card-title">' +
             '<div class="card-name">'+card.name+'</div>' +
             '<div class="card-type"><img class="card-type-icon" src="'+typeIcon+'" alt="'+typeLabel+'"><span>'+typeLabel+'</span></div>' +
           '</div>' +
         '</div>' +
-        '<div class="card-tooltip">'+parseTooltip(card.tooltip)+'</div>' +
+        '<div class="card-tooltip">'+parseTooltip(card.tooltip, opts && opts.awaken)+'</div>' +
       '</div>' +
       awakenHint +
     '</div>';
@@ -1029,7 +1060,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
   }
 
   function showCardZoom(card, attrId, x, y){
-    cardZoomEl.innerHTML = renderCardHTML(card, attrId);
+    cardZoomEl.innerHTML = renderCardHTML(card, attrId, null, {awaken: !!card._isAwakenVariant});
     cardZoomEl.classList.add('visible');
     positionCardZoom(x, y);
     if (card.plus_card) {
@@ -1081,10 +1112,6 @@ document.getElementById('startBtn').addEventListener('click', function(){
     cardInfoEl.innerHTML = cards.map(function(card){ return renderCardHTML(card, a.attribute); }).join('');
     Array.prototype.forEach.call(cardInfoEl.querySelectorAll('.card'), function(cardEl, i){
       var card = cards[i];
-      if (isAwakenable(card)) {
-        cardEl.addEventListener('click', function(){ openAwakenOverlay(card, a); });
-        return;
-      }
       cardEl.addEventListener('mouseenter', function(e){
         showCardZoom(card, a.attribute, e.clientX, e.clientY);
       });
@@ -1092,7 +1119,17 @@ document.getElementById('startBtn').addEventListener('click', function(){
         positionCardZoom(e.clientX, e.clientY);
       });
       cardEl.addEventListener('mouseleave', hideCardZoom);
+      if (isAwakenable(card)) {
+        cardEl.addEventListener('click', function(){ openAwakenOverlay(card, a); });
+      }
     });
+  }
+
+  function awakenCostColor(awCost, baseCost){
+    if (typeof awCost !== 'number' || typeof baseCost !== 'number') return null;
+    if (awCost < baseCost) return '#C2FFAA';
+    if (awCost > baseCost) return '#FFBA91';
+    return null;
   }
 
   function openAwakenOverlay(card, agent){
@@ -1101,10 +1138,12 @@ document.getElementById('startBtn').addEventListener('click', function(){
       for (var k in card) { if (k !== 'awakenings') merged[k] = card[k]; }
       for (var k2 in aw) { merged[k2] = aw[k2]; }
       if (!('plus_card' in aw)) delete merged.plus_card;
+      merged._isAwakenVariant = true;
+      merged._costColor = awakenCostColor(merged.cost, card.cost);
       return merged;
     });
     awakenCardsEl.innerHTML = mergedList.map(function(mc){
-      return renderCardHTML(mc, agent.attribute, null, {noAwakenHint:true});
+      return renderCardHTML(mc, agent.attribute, null, {noAwakenHint:true, awaken:true});
     }).join('');
     Array.prototype.forEach.call(awakenCardsEl.querySelectorAll('.card'), function(cardEl, i){
       cardEl.addEventListener('mouseenter', function(e){
@@ -1153,7 +1192,8 @@ document.getElementById('startBtn').addEventListener('click', function(){
 
   function toggleCardMode(){
     if (state.roster !== 'combatant') return;
-    var fadeOutEls = state.cardMode ? [cardInfoEl] : [illustImg];
+    var textEl = infoEl.querySelector('.agent-info-text');
+    var fadeOutEls = (state.cardMode ? [cardInfoEl] : [illustImg]).concat(textEl ? [textEl] : []);
     var myToken = ++cardModeToken;
     fadeOutEls.forEach(function(el){ el.style.transition = 'opacity .3s'; el.style.opacity = '0'; });
     setTimeout(function(){
@@ -1172,7 +1212,8 @@ document.getElementById('startBtn').addEventListener('click', function(){
     else cardInfoEl.innerHTML = '';
     hideCardZoom();
 
-    var fadeInEls = state.cardMode ? [cardInfoEl] : [illustImg];
+    var textEl = infoEl.querySelector('.agent-info-text');
+    var fadeInEls = (state.cardMode ? [cardInfoEl] : [illustImg]).concat(textEl ? [textEl] : []);
     var fadeOutEls = state.cardMode ? [illustImg] : [cardInfoEl];
     fadeOutEls.forEach(function(el){ el.style.transition = 'none'; el.style.opacity = '0'; });
     fadeInEls.forEach(function(el){ el.style.transition = 'none'; el.style.opacity = '0'; });
@@ -1226,8 +1267,10 @@ document.getElementById('startBtn').addEventListener('click', function(){
         (attr ? '<img src="'+attr.icon+'" alt="'+attr.label+'" title="'+attr.label+'">' : '') +
       '</div>' +
       '<div class="agent-name">'+a.name+'</div>' +
-      (tagline ? '<div class="agent-tagline" style="color:'+(attr ? attr.color : '#ff5714')+'">'+tagline+'</div>' : '') +
-      (description ? '<div class="agent-desc">'+description+'</div>' : '');
+      '<div class="agent-info-text">' +
+        (tagline ? '<div class="agent-tagline" style="color:'+(attr ? attr.color : '#ff5714')+'">'+tagline+'</div>' : '') +
+        (description ? '<div class="agent-desc">'+description+'</div>' : '') +
+      '</div>';
     illustImg.src = a.illust;
     illustImg.alt = a.name;
   }
