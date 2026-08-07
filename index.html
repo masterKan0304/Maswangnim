@@ -194,7 +194,7 @@
   /* video banner */
   .media-row{display:grid;grid-template-columns:2fr 1fr;background:#000;}
   .media-main{aspect-ratio:16/9;background:#000;}
-  .media-main video{width:100%;height:100%;border:0;display:block;object-fit:cover;background:#000;}
+  .media-main video,.media-main iframe{width:100%;height:100%;border:0;display:block;object-fit:cover;background:#000;}
   .media-minis{display:flex;flex-direction:column;}
   .media-mini{flex:1;background-size:cover;background-position:center;min-height:0;}
 
@@ -537,7 +537,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
     <!-- 동영상 배너 -->
     <section class="block" style="padding:0;overflow:hidden;border:none;box-shadow:none;">
       <div class="media-row">
-        <div class="media-main"><video src="assets/youtube-video.mp4" autoplay muted loop playsinline controls></video></div>
+        <div class="media-main"><iframe src="https://www.youtube.com/embed/MyOWl83YXqE?autoplay=1&mute=1&loop=1&playlist=MyOWl83YXqE&playsinline=1" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div>
         <div class="media-minis">
           <div class="media-mini" style="background-image:url('https://d2x8kymwjom7h7.cloudfront.net/live/application_no/10009/partners-sns-api/banner_event_카제나_02_X_1751954085729.jpg');"></div>
           <div class="media-mini" style="background-image:url('https://d2x8kymwjom7h7.cloudfront.net/live/application_no/10009/partners-sns-api/banner_event_카제나_03_카카오톡_1776313590232.jpg');"></div>
@@ -947,8 +947,25 @@ document.getElementById('startBtn').addEventListener('click', function(){
     });
   }
 
+  function preloadImages(){
+    var urls = ['agents/agents_back.webp'];
+    agents.forEach(function(a){
+      urls.push(a.illust);
+      urls.push(agentIcon(a));
+      if (a.grade) urls.push('agents/grade_'+a.grade+'_tag.png');
+    });
+    JOBS.forEach(function(j){ urls.push(j.icon); });
+    ATTRS.forEach(function(a){ urls.push(a.icon); });
+    GRADES.forEach(function(g){ urls.push('agents/grade_'+g.id+'.png'); });
+    urls.forEach(function(src){
+      var img = new Image();
+      img.src = src;
+    });
+  }
+
   renderInfo();
   renderIconRow();
   renderFilterTags();
+  preloadImages();
 })();
 </script>
