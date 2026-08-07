@@ -271,7 +271,8 @@
   .agent-info-badges{display:flex;gap:7px;}
   .agent-info-badges img{width:26px;height:26px;border-radius:7px;object-fit:cover;background:var(--lnb-bg);}
   .agent-name{font-family:var(--font-display);font-size:27px;font-weight:900;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.85),0 0 18px rgba(0,0,0,.6);}
-  .agent-tagline{font-size:13.5px;font-weight:700;text-shadow:0 2px 5px rgba(0,0,0,.85),0 0 16px rgba(0,0,0,.6);}
+  .agent-info-text{display:flex;flex-direction:column;gap:7px;}
+  .agent-tagline{font-size:14.85px;font-weight:700;text-shadow:0 2px 5px rgba(0,0,0,.85),0 0 16px rgba(0,0,0,.6);}
   .agent-desc{font-size:13px;color:#c7c5c3;line-height:1.85;white-space:pre-line;text-shadow:0 1px 4px rgba(0,0,0,.85),0 0 14px rgba(0,0,0,.6);}
 
   .agent-icon-pager{position:relative;display:flex;align-items:center;margin-top:-10px;margin-bottom:4px;padding:0 26px;}
@@ -343,7 +344,7 @@
   .card-media img,.card-media video{width:100%;height:100%;object-fit:cover;object-position:calc(50% + 4cqw) center;display:block;-webkit-user-drag:none;}
   .card-top-grad{position:absolute;top:0;left:0;right:0;height:42%;background:linear-gradient(to bottom, rgba(0,0,0,.5) 0%, transparent 100%);}
   .card-ego{position:absolute;left:0;top:0;bottom:0;width:9.45%;background-repeat:no-repeat;background-size:100% 105%;background-position:center;}
-  .card-grade-star{position:absolute;top:2%;left:-2.18cqw;width:15.2%;aspect-ratio:1/2;background-repeat:no-repeat;background-size:contain;background-position:top center;}
+  .card-grade-star{position:absolute;top:2%;left:-3.38cqw;width:15.2%;aspect-ratio:1/2;background-repeat:no-repeat;background-size:contain;background-position:top center;}
   .card-bottom-grad{position:absolute;bottom:0;left:0;right:0;height:58%;background:linear-gradient(to top, rgba(0,0,0,.58) 0%, transparent 100%);}
 
   .card-content{position:absolute;inset:0;padding:7% 7% 6% calc(9.45% + 5px);}
@@ -383,10 +384,22 @@
 
   .awaken-overlay{position:absolute;inset:0;z-index:10;background:rgba(0,0,0,.55);
     -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
-    display:flex;align-items:center;justify-content:center;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
     opacity:0;pointer-events:none;}
   .awaken-overlay.visible{pointer-events:auto;}
-  .awaken-cards{display:flex;gap:14px;align-items:center;justify-content:center;height:46.2%;}
+
+  .awaken-header{display:flex;flex-direction:column;align-items:center;gap:8px;}
+  .awaken-title{color:#fff;font-family:var(--font-display);font-weight:900;font-size:20px;letter-spacing:3px;}
+  .awaken-divider{display:flex;align-items:center;width:260px;}
+  .awaken-divider-line{flex:1;height:1px;background:linear-gradient(to right, transparent, rgba(255,255,255,.8));}
+  .awaken-divider-line.right{background:linear-gradient(to left, transparent, rgba(255,255,255,.8));}
+  .awaken-divider-star{width:9px;height:9px;margin:0 8px;flex:none;position:relative;}
+  .awaken-divider-star::before{content:'';position:absolute;inset:0;background:#fff;
+    clip-path:polygon(50% 0%,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0% 50%,39% 39%);
+    box-shadow:0 0 8px 2px rgba(255,255,255,.9),0 0 18px 5px rgba(255,255,255,.5);}
+  .awaken-subtitle{color:#a9a9a9;font-size:12.5px;font-weight:600;}
+
+  .awaken-cards{display:flex;gap:14px;align-items:center;justify-content:center;height:55.4%;}
   .awaken-cards .card{height:100%;width:auto;aspect-ratio:5/7;flex:none;cursor:default;}
   .awaken-cards .card:hover{transform:scale(1.05);}
   .awaken-close-btn{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);
@@ -641,6 +654,15 @@ document.getElementById('startBtn').addEventListener('click', function(){
           <div class="agent-info" id="agentInfo"></div>
           <div class="agent-cardinfo" id="agentCardInfo"></div>
           <div class="awaken-overlay" id="awakenOverlay">
+            <div class="awaken-header">
+              <div class="awaken-title">번뜩임</div>
+              <div class="awaken-divider">
+                <span class="awaken-divider-line"></span>
+                <span class="awaken-divider-star"></span>
+                <span class="awaken-divider-line right"></span>
+              </div>
+              <div class="awaken-subtitle">이 카드에는 아래의 번뜩임이 발생할 수 있습니다.</div>
+            </div>
             <div class="awaken-cards" id="awakenCards"></div>
             <button type="button" class="awaken-close-btn" id="awakenCloseBtn">닫기</button>
           </div>
@@ -1017,6 +1039,18 @@ document.getElementById('startBtn').addEventListener('click', function(){
     return (card.grade === 'blue' || card.grade === 'yellow') && !!(card.awakenings && card.awakenings.length);
   }
 
+  var COST_GLOW_RGB = {
+    '#C2FFAA': '120,255,140',
+    '#FFBA91': '255,120,90'
+  };
+
+  function costNumStyle(costColor){
+    if (!costColor) return '';
+    var glow = COST_GLOW_RGB[costColor];
+    if (!glow) return ' style="color:'+costColor+'"';
+    return ' style="color:'+costColor+';text-shadow:0 0 4px rgba('+glow+',.9),0 0 9px rgba('+glow+',.9),0 0 16px rgba('+glow+',.8)"';
+  }
+
   function renderCardHTML(card, attrId, gradeOverride, opts){
     var grade = gradeOverride || card.grade;
     var typeIcon = TYPE_ICONS[card.type] || '';
@@ -1036,7 +1070,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
       '<div class="card-bottom-grad"></div>' +
       '<div class="card-content">' +
         '<div class="card-header">' +
-          '<div class="card-cost"><div class="card-cost-num"'+(card._costColor ? ' style="color:'+card._costColor+'"' : '')+'>'+card.cost+'</div><div class="card-cost-line"></div></div>' +
+          '<div class="card-cost"><div class="card-cost-num"'+costNumStyle(card._costColor)+'>'+card.cost+'</div><div class="card-cost-line"></div></div>' +
           '<div class="card-title">' +
             '<div class="card-name">'+card.name+'</div>' +
             '<div class="card-type"><img class="card-type-icon" src="'+typeIcon+'" alt="'+typeLabel+'"><span>'+typeLabel+'</span></div>' +
