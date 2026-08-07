@@ -335,35 +335,38 @@
   .agent-cardinfo.visible{pointer-events:auto;}
 
   .card{position:relative;aspect-ratio:5/7;border-radius:8px;overflow:hidden;background:#0c0c10;cursor:pointer;
+    container-type:inline-size;
     user-select:none;-webkit-user-select:none;-webkit-user-drag:none;}
   .card-media{position:absolute;inset:0;}
   .card-media img,.card-media video{width:100%;height:100%;object-fit:cover;object-position:center;display:block;-webkit-user-drag:none;}
   .card-top-grad{position:absolute;top:0;left:0;right:0;height:42%;background:linear-gradient(to bottom, rgba(0,0,0,.8) 0%, transparent 100%);}
-  .card-ego{position:absolute;left:0;top:0;bottom:0;width:13%;background-repeat:no-repeat;background-size:100% 100%;}
+  .card-ego{position:absolute;left:0;top:0;bottom:0;width:9%;background-repeat:no-repeat;background-size:100% 100%;}
   .card-grade-star{position:absolute;top:2%;left:0;width:19%;aspect-ratio:1/2;background-repeat:no-repeat;background-size:contain;background-position:top center;}
   .card-bottom-grad{position:absolute;bottom:0;left:0;right:0;height:58%;background:linear-gradient(to top, rgba(0,0,0,.88) 0%, transparent 100%);}
 
-  .card-content{position:absolute;inset:0;padding:7% 7% 6% calc(13% + 5px);}
+  .card-content{position:absolute;inset:0;padding:7% 7% 6% calc(9% + 5px);}
   .card-header{display:flex;align-items:flex-start;gap:5px;}
   .card-cost{flex:none;display:flex;flex-direction:column;align-items:center;}
-  .card-cost-num{font-family:var(--font-display);font-weight:900;font-size:28px;line-height:1;color:#eaf7ff;
+  .card-cost-num{font-family:var(--font-display);font-weight:900;font-size:8.8cqw;line-height:1;color:#eaf7ff;
     text-shadow:0 0 4px #2ab6ff,0 0 9px #2ab6ff,0 0 16px rgba(42,182,255,.8);}
-  .card-cost-line{width:26px;height:4px;background:#2ab6ff;margin-top:3px;box-shadow:0 0 4px #2ab6ff,0 0 8px #2ab6ff;}
+  .card-cost-line{width:8.2cqw;height:1.6cqw;background:#eaf7ff;margin-top:3px;}
   .card-title{min-width:0;flex:1;}
-  .card-name{font-size:21px;font-weight:800;line-height:1.28;word-break:keep-all;}
+  .card-name{font-size:6.6cqw;font-weight:800;line-height:1.28;word-break:keep-all;
+    text-shadow:0 1px 3px #000,0 0 5px #000;}
   .card-type{display:flex;align-items:center;gap:3px;margin-top:3px;}
-  .card-type .card-type-icon{width:20px;height:20px;flex:none;border-radius:4px;object-fit:cover;display:block;}
-  .card-type span{font-size:17px;color:#fff;font-weight:700;}
-  .card-tooltip{position:absolute;left:0;right:0;bottom:0;font-size:19px;line-height:1.45;color:#f2f2f2;font-weight:600;text-align:center;
+  .card-type .card-type-icon{width:6.3cqw;height:6.3cqw;flex:none;border-radius:4px;object-fit:cover;display:block;}
+  .card-type span{font-size:5.4cqw;color:#fff;font-weight:700;text-shadow:0 1px 3px #000,0 0 5px #000;}
+  .card-tooltip{position:absolute;left:0;right:0;bottom:0;font-size:6cqw;line-height:1.45;color:#fff;font-weight:600;text-align:center;
     text-shadow:0 1px 3px #000,0 0 5px #000,0 0 10px rgba(0,0,0,.8);}
 
-  .card[data-grade="gray"] .card-name{color:#a8a7aa;}
+  .card[data-grade="gray"] .card-name{color:#fff;}
   .card[data-grade="blue"] .card-name{color:#60c8ff;}
-  .card[data-grade="yellow"] .card-name{color:#ffba74;}
+  .card[data-grade="yellow"] .card-name{color:#ffd23d;}
   .card[data-grade="purple"] .card-name{color:#d181ff;}
 
   .card-zoom-preview{position:fixed;z-index:9999;width:260px;border-radius:10px;overflow:hidden;
     box-shadow:0 10px 34px rgba(0,0,0,.65);display:none;pointer-events:none;}
+  .card-zoom-preview.card-zoom-plus{z-index:9998;}
   .card-zoom-preview.visible{display:block;}
   .card-zoom-preview .card{border-radius:10px;}
 
@@ -616,6 +619,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
           <button type="button" class="card-toggle-btn" id="cardToggleBtn">카드 정보</button>
         </div>
         <div class="card-zoom-preview" id="cardZoomPreview"></div>
+        <div class="card-zoom-preview card-zoom-plus" id="cardZoomPlusPreview"></div>
 
         <div class="agent-icon-pager">
           <div class="agent-icon-viewport">
@@ -858,6 +862,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
   var cardToggleBtn = document.getElementById('cardToggleBtn');
   var cardInfoEl = document.getElementById('agentCardInfo');
   var cardZoomEl = document.getElementById('cardZoomPreview');
+  var cardZoomPlusEl = document.getElementById('cardZoomPlusPreview');
 
   var agents = ROSTERS.combatant.data;
   if (!agents.length || !iconRow) return;
@@ -927,10 +932,13 @@ document.getElementById('startBtn').addEventListener('click', function(){
   }
 
   function parseTooltip(str){
-    return String(str)
-      .replace(/<color=(#[0-9a-fA-F]{3,8})>/g, '<span style="color:$1">')
-      .replace(/<\/color>/g, '</span>')
-      .replace(/\n/g, '<br>');
+    var withInline = String(str).replace(/\[([^\]]*)\]|"([^"]*)"|(\d+)/g, function(match, bracketInner, quoteInner, digits){
+      if (bracketInner !== undefined) return '<span style="color:#EAAA00">[' + bracketInner + ']</span>';
+      if (quoteInner !== undefined) return '<span style="color:#7EE4FF;text-decoration:underline">' + quoteInner + '</span>';
+      if (digits !== undefined) return '<span style="color:#7EE4FF">' + digits + '</span>';
+      return match;
+    });
+    return withInline.replace(/\n/g, '<br>');
   }
 
   function isVideoSrc(src){ return /\.(webm|mp4)$/i.test(src); }
@@ -942,15 +950,16 @@ document.getElementById('startBtn').addEventListener('click', function(){
     return '<img src="'+card.media+'" alt="'+card.name+'" draggable="false" ondragstart="return false">';
   }
 
-  function renderCardHTML(card, attrId){
+  function renderCardHTML(card, attrId, gradeOverride){
+    var grade = gradeOverride || card.grade;
     var typeIcon = TYPE_ICONS[card.type] || '';
     var typeLabel = TYPE_LABELS[card.type] || '';
     return '' +
-    '<div class="card" data-grade="'+card.grade+'">' +
+    '<div class="card" data-grade="'+grade+'">' +
       '<div class="card-media">'+cardMedia(card)+'</div>' +
       '<div class="card-top-grad"></div>' +
       '<div class="card-ego" style="background-image:url(\'cards/card_ego_'+attrId+'.webp\')"></div>' +
-      '<div class="card-grade-star" style="background-image:url(\'cards/card_'+card.grade+'.webp\')"></div>' +
+      '<div class="card-grade-star" style="background-image:url(\'cards/card_'+grade+'.webp\')"></div>' +
       '<div class="card-bottom-grad"></div>' +
       '<div class="card-content">' +
         '<div class="card-header">' +
@@ -965,15 +974,31 @@ document.getElementById('startBtn').addEventListener('click', function(){
     '</div>';
   }
 
-  function getCurrentCards(){
+  function getAllCards(){
     if (state.roster !== 'combatant') return [];
     return (window.AGENTS_CARDS && window.AGENTS_CARDS[state.selectedId]) || [];
   }
+  function getVisibleCards(){
+    return getAllCards().filter(function(c){ return !!c.grade; });
+  }
+  function findCardByName(name){
+    return getAllCards().filter(function(c){ return c.name === name; })[0];
+  }
 
-  function showCardZoom(cardHTML, x, y){
-    cardZoomEl.innerHTML = cardHTML;
+  function showCardZoom(card, attrId, x, y){
+    cardZoomEl.innerHTML = renderCardHTML(card, attrId);
     cardZoomEl.classList.add('visible');
     positionCardZoom(x, y);
+    if (card.plus_card) {
+      var plusCard = findCardByName(card.plus_card);
+      if (plusCard) {
+        cardZoomPlusEl.innerHTML = renderCardHTML(plusCard, attrId, card.grade);
+        cardZoomPlusEl.classList.add('visible');
+        positionCardZoomPlus();
+        return;
+      }
+    }
+    hideCardZoomPlus();
   }
   function positionCardZoom(x, y){
     var rect = cardZoomEl.getBoundingClientRect();
@@ -983,15 +1008,29 @@ document.getElementById('startBtn').addEventListener('click', function(){
     if (top < 8) top = y + 16;
     cardZoomEl.style.left = left + 'px';
     cardZoomEl.style.top = top + 'px';
+    if (cardZoomPlusEl.classList.contains('visible')) positionCardZoomPlus();
+  }
+  function positionCardZoomPlus(){
+    var mainRect = cardZoomEl.getBoundingClientRect();
+    var plusRect = cardZoomPlusEl.getBoundingClientRect();
+    var left = mainRect.left - plusRect.width - 12;
+    if (left < 8) left = mainRect.right + 12;
+    cardZoomPlusEl.style.left = left + 'px';
+    cardZoomPlusEl.style.top = mainRect.top + 'px';
+  }
+  function hideCardZoomPlus(){
+    cardZoomPlusEl.classList.remove('visible');
+    cardZoomPlusEl.innerHTML = '';
   }
   function hideCardZoom(){
     cardZoomEl.classList.remove('visible');
     cardZoomEl.innerHTML = '';
+    hideCardZoomPlus();
   }
 
   function renderCardInfo(){
     var a = agents.filter(function(x){ return x.id === state.selectedId; })[0];
-    var cards = getCurrentCards();
+    var cards = getVisibleCards();
     if (!a || !cards.length) {
       cardInfoEl.innerHTML = '<div class="agent-desc" style="grid-column:1/-1;align-self:center;">아직 등록된 카드 정보가 없습니다.</div>';
       return;
@@ -999,7 +1038,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
     cardInfoEl.innerHTML = cards.map(function(card){ return renderCardHTML(card, a.attribute); }).join('');
     Array.prototype.forEach.call(cardInfoEl.querySelectorAll('.card'), function(cardEl, i){
       cardEl.addEventListener('mouseenter', function(e){
-        showCardZoom(renderCardHTML(cards[i], a.attribute), e.clientX, e.clientY);
+        showCardZoom(cards[i], a.attribute, e.clientX, e.clientY);
       });
       cardEl.addEventListener('mousemove', function(e){
         positionCardZoom(e.clientX, e.clientY);
