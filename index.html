@@ -1005,9 +1005,9 @@ document.getElementById('startBtn').addEventListener('click', function(){
       return 'PH' + String.fromCharCode(65 + placeholders.length - 1) + '';
     }
 
-    // \텍스트\ -> flat CE4A5F, delimiters removed
+    // \텍스트\ -> flat E08C99, delimiters removed
     var step1 = s.replace(/\\([^\\]*)\\/g, function(m, inner){
-      return stash('<span style="color:#CE4A5F">' + inner + '</span>');
+      return stash('<span style="color:#E08C99">' + inner + '</span>');
     });
 
     // |텍스트| -> normal-rule colors remapped (orange/skyblue -> 99D81F, plain -> E1FFD2), delimiters removed
