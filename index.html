@@ -252,9 +252,12 @@
 
   .split-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;}
 
-  /* 요원 정보 showcase */
+  /* 전투원/파트너 정보 showcase */
   section.agent-block{background:var(--cover-bg);border-color:rgba(255,255,255,.1);}
-  .agent-block .block-head h2{color:#fff;}
+  .agent-tabs{justify-content:flex-start;gap:22px;}
+  .roster-tab-btn{background:none;border:none;padding:0 0 4px;cursor:pointer;font-family:var(--font-display);font-size:16px;font-weight:800;color:rgba(255,255,255,.4);border-bottom:2px solid transparent;transition:color .15s,border-color .15s;}
+  .roster-tab-btn:hover{color:rgba(255,255,255,.75);}
+  .roster-tab-btn.active{color:#fff;border-bottom-color:var(--orange);}
 
   .agent-showcase{position:relative;overflow:hidden;display:flex;align-items:center;background:var(--cover-bg);border:1.5px solid #fff;border-radius:10px;padding:36px 40px;margin-bottom:22px;aspect-ratio:1920/810;width:100%;
     user-select:none;-webkit-user-select:none;}
@@ -425,7 +428,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
           <a href="#">공지사항</a>
           <a href="#">자유 게시판</a>
           <a href="#">팬아트</a>
-          <a href="#">요원 정보</a>
+          <a href="#">전투원 정보</a>
           <a href="#">Q&amp;A</a>
         </div>
       </details>
@@ -458,7 +461,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
       <details class="lnb-group">
         <summary><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21c0-4 4-6 8-6s8 2 8 6"/></svg>침투 준비</summary>
         <div class="lnb-sub">
-          <a href="#">요원 정보</a>
+          <a href="#">전투원 정보</a>
           <a href="#">웹툰</a>
           <a href="#">캘린더 | 배경화면</a>
           <a href="#">게임 가이드</a>
@@ -552,9 +555,12 @@ document.getElementById('startBtn').addEventListener('click', function(){
       <div class="news-layout" id="newsGrid"></div>
     </section>
 
-    <!-- 요원 정보 -->
+    <!-- 전투원 정보 / 파트너 정보 -->
     <section class="block agent-block">
-      <div class="block-head"><h2>요원 정보</h2></div>
+      <div class="block-head agent-tabs">
+        <button type="button" class="roster-tab-btn active" id="rosterTabCombatant">전투원 정보</button>
+        <button type="button" class="roster-tab-btn" id="rosterTabPartner">파트너 정보</button>
+      </div>
 
       <div class="agent-block-inner">
         <div class="agent-showcase">
@@ -577,7 +583,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
             <div class="agent-filter-label">직업</div>
             <div class="agent-filter-tags" id="jobFilterTags"></div>
           </div>
-          <div class="agent-filter-group">
+          <div class="agent-filter-group" id="attrFilterGroup">
             <div class="agent-filter-label">속성</div>
             <div class="agent-filter-tags" id="attrFilterTags"></div>
           </div>
@@ -745,8 +751,10 @@ document.getElementById('startBtn').addEventListener('click', function(){
 })();
 </script>
 
-<!-- 요원 정보 데이터 (agents/agents-data.js 파일에서 직접 수정) -->
+<!-- 전투원 정보 데이터 (agents/agents-data.js 파일에서 직접 수정) -->
 <script src="agents/agents-data.js"></script>
+<!-- 파트너 정보 데이터 (partner/partner-data.js 파일에서 직접 수정) -->
+<script src="partner/partner-data.js"></script>
 <script>
 (function(){
   var JOBS = [
@@ -764,34 +772,52 @@ document.getElementById('startBtn').addEventListener('click', function(){
     {id:'instinct', label:'본능', icon:'agents/instinct.webp', color:'#e18d4d'},
     {id:'void', label:'공허', icon:'agents/void.webp', color:'#9468d6'}
   ];
-  var GRADES = [
+  var GRADES_ALL = [
     {id:5, label:'5성'},
-    {id:4, label:'4성'}
+    {id:4, label:'4성'},
+    {id:3, label:'3성'}
   ];
   var jobById = {}; JOBS.forEach(function(j){ jobById[j.id] = j; });
   var attrById = {}; ATTRS.forEach(function(a){ attrById[a.id] = a; });
 
+  var ROSTERS = {
+    combatant: { data: window.AGENTS_DATA || [], hasAttribute: true, grades: [5,4] },
+    partner:   { data: window.PARTNER_DATA || [], hasAttribute: false, grades: [5,4,3] }
+  };
+
   var PAGE_SIZE = 10;
 
-  var agents = window.AGENTS_DATA || [];
   var iconRow = document.getElementById('agentIconRow');
   var infoEl = document.getElementById('agentInfo');
   var illustImg = document.getElementById('agentIllustImg');
   var showcaseEl = document.querySelector('.agent-showcase');
   var jobTagsEl = document.getElementById('jobFilterTags');
   var attrTagsEl = document.getElementById('attrFilterTags');
+  var attrFilterGroupEl = document.getElementById('attrFilterGroup');
   var gradeTagsEl = document.getElementById('gradeFilterTags');
   var iconPrevBtn = document.getElementById('agentIconPrev');
   var iconNextBtn = document.getElementById('agentIconNext');
+  var rosterTabCombatant = document.getElementById('rosterTabCombatant');
+  var rosterTabPartner = document.getElementById('rosterTabPartner');
 
+  var agents = ROSTERS.combatant.data;
   if (!agents.length || !iconRow) return;
 
-  var state = { selectedId: agents[0].id, job: null, attribute: null, grade: null, iconPage: 0 };
+  var state = { roster: 'combatant', selectedId: agents[0].id, job: null, attribute: null, grade: null, iconPage: 0 };
 
-  iconRow.style.setProperty('--icon-count', agents.length);
-  iconRow.style.setProperty('--icon-visible', PAGE_SIZE);
+  function setIconCountVars(){
+    iconRow.style.setProperty('--icon-count', Math.max(agents.length, 1));
+    iconRow.style.setProperty('--icon-visible', PAGE_SIZE);
+  }
+  setIconCountVars();
 
   function updateIconPager(total){
+    if (!total) {
+      iconRow.style.transform = 'translateX(0%)';
+      iconPrevBtn.disabled = true;
+      iconNextBtn.disabled = true;
+      return;
+    }
     var maxStart = Math.max(0, total - PAGE_SIZE);
     state.iconPage = Math.min(state.iconPage, maxStart);
     iconRow.style.transform = 'translateX(-' + (state.iconPage * (100/total)) + '%)';
@@ -849,6 +875,12 @@ document.getElementById('startBtn').addEventListener('click', function(){
   }
 
   function renderInfo(){
+    if (!agents.length) {
+      infoEl.innerHTML = '<div class="agent-desc">아직 등록된 정보가 없습니다.</div>';
+      illustImg.removeAttribute('src');
+      illustImg.alt = '';
+      return;
+    }
     var a = agents.filter(function(x){ return x.id === state.selectedId; })[0] || agents[0];
     var job = jobById[a.job], attr = attrById[a.attribute];
     infoEl.innerHTML =
@@ -905,6 +937,10 @@ document.getElementById('startBtn').addEventListener('click', function(){
   });
 
   function renderFilterTags(){
+    var rosterCfg = ROSTERS[state.roster];
+    attrFilterGroupEl.style.display = rosterCfg.hasAttribute ? '' : 'none';
+    var gradesForRoster = GRADES_ALL.filter(function(g){ return rosterCfg.grades.indexOf(g.id) !== -1; });
+
     jobTagsEl.innerHTML = JOBS.map(function(j){
       var cls = 'job-tag-btn' + (state.job === j.id ? ' active' : '');
       return '<button type="button" class="'+cls+'" data-job="'+j.id+'"><img src="'+j.icon+'" alt="'+j.label+'"></button>';
@@ -913,7 +949,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
       var cls = 'attr-tag-btn' + (state.attribute === a.id ? ' active' : '');
       return '<button type="button" class="'+cls+'" data-attr="'+a.id+'"><img src="'+a.icon+'" alt="'+a.label+'"></button>';
     }).join('');
-    gradeTagsEl.innerHTML = GRADES.map(function(g){
+    gradeTagsEl.innerHTML = gradesForRoster.map(function(g){
       var cls = 'grade-tag-btn' + (state.grade === g.id ? ' active' : '');
       return '<button type="button" class="'+cls+'" data-grade="'+g.id+'">'+g.id+'</button>';
     }).join('');
@@ -949,19 +985,41 @@ document.getElementById('startBtn').addEventListener('click', function(){
 
   function preloadImages(){
     var urls = ['agents/agents_back.webp'];
-    agents.forEach(function(a){
-      urls.push(a.illust);
-      urls.push(agentIcon(a));
-      if (a.grade) urls.push('agents/grade_'+a.grade+'_tag.png');
+    Object.keys(ROSTERS).forEach(function(key){
+      ROSTERS[key].data.forEach(function(a){
+        urls.push(a.illust);
+        urls.push(agentIcon(a));
+        if (a.grade) urls.push('agents/grade_'+a.grade+'_tag.png');
+      });
     });
     JOBS.forEach(function(j){ urls.push(j.icon); });
     ATTRS.forEach(function(a){ urls.push(a.icon); });
-    GRADES.forEach(function(g){ urls.push('agents/grade_'+g.id+'.png'); });
+    GRADES_ALL.forEach(function(g){ urls.push('agents/grade_'+g.id+'.png'); });
     urls.forEach(function(src){
       var img = new Image();
       img.src = src;
     });
   }
+
+  function switchRoster(key){
+    if (state.roster === key) return;
+    state.roster = key;
+    agents = ROSTERS[key].data;
+    state.job = null;
+    state.attribute = null;
+    state.grade = null;
+    state.iconPage = 0;
+    state.selectedId = agents.length ? agents[0].id : null;
+    rosterTabCombatant.classList.toggle('active', key === 'combatant');
+    rosterTabPartner.classList.toggle('active', key === 'partner');
+    setIconCountVars();
+    renderInfo();
+    renderIconRow();
+    renderFilterTags();
+  }
+
+  rosterTabCombatant.addEventListener('click', function(){ switchRoster('combatant'); });
+  rosterTabPartner.addEventListener('click', function(){ switchRoster('partner'); });
 
   renderInfo();
   renderIconRow();
