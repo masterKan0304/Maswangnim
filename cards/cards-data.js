@@ -12,6 +12,11 @@
 //               비워두면('') 8장 목록에는 안 나오고, plus_card로만 참조되는 숨김 카드가 됩니다.
 //   plus_card : (선택) 이 카드에 커서를 올렸을 때 왼쪽에 추가로 보여줄 다른 카드의 이름.
 //               그 카드는 등급을 비워두면 이 카드의 등급 색을 그대로 물려받습니다.
+//   awakenings : (선택, grade가 blue나 yellow인 카드만) 번뜩임 5단계 배열.
+//               각 항목은 cost / type / tooltip 만 새로 적으면 되고(등급·일러스트는 원본 카드 그대로 사용),
+//               plus_card도 단계별로 다르게 적거나 아예 안 적을 수 있습니다(안 적으면 그 단계는 plus_card 없음).
+//               이 필드가 있으면 카드에 커서를 올렸을 때 확대 미리보기 대신 "번뜩임" 안내가 뜨고,
+//               클릭하면 5장이 나열되는 번뜩임 화면이 열립니다.
 //   media     : 카드 일러스트 경로. .webm/.mp4면 자동으로 영상(상시 재생)으로, 그 외엔 이미지로 표시됩니다.
 //   tooltip   : 카드 설명 텍스트. 아래 규칙이 자동으로 적용되니 <color> 태그는 더 이상 쓰지 않아도 됩니다.
 //               - [대괄호] 로 감싼 부분은 대괄호 포함 EAAA00 색
@@ -54,7 +59,14 @@ window.AGENTS_CARDS = {
       grade: 'blue',
       plus_card: '호밍 애로우',
       media: 'cards/힐데/blue1.webp',
-      tooltip: '[주도]\n뽑을 카드에 "호밍 애로우" 3장 생성'
+      tooltip: '[주도]\n뽑을 카드에 "호밍 애로우" 3장 생성',
+      awakenings: [
+        { cost: 1, type: 'skill', tooltip: '[주도]\n뽑을 카드에 "호밍 애로우" 3장 생성', plus_card: '호밍 애로우' },
+        { cost: 1, type: 'skill', tooltip: '[주도]\n뽑을 카드에 "호밍 애로우" 4장 생성', plus_card: '호밍 애로우' },
+        { cost: 0, type: 'skill', tooltip: '[주도]\n뽑을 카드에 "호밍 애로우" 4장 생성' },
+        { cost: 0, type: 'skill', tooltip: '[주도]\n뽑을 카드에 "호밍 애로우" 5장 생성\n실드 50%', plus_card: '호밍 애로우' },
+        { cost: 0, type: 'upgrade', tooltip: '[유일 / 주도]\n뽑을 카드에 "호밍 애로우" 5장 생성\n실드 100%', plus_card: '호밍 애로우' }
+      ]
     },
     {
       name: '호밍 애로우',
@@ -86,7 +98,14 @@ window.AGENTS_CARDS = {
       type: 'upgrade',
       grade: 'yellow',
       media: 'cards/힐데/yellow.webp',
-      tooltip: '[유일 / 주도]\n타격 시 일점 조준 2'
+      tooltip: '[유일 / 주도]\n타격 시 일점 조준 2',
+      awakenings: [
+        { cost: 1, type: 'upgrade', tooltip: '[유일 / 주도]\n타격 시 일점 조준 2' },
+        { cost: 1, type: 'upgrade', tooltip: '[유일 / 주도]\n타격 시 일점 조준 3' },
+        { cost: 0, type: 'upgrade', tooltip: '[유일 / 주도]\n타격 시 일점 조준 3' },
+        { cost: 0, type: 'upgrade', tooltip: '[유일 / 주도]\n타격 시 일점 조준 4\n이온화 2' },
+        { cost: 0, type: 'upgrade', tooltip: '[유일 / 주도]\n타격 시 일점 조준 5\n이온화 3' }
+      ]
     },
     {
       name: '볼텍스 애로우',

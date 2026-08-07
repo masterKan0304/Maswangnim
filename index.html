@@ -329,7 +329,7 @@
   .card-toggle-btn:hover{background:rgba(255,255,255,.24);}
 
   /* 카드 정보 그리드 */
-  .agent-cardinfo{position:absolute;top:12px;right:25px;bottom:11px;aspect-ratio:1.51;max-width:600px;z-index:5;
+  .agent-cardinfo{position:absolute;top:12px;right:12px;bottom:11px;aspect-ratio:1.51;max-width:600px;z-index:5;
     display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:1fr;gap:13px 16px;
     opacity:0;pointer-events:none;user-select:none;-webkit-user-select:none;}
   .agent-cardinfo.visible{pointer-events:auto;}
@@ -343,7 +343,7 @@
   .card-media img,.card-media video{width:100%;height:100%;object-fit:cover;object-position:calc(50% + 4cqw) center;display:block;-webkit-user-drag:none;}
   .card-top-grad{position:absolute;top:0;left:0;right:0;height:42%;background:linear-gradient(to bottom, rgba(0,0,0,.5) 0%, transparent 100%);}
   .card-ego{position:absolute;left:0;top:0;bottom:0;width:9.45%;background-repeat:no-repeat;background-size:100% 105%;background-position:center;}
-  .card-grade-star{position:absolute;top:2%;left:-4.58cqw;width:15.2%;aspect-ratio:1/2;background-repeat:no-repeat;background-size:contain;background-position:top center;}
+  .card-grade-star{position:absolute;top:2%;left:-0.58cqw;width:15.2%;aspect-ratio:1/2;background-repeat:no-repeat;background-size:contain;background-position:top center;}
   .card-bottom-grad{position:absolute;bottom:0;left:0;right:0;height:58%;background:linear-gradient(to top, rgba(0,0,0,.58) 0%, transparent 100%);}
 
   .card-content{position:absolute;inset:0;padding:7% 7% 6% calc(9.45% + 5px);}
@@ -372,6 +372,28 @@
   .card-zoom-preview.card-zoom-plus{z-index:9998;width:208px;}
   .card-zoom-preview.visible{display:block;}
   .card-zoom-preview .card{border-radius:10px;aspect-ratio:5/7;}
+
+  /* 카드 번뜩임(awakening) 힌트 + 오버레이 */
+  .card-awaken-hint{position:absolute;inset:0;z-index:4;opacity:0;transition:opacity .2s;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6%;
+    background:rgba(0,0,0,.45);pointer-events:none;}
+  .card[data-awaken="1"]:hover .card-awaken-hint{opacity:1;}
+  .card-awaken-icon{width:40%;display:block;filter:drop-shadow(0 0 5px #fff) drop-shadow(0 0 9px #fff);}
+  .card-awaken-label{color:#fff;font-size:7.2cqw;font-weight:700;text-align:center;line-height:1.4;padding:0 8%;
+    text-shadow:0 0 5px #fff,0 0 9px #fff,0 0 14px rgba(255,255,255,.8);}
+
+  .awaken-overlay{position:absolute;inset:0;z-index:10;background:rgba(0,0,0,.55);
+    -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+    display:flex;align-items:center;justify-content:center;
+    opacity:0;pointer-events:none;}
+  .awaken-overlay.visible{pointer-events:auto;}
+  .awaken-cards{display:flex;gap:14px;align-items:center;justify-content:center;height:66%;}
+  .awaken-cards .card{height:100%;width:auto;aspect-ratio:5/7;flex:none;cursor:default;}
+  .awaken-cards .card:hover{transform:scale(1.05);}
+  .awaken-close-btn{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);
+    background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.45);color:#fff;
+    font-size:13px;font-weight:700;padding:8px 22px;border-radius:20px;cursor:pointer;transition:background .15s;}
+  .awaken-close-btn:hover{background:rgba(255,255,255,.26);}
 
   footer{background:var(--cover-bg);color:#b7b0ac;padding:34px 0 46px;margin-top:8px;}
   .foot-links{display:flex;gap:18px;font-size:12.5px;color:#b7b0ac;flex-wrap:wrap;margin-bottom:18px;}
@@ -619,6 +641,10 @@ document.getElementById('startBtn').addEventListener('click', function(){
           <div class="agent-showcase-scrim"></div>
           <div class="agent-info" id="agentInfo"></div>
           <div class="agent-cardinfo" id="agentCardInfo"></div>
+          <div class="awaken-overlay" id="awakenOverlay">
+            <div class="awaken-cards" id="awakenCards"></div>
+            <button type="button" class="awaken-close-btn" id="awakenCloseBtn">닫기</button>
+          </div>
           <button type="button" class="card-toggle-btn" id="cardToggleBtn">카드 정보</button>
         </div>
         <div class="card-zoom-preview" id="cardZoomPreview"></div>
@@ -866,11 +892,14 @@ document.getElementById('startBtn').addEventListener('click', function(){
   var cardInfoEl = document.getElementById('agentCardInfo');
   var cardZoomEl = document.getElementById('cardZoomPreview');
   var cardZoomPlusEl = document.getElementById('cardZoomPlusPreview');
+  var awakenOverlayEl = document.getElementById('awakenOverlay');
+  var awakenCardsEl = document.getElementById('awakenCards');
+  var awakenCloseBtn = document.getElementById('awakenCloseBtn');
 
   var agents = ROSTERS.combatant.data;
   if (!agents.length || !iconRow) return;
 
-  var state = { roster: 'combatant', selectedId: agents[0].id, job: null, attribute: null, grade: null, iconPage: 0, cardMode: false };
+  var state = { roster: 'combatant', selectedId: agents[0].id, job: null, attribute: null, grade: null, iconPage: 0, cardMode: false, awakenOpen: false };
 
   function setIconCountVars(){
     iconRow.style.setProperty('--icon-count', Math.max(agents.length, 1));
@@ -953,12 +982,22 @@ document.getElementById('startBtn').addEventListener('click', function(){
     return '<img src="'+card.media+'" alt="'+card.name+'" draggable="false" ondragstart="return false">';
   }
 
-  function renderCardHTML(card, attrId, gradeOverride){
+  function isAwakenable(card){
+    return (card.grade === 'blue' || card.grade === 'yellow') && !!(card.awakenings && card.awakenings.length);
+  }
+
+  function renderCardHTML(card, attrId, gradeOverride, opts){
     var grade = gradeOverride || card.grade;
     var typeIcon = TYPE_ICONS[card.type] || '';
     var typeLabel = TYPE_LABELS[card.type] || '';
+    var showAwakenHint = !(opts && opts.noAwakenHint) && isAwakenable(card);
+    var awakenHint = showAwakenHint ?
+      '<div class="card-awaken-hint">' +
+        '<img class="card-awaken-icon" src="cards/awake.png" alt="" draggable="false" ondragstart="return false">' +
+        '<div class="card-awaken-label">클릭 시 해당 카드의 번뜩임을 확인합니다.</div>' +
+      '</div>' : '';
     return '' +
-    '<div class="card" data-grade="'+grade+'">' +
+    '<div class="card" data-grade="'+grade+'"'+(showAwakenHint ? ' data-awaken="1"' : '')+'>' +
       '<div class="card-media">'+cardMedia(card)+'</div>' +
       '<div class="card-top-grad"></div>' +
       '<div class="card-ego" style="background-image:url(\'cards/card_ego_'+attrId+'.webp\')"></div>' +
@@ -974,6 +1013,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
         '</div>' +
         '<div class="card-tooltip">'+parseTooltip(card.tooltip)+'</div>' +
       '</div>' +
+      awakenHint +
     '</div>';
   }
 
@@ -1040,8 +1080,13 @@ document.getElementById('startBtn').addEventListener('click', function(){
     }
     cardInfoEl.innerHTML = cards.map(function(card){ return renderCardHTML(card, a.attribute); }).join('');
     Array.prototype.forEach.call(cardInfoEl.querySelectorAll('.card'), function(cardEl, i){
+      var card = cards[i];
+      if (isAwakenable(card)) {
+        cardEl.addEventListener('click', function(){ openAwakenOverlay(card, a); });
+        return;
+      }
       cardEl.addEventListener('mouseenter', function(e){
-        showCardZoom(cards[i], a.attribute, e.clientX, e.clientY);
+        showCardZoom(card, a.attribute, e.clientX, e.clientY);
       });
       cardEl.addEventListener('mousemove', function(e){
         positionCardZoom(e.clientX, e.clientY);
@@ -1049,6 +1094,60 @@ document.getElementById('startBtn').addEventListener('click', function(){
       cardEl.addEventListener('mouseleave', hideCardZoom);
     });
   }
+
+  function openAwakenOverlay(card, agent){
+    var mergedList = card.awakenings.map(function(aw){
+      var merged = {};
+      for (var k in card) { if (k !== 'awakenings') merged[k] = card[k]; }
+      for (var k2 in aw) { merged[k2] = aw[k2]; }
+      if (!('plus_card' in aw)) delete merged.plus_card;
+      return merged;
+    });
+    awakenCardsEl.innerHTML = mergedList.map(function(mc){
+      return renderCardHTML(mc, agent.attribute, null, {noAwakenHint:true});
+    }).join('');
+    Array.prototype.forEach.call(awakenCardsEl.querySelectorAll('.card'), function(cardEl, i){
+      cardEl.addEventListener('mouseenter', function(e){
+        showCardZoom(mergedList[i], agent.attribute, e.clientX, e.clientY);
+      });
+      cardEl.addEventListener('mousemove', function(e){
+        positionCardZoom(e.clientX, e.clientY);
+      });
+      cardEl.addEventListener('mouseleave', hideCardZoom);
+    });
+
+    state.awakenOpen = true;
+    awakenOverlayEl.classList.add('visible');
+    awakenOverlayEl.style.transition = 'none';
+    awakenOverlayEl.style.opacity = '0';
+    void awakenOverlayEl.offsetWidth;
+    awakenOverlayEl.style.transition = 'opacity .3s';
+    awakenOverlayEl.style.opacity = '1';
+  }
+
+  function closeAwakenOverlay(instant){
+    if (!state.awakenOpen) return;
+    state.awakenOpen = false;
+    hideCardZoom();
+    if (instant) {
+      awakenOverlayEl.style.transition = 'none';
+      awakenOverlayEl.style.opacity = '0';
+      awakenOverlayEl.classList.remove('visible');
+      awakenCardsEl.innerHTML = '';
+      return;
+    }
+    awakenOverlayEl.style.transition = 'opacity .3s';
+    awakenOverlayEl.style.opacity = '0';
+    setTimeout(function(){
+      if (state.awakenOpen) return;
+      awakenOverlayEl.classList.remove('visible');
+      awakenCardsEl.innerHTML = '';
+    }, 300);
+  }
+
+  awakenCloseBtn.addEventListener('click', function(){ closeAwakenOverlay(false); });
+  cardInfoEl.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+  awakenCardsEl.addEventListener('contextmenu', function(e){ e.preventDefault(); });
 
   var cardModeToken = 0;
 
@@ -1067,6 +1166,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
   function applyCardModeUI(animateIn){
     cardToggleBtn.textContent = state.cardMode ? '전투원 정보' : '카드 정보';
     cardInfoEl.classList.toggle('visible', state.cardMode);
+    if (!state.cardMode) closeAwakenOverlay(true);
     renderInfo();
     if (state.cardMode) renderCardInfo();
     else cardInfoEl.innerHTML = '';
@@ -1155,6 +1255,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
         var newId = btn.getAttribute('data-id');
         var changed = newId !== state.selectedId;
         state.selectedId = newId;
+        if (changed) closeAwakenOverlay(true);
         renderInfo();
         renderIconRow();
         if (changed) {
