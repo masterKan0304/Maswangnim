@@ -377,9 +377,10 @@
   .ego-col{min-width:0;min-height:0;display:flex;flex-direction:column;}
   .ego-col-title{flex:none;color:#fff;font-family:var(--font-display);font-weight:900;font-size:15px;letter-spacing:1px;margin-bottom:10px;text-shadow:0 1px 4px rgba(0,0,0,.8),0 0 10px rgba(0,0,0,.5);}
 
-  .ego-skill-row{flex:1;min-height:0;display:flex;gap:14px;align-items:flex-start;}
-  .ego-skill-img{width:35%;height:auto;aspect-ratio:420/632;object-fit:contain;border-radius:10px;flex:none;display:block;-webkit-user-drag:none;transition:transform .2s;}
-  .ego-skill-img:hover{transform:scale(1.1);}
+  .ego-skill-row{flex:1;min-height:0;display:flex;gap:14px;align-items:flex-start;transform:translateY(20px);}
+  .ego-skill-img-box{width:35%;aspect-ratio:420/632;border-radius:10px;overflow:hidden;flex:none;}
+  .ego-skill-img{width:100%;height:100%;object-fit:cover;display:block;-webkit-user-drag:none;transition:transform .2s;}
+  .ego-skill-img-box:hover .ego-skill-img{transform:scale(1.1);}
   .ego-skill-text{flex:1;min-width:0;display:flex;flex-direction:column;}
   .ego-skill-name{color:#fff;font-weight:800;font-size:16px;line-height:1.3;text-shadow:0 1px 4px rgba(0,0,0,.8);}
   .ego-skill-point{color:#EAF4FF;font-size:12.5px;font-weight:700;margin-top:8px;}
@@ -395,6 +396,7 @@
   .ego-awaken-name{color:#fff;font-weight:700;font-size:11.5px;line-height:1.35;text-shadow:0 1px 3px rgba(0,0,0,.7);}
   .ego-awaken-tooltip{color:#fff;font-size:11px;line-height:1.4;font-weight:600;text-align:left;
     text-shadow:0 1px 3px #000,0 0 5px #000;}
+  .tooltip-card-ref{cursor:pointer;}
 
   .card-zoom-preview{position:fixed;z-index:9999;width:260px;border-radius:10px;overflow:hidden;
     box-shadow:0 10px 34px rgba(0,0,0,.65);display:none;pointer-events:none;}
@@ -1016,20 +1018,23 @@ document.getElementById('startBtn').addEventListener('click', function(){
     showcaseEl.addEventListener('mouseleave', function(){ isHovering = false; applyHoverScale(); });
   }
 
-  function parseNormalInline(str, bracketColor, quoteColor, digitColor){
+  function parseNormalInline(str, bracketColor, quoteColor, digitColor, tagCardRefs){
     return String(str).replace(/\[([^\]]*)\]|"([^"]*)"|-([^-]*)-|(\d+)/g, function(match, bracketInner, quoteInner, dashInner, digits){
       if (bracketInner !== undefined) return '<span style="color:'+bracketColor+'">[' + bracketInner + ']</span>';
-      if (quoteInner !== undefined) return '<span style="color:'+quoteColor+';text-decoration:underline">' + quoteInner + '</span>';
+      if (quoteInner !== undefined) {
+        var refAttrs = tagCardRefs ? ' class="tooltip-card-ref" data-card-name="'+quoteInner.replace(/"/g,'&quot;')+'"' : '';
+        return '<span style="color:'+quoteColor+';text-decoration:underline"'+refAttrs+'>' + quoteInner + '</span>';
+      }
       if (dashInner !== undefined) return '<span style="color:'+quoteColor+'">' + dashInner + '</span>';
       if (digits !== undefined) return '<span style="color:'+digitColor+'">' + digits + '</span>';
       return match;
     });
   }
 
-  function parseTooltip(str, awakenMode){
+  function parseTooltip(str, awakenMode, tagCardRefs){
     var s = String(str);
     if (!awakenMode) {
-      return parseNormalInline(s, '#EAAA00', '#7EE4FF', '#7EE4FF').replace(/\n/g, '<br>');
+      return parseNormalInline(s, '#EAAA00', '#7EE4FF', '#7EE4FF', tagCardRefs).replace(/\n/g, '<br>');
     }
 
     var placeholders = [];
@@ -1045,12 +1050,12 @@ document.getElementById('startBtn').addEventListener('click', function(){
 
     // |텍스트| -> normal-rule colors remapped (orange/skyblue -> 99D81F, plain -> E1FFD2), delimiters removed
     var step2 = step1.replace(/\|([^|]*)\|/g, function(m, inner){
-      var innerHtml = parseNormalInline(inner, '#99D81F', '#99D81F', '#99D81F');
+      var innerHtml = parseNormalInline(inner, '#99D81F', '#99D81F', '#99D81F', tagCardRefs);
       return stash('<span style="color:#E1FFD2">' + innerHtml + '</span>');
     });
 
     // everything outside | | and \ \ still gets the normal bracket/quote/digit coloring
-    var step3 = parseNormalInline(step2, '#EAAA00', '#7EE4FF', '#7EE4FF');
+    var step3 = parseNormalInline(step2, '#EAAA00', '#7EE4FF', '#7EE4FF', tagCardRefs);
 
     var restored = step3.replace(/PH([A-Z])/g, function(m, letter){
       return placeholders[letter.charCodeAt(0) - 65];
@@ -1235,6 +1240,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
   function renderEgoInfo(){
     var ego = window.AGENTS_EGO && window.AGENTS_EGO[state.selectedId];
     if (!ego) { egoInfoEl.innerHTML = ''; return; }
+    var a = agents.filter(function(x){ return x.id === state.selectedId; })[0];
     var skill = ego.skill || {};
     var pointHtml = parseNormalInline('에고 포인트 ' + (skill.point != null ? skill.point : ''), '#EAAA00', '#7EE4FF', '#7EE4FF');
     var awakenRows = (ego.awakenings || []).map(function(aw, i){
@@ -1242,14 +1248,14 @@ document.getElementById('startBtn').addEventListener('click', function(){
         '<div class="ego-awaken-row">' +
           '<div class="ego-awaken-num">' + (i + 1) + '</div>' +
           '<div class="ego-awaken-name">' + (aw.name || '') + '</div>' +
-          '<div class="ego-awaken-tooltip">' + parseTooltip(aw.tooltip || '', true) + '</div>' +
+          '<div class="ego-awaken-tooltip">' + parseTooltip(aw.tooltip || '', true, true) + '</div>' +
         '</div>';
     }).join('');
     egoInfoEl.innerHTML =
       '<div class="ego-col ego-skill-col">' +
         '<div class="ego-col-title">에고 스킬</div>' +
         '<div class="ego-skill-row">' +
-          '<img class="ego-skill-img" src="' + (skill.media || '') + '" alt="' + (skill.name || '') + '" draggable="false" ondragstart="return false">' +
+          '<div class="ego-skill-img-box"><img class="ego-skill-img" src="' + (skill.media || '') + '" alt="' + (skill.name || '') + '" draggable="false" ondragstart="return false"></div>' +
           '<div class="ego-skill-text">' +
             '<div class="ego-skill-name">' + (skill.name || '') + '</div>' +
             '<div class="ego-skill-point">' + pointHtml + '</div>' +
@@ -1262,6 +1268,20 @@ document.getElementById('startBtn').addEventListener('click', function(){
         '<div class="ego-col-title">에고 발현</div>' +
         '<div class="ego-awaken-list">' + awakenRows + '</div>' +
       '</div>';
+
+    if (a) {
+      Array.prototype.forEach.call(egoInfoEl.querySelectorAll('.tooltip-card-ref'), function(refEl){
+        var card = findCardByName(refEl.getAttribute('data-card-name'));
+        if (!card) { refEl.classList.remove('tooltip-card-ref'); return; }
+        refEl.addEventListener('mouseenter', function(e){
+          showCardZoom(card, a.attribute, e.clientX, e.clientY);
+        });
+        refEl.addEventListener('mousemove', function(e){
+          positionCardZoom(e.clientX, e.clientY);
+        });
+        refEl.addEventListener('mouseleave', hideCardZoom);
+      });
+    }
   }
 
   function awakenCostColor(awCost, baseCost){
