@@ -1273,8 +1273,14 @@ document.getElementById('startBtn').addEventListener('click', function(){
       Array.prototype.forEach.call(egoInfoEl.querySelectorAll('.tooltip-card-ref'), function(refEl){
         var card = findCardByName(refEl.getAttribute('data-card-name'));
         if (!card) { refEl.classList.remove('tooltip-card-ref'); return; }
+        var displayCard = card;
+        if (!displayCard.grade) {
+          displayCard = {};
+          for (var k in card) displayCard[k] = card[k];
+          displayCard.grade = 'blue';
+        }
         refEl.addEventListener('mouseenter', function(e){
-          showCardZoom(card, a.attribute, e.clientX, e.clientY);
+          showCardZoom(displayCard, a.attribute, e.clientX, e.clientY);
         });
         refEl.addEventListener('mousemove', function(e){
           positionCardZoom(e.clientX, e.clientY);
@@ -1357,7 +1363,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
     if (from === targetMode) return;
     modeLocked = true;
     var textEl = infoEl.querySelector('.agent-info-text');
-    var fadeOutEls = [mainElFor(from)];
+    var fadeOutEls = [mainElFor(from), modeToggleBtnsEl];
     if (targetMode === 'ego') {
       fadeOutEls.push(infoEl);
     } else if (from !== 'ego') {
@@ -1385,7 +1391,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
     hideCardZoom();
 
     var textEl = infoEl.querySelector('.agent-info-text');
-    var fadeInEls = [mainElFor(targetMode)];
+    var fadeInEls = [mainElFor(targetMode), modeToggleBtnsEl];
     if (from === 'ego') {
       fadeInEls.push(infoEl);
     } else if (targetMode !== 'ego') {
