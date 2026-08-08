@@ -327,7 +327,7 @@
 
   /* 정보 모드 전환 버튼 (전투원 정보 / 카드 정보 / 에고 정보) */
   .mode-toggle-btns{position:absolute;left:40px;bottom:32px;z-index:6;display:flex;gap:10px;}
-  .mode-toggle-btn{width:91px;text-align:center;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.4);color:#fff;font-size:12.5px;font-weight:700;padding:7px 16px;border-radius:20px;cursor:pointer;transition:background .15s;}
+  .mode-toggle-btn{width:96px;text-align:center;white-space:nowrap;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.4);color:#fff;font-size:12.5px;font-weight:700;padding:7px 16px;border-radius:20px;cursor:pointer;transition:background .15s;}
   .mode-toggle-btn:hover{background:rgba(255,255,255,.24);}
 
   /* 카드 정보 그리드 */
@@ -371,14 +371,15 @@
 
   /* 에고 정보 */
   .agent-egoinfo{position:absolute;top:12px;left:12px;right:12px;bottom:11px;z-index:5;
-    display:grid;grid-template-columns:1fr 1fr;gap:3.5%;
+    display:grid;grid-template-columns:4fr 6fr;gap:3.5%;
     opacity:0;pointer-events:none;user-select:none;-webkit-user-select:none;}
   .agent-egoinfo.visible{pointer-events:auto;}
   .ego-col{min-width:0;min-height:0;display:flex;flex-direction:column;}
   .ego-col-title{flex:none;color:#fff;font-family:var(--font-display);font-weight:900;font-size:15px;letter-spacing:1px;margin-bottom:10px;text-shadow:0 1px 4px rgba(0,0,0,.8),0 0 10px rgba(0,0,0,.5);}
 
   .ego-skill-row{flex:1;min-height:0;display:flex;gap:14px;align-items:flex-start;}
-  .ego-skill-img{width:35%;height:auto;aspect-ratio:420/632;object-fit:contain;border-radius:10px;flex:none;display:block;-webkit-user-drag:none;}
+  .ego-skill-img{width:35%;height:auto;aspect-ratio:420/632;object-fit:contain;border-radius:10px;flex:none;display:block;-webkit-user-drag:none;transition:transform .2s;}
+  .ego-skill-img:hover{transform:scale(1.1);}
   .ego-skill-text{flex:1;min-width:0;display:flex;flex-direction:column;}
   .ego-skill-name{color:#fff;font-weight:800;font-size:16px;line-height:1.3;text-shadow:0 1px 4px rgba(0,0,0,.8);}
   .ego-skill-point{color:#EAF4FF;font-size:12.5px;font-weight:700;margin-top:8px;}
