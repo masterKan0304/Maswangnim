@@ -325,9 +325,10 @@
   .grade-tag-btn[data-grade="4"]{background-image:url('agents/grade_4.png');}
   .grade-tag-btn[data-grade="3"]{background-image:url('agents/grade_3.png');}
 
-  /* 카드 정보 토글 버튼 */
-  .card-toggle-btn{position:absolute;left:40px;bottom:32px;z-index:6;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.4);color:#fff;font-size:12.5px;font-weight:700;padding:7px 16px;border-radius:20px;cursor:pointer;transition:background .15s;}
-  .card-toggle-btn:hover{background:rgba(255,255,255,.24);}
+  /* 정보 모드 전환 버튼 (전투원 정보 / 카드 정보 / 에고 정보) */
+  .mode-toggle-btns{position:absolute;left:40px;bottom:32px;z-index:6;display:flex;gap:10px;}
+  .mode-toggle-btn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.4);color:#fff;font-size:12.5px;font-weight:700;padding:7px 16px;border-radius:20px;cursor:pointer;transition:background .15s;}
+  .mode-toggle-btn:hover{background:rgba(255,255,255,.24);}
 
   /* 카드 정보 그리드 */
   .agent-cardinfo{position:absolute;top:12px;right:12px;bottom:11px;aspect-ratio:1.51;max-width:600px;z-index:5;
@@ -367,6 +368,32 @@
   .card[data-grade="blue"] .card-name{color:#60c8ff;}
   .card[data-grade="yellow"] .card-name{color:#ffd23d;}
   .card[data-grade="purple"] .card-name{color:#d181ff;}
+
+  /* 에고 정보 */
+  .agent-egoinfo{position:absolute;top:12px;left:12px;right:12px;bottom:11px;z-index:5;
+    display:grid;grid-template-columns:1fr 1fr;gap:3.5%;
+    opacity:0;pointer-events:none;user-select:none;-webkit-user-select:none;}
+  .agent-egoinfo.visible{pointer-events:auto;}
+  .ego-col{min-width:0;min-height:0;display:flex;flex-direction:column;}
+  .ego-col-title{flex:none;color:#fff;font-family:var(--font-display);font-weight:900;font-size:15px;letter-spacing:1px;margin-bottom:10px;text-shadow:0 1px 4px rgba(0,0,0,.8),0 0 10px rgba(0,0,0,.5);}
+
+  .ego-skill-row{flex:1;min-height:0;display:flex;gap:14px;align-items:flex-start;}
+  .ego-skill-img{height:100%;width:auto;max-width:44%;object-fit:contain;border-radius:10px;flex:none;display:block;-webkit-user-drag:none;}
+  .ego-skill-text{flex:1;min-width:0;display:flex;flex-direction:column;padding-top:2px;}
+  .ego-skill-name{color:#fff;font-weight:800;font-size:16px;line-height:1.3;text-shadow:0 1px 4px rgba(0,0,0,.8);}
+  .ego-skill-point{color:#EAF4FF;font-size:12.5px;font-weight:700;margin-top:8px;}
+  .ego-skill-hr{height:1px;background:rgba(255,255,255,.3);margin:10px 0;}
+  .ego-skill-tooltip{color:#fff;font-size:12px;line-height:1.55;font-weight:600;text-align:left;white-space:nowrap;
+    text-shadow:0 1px 3px #000,0 0 5px #000;}
+
+  .ego-awaken-list{flex:1;min-height:0;display:grid;grid-template-rows:repeat(6,1fr);}
+  .ego-awaken-row{display:grid;grid-template-columns:20px 88px 1fr;gap:10px;align-items:center;
+    border-top:1px solid rgba(255,255,255,.14);}
+  .ego-awaken-row:first-child{border-top:none;}
+  .ego-awaken-num{color:rgba(255,255,255,.5);font-family:var(--font-display);font-weight:800;font-size:13px;text-align:center;}
+  .ego-awaken-name{color:#fff;font-weight:700;font-size:11.5px;line-height:1.35;text-shadow:0 1px 3px rgba(0,0,0,.7);}
+  .ego-awaken-tooltip{color:#fff;font-size:11px;line-height:1.4;font-weight:600;text-align:left;
+    text-shadow:0 1px 3px #000,0 0 5px #000;}
 
   .card-zoom-preview{position:fixed;z-index:9999;width:260px;border-radius:10px;overflow:hidden;
     box-shadow:0 10px 34px rgba(0,0,0,.65);display:none;pointer-events:none;}
@@ -653,6 +680,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
           <div class="agent-showcase-scrim"></div>
           <div class="agent-info" id="agentInfo"></div>
           <div class="agent-cardinfo" id="agentCardInfo"></div>
+          <div class="agent-egoinfo" id="agentEgoInfo"></div>
           <div class="awaken-overlay" id="awakenOverlay">
             <div class="awaken-header">
               <div class="awaken-title">번뜩임</div>
@@ -666,7 +694,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
             <div class="awaken-cards" id="awakenCards"></div>
             <button type="button" class="awaken-close-btn" id="awakenCloseBtn">닫기</button>
           </div>
-          <button type="button" class="card-toggle-btn" id="cardToggleBtn">카드 정보</button>
+          <div class="mode-toggle-btns" id="modeToggleBtns"></div>
         </div>
         <div class="card-zoom-preview" id="cardZoomPreview"></div>
         <div class="card-zoom-preview card-zoom-plus" id="cardZoomPlusPreview"></div>
@@ -858,6 +886,8 @@ document.getElementById('startBtn').addEventListener('click', function(){
 <script src="partner/partner-data.js"></script>
 <!-- 전투원 카드 정보 데이터 (cards/cards-data.js 파일에서 직접 수정) -->
 <script src="cards/cards-data.js"></script>
+<!-- 전투원 에고 정보 데이터 (ego/ego-data.js 파일에서 직접 수정) -->
+<script src="ego/ego-data.js"></script>
 <script>
 (function(){
   var JOBS = [
@@ -909,8 +939,9 @@ document.getElementById('startBtn').addEventListener('click', function(){
   var iconNextBtn = document.getElementById('agentIconNext');
   var rosterTabCombatant = document.getElementById('rosterTabCombatant');
   var rosterTabPartner = document.getElementById('rosterTabPartner');
-  var cardToggleBtn = document.getElementById('cardToggleBtn');
+  var modeToggleBtnsEl = document.getElementById('modeToggleBtns');
   var cardInfoEl = document.getElementById('agentCardInfo');
+  var egoInfoEl = document.getElementById('agentEgoInfo');
   var cardZoomEl = document.getElementById('cardZoomPreview');
   var cardZoomPlusEl = document.getElementById('cardZoomPlusPreview');
   var awakenOverlayEl = document.getElementById('awakenOverlay');
@@ -920,7 +951,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
   var agents = ROSTERS.combatant.data;
   if (!agents.length || !iconRow) return;
 
-  var state = { roster: 'combatant', selectedId: agents[0].id, job: null, attribute: null, grade: null, iconPage: 0, cardMode: false, awakenOpen: false };
+  var state = { roster: 'combatant', selectedId: agents[0].id, job: null, attribute: null, grade: null, iconPage: 0, cardMode: false, egoMode: false, awakenOpen: false };
 
   function setIconCountVars(){
     iconRow.style.setProperty('--icon-count', Math.max(agents.length, 1));
@@ -949,7 +980,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
   var entranceToken = 0;
 
   function applyHoverScale(){
-    if (illustEntering || state.cardMode) return;
+    if (illustEntering || state.cardMode || state.egoMode) return;
     illustImg.style.transition = 'transform .2s';
     illustImg.style.transform = 'scale(' + (isHovering ? 1.1 : 1) + ')';
   }
@@ -1043,8 +1074,40 @@ document.getElementById('startBtn').addEventListener('click', function(){
     return !!(window.AGENTS_CARDS && window.AGENTS_CARDS[id] && window.AGENTS_CARDS[id].length);
   }
 
-  function updateCardToggleVisibility(){
-    cardToggleBtn.style.display = (state.roster === 'combatant' && agentHasCards(state.selectedId)) ? '' : 'none';
+  function agentHasEgo(id){
+    return !!(window.AGENTS_EGO && window.AGENTS_EGO[id]);
+  }
+
+  function currentMode(){
+    return state.egoMode ? 'ego' : (state.cardMode ? 'card' : 'agent');
+  }
+
+  function setMode(m){
+    state.cardMode = (m === 'card');
+    state.egoMode = (m === 'ego');
+  }
+
+  function mainElFor(m){
+    return m === 'card' ? cardInfoEl : (m === 'ego' ? egoInfoEl : illustImg);
+  }
+
+  var MODE_LABELS = { agent: '전투원 정보', card: '카드 정보', ego: '에고 정보' };
+
+  function renderModeButtons(){
+    var id = state.selectedId;
+    var hasCards = state.roster === 'combatant' && agentHasCards(id);
+    var hasEgo = state.roster === 'combatant' && agentHasEgo(id);
+    var mode = currentMode();
+    var order = ['agent', 'card', 'ego'].filter(function(m){
+      if (m === mode) return false;
+      if (m === 'card' && !hasCards) return false;
+      if (m === 'ego' && !hasEgo) return false;
+      return true;
+    });
+    modeToggleBtnsEl.innerHTML = order.map(function(m){
+      return '<button type="button" class="mode-toggle-btn" data-mode="'+m+'">'+MODE_LABELS[m]+'</button>';
+    }).join('');
+    modeToggleBtnsEl.style.display = order.length ? '' : 'none';
   }
 
   var COST_GLOW_RGB = {
@@ -1167,6 +1230,38 @@ document.getElementById('startBtn').addEventListener('click', function(){
     });
   }
 
+  function renderEgoInfo(){
+    var ego = window.AGENTS_EGO && window.AGENTS_EGO[state.selectedId];
+    if (!ego) { egoInfoEl.innerHTML = ''; return; }
+    var skill = ego.skill || {};
+    var pointHtml = parseNormalInline('에고 포인트 ' + (skill.point != null ? skill.point : ''), '#EAAA00', '#7EE4FF', '#7EE4FF');
+    var awakenRows = (ego.awakenings || []).map(function(aw, i){
+      return '' +
+        '<div class="ego-awaken-row">' +
+          '<div class="ego-awaken-num">' + (i + 1) + '</div>' +
+          '<div class="ego-awaken-name">' + (aw.name || '') + '</div>' +
+          '<div class="ego-awaken-tooltip">' + parseTooltip(aw.tooltip || '', true) + '</div>' +
+        '</div>';
+    }).join('');
+    egoInfoEl.innerHTML =
+      '<div class="ego-col ego-skill-col">' +
+        '<div class="ego-col-title">에고 스킬</div>' +
+        '<div class="ego-skill-row">' +
+          '<img class="ego-skill-img" src="' + (skill.media || '') + '" alt="' + (skill.name || '') + '" draggable="false" ondragstart="return false">' +
+          '<div class="ego-skill-text">' +
+            '<div class="ego-skill-name">' + (skill.name || '') + '</div>' +
+            '<div class="ego-skill-point">' + pointHtml + '</div>' +
+            '<div class="ego-skill-hr"></div>' +
+            '<div class="ego-skill-tooltip">' + parseTooltip(skill.tooltip || '', false) + '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="ego-col ego-awaken-col">' +
+        '<div class="ego-col-title">에고 발현</div>' +
+        '<div class="ego-awaken-list">' + awakenRows + '</div>' +
+      '</div>';
+  }
+
   function awakenCostColor(awCost, baseCost){
     if (typeof awCost !== 'number' || typeof baseCost !== 'number') return null;
     if (awCost < baseCost) return '#C2FFAA';
@@ -1230,66 +1325,100 @@ document.getElementById('startBtn').addEventListener('click', function(){
   cardInfoEl.addEventListener('contextmenu', function(e){ e.preventDefault(); });
   awakenCardsEl.addEventListener('contextmenu', function(e){ e.preventDefault(); });
 
-  var cardModeToken = 0;
-  var cardModeLocked = false;
+  var modeToken = 0;
+  var modeLocked = false;
 
-  function toggleCardMode(){
+  function switchMode(targetMode){
     if (state.roster !== 'combatant') return;
-    if (cardModeLocked) return;
-    cardModeLocked = true;
+    if (modeLocked) return;
+    var from = currentMode();
+    if (from === targetMode) return;
+    modeLocked = true;
     var textEl = infoEl.querySelector('.agent-info-text');
-    var fadeOutEls = (state.cardMode ? [cardInfoEl] : [illustImg]).concat(textEl ? [textEl] : []);
-    var myToken = ++cardModeToken;
+    var fadeOutEls = [mainElFor(from)];
+    if (targetMode === 'ego') {
+      fadeOutEls.push(infoEl);
+    } else if (from !== 'ego') {
+      if (textEl) fadeOutEls.push(textEl);
+    }
+    var myToken = ++modeToken;
     fadeOutEls.forEach(function(el){ el.style.transition = 'opacity .3s'; el.style.opacity = '0'; });
     setTimeout(function(){
-      if (myToken !== cardModeToken) { cardModeLocked = false; return; }
-      state.cardMode = !state.cardMode;
-      applyCardModeUI(true);
+      if (myToken !== modeToken) { modeLocked = false; return; }
+      setMode(targetMode);
+      applyModeUI(true, from, targetMode);
     }, 300);
   }
 
-  function applyCardModeUI(animateIn){
-    cardToggleBtn.textContent = state.cardMode ? '전투원 정보' : '카드 정보';
-    cardInfoEl.classList.toggle('visible', state.cardMode);
-    if (!state.cardMode) closeAwakenOverlay(true);
+  function applyModeUI(animateIn, from, targetMode){
+    renderModeButtons();
+    cardInfoEl.classList.toggle('visible', targetMode === 'card');
+    egoInfoEl.classList.toggle('visible', targetMode === 'ego');
+    if (targetMode !== 'card') closeAwakenOverlay(true);
     renderInfo();
-    if (state.cardMode) renderCardInfo();
+    if (targetMode === 'card') renderCardInfo();
     else cardInfoEl.innerHTML = '';
+    if (targetMode === 'ego') renderEgoInfo();
+    else egoInfoEl.innerHTML = '';
     hideCardZoom();
 
     var textEl = infoEl.querySelector('.agent-info-text');
-    var fadeInEls = (state.cardMode ? [cardInfoEl] : [illustImg]).concat(textEl ? [textEl] : []);
-    var fadeOutEls = state.cardMode ? [illustImg] : [cardInfoEl];
+    var fadeInEls = [mainElFor(targetMode)];
+    if (from === 'ego') {
+      fadeInEls.push(infoEl);
+    } else if (targetMode !== 'ego') {
+      if (textEl) fadeInEls.push(textEl);
+    }
+    var fadeOutEls = [mainElFor(from)];
     fadeOutEls.forEach(function(el){ el.style.transition = 'none'; el.style.opacity = '0'; });
     fadeInEls.forEach(function(el){ el.style.transition = 'none'; el.style.opacity = '0'; });
     fadeInEls.forEach(function(el){ void el.offsetWidth; });
     if (animateIn) {
       fadeInEls.forEach(function(el){ el.style.transition = 'opacity .4s'; el.style.opacity = '1'; });
-      var myToken = cardModeToken;
+      var myToken = modeToken;
       setTimeout(function(){
-        if (myToken === cardModeToken) cardModeLocked = false;
+        if (myToken === modeToken) modeLocked = false;
       }, 400);
     } else {
       fadeInEls.forEach(function(el){ el.style.opacity = '1'; });
-      cardModeLocked = false;
+      modeLocked = false;
     }
-    if (!state.cardMode) applyHoverScale();
+    if (targetMode === 'agent') applyHoverScale();
   }
 
-  cardToggleBtn.addEventListener('click', toggleCardMode);
+  modeToggleBtnsEl.addEventListener('click', function(e){
+    var btn = e.target.closest ? e.target.closest('.mode-toggle-btn') : null;
+    if (!btn) return;
+    switchMode(btn.getAttribute('data-mode'));
+  });
 
   function playCardSwapEffect(){
-    var myToken = ++cardModeToken;
+    var myToken = ++modeToken;
     cardInfoEl.style.transition = 'opacity .2s';
     cardInfoEl.style.opacity = '0';
     setTimeout(function(){
-      if (myToken !== cardModeToken) return;
+      if (myToken !== modeToken) return;
       renderCardInfo();
       cardInfoEl.style.transition = 'none';
       cardInfoEl.style.opacity = '0';
       void cardInfoEl.offsetWidth;
       cardInfoEl.style.transition = 'opacity .4s';
       cardInfoEl.style.opacity = '1';
+    }, 200);
+  }
+
+  function playEgoSwapEffect(){
+    var myToken = ++modeToken;
+    egoInfoEl.style.transition = 'opacity .2s';
+    egoInfoEl.style.opacity = '0';
+    setTimeout(function(){
+      if (myToken !== modeToken) return;
+      renderEgoInfo();
+      egoInfoEl.style.transition = 'none';
+      egoInfoEl.style.opacity = '0';
+      void egoInfoEl.offsetWidth;
+      egoInfoEl.style.transition = 'opacity .4s';
+      egoInfoEl.style.opacity = '1';
     }, 200);
   }
 
@@ -1352,10 +1481,17 @@ document.getElementById('startBtn').addEventListener('click', function(){
         renderInfo();
         renderIconRow();
         if (changed) {
-          updateCardToggleVisibility();
-          if (state.cardMode && !agentHasCards(newId)) toggleCardMode();
-          else if (state.cardMode) playCardSwapEffect();
-          else playEntranceEffect();
+          renderModeButtons();
+          var mode = currentMode();
+          if (mode === 'card') {
+            if (!agentHasCards(newId)) switchMode('agent');
+            else playCardSwapEffect();
+          } else if (mode === 'ego') {
+            if (!agentHasEgo(newId)) switchMode('agent');
+            else playEgoSwapEffect();
+          } else {
+            playEntranceEffect();
+          }
         }
       });
     });
@@ -1444,6 +1580,14 @@ document.getElementById('startBtn').addEventListener('click', function(){
         });
       });
     }
+    if (window.AGENTS_EGO) {
+      Object.keys(window.AGENTS_EGO).forEach(function(id){
+        var media = window.AGENTS_EGO[id].skill && window.AGENTS_EGO[id].skill.media;
+        if (!media) return;
+        if (isVideoSrc(media)) videoUrls.push(media);
+        else urls.push(media);
+      });
+    }
     urls.forEach(function(src){
       var img = new Image();
       img.src = src;
@@ -1469,11 +1613,12 @@ document.getElementById('startBtn').addEventListener('click', function(){
     rosterTabCombatant.classList.toggle('active', key === 'combatant');
     rosterTabPartner.classList.toggle('active', key === 'partner');
     setIconCountVars();
-    if (state.cardMode) {
-      state.cardMode = false;
-      applyCardModeUI(false);
+    if (state.cardMode || state.egoMode) {
+      var wasMode = currentMode();
+      setMode('agent');
+      applyModeUI(false, wasMode, 'agent');
     }
-    updateCardToggleVisibility();
+    renderModeButtons();
     renderInfo();
     renderIconRow();
     renderFilterTags();
@@ -1482,7 +1627,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
   rosterTabCombatant.addEventListener('click', function(){ switchRoster('combatant'); });
   rosterTabPartner.addEventListener('click', function(){ switchRoster('partner'); });
 
-  updateCardToggleVisibility();
+  renderModeButtons();
   renderInfo();
   renderIconRow();
   renderFilterTags();
