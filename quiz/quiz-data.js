@@ -23,19 +23,13 @@
 //                 무작위로 통째로 드러나며, 드러난 텍스트에는 카드 툴팁과 동일한 색상
 //                 규칙([대괄호]→주황, 숫자→파랑, "따옴표"→파랑 밑줄, -텍스트-→파랑)이
 //                 자동으로 적용됩니다. 줄바꿈과 쉼표 자체는 항상 그대로 보입니다.
+//                 세미콜론(;)도 줄바꿈/쉼표와 똑같이 정보 단위를 나누는 기준으로
+//                 쓸 수 있는데, 화면에 드러날 때는 ; 대신 그냥 띄어쓰기로 보입니다.
+//                 (예: '핸드에 진혼의 탄환이 있다면;1장 버리고 피해량 +100%' 은
+//                 2개의 정보 단위이며, 뒤쪽이 드러나면 "1장 버리고 피해량 +100%"로 보입니다)
 // ============================================================
 
 window.QUIZ_CARDS = [
-  {
-    name: '멀티샷',
-    rarity: 'gray',
-    attribute: 'instinct',
-    type: 'attack',
-    cost: 1,
-    illustColor: 'gray',
-    illust: 'cards/힐데/attack.webp',
-    tooltip: '모든 적 피해 60%'
-  },
   {
     name: '퀴버 로딩',
     rarity: 'blue',
@@ -44,7 +38,47 @@ window.QUIZ_CARDS = [
     cost: 1,
     illustColor: 'blue',
     illust: 'cards/힐데/blue1.webp',
-    tooltip: '[ 주도 ]\n뽑을 카드에 "호밍 애로우" 3장 생성, 이번 턴 능력으로 드로우한 카드 수만큼 피해량 +30% (최대 300%)'
+    tooltip: '[ 주도 ]\n뽑을 카드에;"호밍 애로우" 3장 생성'
+  },
+  {
+    name: '호밍 애로우',
+    rarity: 'blue',
+    attribute: 'instinct',
+    type: 'attack',
+    cost: '-',
+    illustColor: 'blue',
+    illust: 'cards/힐데/blue1_1.webp',
+    tooltip: '[ 사용불가 / 소멸 ]\n체력이 가장 낮은 적 추가 공격 120%\n드로우 1\n감응: 이 카드 발동'
+  },
+  {
+    name: '플라즈마 레인',
+    rarity: 'blue',
+    attribute: 'instinct',
+    type: 'attack',
+    cost: 1,
+    illustColor: 'purple',
+    illust: 'cards/힐데/blue2.webp',
+    tooltip: '모든 적 피해 60%, 이온화 2'
+  },
+  {
+    name: '드로우 & 릴리즈',
+    rarity: 'blue',
+    attribute: 'instinct',
+    type: 'skill',
+    cost: 1,
+    illustColor: 'purple',
+    illust: 'cards/힐데/blue3.webp',
+    tooltip: '자신의 공격 카드 드로우 2\n1턴간 사용 시까지 그 카드 피해량 +50%'
+  },
+  {
+    name: '빅 게임 레인저',
+    rarity: 'yellow',
+    attribute: 'instinct',
+    type: 'upgrade',
+    cost: 1,
+    illustColor: 'blue',
+    illust: 'cards/힐데/yellow.webp',
+    tooltip: '[ 유일 / 주도 ]\n타격 시 일점 조준 2'
   },
   {
     name: '볼텍스 애로우',
@@ -52,8 +86,18 @@ window.QUIZ_CARDS = [
     attribute: 'instinct',
     type: 'attack',
     cost: 1,
-    illustColor: 'yellow',
+    illustColor: 'purple',
     illust: 'cards/힐데/purple.webp',
-    tooltip: '드로우 3\n모든 적 피해 120%, 이번 턴 드로우한 공격 카드 수만큼 피해량 +60% (최대 8장)'
+    tooltip: '[ 유일 ]\n드로우 3\n모든 적 피해 120%\n이번 턴 드로우한 공격 카드 수만큼;피해량 +60% (최대 8장)'
+  },
+  {
+    name: '즉결 심판',
+    rarity: 'blue',
+    attribute: 'void',
+    type: 'attack',
+    cost: 1,
+    illustColor: 'purple',
+    illust: 'quiz/즉결심판.webp',
+    tooltip: '피해 180%\n핸드에 진혼의 탄환이 있다면;1장 버리고 피해량 +100%'
   }
 ];

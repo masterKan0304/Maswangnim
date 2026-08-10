@@ -151,7 +151,7 @@ window.AGENTS_CARDS = {
       type: 'attack',
       grade: 'purple',
       media: 'cards/힐데/purple.webp',
-      tooltip: '[유일]\n드로우 3\n모든 적 피해 120%\n이번 턴 드로우한 공격 카드 수만큼 피해량 +60% (최대 8장)'
+      tooltip: '[ 유일 ]\n드로우 3\n모든 적 피해 120%\n이번 턴 드로우한 공격 카드 수만큼 피해량 +60% (최대 8장)'
     }
   ]
 };
