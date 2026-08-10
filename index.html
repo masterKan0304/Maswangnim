@@ -512,12 +512,6 @@
     color:rgba(255,255,255,.85);font-family:var(--font-display);font-weight:900;font-size:15cqw;
     text-shadow:0 2px 10px rgba(0,0,0,.6);pointer-events:none;}
   .quiz-silhouette-illust{width:100%;height:100%;object-fit:cover;display:block;}
-  .quiz-silhouette-content{position:absolute;left:calc(9.45% + 6px);right:6%;bottom:6%;display:flex;flex-direction:column;gap:5px;z-index:2;}
-  .quiz-silhouette-type{display:flex;align-items:center;gap:5px;}
-  .quiz-silhouette-type img{width:14px;height:14px;border-radius:3px;object-fit:cover;}
-  .quiz-silhouette-type span{color:#fff;font-size:12px;font-weight:700;text-shadow:0 1px 3px #000,0 0 5px #000;}
-  .quiz-silhouette-tooltip{color:#fff;font-size:11.5px;line-height:1.55;font-weight:600;text-align:left;
-    text-shadow:0 1px 3px #000,0 0 5px #000;}
   .quiz-win-flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:5;}
   .quiz-win-flash.play{animation:quizWinFlash .6s ease-out;}
   @keyframes quizWinFlash{0%{opacity:.85;}100%{opacity:0;}}
@@ -941,12 +935,19 @@ document.getElementById('startBtn').addEventListener('click', function(){
     localStorage.setItem('czn_quiz_daily_' + todayStr(), '1');
   }
 
+  function updateScrollLock(){
+    var locked = quizBaseOverlay.classList.contains('open') || quizMsgOverlay.classList.contains('open');
+    document.body.style.overflow = locked ? 'hidden' : '';
+  }
   function openOverlay(){
     quizBaseOverlay.classList.add('open');
+    updateScrollLock();
   }
   function closeOverlay(){
     quizBaseOverlay.classList.remove('open');
     quizMsgOverlay.classList.remove('open');
+    quizMsgPopup.classList.remove('active');
+    updateScrollLock();
   }
   function showMain(){
     quizDailyDoneTag.style.display = isDailyDone() ? 'flex' : 'none';
@@ -956,10 +957,14 @@ document.getElementById('startBtn').addEventListener('click', function(){
   }
   function showMsg(html){
     quizMsgPopup.innerHTML = html;
+    quizMsgPopup.classList.add('active');
     quizMsgOverlay.classList.add('open');
+    updateScrollLock();
   }
   function closeMsg(){
     quizMsgOverlay.classList.remove('open');
+    quizMsgPopup.classList.remove('active');
+    updateScrollLock();
   }
 
   quizBannerBtn.addEventListener('click', showMain);
@@ -982,7 +987,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
     { key:'attribute', label:'속성' },
     { key:'type', label:'유형' },
     { key:'illustColor', label:'일러스트 색상' },
-    { key:'specialAbility', label:'특수 능력' },
+    { key:'cost', label:'비용' },
     { key:'tooltip', label:'카드 툴팁' }
   ];
 
@@ -990,31 +995,36 @@ document.getElementById('startBtn').addEventListener('click', function(){
   var quizSilhouetteEl = null;
   var quizInfoGridEl = null;
 
-  function tokenizeTooltip(str){
-    var tokens = [];
-    var re = /(\d+%?(?:\s*x\s*\d+)?)|(\n)|([,:])|([^\d\n,:]+)/g;
-    var m;
-    while ((m = re.exec(str))) {
-      if (m[1] !== undefined) tokens.push({ type:'num', text:m[1], revealable:true, revealed:false });
-      else if (m[2] !== undefined) tokens.push({ type:'newline', revealable:false });
-      else if (m[3] !== undefined) tokens.push({ type: m[3]===','?'comma':'colon', text:m[3], revealable:false });
-      else {
-        var w = m[4].trim();
-        if (w) tokens.push({ type:'text', text:w, revealable:true, revealed:false });
-      }
-    }
-    return tokens;
+  function quizParseInline(str){
+    return String(str).replace(/\[([^\]]*)\]|"([^"]*)"|-([^-]*)-|(\d+)/g, function(match, bracketInner, quoteInner, dashInner, digits){
+      if (bracketInner !== undefined) return '<span style="color:#EAAA00">[' + bracketInner + ']</span>';
+      if (quoteInner !== undefined) return '<span style="color:#7EE4FF;text-decoration:underline">' + quoteInner + '</span>';
+      if (dashInner !== undefined) return '<span style="color:#7EE4FF">' + dashInner + '</span>';
+      if (digits !== undefined) return '<span style="color:#7EE4FF">' + digits + '</span>';
+      return match;
+    });
   }
 
-  function renderTooltipTokensHtml(tokens){
+  function tokenizeTooltipSegments(str){
+    var parts = String(str).split(/(\n|,)/);
+    var segments = [];
+    parts.forEach(function(p){
+      if (p === '\n') segments.push({ type:'newline' });
+      else if (p === ',') segments.push({ type:'comma' });
+      else {
+        var t = p.trim();
+        if (t) segments.push({ type:'seg', text:t, revealed:false });
+      }
+    });
+    return segments;
+  }
+
+  function renderTooltipSegmentsHtml(segments){
     var out = '', pending = '';
-    tokens.forEach(function(t){
-      if (t.type === 'newline') { out += pending + '<br>'; pending = ''; return; }
-      if (t.type === 'comma') { pending += ','; return; }
-      var html;
-      if (t.type === 'colon') html = ':';
-      else if (t.type === 'num') html = '<span style="color:#7EE4FF">' + (t.revealed ? t.text : '?') + '</span>';
-      else html = '<span style="color:#fff">' + (t.revealed ? t.text : 'XXX') + '</span>';
+    segments.forEach(function(s){
+      if (s.type === 'newline') { out += pending + '<br>'; pending = ''; return; }
+      if (s.type === 'comma') { pending += ','; return; }
+      var html = s.revealed ? quizParseInline(s.text) : '<span style="color:#fff">XXX</span>';
       if (pending) pending += ' ';
       pending += html;
     });
@@ -1027,8 +1037,8 @@ document.getElementById('startBtn').addEventListener('click', function(){
       mode: mode,
       card: card,
       infoCount: 0,
-      revealed: { rarity:false, attribute:false, type:false, illustColor:false, specialAbility:false },
-      tooltipTokens: tokenizeTooltip(card.tooltip || ''),
+      revealed: { rarity:false, attribute:false, type:false, illustColor:false, cost:false },
+      tooltipSegments: tokenizeTooltipSegments(card.tooltip || ''),
       wrongGuesses: [],
       solved: false,
       answerRevealed: false,
@@ -1075,19 +1085,20 @@ document.getElementById('startBtn').addEventListener('click', function(){
   function renderSilhouette(){
     var card = quizState.card;
     var r = quizState.revealed;
-    var anyRevealed = r.rarity || r.attribute || r.type || r.illustColor || r.specialAbility ||
-      quizState.tooltipTokens.some(function(t){ return t.revealed; });
+    var anyRevealed = r.rarity || r.attribute || r.type || r.illustColor || r.cost ||
+      quizState.tooltipSegments.some(function(s){ return s.type === 'seg' && s.revealed; });
     var mediaBg = r.illustColor ? QUIZ_COLOR_HEX[card.illustColor] : '#0c0c10';
     var mediaHtml = (quizState.solvedIllust && card.illust) ?
       '<img class="quiz-silhouette-illust" src="' + card.illust + '" alt="">' : '';
     var egoStyle = r.attribute ? "background-image:url('" + QUIZ_ATTR_BAND[card.attribute] + "')" : '';
     var gradeStyle = r.rarity ? "background-image:url('cards/card_" + card.rarity + ".webp')" : '';
+    var costText = r.cost ? card.cost : '?';
+    var nameText = quizState.answerRevealed ? card.name : '???';
     var typeHtml = r.type ?
-      '<div class="quiz-silhouette-type"><img src="' + QUIZ_TYPE_ICON[card.type] + '" alt="">' +
+      '<div class="card-type"><img class="card-type-icon" src="' + QUIZ_TYPE_ICON[card.type] + '" alt="">' +
       '<span>' + QUIZ_TYPE_LABEL[card.type] + '</span></div>' : '';
-    var abilityHtml = (r.specialAbility && card.specialAbility) ?
-      '<span style="color:#EAAA00">' + card.specialAbility + '</span><br>' : '';
-    var tooltipHtml = renderTooltipTokensHtml(quizState.tooltipTokens);
+    var tooltipHtml = renderTooltipSegmentsHtml(quizState.tooltipSegments);
+    quizSilhouetteEl.setAttribute('data-grade', r.rarity ? card.rarity : '');
     quizSilhouetteEl.innerHTML =
       '<div class="card-media" style="background:' + mediaBg + '">' + mediaHtml + '</div>' +
       '<div class="card-top-grad"></div>' +
@@ -1095,8 +1106,15 @@ document.getElementById('startBtn').addEventListener('click', function(){
       '<div class="card-grade-star" style="' + gradeStyle + '"></div>' +
       '<div class="card-bottom-grad"></div>' +
       (anyRevealed ? '' : '<div class="quiz-silhouette-qmark">?</div>') +
-      '<div class="quiz-silhouette-content">' + typeHtml +
-        '<div class="quiz-silhouette-tooltip">' + abilityHtml + tooltipHtml + '</div>' +
+      '<div class="card-content">' +
+        '<div class="card-header">' +
+          '<div class="card-cost"><div class="card-cost-num">' + costText + '</div><div class="card-cost-line"></div></div>' +
+          '<div class="card-title">' +
+            '<div class="card-name">' + nameText + '</div>' +
+            typeHtml +
+          '</div>' +
+        '</div>' +
+        '<div class="card-tooltip">' + tooltipHtml + '</div>' +
       '</div>' +
       '<div class="quiz-win-flash" id="quizWinFlash"></div>' +
       '<div class="quiz-win-banner" id="quizWinBanner"></div>';
@@ -1108,14 +1126,14 @@ document.getElementById('startBtn').addEventListener('click', function(){
     if (key === 'attribute') return '<div class="quiz-info-value"><img src="' + QUIZ_ATTR_ICON[card.attribute] + '" alt="">' + QUIZ_ATTR_LABEL[card.attribute] + '</div>';
     if (key === 'type') return '<div class="quiz-info-value"><img src="' + QUIZ_TYPE_ICON[card.type] + '" alt="">' + QUIZ_TYPE_LABEL[card.type] + '</div>';
     if (key === 'illustColor') return '<div class="quiz-info-value"><span class="quiz-color-swatch" style="background:' + QUIZ_COLOR_HEX[card.illustColor] + '"></span>' + QUIZ_COLOR_LABEL[card.illustColor] + '</div>';
-    if (key === 'specialAbility') return '<div class="quiz-info-value">' + (card.specialAbility ? card.specialAbility : '특수 능력 없음') + '</div>';
+    if (key === 'cost') return '<div class="quiz-info-value">비용 ' + card.cost + '</div>';
     return '';
   }
 
   function renderInfoGrid(){
     quizInfoGridEl.innerHTML = QUIZ_INFO_DEFS.map(function(def){
       if (def.key === 'tooltip') {
-        var remaining = quizState.tooltipTokens.filter(function(t){ return t.revealable && !t.revealed; }).length;
+        var remaining = quizState.tooltipSegments.filter(function(s){ return s.type === 'seg' && !s.revealed; }).length;
         var done = remaining === 0;
         return '<button type="button" class="quiz-info-btn' + (done ? ' revealed' : '') + '" data-key="tooltip"' + (done ? ' disabled' : '') + '>' +
           '<div class="quiz-info-label">카드 툴팁</div>' +
@@ -1131,7 +1149,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
     Array.prototype.forEach.call(quizInfoGridEl.querySelectorAll('.quiz-info-btn'), function(btn){
       btn.addEventListener('click', function(){
         var key = btn.getAttribute('data-key');
-        if (key === 'tooltip') revealTooltipToken();
+        if (key === 'tooltip') revealTooltipSegment();
         else revealCategory(key);
       });
     });
@@ -1151,9 +1169,9 @@ document.getElementById('startBtn').addEventListener('click', function(){
     updateInfoCount();
   }
 
-  function revealTooltipToken(){
+  function revealTooltipSegment(){
     if (quizState.solved || quizState.answerRevealed) return;
-    var pool = quizState.tooltipTokens.filter(function(t){ return t.revealable && !t.revealed; });
+    var pool = quizState.tooltipSegments.filter(function(s){ return s.type === 'seg' && !s.revealed; });
     if (!pool.length) return;
     var pick = pool[Math.floor(Math.random() * pool.length)];
     pick.revealed = true;
@@ -1258,8 +1276,8 @@ document.getElementById('startBtn').addEventListener('click', function(){
     quizState.revealed.attribute = true;
     quizState.revealed.type = true;
     quizState.revealed.illustColor = true;
-    quizState.revealed.specialAbility = true;
-    quizState.tooltipTokens.forEach(function(t){ if (t.revealable) t.revealed = true; });
+    quizState.revealed.cost = true;
+    quizState.tooltipSegments.forEach(function(s){ if (s.type === 'seg') s.revealed = true; });
     if (won && quizState.mode === 'daily') setDailyDone();
     renderInfoGrid();
     renderSilhouette();
