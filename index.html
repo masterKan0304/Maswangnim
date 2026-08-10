@@ -505,6 +505,11 @@
     font-size:12.5px;font-weight:700;padding:8px 18px;border-radius:20px;cursor:pointer;transition:background .15s;}
   .quiz-action-btn:hover{background:rgba(255,255,255,.24);}
 
+  .quiz-result-banner{display:none;text-align:center;color:#fff;font-family:var(--font-display);font-weight:900;
+    font-size:15px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:8px;
+    padding:10px 0;margin-bottom:18px;}
+  .quiz-result-banner.show{display:block;}
+
   .quiz-game-body{display:flex;gap:26px;}
   .quiz-silhouette-wrap{flex:none;width:230px;}
   .quiz-silhouette{width:100%;aspect-ratio:5/7;cursor:default;}
@@ -515,10 +520,6 @@
   .quiz-win-flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:5;}
   .quiz-win-flash.play{animation:quizWinFlash .6s ease-out;}
   @keyframes quizWinFlash{0%{opacity:.85;}100%{opacity:0;}}
-  .quiz-win-banner{position:absolute;left:4%;right:4%;top:4%;text-align:center;color:#fff;font-family:var(--font-display);
-    font-weight:900;font-size:5.5cqw;text-shadow:0 2px 8px rgba(0,0,0,.9);opacity:0;transform:translateY(-6px);
-    transition:opacity .3s,transform .3s;z-index:4;background:rgba(0,0,0,.4);border-radius:6px;padding:4px 0;}
-  .quiz-win-banner.show{opacity:1;transform:translateY(0);}
 
   .quiz-info-grid{flex:1;min-width:0;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(3,1fr);gap:12px;}
   .quiz-info-btn{position:relative;border-radius:10px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.06);
@@ -972,8 +973,18 @@ document.getElementById('startBtn').addEventListener('click', function(){
 
   quizDailyBtn.addEventListener('click', function(){
     if (isDailyDone()) {
-      showMsg('<div class="quiz-msg-text">데일리 퀴즈를 이미 완료하셨습니다.</div><button type="button" class="quiz-msg-close-btn" id="quizMsgOkBtn">확인</button>');
-      document.getElementById('quizMsgOkBtn').addEventListener('click', closeMsg);
+      showMsg(
+        '<div class="quiz-msg-text">이미 데일리 퀴즈를 완료하셨습니다. 다시 퀴즈를 풀어보시겠습니까?</div>' +
+        '<div class="quiz-msg-confirm-row">' +
+          '<button type="button" class="quiz-msg-btn-cancel" id="quizDailyReplayCancel">아니오</button>' +
+          '<button type="button" class="quiz-msg-btn-confirm" id="quizDailyReplayOk">다시 풀기</button>' +
+        '</div>'
+      );
+      document.getElementById('quizDailyReplayCancel').addEventListener('click', closeMsg);
+      document.getElementById('quizDailyReplayOk').addEventListener('click', function(){
+        closeMsg();
+        startGame('daily');
+      });
       return;
     }
     startGame('daily');
@@ -1061,6 +1072,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
         '<div class="quiz-info-count">정보 확인 횟수: <b id="quizInfoCountNum">' + quizState.infoCount + '</b>회</div>' +
         actionBtnHtml +
       '</div>' +
+      '<div class="quiz-result-banner" id="quizResultBanner"></div>' +
       '<div class="quiz-game-body">' +
         '<div class="quiz-silhouette-wrap"><div class="card quiz-silhouette" id="quizSilhouette"></div></div>' +
         '<div class="quiz-info-grid" id="quizInfoGrid"></div>' +
@@ -1116,8 +1128,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
         '</div>' +
         '<div class="card-tooltip">' + tooltipHtml + '</div>' +
       '</div>' +
-      '<div class="quiz-win-flash" id="quizWinFlash"></div>' +
-      '<div class="quiz-win-banner" id="quizWinBanner"></div>';
+      '<div class="quiz-win-flash" id="quizWinFlash"></div>';
   }
 
   function revealedValueHtml(key){
@@ -1285,11 +1296,11 @@ document.getElementById('startBtn').addEventListener('click', function(){
     var actionBtn = document.getElementById('quizActionBtn');
     if (actionBtn) actionBtn.textContent = '새 문제';
     var flash = document.getElementById('quizWinFlash');
-    var banner = document.getElementById('quizWinBanner');
+    var banner = document.getElementById('quizResultBanner');
     if (flash) { flash.classList.remove('play'); void flash.offsetWidth; flash.classList.add('play'); }
     if (banner) {
       banner.textContent = won ? ('정답입니다! ' + quizState.card.name) : ('정답: ' + quizState.card.name);
-      setTimeout(function(){ banner.classList.add('show'); }, 50);
+      banner.classList.add('show');
     }
   }
 })();
