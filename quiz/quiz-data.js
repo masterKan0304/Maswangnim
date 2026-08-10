@@ -396,7 +396,7 @@ window.QUIZ_CARDS = [
     type: 'attack',
     cost: 1,
     illust: 'quiz/포식자의칼날.webp',
-    tooltip: '피해 250%;1턴간;사기 2'
+    tooltip: '피해 250%\n1턴간;사기 2'
   },
   {
     name: '대용량 탄창',
@@ -849,15 +849,6 @@ window.QUIZ_CARDS = [
     tooltip: '[ 주도 ]\n카드가 4장 버려질 시;행동 포인트 1\n(턴당 1회)'
   },
   {
-    name: '감정의 폭발',
-    rarity: 'blue',
-    attribute: 'common',
-    type: 'upgrade',
-    cost: 2,
-    illust: 'quiz/감정의폭발.webp',
-    tooltip: '[ 주도 ]\n카드가 4장 버려질 시;행동 포인트 1\n(턴당 1회)'
-  },
-  {
     name: '내면의 각성',
     rarity: 'blue',
     attribute: 'common',
@@ -937,5 +928,77 @@ window.QUIZ_CARDS = [
     cost: 3,
     illust: 'quiz/버섯탄환.webp',
     tooltip: '[ 탄환 ] [ 소멸 ]\n피해 450%\n포자증식 효과 2배'
+  },
+  {
+    name: '자연의 선물',
+    rarity: 'blue',
+    attribute: 'common',
+    type: 'skill',
+    cost: 1,
+    illust: 'quiz/자연의선물.webp',
+    tooltip: '[ 소멸 ]\n핸드의 카드 수만큼 치유 20%\n조율 : 핸드의 카드 수만큼 "오염된 포자" 1장 생성'
+  },
+  {
+    name: '양분 흡수',
+    rarity: 'yellow',
+    attribute: 'common',
+    type: 'skill',
+    cost: 0,
+    illust: 'quiz/양분흡수.webp',
+    tooltip: '[ 소멸 ]\n핸드의 카드 1장 선택 소멸\n그 카드 비용만큼 핸드의 무작위 카드 1장;1턴간 사용 시까지 비용 1 감소'
+  },
+  {
+    name: '잔상초',
+    rarity: 'blue',
+    attribute: 'common',
+    type: 'skill',
+    cost: 0,
+    illust: 'quiz/잔상초.webp',
+    tooltip: '[ 회수 2 ] [ 소멸 3 ]\n실드 60%\n소각 : "오염된 포자" 1장 생성'
+  },
+  {
+    name: '포자 채집기',
+    rarity: 'yellow',
+    attribute: 'common',
+    type: 'skill',
+    cost: 0,
+    illust: 'quiz/포자채집기.webp',
+    tooltip: '[ 보존 ] [ 소멸 ]\n소각 : "오염된 포자" 2장 생성\n보존 : "오염된 포자" 1장 생성'
+  },
+  {
+    name: '산성 가스',
+    rarity: 'gray',
+    attribute: 'common',
+    type: 'skill',
+    cost: 0,
+    illust: 'quiz/산성가스.webp',
+    tooltip: '[ 회수 ] [ 소멸 ]\n모든 적 손상 3'
+  },
+  {
+    name: '공격성 돌연변이',
+    rarity: 'blue',
+    attribute: 'common',
+    type: 'skill',
+    cost: 0,
+    illust: 'quiz/공격성돌연변이.webp',
+    tooltip: '[ 소멸 ]\n자신의 공격 카드 드로우 1,;1턴간 그 카드 피해량 +50%'
+  },
+  {
+    name: '조준 사격',
+    rarity: 'yellow',
+    attribute: 'common',
+    type: 'attack',
+    cost: 2,
+    illust: 'quiz/조준사격.webp',
+    tooltip: '피해 400%\n처치 : 크레딧 20 획득'
+  },
+  {
+    name: '기습',
+    rarity: 'blue',
+    attribute: 'common',
+    type: 'attack',
+    cost: 0,
+    illust: 'quiz/기습.webp',
+    tooltip: '피해 80%\n격파 시 이 카드를;무덤에서 핸드로 이동'
   }
 ];
