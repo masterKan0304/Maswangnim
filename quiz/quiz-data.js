@@ -838,5 +838,104 @@ window.QUIZ_CARDS = [
     cost: 2,
     illust: 'quiz/넘침의울림.webp',
     tooltip: '[ 안식 ]\n피해 200%\n버려질 시 대상에게 공명 2'
+  },
+  {
+    name: '감정의 폭발',
+    rarity: 'blue',
+    attribute: 'common',
+    type: 'upgrade',
+    cost: 2,
+    illust: 'quiz/감정의폭발.webp',
+    tooltip: '[ 주도 ]\n카드가 4장 버려질 시;행동 포인트 1\n(턴당 1회)'
+  },
+  {
+    name: '감정의 폭발',
+    rarity: 'blue',
+    attribute: 'common',
+    type: 'upgrade',
+    cost: 2,
+    illust: 'quiz/감정의폭발.webp',
+    tooltip: '[ 주도 ]\n카드가 4장 버려질 시;행동 포인트 1\n(턴당 1회)'
+  },
+  {
+    name: '내면의 각성',
+    rarity: 'blue',
+    attribute: 'common',
+    type: 'skill',
+    cost: 1,
+    illust: 'quiz/내면의각성.webp',
+    tooltip: '[ 안식 ]\n버리기 1\n무작위 공격 카드 1장 드로우\n그 카드 연결 부여'
+  },
+  {
+    name: '상실의 페르소나',
+    rarity: 'blue',
+    attribute: 'common',
+    type: 'skill',
+    cost: 1,
+    illust: 'quiz/상실의페르소나.webp',
+    tooltip: '자신의 공격 카드 드로우 1\n그 카드가 안식 카드면;연결 부여'
+  },
+  {
+    name: '진실의 공명',
+    rarity: 'blue',
+    attribute: 'common',
+    type: 'upgrade',
+    cost: 1,
+    illust: 'quiz/진실의공명.webp',
+    tooltip: '[ 개전 ]\n능력으로 드로우 시;모든 적 공명 1 (턴당 1회)'
+  },
+  {
+    name: '악몽의 이면',
+    rarity: 'yellow',
+    attribute: 'common',
+    type: 'skill',
+    cost: 1,
+    illust: 'quiz/악몽의이면.webp',
+    tooltip: '[ 안식 ]\n드로우 2\n뽑을 카드에 "끔찍한 기억" 1장 생성'
+  },
+  {
+    name: '광기의 속삭임',
+    rarity: 'blue',
+    attribute: 'common',
+    type: 'skill',
+    cost: 1,
+    illust: 'quiz/광기의속삭임.webp',
+    tooltip: '버리기 1\n다음 사용하는 공격 카드;피해량 +100%'
+  },
+  {
+    name: '오염된 포자',
+    rarity: 'blue',
+    attribute: 'common',
+    type: 'skill',
+    cost: 0,
+    illust: 'quiz/오염된포자.webp',
+    tooltip: '[ 보존 ] [ 소멸 ]\포자증식 1\n보존 : "오염된 포자" 1장 생성'
+  },
+  {
+    name: '숲의 굶주림',
+    rarity: 'blue',
+    attribute: 'common',
+    type: 'attack',
+    cost: 2,
+    illust: 'quiz/숲의굶주림.webp',
+    tooltip: '방어 기반 피해 300%\n핸드의 소멸 카드 모두 소멸,;그 수만큼 피해량 +25%'
+  },
+  {
+    name: '잊혀진 무덤',
+    rarity: 'blue',
+    attribute: 'common',
+    type: 'skill',
+    cost: 6,
+    illust: 'quiz/잊혀진무덤.webp',
+    tooltip: '[ 점화 ] [ 보존 ] [ 소멸 ]\n이 카드 비용 감소 시 1턴간 자신의 치명확률 +10%\n소각 : "오염된 포자" 1장 생성'
+  },
+  {
+    name: '버섯 탄환',
+    rarity: 'blue',
+    attribute: 'common',
+    type: 'attack',
+    cost: 3,
+    illust: 'quiz/버섯탄환.webp',
+    tooltip: '[ 탄환 ] [ 소멸 ]\n피해 450%\n포자증식 효과 2배'
   }
 ];

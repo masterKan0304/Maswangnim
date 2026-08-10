@@ -487,6 +487,11 @@
   .quiz-close-btn{position:absolute;top:10px;right:14px;background:none;border:none;color:rgba(255,255,255,.6);
     font-size:24px;line-height:1;cursor:pointer;padding:4px;}
   .quiz-close-btn:hover{color:#fff;}
+  .quiz-help-btn{position:absolute;top:11px;right:48px;width:23px;height:23px;border-radius:50%;
+    border:1px solid rgba(255,255,255,.4);background:rgba(255,255,255,.1);color:rgba(255,255,255,.75);
+    font-size:12.5px;font-weight:800;cursor:pointer;padding:0;line-height:1;
+    display:flex;align-items:center;justify-content:center;transition:background .15s,color .15s;}
+  .quiz-help-btn:hover{background:rgba(255,255,255,.2);color:#fff;}
   .quiz-title{font-family:var(--font-display);font-weight:900;font-size:21px;letter-spacing:.5px;}
   .quiz-popup-banner{display:block;width:100%;height:auto;border-radius:10px;margin-top:14px;}
   .quiz-subtitle{margin-top:8px;font-size:13px;color:#c7c5c3;}
@@ -499,28 +504,31 @@
     background:rgba(20,16,16,.92);color:var(--orange);font-weight:900;font-size:14.5px;}
 
   .quiz-popup-category{width:420px;max-width:100%;padding:32px 30px 28px;text-align:center;}
-  .quiz-category-row{display:flex;gap:10px;margin-top:22px;}
+  .quiz-category-section-title{margin-top:22px;text-align:left;font-size:12px;font-weight:800;color:rgba(255,255,255,.55);}
+  .quiz-category-row{display:flex;gap:10px;margin-top:8px;}
   .quiz-category-btn{flex:1;padding:12px 0;border-radius:10px;border:1px solid rgba(255,255,255,.3);
     background:rgba(255,255,255,.08);color:#fff;font-size:13.5px;font-weight:800;cursor:pointer;transition:background .15s,border-color .15s;}
   .quiz-category-btn:hover{background:rgba(255,255,255,.16);}
   .quiz-category-btn.active{background:var(--orange-soft);border-color:var(--orange);color:var(--orange);}
-  .quiz-category-all{display:block;width:100%;margin-top:10px;padding:12px 0;border-radius:10px;
-    border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.08);color:#fff;font-size:13.5px;
-    font-weight:800;cursor:pointer;transition:background .15s,border-color .15s;}
-  .quiz-category-all:hover{background:rgba(255,255,255,.16);}
-  .quiz-category-all.active{background:var(--orange-soft);border-color:var(--orange);color:var(--orange);}
-  .quiz-category-start-btn{display:block;width:100%;margin-top:18px;padding:13px 0;border-radius:10px;
+  .quiz-category-start-btn{display:block;width:100%;margin-top:22px;padding:13px 0;border-radius:10px;
     text-align:center;font-size:14.5px;}
 
   .quiz-popup-game{width:840px;max-width:100%;padding:24px 28px 26px;}
+  .quiz-set-header{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;margin-bottom:14px;text-align:center;}
+  .quiz-set-progress{font-size:14px;font-weight:800;color:#fff;}
+  .quiz-set-progress b{color:var(--orange);}
+  .quiz-set-correct{margin-left:10px;font-size:12.5px;font-weight:700;color:rgba(255,255,255,.65);}
+  .quiz-set-score{font-family:var(--font-display);font-weight:900;font-size:19px;color:var(--orange);}
   .quiz-game-topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;padding-right:26px;}
   .quiz-info-count{font-size:12.5px;color:rgba(255,255,255,.6);font-weight:700;}
   .quiz-info-count b{color:#fff;}
-  .quiz-streak-count{font-size:12.5px;color:var(--orange);font-weight:700;}
-  .quiz-streak-count b{color:#fff;}
   .quiz-action-btn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.4);color:#fff;
     font-size:12.5px;font-weight:700;padding:8px 18px;border-radius:20px;cursor:pointer;transition:background .15s;}
   .quiz-action-btn:hover{background:rgba(255,255,255,.24);}
+
+  .quiz-popup-results{width:380px;max-width:100%;padding:44px 30px 38px;text-align:center;}
+  .quiz-results-score{font-family:var(--font-display);font-weight:900;font-size:36px;color:var(--orange);}
+  .quiz-results-sub{margin-top:10px;font-size:14px;font-weight:700;color:#c7c5c3;}
 
   .quiz-result-banner{display:none;text-align:center;color:#fff;font-family:var(--font-display);font-weight:900;
     font-size:15px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:8px;
@@ -570,6 +578,8 @@
   .quiz-autocomplete.open{display:block;}
   .quiz-autocomplete-item{padding:8px 12px;font-size:12.5px;cursor:pointer;}
   .quiz-autocomplete-item:hover{background:rgba(255,255,255,.1);}
+  .quiz-invalid-flash{position:absolute;left:0;top:calc(100% + 4px);font-size:11.5px;color:#ff5252;
+    font-weight:700;opacity:0;pointer-events:none;}
 
   .quiz-wrong-list{margin-top:12px;display:flex;flex-wrap:wrap;gap:6px;min-height:1px;}
   .quiz-wrong-tag{background:rgba(214,69,69,.18);border:1px solid rgba(214,69,69,.4);color:#ff8f8f;
@@ -587,6 +597,13 @@
   .quiz-msg-btn-confirm{background:var(--orange);color:#fff;border:none;border-radius:8px;padding:9px 20px;
     font-size:13px;font-weight:800;cursor:pointer;}
   .quiz-msg-btn-confirm:hover{background:var(--orange-dim);}
+
+  .quiz-popup-msg.quiz-help-mode{width:480px;max-width:92vw;text-align:left;}
+  .quiz-help-section{margin-bottom:16px;}
+  .quiz-help-section:last-of-type{margin-bottom:0;}
+  .quiz-help-title{font-family:var(--font-display);font-weight:900;font-size:15px;color:#fff;margin-bottom:6px;}
+  .quiz-help-desc{font-size:12.5px;line-height:1.6;color:#c7c5c3;}
+  .quiz-help-mode .quiz-msg-close-btn{display:block;margin:18px auto 0;}
 
   @media (max-width:900px){
     .quiz-popup-game{width:94vw;padding:18px;}
@@ -901,6 +918,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
 <div class="quiz-modal-layer" id="quizBaseOverlay">
   <div class="quiz-popup quiz-popup-main" id="quizMainPopup">
     <button type="button" class="quiz-close-btn" id="quizMainCloseBtn">&times;</button>
+    <button type="button" class="quiz-help-btn" id="quizMainHelpBtn">?</button>
     <div class="quiz-title">카제나 카드 맞히기</div>
     <img class="quiz-popup-banner" src="quiz/banner.png" alt="카제나 카드 맞히기" draggable="false" ondragstart="return false">
     <div class="quiz-subtitle">최소한의 정보를 가지고 카드를 맞혀보세요!</div>
@@ -915,17 +933,30 @@ document.getElementById('startBtn').addEventListener('click', function(){
   </div>
   <div class="quiz-popup quiz-popup-category" id="quizCategoryPopup">
     <button type="button" class="quiz-close-btn" id="quizCategoryCloseBtn">&times;</button>
-    <div class="quiz-title">출제 유형</div>
-    <div class="quiz-subtitle">출제될 카드들의 유형을 선택해주세요.</div>
+    <button type="button" class="quiz-help-btn" id="quizCategoryHelpBtn">?</button>
+    <div class="quiz-title">출제 설정</div>
+    <div class="quiz-subtitle">출제될 카드들의 유형와 수량을 선택해주세요.</div>
+    <div class="quiz-category-section-title">유형</div>
     <div class="quiz-category-row">
       <button type="button" class="quiz-category-btn" data-cat="agent">전투원</button>
       <button type="button" class="quiz-category-btn" data-cat="common">공용</button>
       <button type="button" class="quiz-category-btn" data-cat="monster">몬스터</button>
+      <button type="button" class="quiz-category-btn" data-cat="all">전체</button>
     </div>
-    <button type="button" class="quiz-category-btn quiz-category-all" data-cat="all">전체</button>
+    <div class="quiz-category-section-title">수량</div>
+    <div class="quiz-category-row">
+      <button type="button" class="quiz-category-btn" data-qty="10">10장</button>
+      <button type="button" class="quiz-category-btn" data-qty="30">30장</button>
+      <button type="button" class="quiz-category-btn" data-qty="all">모두</button>
+    </div>
     <button type="button" class="quiz-action-btn quiz-category-start-btn" id="quizCategoryStartBtn">시작</button>
   </div>
   <div class="quiz-popup quiz-popup-game" id="quizGamePopup"></div>
+  <div class="quiz-popup quiz-popup-results" id="quizResultsPopup">
+    <button type="button" class="quiz-close-btn" id="quizResultsCloseBtn">&times;</button>
+    <div class="quiz-results-score" id="quizResultsScore"></div>
+    <div class="quiz-results-sub" id="quizResultsSub"></div>
+  </div>
 </div>
 <div class="quiz-modal-layer quiz-modal-layer-msg" id="quizMsgOverlay">
   <div class="quiz-popup quiz-popup-msg" id="quizMsgPopup"></div>
@@ -939,6 +970,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
   var quizMainPopup = document.getElementById('quizMainPopup');
   var quizCategoryPopup = document.getElementById('quizCategoryPopup');
   var quizGamePopup = document.getElementById('quizGamePopup');
+  var quizResultsPopup = document.getElementById('quizResultsPopup');
   var quizMsgPopup = document.getElementById('quizMsgPopup');
   var quizDailyBtn = document.getElementById('quizDailyBtn');
   var quizFreeBtn = document.getElementById('quizFreeBtn');
@@ -1003,6 +1035,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
     quizMainPopup.classList.add('active');
     quizCategoryPopup.classList.remove('active');
     quizGamePopup.classList.remove('active');
+    quizResultsPopup.classList.remove('active');
     openOverlay();
   }
   function showCategoryPopup(){
@@ -1010,6 +1043,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
     quizMainPopup.classList.remove('active');
     quizCategoryPopup.classList.add('active');
     quizGamePopup.classList.remove('active');
+    quizResultsPopup.classList.remove('active');
     openOverlay();
   }
   function showMsg(html){
@@ -1021,40 +1055,78 @@ document.getElementById('startBtn').addEventListener('click', function(){
   function closeMsg(){
     quizMsgOverlay.classList.remove('open');
     quizMsgPopup.classList.remove('active');
+    quizMsgPopup.classList.remove('quiz-help-mode');
     updateScrollLock();
+  }
+
+  var QUIZ_HELP_HTML =
+    '<div class="quiz-help-section"><div class="quiz-help-title">게임 소개</div>' +
+      '<div class="quiz-help-desc">게임 내 모든 카드들 중 무작위로 하나가 정해집니다. 카드에 대한 정보를 하나씩 밝혀내 최대한 적은 정보로 정답을 맞히면 높은 점수를 받습니다. 최대한 많은 정답들을 연속해서 맞혀보세요!</div></div>' +
+    '<div class="quiz-help-section"><div class="quiz-help-title">정보 종류</div>' +
+      '<div class="quiz-help-desc">카드의 정보들로는 희귀도, 속성, 유형, 일러스트 일부 공개, 비용, 툴팁을 확인할 수 있습니다.<br>툴팁의 경우, 전체의 일부분이 쪼개져서 확인되며 여러 번 정보를 얻을 수 있습니다.</div></div>' +
+    '<div class="quiz-help-section"><div class="quiz-help-title">배제 요소</div>' +
+      '<div class="quiz-help-desc">번뜩임, 페르소나 각인, 에고 발현 등의 카드 강화 요소는 상정하지 않습니다.<br>또한, 페르소나 카드 및 출격 전용 카드, 상태이상 카드들은 출제되지 않습니다.</div></div>' +
+    '<button type="button" class="quiz-msg-close-btn" id="quizHelpCloseBtn">확인</button>';
+
+  function showHelpPopup(){
+    showMsg(QUIZ_HELP_HTML);
+    quizMsgPopup.classList.add('quiz-help-mode');
+    document.getElementById('quizHelpCloseBtn').addEventListener('click', closeMsg);
   }
 
   quizBannerBtn.addEventListener('click', showMain);
   quizMainCloseBtn.addEventListener('click', closeOverlay);
   document.getElementById('quizCategoryCloseBtn').addEventListener('click', closeOverlay);
+  document.getElementById('quizResultsCloseBtn').addEventListener('click', closeOverlay);
+  document.getElementById('quizMainHelpBtn').addEventListener('click', showHelpPopup);
+  document.getElementById('quizCategoryHelpBtn').addEventListener('click', showHelpPopup);
 
-  var quizStreak = 0;
   var quizCategoryFilter = 'all';
-  var quizUsedCards = [];
+  var quizQuantityFilter = '10';
+  var quizSet = null;
 
   function quizCardMatchesCategory(card, cat){
     if (cat === 'all') return true;
     if (cat === 'agent') return card.attribute !== 'common' && card.attribute !== 'monster';
     return card.attribute === cat;
   }
-  function quizFilteredCards(){
+  function quizFilteredCardsByAttr(){
     var list = QUIZ_CARDS.filter(function(c){ return quizCardMatchesCategory(c, quizCategoryFilter); });
     return list.length ? list : QUIZ_CARDS;
   }
+  function shuffleArray(arr){
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+    }
+    return a;
+  }
   function renderCategoryButtons(){
-    Array.prototype.forEach.call(quizCategoryPopup.querySelectorAll('.quiz-category-btn'), function(btn){
+    Array.prototype.forEach.call(quizCategoryPopup.querySelectorAll('[data-cat]'), function(btn){
       btn.classList.toggle('active', btn.getAttribute('data-cat') === quizCategoryFilter);
     });
+    Array.prototype.forEach.call(quizCategoryPopup.querySelectorAll('[data-qty]'), function(btn){
+      btn.classList.toggle('active', btn.getAttribute('data-qty') === quizQuantityFilter);
+    });
   }
-  Array.prototype.forEach.call(quizCategoryPopup.querySelectorAll('.quiz-category-btn'), function(btn){
+  Array.prototype.forEach.call(quizCategoryPopup.querySelectorAll('[data-cat]'), function(btn){
     btn.addEventListener('click', function(){
       quizCategoryFilter = btn.getAttribute('data-cat');
       renderCategoryButtons();
     });
   });
+  Array.prototype.forEach.call(quizCategoryPopup.querySelectorAll('[data-qty]'), function(btn){
+    btn.addEventListener('click', function(){
+      quizQuantityFilter = btn.getAttribute('data-qty');
+      renderCategoryButtons();
+    });
+  });
   document.getElementById('quizCategoryStartBtn').addEventListener('click', function(){
-    quizStreak = 0;
-    quizUsedCards = [];
+    var pool = quizFilteredCardsByAttr();
+    var qty = quizQuantityFilter === 'all' ? pool.length : Math.min(parseInt(quizQuantityFilter, 10), pool.length);
+    var cards = shuffleArray(pool).slice(0, qty);
+    quizSet = { cards: cards, index: 0, correctCount: 0, totalScore: 0 };
     startGame('free');
   });
 
@@ -1070,12 +1142,10 @@ document.getElementById('startBtn').addEventListener('click', function(){
       document.getElementById('quizDailyReplayCancel').addEventListener('click', closeMsg);
       document.getElementById('quizDailyReplayOk').addEventListener('click', function(){
         closeMsg();
-        quizStreak = 0;
         startGame('daily');
       });
       return;
     }
-    quizStreak = 0;
     startGame('daily');
   });
   quizFreeBtn.addEventListener('click', function(){
@@ -1131,24 +1201,13 @@ document.getElementById('startBtn').addEventListener('click', function(){
     return out + pending;
   }
 
-  function pickFreeCard(){
-    var pool = quizFilteredCards();
-    var available = pool.filter(function(c){ return quizUsedCards.indexOf(c) === -1; });
-    if (!available.length) {
-      quizUsedCards = [];
-      available = pool;
-    }
-    var card = available[Math.floor(Math.random() * available.length)];
-    quizUsedCards.push(card);
-    return card;
-  }
-
   function startGame(mode){
-    var card = mode === 'daily' ? QUIZ_CARDS[dailyIndex()] : pickFreeCard();
+    var card = mode === 'daily' ? QUIZ_CARDS[dailyIndex()] : quizSet.cards[quizSet.index];
     quizState = {
       mode: mode,
       card: card,
       infoCount: 0,
+      hintsUsed: 0,
       revealed: { rarity:false, attribute:false, type:false, illustPartial:false, cost:false },
       illustPos: null,
       tooltipSegments: tokenizeTooltipSegments(card.tooltip || ''),
@@ -1157,25 +1216,47 @@ document.getElementById('startBtn').addEventListener('click', function(){
       answerRevealed: false,
       solvedIllust: false
     };
+    quizState.totalHints = 5 + quizState.tooltipSegments.filter(function(s){ return s.type === 'seg'; }).length;
     quizMainPopup.classList.remove('active');
     quizCategoryPopup.classList.remove('active');
+    quizResultsPopup.classList.remove('active');
     quizGamePopup.classList.add('active');
     renderGamePopup();
+  }
+
+  function computeQuestionScore(hintsUsed, totalHints){
+    if (!totalHints || totalHints <= 0) return 1000;
+    var x = Math.min(hintsUsed / totalHints, 1);
+    return Math.round(1000 - 600 * x * x);
+  }
+
+  function renderSetHeaderHtml(){
+    if (quizState.mode !== 'free' || !quizSet) return '';
+    return '<div class="quiz-set-header" id="quizSetHeader">' +
+      '<div class="quiz-set-progress"><b>' + (quizSet.index + 1) + '</b>/<b>' + quizSet.cards.length + '</b>' +
+        '<span class="quiz-set-correct">' + quizSet.correctCount + '개 정답</span></div>' +
+      '<div class="quiz-set-score">' + quizSet.totalScore + '점</div>' +
+    '</div>';
+  }
+
+  function updateSetHeader(){
+    var el = document.getElementById('quizSetHeader');
+    if (!el || quizState.mode !== 'free' || !quizSet) return;
+    el.outerHTML = renderSetHeaderHtml();
   }
 
   function renderGamePopup(){
     var actionBtnHtml = '';
     if (quizState.mode === 'free') {
       actionBtnHtml = '<button type="button" class="quiz-action-btn" id="quizActionBtn">' +
-        ((quizState.solved || quizState.answerRevealed) ? '새 문제' : '정답 보기') + '</button>';
+        ((quizState.solved || quizState.answerRevealed) ? '다음 문제' : '정답 보기') + '</button>';
     }
-    var streakHtml = (quizState.mode === 'free' && quizStreak > 0) ?
-      '<div class="quiz-streak-count">연속 정답 <b>' + quizStreak + '</b>회</div>' : '';
     quizGamePopup.innerHTML =
       '<button type="button" class="quiz-close-btn" id="quizGameCloseBtn">&times;</button>' +
+      '<button type="button" class="quiz-help-btn" id="quizGameHelpBtn">?</button>' +
+      renderSetHeaderHtml() +
       '<div class="quiz-game-topbar">' +
         '<div class="quiz-info-count">기회 사용 횟수: <b id="quizInfoCountNum">' + quizState.infoCount + '</b>회</div>' +
-        streakHtml +
         actionBtnHtml +
       '</div>' +
       '<div class="quiz-result-banner" id="quizResultBanner"></div>' +
@@ -1186,6 +1267,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
       '<div class="quiz-answer-row">' +
         '<input type="text" class="quiz-answer-input" id="quizAnswerInput" placeholder="카드 이름을 입력하세요" autocomplete="off">' +
         '<div class="quiz-autocomplete" id="quizAutocomplete"></div>' +
+        '<div class="quiz-invalid-flash" id="quizInvalidFlash">존재하지 않는 카드입니다.</div>' +
         '<button type="button" class="quiz-submit-btn" id="quizSubmitBtn">제출</button>' +
       '</div>' +
       '<div class="quiz-wrong-list" id="quizWrongList"></div>';
@@ -1193,6 +1275,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
     quizSilhouetteEl = document.getElementById('quizSilhouette');
     quizInfoGridEl = document.getElementById('quizInfoGrid');
     document.getElementById('quizGameCloseBtn').addEventListener('click', closeOverlay);
+    document.getElementById('quizGameHelpBtn').addEventListener('click', showHelpPopup);
     renderSilhouette();
     renderInfoGrid();
     renderWrongList();
@@ -1311,6 +1394,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
     if (quizState.solved || quizState.answerRevealed || quizState.revealed[key]) return;
     quizState.revealed[key] = true;
     quizState.infoCount++;
+    quizState.hintsUsed++;
     renderInfoGrid();
     renderSilhouette();
     updateInfoCount();
@@ -1323,6 +1407,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
     var pick = pool[Math.floor(Math.random() * pool.length)];
     pick.revealed = true;
     quizState.infoCount++;
+    quizState.hintsUsed++;
     renderInfoGrid();
     renderSilhouette();
     updateInfoCount();
@@ -1368,13 +1453,33 @@ document.getElementById('startBtn').addEventListener('click', function(){
     });
   }
 
+  var quizInvalidFlashTimer = null;
+  function showInvalidNameFlash(){
+    var el = document.getElementById('quizInvalidFlash');
+    if (!el) return;
+    clearTimeout(quizInvalidFlashTimer);
+    el.style.transition = 'none';
+    el.style.opacity = '1';
+    void el.offsetWidth;
+    quizInvalidFlashTimer = setTimeout(function(){
+      el.style.transition = 'opacity 1.2s ease';
+      el.style.opacity = '0';
+    }, 700);
+  }
+
   function submitAnswer(){
     var input = document.getElementById('quizAnswerInput');
     if (!input) return;
     var v = input.value.trim();
     if (!v || quizState.solved || quizState.answerRevealed) return;
+    var ac = document.getElementById('quizAutocomplete');
     if (v === quizState.card.name) {
       revealFull(true);
+    } else if (!QUIZ_CARDS.some(function(c){ return c.name === v; })) {
+      showInvalidNameFlash();
+      input.value = '';
+      if (ac) ac.classList.remove('open');
+      return;
     } else {
       quizState.wrongGuesses.push(v);
       quizState.infoCount++;
@@ -1382,7 +1487,6 @@ document.getElementById('startBtn').addEventListener('click', function(){
       renderWrongList();
     }
     input.value = '';
-    var ac = document.getElementById('quizAutocomplete');
     if (ac) ac.classList.remove('open');
   }
 
@@ -1390,14 +1494,27 @@ document.getElementById('startBtn').addEventListener('click', function(){
     var btn = document.getElementById('quizActionBtn');
     if (!btn) return;
     btn.addEventListener('click', function(){
-      if (quizState.solved || quizState.answerRevealed) newProblem();
+      if (quizState.solved || quizState.answerRevealed) nextProblem();
       else openAnswerConfirm();
     });
   }
 
-  function newProblem(){
-    if (!quizState || quizState.mode !== 'free') return;
+  function nextProblem(){
+    if (!quizState || quizState.mode !== 'free' || !quizSet) return;
+    quizSet.index++;
+    if (quizSet.index >= quizSet.cards.length) {
+      showResultsPopup();
+      return;
+    }
     startGame('free');
+  }
+
+  function showResultsPopup(){
+    document.getElementById('quizResultsScore').textContent = quizSet.totalScore + '점';
+    document.getElementById('quizResultsSub').textContent =
+      '총 ' + quizSet.cards.length + '문제 중 ' + quizSet.correctCount + '개 정답';
+    quizGamePopup.classList.remove('active');
+    quizResultsPopup.classList.add('active');
   }
 
   function openAnswerConfirm(){
@@ -1421,8 +1538,10 @@ document.getElementById('startBtn').addEventListener('click', function(){
       quizState.tooltipSegments.every(function(s){ return s.type !== 'seg' || s.revealed; });
     var infoCountAtWin = quizState.infoCount;
 
-    if (quizState.mode === 'free') {
-      quizStreak = won ? (quizStreak + 1) : 0;
+    if (quizState.mode === 'free' && quizSet) {
+      var questionScore = won ? computeQuestionScore(quizState.hintsUsed, quizState.totalHints) : 0;
+      if (won) quizSet.correctCount++;
+      quizSet.totalScore += questionScore;
     }
 
     quizState.solved = won;
@@ -1438,8 +1557,9 @@ document.getElementById('startBtn').addEventListener('click', function(){
     renderInfoGrid();
     renderSilhouette();
     wireAnswerRow();
+    updateSetHeader();
     var actionBtn = document.getElementById('quizActionBtn');
-    if (actionBtn) actionBtn.textContent = '새 문제';
+    if (actionBtn) actionBtn.textContent = '다음 문제';
     var flash = document.getElementById('quizWinFlash');
     var banner = document.getElementById('quizResultBanner');
     if (flash) { flash.classList.remove('play'); void flash.offsetWidth; flash.classList.add('play'); }
