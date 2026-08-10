@@ -510,6 +510,8 @@
     font-size:15px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:8px;
     padding:10px 0;margin-bottom:18px;}
   .quiz-result-banner.show{display:block;}
+  .quiz-result-sub{margin-top:5px;font-family:var(--font-display);font-weight:700;font-size:12px;color:#c7c5c3;}
+  .quiz-result-sub.quiz-result-sub-giveup{color:#ff5252;}
 
   .quiz-game-body{display:flex;gap:26px;}
   .quiz-silhouette-wrap{flex:none;width:230px;}
@@ -1322,6 +1324,11 @@ document.getElementById('startBtn').addEventListener('click', function(){
   }
 
   function revealFull(won){
+    var wasAllRevealed = quizState.revealed.rarity && quizState.revealed.attribute && quizState.revealed.type &&
+      quizState.revealed.illustPartial && quizState.revealed.cost &&
+      quizState.tooltipSegments.every(function(s){ return s.type !== 'seg' || s.revealed; });
+    var infoCountAtWin = quizState.infoCount;
+
     quizState.solved = won;
     quizState.answerRevealed = true;
     quizState.solvedIllust = true;
@@ -1341,7 +1348,19 @@ document.getElementById('startBtn').addEventListener('click', function(){
     var banner = document.getElementById('quizResultBanner');
     if (flash) { flash.classList.remove('play'); void flash.offsetWidth; flash.classList.add('play'); }
     if (banner) {
-      banner.textContent = won ? ('정답입니다! ' + quizState.card.name) : ('정답: ' + quizState.card.name);
+      var mainText = won ? ('정답입니다! ' + quizState.card.name) : ('정답: ' + quizState.card.name);
+      var subText, subClass = '';
+      if (!won) {
+        subText = '추측을 포기하고 정답을 확인하셨습니다.';
+        subClass = ' quiz-result-sub-giveup';
+      } else if (wasAllRevealed) {
+        subText = '정보를 모두 확인하고 정답을 맞히셨습니다.';
+      } else if (infoCountAtWin <= 3) {
+        subText = '정보를 ' + infoCountAtWin + '회만 확인하고 정답을 맞히셨습니다! 굉장합니다!';
+      } else {
+        subText = '정보를 ' + infoCountAtWin + '회 확인하고 정답을 맞히셨습니다.';
+      }
+      banner.innerHTML = '<div>' + mainText + '</div><div class="quiz-result-sub' + subClass + '">' + subText + '</div>';
       banner.classList.add('show');
     }
   }
