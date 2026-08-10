@@ -502,6 +502,8 @@
   .quiz-game-topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;padding-right:26px;}
   .quiz-info-count{font-size:12.5px;color:rgba(255,255,255,.6);font-weight:700;}
   .quiz-info-count b{color:#fff;}
+  .quiz-streak-count{font-size:12.5px;color:var(--orange);font-weight:700;}
+  .quiz-streak-count b{color:#fff;}
   .quiz-action-btn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.4);color:#fff;
     font-size:12.5px;font-weight:700;padding:8px 18px;border-radius:20px;cursor:pointer;transition:background .15s;}
   .quiz-action-btn:hover{background:rgba(255,255,255,.24);}
@@ -986,6 +988,8 @@ document.getElementById('startBtn').addEventListener('click', function(){
   quizBannerBtn.addEventListener('click', showMain);
   quizMainCloseBtn.addEventListener('click', closeOverlay);
 
+  var quizStreak = 0;
+
   quizDailyBtn.addEventListener('click', function(){
     if (isDailyDone()) {
       showMsg(
@@ -998,13 +1002,16 @@ document.getElementById('startBtn').addEventListener('click', function(){
       document.getElementById('quizDailyReplayCancel').addEventListener('click', closeMsg);
       document.getElementById('quizDailyReplayOk').addEventListener('click', function(){
         closeMsg();
+        quizStreak = 0;
         startGame('daily');
       });
       return;
     }
+    quizStreak = 0;
     startGame('daily');
   });
   quizFreeBtn.addEventListener('click', function(){
+    quizStreak = 0;
     startGame('free');
   });
 
@@ -1082,10 +1089,13 @@ document.getElementById('startBtn').addEventListener('click', function(){
       actionBtnHtml = '<button type="button" class="quiz-action-btn" id="quizActionBtn">' +
         ((quizState.solved || quizState.answerRevealed) ? '새 문제' : '정답 보기') + '</button>';
     }
+    var streakHtml = (quizState.mode === 'free' && quizStreak > 0) ?
+      '<div class="quiz-streak-count">연속 정답 <b>' + quizStreak + '</b>회</div>' : '';
     quizGamePopup.innerHTML =
       '<button type="button" class="quiz-close-btn" id="quizGameCloseBtn">&times;</button>' +
       '<div class="quiz-game-topbar">' +
         '<div class="quiz-info-count">정보 확인 횟수: <b id="quizInfoCountNum">' + quizState.infoCount + '</b>회</div>' +
+        streakHtml +
         actionBtnHtml +
       '</div>' +
       '<div class="quiz-result-banner" id="quizResultBanner"></div>' +
@@ -1326,6 +1336,10 @@ document.getElementById('startBtn').addEventListener('click', function(){
       quizState.revealed.illustPartial && quizState.revealed.cost &&
       quizState.tooltipSegments.every(function(s){ return s.type !== 'seg' || s.revealed; });
     var infoCountAtWin = quizState.infoCount;
+
+    if (quizState.mode === 'free') {
+      quizStreak = won ? (quizStreak + 1) : 0;
+    }
 
     quizState.solved = won;
     quizState.answerRevealed = true;
