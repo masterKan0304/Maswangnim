@@ -498,6 +498,20 @@
   .quiz-mode-btn-done{display:none;position:absolute;inset:0;align-items:center;justify-content:center;
     background:rgba(20,16,16,.92);color:var(--orange);font-weight:900;font-size:14.5px;}
 
+  .quiz-popup-category{width:420px;max-width:100%;padding:32px 30px 28px;text-align:center;}
+  .quiz-category-row{display:flex;gap:10px;margin-top:22px;}
+  .quiz-category-btn{flex:1;padding:12px 0;border-radius:10px;border:1px solid rgba(255,255,255,.3);
+    background:rgba(255,255,255,.08);color:#fff;font-size:13.5px;font-weight:800;cursor:pointer;transition:background .15s,border-color .15s;}
+  .quiz-category-btn:hover{background:rgba(255,255,255,.16);}
+  .quiz-category-btn.active{background:var(--orange-soft);border-color:var(--orange);color:var(--orange);}
+  .quiz-category-all{display:block;width:100%;margin-top:10px;padding:12px 0;border-radius:10px;
+    border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.08);color:#fff;font-size:13.5px;
+    font-weight:800;cursor:pointer;transition:background .15s,border-color .15s;}
+  .quiz-category-all:hover{background:rgba(255,255,255,.16);}
+  .quiz-category-all.active{background:var(--orange-soft);border-color:var(--orange);color:var(--orange);}
+  .quiz-category-start-btn{display:block;width:100%;margin-top:18px;padding:13px 0;border-radius:10px;
+    text-align:center;font-size:14.5px;}
+
   .quiz-popup-game{width:840px;max-width:100%;padding:24px 28px 26px;}
   .quiz-game-topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;padding-right:26px;}
   .quiz-info-count{font-size:12.5px;color:rgba(255,255,255,.6);font-weight:700;}
@@ -522,9 +536,10 @@
     color:rgba(255,255,255,.85);font-family:var(--font-display);font-weight:900;font-size:15cqw;
     text-shadow:0 2px 10px rgba(0,0,0,.6);pointer-events:none;}
   .quiz-silhouette-illust{width:100%;height:100%;object-fit:cover;display:block;}
-  .quiz-monster-edge{position:absolute;left:0;top:0;bottom:0;width:20px;pointer-events:none;}
-  .quiz-monster-edge.solid{background:#000;}
-  .quiz-monster-edge.gradient{width:40px;background:linear-gradient(to right, #000 0%, transparent 100%);}
+  .quiz-monster-illust-shift{position:relative;left:-5px;width:calc(100% + 5px);}
+  .quiz-illust-crop-area{position:absolute;left:20px;right:0;top:0;bottom:0;background-repeat:no-repeat;}
+  .quiz-monster-edge{position:absolute;left:0;top:0;bottom:0;width:40px;pointer-events:none;
+    background:linear-gradient(to right, #000 0%, transparent 100%);}
   .quiz-win-flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:5;}
   .quiz-win-flash.play{animation:quizWinFlash .6s ease-out;}
   @keyframes quizWinFlash{0%{opacity:.85;}100%{opacity:0;}}
@@ -898,6 +913,18 @@ document.getElementById('startBtn').addEventListener('click', function(){
       <button type="button" class="quiz-mode-btn" id="quizFreeBtn">자유</button>
     </div>
   </div>
+  <div class="quiz-popup quiz-popup-category" id="quizCategoryPopup">
+    <button type="button" class="quiz-close-btn" id="quizCategoryCloseBtn">&times;</button>
+    <div class="quiz-title">출제 유형</div>
+    <div class="quiz-subtitle">출제될 카드들의 유형을 선택해주세요.</div>
+    <div class="quiz-category-row">
+      <button type="button" class="quiz-category-btn" data-cat="agent">전투원</button>
+      <button type="button" class="quiz-category-btn" data-cat="common">공용</button>
+      <button type="button" class="quiz-category-btn" data-cat="monster">몬스터</button>
+    </div>
+    <button type="button" class="quiz-category-btn quiz-category-all" data-cat="all">전체</button>
+    <button type="button" class="quiz-action-btn quiz-category-start-btn" id="quizCategoryStartBtn">시작</button>
+  </div>
   <div class="quiz-popup quiz-popup-game" id="quizGamePopup"></div>
 </div>
 <div class="quiz-modal-layer quiz-modal-layer-msg" id="quizMsgOverlay">
@@ -910,6 +937,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
   var quizBaseOverlay = document.getElementById('quizBaseOverlay');
   var quizMsgOverlay = document.getElementById('quizMsgOverlay');
   var quizMainPopup = document.getElementById('quizMainPopup');
+  var quizCategoryPopup = document.getElementById('quizCategoryPopup');
   var quizGamePopup = document.getElementById('quizGamePopup');
   var quizMsgPopup = document.getElementById('quizMsgPopup');
   var quizDailyBtn = document.getElementById('quizDailyBtn');
@@ -973,6 +1001,14 @@ document.getElementById('startBtn').addEventListener('click', function(){
   function showMain(){
     quizDailyDoneTag.style.display = isDailyDone() ? 'flex' : 'none';
     quizMainPopup.classList.add('active');
+    quizCategoryPopup.classList.remove('active');
+    quizGamePopup.classList.remove('active');
+    openOverlay();
+  }
+  function showCategoryPopup(){
+    renderCategoryButtons();
+    quizMainPopup.classList.remove('active');
+    quizCategoryPopup.classList.add('active');
     quizGamePopup.classList.remove('active');
     openOverlay();
   }
@@ -990,8 +1026,37 @@ document.getElementById('startBtn').addEventListener('click', function(){
 
   quizBannerBtn.addEventListener('click', showMain);
   quizMainCloseBtn.addEventListener('click', closeOverlay);
+  document.getElementById('quizCategoryCloseBtn').addEventListener('click', closeOverlay);
 
   var quizStreak = 0;
+  var quizCategoryFilter = 'all';
+  var quizUsedCards = [];
+
+  function quizCardMatchesCategory(card, cat){
+    if (cat === 'all') return true;
+    if (cat === 'agent') return card.attribute !== 'common' && card.attribute !== 'monster';
+    return card.attribute === cat;
+  }
+  function quizFilteredCards(){
+    var list = QUIZ_CARDS.filter(function(c){ return quizCardMatchesCategory(c, quizCategoryFilter); });
+    return list.length ? list : QUIZ_CARDS;
+  }
+  function renderCategoryButtons(){
+    Array.prototype.forEach.call(quizCategoryPopup.querySelectorAll('.quiz-category-btn'), function(btn){
+      btn.classList.toggle('active', btn.getAttribute('data-cat') === quizCategoryFilter);
+    });
+  }
+  Array.prototype.forEach.call(quizCategoryPopup.querySelectorAll('.quiz-category-btn'), function(btn){
+    btn.addEventListener('click', function(){
+      quizCategoryFilter = btn.getAttribute('data-cat');
+      renderCategoryButtons();
+    });
+  });
+  document.getElementById('quizCategoryStartBtn').addEventListener('click', function(){
+    quizStreak = 0;
+    quizUsedCards = [];
+    startGame('free');
+  });
 
   quizDailyBtn.addEventListener('click', function(){
     if (isDailyDone()) {
@@ -1014,8 +1079,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
     startGame('daily');
   });
   quizFreeBtn.addEventListener('click', function(){
-    quizStreak = 0;
-    startGame('free');
+    showCategoryPopup();
   });
 
   var QUIZ_INFO_DEFS = [
@@ -1067,8 +1131,20 @@ document.getElementById('startBtn').addEventListener('click', function(){
     return out + pending;
   }
 
+  function pickFreeCard(){
+    var pool = quizFilteredCards();
+    var available = pool.filter(function(c){ return quizUsedCards.indexOf(c) === -1; });
+    if (!available.length) {
+      quizUsedCards = [];
+      available = pool;
+    }
+    var card = available[Math.floor(Math.random() * available.length)];
+    quizUsedCards.push(card);
+    return card;
+  }
+
   function startGame(mode){
-    var card = mode === 'daily' ? QUIZ_CARDS[dailyIndex()] : QUIZ_CARDS[Math.floor(Math.random() * QUIZ_CARDS.length)];
+    var card = mode === 'daily' ? QUIZ_CARDS[dailyIndex()] : pickFreeCard();
     quizState = {
       mode: mode,
       card: card,
@@ -1082,6 +1158,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
       solvedIllust: false
     };
     quizMainPopup.classList.remove('active');
+    quizCategoryPopup.classList.remove('active');
     quizGamePopup.classList.add('active');
     renderGamePopup();
   }
@@ -1129,8 +1206,9 @@ document.getElementById('startBtn').addEventListener('click', function(){
     var anyRevealed = r.rarity || r.attribute || r.type || r.illustPartial || r.cost ||
       quizState.tooltipSegments.some(function(s){ return s.type === 'seg' && s.revealed; });
     var mediaBg = '#0c0c10';
+    var isMonster = card.attribute === 'monster';
     var mediaHtml = (quizState.solvedIllust && card.illust) ?
-      '<img class="quiz-silhouette-illust" src="' + card.illust + '" alt="">' : '';
+      '<img class="quiz-silhouette-illust' + (isMonster ? ' quiz-monster-illust-shift' : '') + '" src="' + card.illust + '" alt="">' : '';
     var egoStyle = r.attribute ? "background-image:url('" + QUIZ_ATTR_BAND[card.attribute] + "')" : '';
     var gradeStyle = r.rarity ? "background-image:url('cards/card_" + card.rarity + ".webp')" : '';
     var costText = r.cost ? card.cost : '?';
@@ -1139,14 +1217,11 @@ document.getElementById('startBtn').addEventListener('click', function(){
       '<div class="card-type"><img class="card-type-icon" src="' + QUIZ_TYPE_ICON[card.type] + '" alt="">' +
       '<span>' + QUIZ_TYPE_LABEL[card.type] + '</span></div>' : '';
     var tooltipHtml = renderTooltipSegmentsHtml(quizState.tooltipSegments);
-    var monsterEdgeHtml = '';
-    if (card.attribute === 'monster') {
-      if (quizState.solvedIllust) monsterEdgeHtml = '<div class="quiz-monster-edge gradient"></div>';
-      else if (r.illustPartial) monsterEdgeHtml = '<div class="quiz-monster-edge solid"></div>';
-    }
+    var monsterEdgeHtml = (isMonster && quizState.solvedIllust) ? '<div class="quiz-monster-edge"></div>' : '';
+    var cropAreaHtml = (isMonster && r.illustPartial && !quizState.solvedIllust) ? '<div class="quiz-illust-crop-area"></div>' : '';
     quizSilhouetteEl.setAttribute('data-grade', r.rarity ? card.rarity : '');
     quizSilhouetteEl.innerHTML =
-      '<div class="card-media" style="background:' + mediaBg + '">' + mediaHtml + monsterEdgeHtml + '</div>' +
+      '<div class="card-media" style="background:' + mediaBg + '">' + mediaHtml + cropAreaHtml + monsterEdgeHtml + '</div>' +
       '<div class="card-top-grad"></div>' +
       '<div class="card-ego" style="' + egoStyle + '"></div>' +
       '<div class="card-grade-star" style="' + gradeStyle + '"></div>' +
@@ -1178,13 +1253,14 @@ document.getElementById('startBtn').addEventListener('click', function(){
       if (quizState.card !== myCard || !quizState.revealed.illustPartial || quizState.solvedIllust) return;
       var mediaEl = quizSilhouetteEl.querySelector('.card-media');
       if (!mediaEl) return;
-      var rect = mediaEl.getBoundingClientRect();
+      var targetEl = mediaEl.querySelector('.quiz-illust-crop-area') || mediaEl;
+      var rect = targetEl.getBoundingClientRect();
       if (!rect.width || !rect.height) return;
       var scale = Math.max(rect.width / dims.w, rect.height / dims.h) * 5;
-      mediaEl.style.backgroundImage = "url('" + card.illust + "')";
-      mediaEl.style.backgroundRepeat = 'no-repeat';
-      mediaEl.style.backgroundSize = (dims.w * scale) + 'px ' + (dims.h * scale) + 'px';
-      mediaEl.style.backgroundPosition = pos.x + '% ' + pos.y + '%';
+      targetEl.style.backgroundImage = "url('" + card.illust + "')";
+      targetEl.style.backgroundRepeat = 'no-repeat';
+      targetEl.style.backgroundSize = (dims.w * scale) + 'px ' + (dims.h * scale) + 'px';
+      targetEl.style.backgroundPosition = pos.x + '% ' + pos.y + '%';
     });
   }
 
