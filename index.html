@@ -1139,7 +1139,10 @@ document.getElementById('startBtn').addEventListener('click', function(){
     if (key === 'attribute') return '<div class="quiz-info-value"><img src="' + QUIZ_ATTR_ICON[card.attribute] + '" alt="">' + QUIZ_ATTR_LABEL[card.attribute] + '</div>';
     if (key === 'type') return '<div class="quiz-info-value"><img src="' + QUIZ_TYPE_ICON[card.type] + '" alt="">' + QUIZ_TYPE_LABEL[card.type] + '</div>';
     if (key === 'illustColor') return '<div class="quiz-info-value"><span class="quiz-color-swatch" style="background:' + QUIZ_COLOR_HEX[card.illustColor] + '"></span>' + QUIZ_COLOR_LABEL[card.illustColor] + '</div>';
-    if (key === 'cost') return '<div class="quiz-info-value">비용 ' + card.cost + '</div>';
+    if (key === 'cost') {
+      var costLabel = card.cost === '-' ? '비용 없음' : (card.cost === 'X' ? 'X' : '비용 ' + card.cost);
+      return '<div class="quiz-info-value">' + costLabel + '</div>';
+    }
     return '';
   }
 
