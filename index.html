@@ -1296,7 +1296,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
       '<div class="quiz-answer-row">' +
         '<input type="text" class="quiz-answer-input" id="quizAnswerInput" placeholder="카드 이름을 입력하세요" autocomplete="off">' +
         '<div class="quiz-autocomplete" id="quizAutocomplete"></div>' +
-        '<div class="quiz-invalid-flash" id="quizInvalidFlash">존재하지 않는 카드입니다.</div>' +
+        '<div class="quiz-invalid-flash" id="quizInvalidFlash"></div>' +
         '<button type="button" class="quiz-submit-btn" id="quizSubmitBtn">제출</button>' +
       '</div>' +
       '<div class="quiz-wrong-list" id="quizWrongList"></div>';
@@ -1459,7 +1459,9 @@ document.getElementById('startBtn').addEventListener('click', function(){
     input.addEventListener('input', function(){
       var v = input.value.trim();
       if (!v) { ac.classList.remove('open'); ac.innerHTML = ''; return; }
-      var matches = QUIZ_CARDS.filter(function(c){ return c.name.indexOf(v) === 0; }).slice(0, 8);
+      var matches = QUIZ_CARDS.filter(function(c){
+        return c.name.indexOf(v) === 0 && quizState.wrongGuesses.indexOf(c.name) === -1;
+      }).slice(0, 8);
       if (!matches.length) { ac.classList.remove('open'); ac.innerHTML = ''; return; }
       ac.innerHTML = matches.map(function(c){ return '<div class="quiz-autocomplete-item">' + c.name + '</div>'; }).join('');
       ac.classList.add('open');
@@ -1482,9 +1484,10 @@ document.getElementById('startBtn').addEventListener('click', function(){
   }
 
   var quizInvalidFlashTimer = null;
-  function showInvalidNameFlash(){
+  function showInvalidNameFlash(message){
     var el = document.getElementById('quizInvalidFlash');
     if (!el) return;
+    el.textContent = message;
     clearTimeout(quizInvalidFlashTimer);
     el.style.transition = 'none';
     el.style.opacity = '1';
@@ -1503,8 +1506,13 @@ document.getElementById('startBtn').addEventListener('click', function(){
     var ac = document.getElementById('quizAutocomplete');
     if (v === quizState.card.name) {
       revealFull(true);
+    } else if (quizState.wrongGuesses.indexOf(v) !== -1) {
+      showInvalidNameFlash('이미 제출한 답안입니다.');
+      input.value = '';
+      if (ac) ac.classList.remove('open');
+      return;
     } else if (!QUIZ_CARDS.some(function(c){ return c.name === v; })) {
-      showInvalidNameFlash();
+      showInvalidNameFlash('존재하지 않는 카드입니다.');
       input.value = '';
       if (ac) ac.classList.remove('open');
       return;
