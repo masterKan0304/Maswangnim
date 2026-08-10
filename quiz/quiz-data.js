@@ -126,7 +126,7 @@ window.QUIZ_CARDS = [
     type: 'attack',
     cost: 1,
     illust: 'quiz/결사의일격.webp',
-    tooltip: '[ 보존 ]\n피해 150%\n진혼의 탄환 모두 버리기, 그 수만큼 피해량 +50%'
+    tooltip: '[ 보존 ]\n피해 150%\n진혼의 탄환 모두 버리기,;그 수만큼 피해량 +50%'
   },
   {
     name: '검의 비',
@@ -216,7 +216,7 @@ window.QUIZ_CARDS = [
     type: 'attack',
     cost: 6,
     illust: 'quiz/완전한식사.webp',
-    tooltip: '[ 보존 ] [ 유일 ]\n탐식이 감소되면 사용 시까지 비용 1 감소, 치유량 +30% (최대 10)\n모든 적 방어 기반 피해 160%\n치유 100%\n포식 4'
+    tooltip: '[ 보존 ] [ 유일 ]\n탐식이 감소되면 사용 시까지 비용 1 감소,;치유량 +30% (최대 10)\n모든 적 방어 기반 피해 160%\n치유 100%\n포식 4'
   },
   {
     name: '파쇄',
@@ -243,7 +243,7 @@ window.QUIZ_CARDS = [
     type: 'attack',
     cost: 1,
     illust: 'quiz/치명적일격.webp',
-    tooltip: '방어 기반 피해 140%\n핸드의 비용이 가장 높은 소멸 카드의;비용만큼 피해량 20% 증가, 그 카드 소멸'
+    tooltip: '방어 기반 피해 140%\n핸드의 비용이 가장 높은 소멸 카드의;비용만큼 피해량 20% 증가,;그 카드 소멸'
   },
   {
     name: '역전의 칼날',
@@ -261,7 +261,7 @@ window.QUIZ_CARDS = [
     type: 'skill',
     cost: 1,
     illust: 'quiz/투지.webp',
-    tooltip: '핸드의 비용이 가장 높은;자신의 공격 카드 1장 발동, 그 카드 소멸'
+    tooltip: '핸드의 비용이 가장 높은;자신의 공격 카드 1장 발동,;그 카드 소멸'
   },
   {
     name: 'G코드',
@@ -271,5 +271,32 @@ window.QUIZ_CARDS = [
     cost: 1,
     illust: 'quiz/G코드.webp',
     tooltip: '데시벨 2\n뽑을 카드 맨 위의;카드 1장 발동'
+  },
+  {
+    name: '악센트 뮤트',
+    rarity: 'blue',
+    attribute: 'instinct',
+    type: 'skill',
+    cost: 1,
+    illust: 'quiz/악센트뮤트.webp',
+    tooltip: '비용이 가장 높은 카드 1장 버리기\n그 카드를 소유한 전투원;무작위 적 추가 공격 150%'
+  },
+  {
+    name: '소울리프',
+    rarity: 'blue',
+    attribute: 'instinct',
+    type: 'skill',
+    cost: 1,
+    illust: 'quiz/소울리프.webp',
+    tooltip: '[ 보존 ]\n치유 150%\n1턴간 카드를 버릴 시;데시벨 1, 탄력 2'
+  },
+  {
+    name: '아다지오',
+    rarity: 'yellow',
+    attribute: 'instinct',
+    type: 'skill',
+    cost: 0,
+    illust: 'quiz/아다지오.webp',
+    tooltip: '드로우 1\n버리기 1\n이 효과로 버려진 카드를;뽑을 카드 위로 이동'
   }
 ];

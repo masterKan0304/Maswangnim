@@ -1032,11 +1032,10 @@ document.getElementById('startBtn').addEventListener('click', function(){
   }
 
   function tokenizeTooltipSegments(str){
-    var parts = String(str).split(/(\n|,|;)/);
+    var parts = String(str).split(/(\n|;)/);
     var segments = [];
     parts.forEach(function(p){
       if (p === '\n') segments.push({ type:'newline' });
-      else if (p === ',') segments.push({ type:'comma' });
       else if (p === ';') segments.push({ type:'semicolon' });
       else {
         var t = p.trim();
@@ -1050,7 +1049,6 @@ document.getElementById('startBtn').addEventListener('click', function(){
     var out = '', pending = '';
     segments.forEach(function(s){
       if (s.type === 'newline') { out += pending + '<br>'; pending = ''; return; }
-      if (s.type === 'comma') { pending += ','; return; }
       if (s.type === 'semicolon') { return; }
       var html = s.revealed ? quizParseInline(s.text) : '<span style="color:#fff">XXX</span>';
       if (pending) pending += ' ';
