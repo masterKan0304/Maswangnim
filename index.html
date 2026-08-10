@@ -488,6 +488,7 @@
     font-size:24px;line-height:1;cursor:pointer;padding:4px;}
   .quiz-close-btn:hover{color:#fff;}
   .quiz-title{font-family:var(--font-display);font-weight:900;font-size:21px;letter-spacing:.5px;}
+  .quiz-popup-banner{display:block;width:100%;height:auto;border-radius:10px;margin-top:14px;}
   .quiz-subtitle{margin-top:8px;font-size:13px;color:#c7c5c3;}
   .quiz-example-img{display:block;width:100%;height:auto;min-height:160px;border-radius:10px;margin-top:18px;background:#111;object-fit:cover;}
   .quiz-mode-row{display:flex;gap:12px;margin-top:22px;}
@@ -879,6 +880,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
   <div class="quiz-popup quiz-popup-main" id="quizMainPopup">
     <button type="button" class="quiz-close-btn" id="quizMainCloseBtn">&times;</button>
     <div class="quiz-title">카제나 카드 맞히기</div>
+    <img class="quiz-popup-banner" src="quiz/banner.png" alt="카제나 카드 맞히기" draggable="false" ondragstart="return false">
     <div class="quiz-subtitle">최소한의 정보를 가지고 카드를 맞혀보세요!</div>
     <!-- 예시 이미지 자리: quiz/example.png 준비되면 여기에 <img class="quiz-example-img" src="quiz/example.png" alt="예시 이미지" draggable="false" ondragstart="return false"> 로 복원 -->
     <div class="quiz-mode-row">
@@ -916,8 +918,19 @@ document.getElementById('startBtn').addEventListener('click', function(){
   var QUIZ_TYPE_LABEL = { attack:'공격', skill:'스킬', upgrade:'강화' };
   var QUIZ_TYPE_ICON = { attack:'cards/attack.png', skill:'cards/skill.png', upgrade:'cards/upgrade.png' };
   var QUIZ_RARITY_LABEL = { gray:'일반', blue:'희귀', yellow:'전설', purple:'신화' };
-  var QUIZ_COLOR_LABEL = { red:'빨강', blue:'파랑', green:'초록', yellow:'노랑', purple:'보라', brown:'갈색', gray:'회색', white:'하양', pink:'분홍', black:'검정' };
-  var QUIZ_COLOR_HEX = { red:'#d64545', blue:'#3f7fd6', green:'#4a9b5e', yellow:'#e0c23d', purple:'#9459c9', brown:'#8a5a3c', gray:'#8b8b8b', white:'#e9e9e9', pink:'#e37fb0', black:'#222222' };
+  var quizIllustDimsCache = {};
+
+  function getQuizImgDims(src, cb){
+    if (quizIllustDimsCache[src]) { cb(quizIllustDimsCache[src]); return; }
+    var img = new Image();
+    img.onload = function(){
+      var d = { w: img.naturalWidth || 1, h: img.naturalHeight || 1 };
+      quizIllustDimsCache[src] = d;
+      cb(d);
+    };
+    img.onerror = function(){};
+    img.src = src;
+  }
 
   function todayStr(){
     var d = new Date();
@@ -997,7 +1010,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
     { key:'rarity', label:'희귀도' },
     { key:'attribute', label:'속성' },
     { key:'type', label:'유형' },
-    { key:'illustColor', label:'일러스트 색상' },
+    { key:'illustPartial', label:'일러스트 일부 공개' },
     { key:'cost', label:'비용' },
     { key:'tooltip', label:'카드 툴팁' }
   ];
@@ -1050,7 +1063,8 @@ document.getElementById('startBtn').addEventListener('click', function(){
       mode: mode,
       card: card,
       infoCount: 0,
-      revealed: { rarity:false, attribute:false, type:false, illustColor:false, cost:false },
+      revealed: { rarity:false, attribute:false, type:false, illustPartial:false, cost:false },
+      illustPos: null,
       tooltipSegments: tokenizeTooltipSegments(card.tooltip || ''),
       wrongGuesses: [],
       solved: false,
@@ -1099,9 +1113,9 @@ document.getElementById('startBtn').addEventListener('click', function(){
   function renderSilhouette(){
     var card = quizState.card;
     var r = quizState.revealed;
-    var anyRevealed = r.rarity || r.attribute || r.type || r.illustColor || r.cost ||
+    var anyRevealed = r.rarity || r.attribute || r.type || r.illustPartial || r.cost ||
       quizState.tooltipSegments.some(function(s){ return s.type === 'seg' && s.revealed; });
-    var mediaBg = r.illustColor ? QUIZ_COLOR_HEX[card.illustColor] : '#0c0c10';
+    var mediaBg = '#0c0c10';
     var mediaHtml = (quizState.solvedIllust && card.illust) ?
       '<img class="quiz-silhouette-illust" src="' + card.illust + '" alt="">' : '';
     var egoStyle = r.attribute ? "background-image:url('" + QUIZ_ATTR_BAND[card.attribute] + "')" : '';
@@ -1131,6 +1145,29 @@ document.getElementById('startBtn').addEventListener('click', function(){
         '<div class="card-tooltip">' + tooltipHtml + '</div>' +
       '</div>' +
       '<div class="quiz-win-flash" id="quizWinFlash"></div>';
+    if (r.illustPartial && !quizState.solvedIllust) applyIllustPartial();
+  }
+
+  function applyIllustPartial(){
+    var card = quizState.card;
+    if (!card.illust) return;
+    if (!quizState.illustPos) {
+      quizState.illustPos = { x: Math.random() * 100, y: Math.random() * 100 };
+    }
+    var myCard = card;
+    var pos = quizState.illustPos;
+    getQuizImgDims(card.illust, function(dims){
+      if (quizState.card !== myCard || !quizState.revealed.illustPartial || quizState.solvedIllust) return;
+      var mediaEl = quizSilhouetteEl.querySelector('.card-media');
+      if (!mediaEl) return;
+      var rect = mediaEl.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+      var scale = Math.max(rect.width / dims.w, rect.height / dims.h) * 5;
+      mediaEl.style.backgroundImage = "url('" + card.illust + "')";
+      mediaEl.style.backgroundRepeat = 'no-repeat';
+      mediaEl.style.backgroundSize = (dims.w * scale) + 'px ' + (dims.h * scale) + 'px';
+      mediaEl.style.backgroundPosition = pos.x + '% ' + pos.y + '%';
+    });
   }
 
   function revealedValueHtml(key){
@@ -1138,7 +1175,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
     if (key === 'rarity') return '<div class="quiz-info-value"><img src="cards/card_' + card.rarity + '.webp" alt="">' + QUIZ_RARITY_LABEL[card.rarity] + '</div>';
     if (key === 'attribute') return '<div class="quiz-info-value"><img src="' + QUIZ_ATTR_ICON[card.attribute] + '" alt="">' + QUIZ_ATTR_LABEL[card.attribute] + '</div>';
     if (key === 'type') return '<div class="quiz-info-value"><img src="' + QUIZ_TYPE_ICON[card.type] + '" alt="">' + QUIZ_TYPE_LABEL[card.type] + '</div>';
-    if (key === 'illustColor') return '<div class="quiz-info-value"><span class="quiz-color-swatch" style="background:' + QUIZ_COLOR_HEX[card.illustColor] + '"></span>' + QUIZ_COLOR_LABEL[card.illustColor] + '</div>';
+    if (key === 'illustPartial') return '<div class="quiz-info-value">일부 공개됨</div>';
     if (key === 'cost') {
       var costLabel = card.cost === '-' ? '비용 없음' : (card.cost === 'X' ? 'X' : '비용 ' + card.cost);
       return '<div class="quiz-info-value">' + costLabel + '</div>';
@@ -1291,7 +1328,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
     quizState.revealed.rarity = true;
     quizState.revealed.attribute = true;
     quizState.revealed.type = true;
-    quizState.revealed.illustColor = true;
+    quizState.revealed.illustPartial = true;
     quizState.revealed.cost = true;
     quizState.tooltipSegments.forEach(function(s){ if (s.type === 'seg') s.revealed = true; });
     if (won && quizState.mode === 'daily') setDailyDone();
