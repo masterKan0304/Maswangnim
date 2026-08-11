@@ -487,6 +487,9 @@
   .quiz-close-btn{position:absolute;top:10px;right:14px;background:none;border:none;color:rgba(255,255,255,.6);
     font-size:24px;line-height:1;cursor:pointer;padding:4px;}
   .quiz-close-btn:hover{color:#fff;}
+  .quiz-back-btn{position:absolute;top:10px;left:14px;background:none;border:none;color:rgba(255,255,255,.6);
+    font-size:22px;line-height:1;cursor:pointer;padding:4px;}
+  .quiz-back-btn:hover{color:#fff;}
   .quiz-help-btn{position:absolute;top:16px;right:48px;width:23px;height:23px;border-radius:50%;
     border:1px solid rgba(255,255,255,.4);background:rgba(255,255,255,.1);color:rgba(255,255,255,.75);
     font-size:12.5px;font-weight:800;cursor:pointer;padding:0;line-height:1;
@@ -506,6 +509,9 @@
   .quiz-mode-btn:hover{background:rgba(255,255,255,.16);}
   .quiz-mode-btn-done{display:none;position:absolute;inset:0;align-items:center;justify-content:center;
     background:rgba(20,16,16,.92);color:var(--orange);font-weight:900;font-size:14.5px;}
+  .quiz-hub-help-btn{flex:none;width:44px;padding:13px 0;border-radius:10px;border:1px solid rgba(255,255,255,.3);
+    background:rgba(255,255,255,.08);color:rgba(255,255,255,.75);font-size:15px;font-weight:800;cursor:pointer;transition:background .15s,color .15s;}
+  .quiz-hub-help-btn:hover{background:rgba(255,255,255,.16);color:#fff;}
 
   .quiz-popup-category{width:420px;max-width:100%;padding:32px 30px 28px;text-align:center;}
   .quiz-category-section-title{margin-top:22px;text-align:left;font-size:12px;font-weight:800;color:rgba(255,255,255,.55);}
@@ -966,6 +972,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
             <span class="quiz-mode-btn-done" id="quizDailyDoneTag">완료</span>
           </button>
           <button type="button" class="quiz-mode-btn" id="quizFreeBtn">자유</button>
+          <button type="button" class="quiz-hub-help-btn" id="quizHubHelpBtn1">?</button>
         </div>
       </div>
       <div class="quiz-hub-game">
@@ -976,11 +983,13 @@ document.getElementById('startBtn').addEventListener('click', function(){
             <span class="quiz-mode-btn-done" id="quizDailyDoneTag2">완료</span>
           </button>
           <button type="button" class="quiz-mode-btn" id="quizFreeBtn2">자유</button>
+          <button type="button" class="quiz-hub-help-btn" id="quizHubHelpBtn2">?</button>
         </div>
       </div>
     </div>
   </div>
   <div class="quiz-popup quiz-popup-category" id="quizCategoryPopup">
+    <button type="button" class="quiz-back-btn" id="quizCategoryBackBtn">&larr;</button>
     <button type="button" class="quiz-close-btn" id="quizCategoryCloseBtn">&times;</button>
     <button type="button" class="quiz-help-btn" id="quizCategoryHelpBtn">?</button>
     <div class="quiz-title">출제 설정</div>
@@ -1003,7 +1012,9 @@ document.getElementById('startBtn').addEventListener('click', function(){
   </div>
   <div class="quiz-popup quiz-popup-game" id="quizGamePopup"></div>
   <div class="quiz-popup quiz-popup-category" id="quizCategoryPopup2">
+    <button type="button" class="quiz-back-btn" id="quizCategoryBackBtn2">&larr;</button>
     <button type="button" class="quiz-close-btn" id="quizCategoryCloseBtn2">&times;</button>
+    <button type="button" class="quiz-help-btn" id="quizCategoryHelpBtn2">?</button>
     <div class="quiz-title">출제 설정</div>
     <div class="quiz-subtitle">게임 풀이 시간과 출제될 문제 수량을 선택해주세요.</div>
     <div class="quiz-category-section-title">풀이 시간</div>
@@ -1162,6 +1173,19 @@ document.getElementById('startBtn').addEventListener('click', function(){
     document.getElementById('quizHelpCloseBtn').addEventListener('click', closeMsg);
   }
 
+  var QUIZ_MATCH_HELP_HTML =
+    '<div class="quiz-help-section"><div class="quiz-help-title">게임 소개</div>' +
+      '<div class="quiz-help-desc">게임 내 모든 카드들 중 무작위 한 카드의 이름이 제시됩니다. 이후 총 4장의 카드들의 일러스트만이 공개됩니다. 제시된 이름에 맞는 일러스트를 클릭해 정답을 맞혀야 하며, 정답을 맞힌 시간이 적을수록 높은 점수를 받습니다. 최대한 빠르게 정답들을 맞혀보세요!</div></div>' +
+    '<div class="quiz-help-section"><div class="quiz-help-title">배제 요소</div>' +
+      '<div class="quiz-help-desc">번뜩임, 페르소나 각인, 에고 발현 등의 카드 강화 요소는 상정하지 않습니다.<br>또한, 전투원 기본 일반 카드 및 페르소나 카드, 출격 전용 카드, 상태이상 카드들은 출제되지 않습니다.</div></div>' +
+    '<button type="button" class="quiz-msg-close-btn" id="quizMatchHelpCloseBtn">확인</button>';
+
+  function showMatchHelpPopup(){
+    showMsg(QUIZ_MATCH_HELP_HTML);
+    quizMsgPopup.classList.add('quiz-help-mode');
+    document.getElementById('quizMatchHelpCloseBtn').addEventListener('click', closeMsg);
+  }
+
   quizBannerBtn.addEventListener('click', showMain);
   quizMainCloseBtn.addEventListener('click', closeOverlay);
   document.getElementById('quizCategoryCloseBtn').addEventListener('click', closeOverlay);
@@ -1169,6 +1193,11 @@ document.getElementById('startBtn').addEventListener('click', function(){
   document.getElementById('quizResultsCloseBtn').addEventListener('click', closeOverlay);
   document.getElementById('quizResultsRestartBtn').addEventListener('click', showMain);
   document.getElementById('quizCategoryHelpBtn').addEventListener('click', showHelpPopup);
+  document.getElementById('quizCategoryHelpBtn2').addEventListener('click', showMatchHelpPopup);
+  document.getElementById('quizHubHelpBtn1').addEventListener('click', showHelpPopup);
+  document.getElementById('quizHubHelpBtn2').addEventListener('click', showMatchHelpPopup);
+  document.getElementById('quizCategoryBackBtn').addEventListener('click', showMain);
+  document.getElementById('quizCategoryBackBtn2').addEventListener('click', showMain);
 
   var quizCategoryFilter = 'all';
   var quizQuantityFilter = '10';
@@ -1385,6 +1414,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
         ((quizState.solved || quizState.answerRevealed) ? '다음 문제' : '정답 보기') + '</button>';
     }
     quizGamePopup.innerHTML =
+      '<button type="button" class="quiz-back-btn" id="quizGameBackBtn">&larr;</button>' +
       '<button type="button" class="quiz-close-btn" id="quizGameCloseBtn">&times;</button>' +
       '<button type="button" class="quiz-help-btn" id="quizGameHelpBtn">?</button>' +
       renderSetHeaderHtml() +
@@ -1409,6 +1439,9 @@ document.getElementById('startBtn').addEventListener('click', function(){
     quizInfoGridEl = document.getElementById('quizInfoGrid');
     document.getElementById('quizGameCloseBtn').addEventListener('click', closeOverlay);
     document.getElementById('quizGameHelpBtn').addEventListener('click', showHelpPopup);
+    document.getElementById('quizGameBackBtn').addEventListener('click', function(){
+      if (quizState.mode === 'daily') showMain(); else showCategoryPopup();
+    });
     renderSilhouette();
     renderInfoGrid();
     renderWrongList();
@@ -1867,7 +1900,9 @@ document.getElementById('startBtn').addEventListener('click', function(){
 
   function renderMatchGamePopup(){
     quizGamePopup2.innerHTML =
+      '<button type="button" class="quiz-back-btn" id="quizMatchBackBtn">&larr;</button>' +
       '<button type="button" class="quiz-close-btn" id="quizMatchCloseBtn">&times;</button>' +
+      '<button type="button" class="quiz-help-btn" id="quizMatchHelpBtn">?</button>' +
       renderMatchSetHeaderHtml() +
       '<div class="quiz-match-prompt" id="quizMatchPrompt"></div>' +
       '<div class="quiz-match-timer-row">' +
@@ -1886,6 +1921,12 @@ document.getElementById('startBtn').addEventListener('click', function(){
       if (quizMatchRAF) cancelAnimationFrame(quizMatchRAF);
       closeOverlay();
     });
+    document.getElementById('quizMatchBackBtn').addEventListener('click', function(){
+      quizMatchToken++;
+      if (quizMatchRAF) cancelAnimationFrame(quizMatchRAF);
+      if (quizMatchState.mode === 'daily') showMain(); else showCategoryPopup2();
+    });
+    document.getElementById('quizMatchHelpBtn').addEventListener('click', showMatchHelpPopup);
     document.getElementById('quizMatchActionBtn').addEventListener('click', onMatchActionClick);
     renderMatchCardsBlack();
 
