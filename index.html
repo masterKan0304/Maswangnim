@@ -782,6 +782,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
           <a href="#">Q&amp;A</a>
           <a href="#">공략 게시판</a>
           <a href="#">팬아트</a>
+          <a href="deckbuilder/">덱 빌딩 게시판</a>
           <a href="#">제보/건의사항 <span class="new">N</span></a>
         </div>
       </details>
@@ -916,18 +917,6 @@ document.getElementById('startBtn').addEventListener('click', function(){
           </div>
         </div>
       </div>
-    </section>
-
-    <!-- 웹툰 -->
-    <section class="block">
-      <div class="block-head"><h2>웹툰</h2><a class="block-more" href="#">전체보기 ›</a></div>
-      <div class="post-grid cols-2" id="webtoonGrid"></div>
-    </section>
-
-    <!-- 캘린더 -->
-    <section class="block">
-      <div class="block-head"><h2>캘린더 | 배경화면</h2><a class="block-more" href="#">전체보기 ›</a></div>
-      <div class="post-grid cols-2" id="calGrid"></div>
     </section>
 
   </main>
@@ -2091,18 +2080,6 @@ document.getElementById('startBtn').addEventListener('click', function(){
   var viewIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>';
   var replyIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.5 8.5 0 0 1-12.5 7.5L3 20l1-4.5A8.5 8.5 0 1 1 21 11.5z"/></svg>';
 
-  var officialAv = 'https://d2x8kymwjom7h7.cloudfront.net/live/application_no/119001/images/SNS26EC8AA4ED86A0EBB88CED9484EBA19CED9584_500x500_1752019414561.jpg';
-
-  function postCard(o){
-    return '<div class="post-card">'
-      + '<div class="post-author"><img class="av" src="'+(o.av||officialAv)+'" alt="" loading="lazy">'
-      + (o.official ? '<span class="official">OFFICIAL</span>' : '')
-      + '<span class="writer">'+o.writer+'</span><time>'+o.date+'</time></div>'
-      + (o.img ? '<div class="post-thumb"><img src="'+o.img+'" alt="" loading="lazy">'+(o.badge ? '<span class="badge">'+o.badge+'</span>' : '')+'</div>' : '')
-      + '<div class="post-body"><div class="post-title">'+o.title+(o.reply ? ' <span class="reply-count">['+o.reply+']</span>' : '')+'</div>'
-      + (o.excerpt ? '<div class="post-excerpt">'+o.excerpt+'</div>' : '')
-      + '<div class="post-stats"><span>'+viewIcon+o.view+'</span><span>'+replyIcon+(o.comment||0)+'</span></div></div></div>';
-  }
   function postRow(o){
     return '<div class="post-row"><img class="thumb" src="'+o.img+'" alt="" loading="lazy"><div class="title">'+o.title+'</div><time>'+o.date+'</time></div>';
   }
@@ -2132,16 +2109,6 @@ document.getElementById('startBtn').addEventListener('click', function(){
   document.getElementById('newsGrid').innerHTML =
     newsFeatured(newsData[0])
     + '<div class="news-compact-list">' + newsData.slice(1,4).map(newsCompact).join('') + '</div>';
-
-  document.getElementById('webtoonGrid').innerHTML = [
-    postCard({official:true,writer:'카오스 제로 나이트메어',date:'07.30',img:'https://image.onstove.com/850x0/d2x8kymwjom7h7.cloudfront.net/live/application_no/96001/commnunity/bossImage_1785386776110471.png',title:'◤4컷 만화 "힐데"편◢',excerpt:'@tare_nu 작가님과 함께한 4컷 만화 공개!',view:'52',comment:0}),
-    postCard({official:true,writer:'카오스 제로 나이트메어',date:'07.28',img:'https://image.onstove.com/850x0/d2x8kymwjom7h7.cloudfront.net/live/application_no/96001/commnunity/bossImage_1785205812832286.png',title:'◤4컷 만화 "하루"편◢',excerpt:'@nanoda_jun 작가님과 함께한 4컷 만화 공개!',view:'80',comment:0})
-  ].join('');
-
-  document.getElementById('calGrid').innerHTML = [
-    postCard({official:true,writer:'카오스 제로 나이트메어',date:'07.30',img:'https://image.onstove.com/850x0/d2x8kymwjom7h7.cloudfront.net/live/application_no/96001/commnunity/bossImage_1785375415927622.png',title:'◤8월 캘린더 배경화면◢',excerpt:'오늘은 업무따윈 내려놓고 같이 신나게 놀자구요!',view:'59',comment:0}),
-    postCard({official:true,writer:'카오스 제로 나이트메어',date:'06.25',img:'https://image.onstove.com/850x0/d2x8kymwjom7h7.cloudfront.net/live/application_no/96001/commnunity/bossImage_1782269054912831.png',title:'◤7월 캘린더 배경화면◢',reply:3,excerpt:'내게 가까이 다가왔다간 함장이 다칠 거야.',view:'192',comment:3})
-  ].join('');
 
   var slides = [
     {t:'힐데의 작전 회의 이벤트', img:'https://d2x8kymwjom7h7.cloudfront.net/live/application_no/10009/partners-sns-api/CP커뮤니티멀티배너형_L_1360x280_힐데-이벤트_kr.jpg'},
