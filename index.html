@@ -623,6 +623,12 @@
   .quiz-match-card-black{background:#000;cursor:default;}
   .quiz-match-card.quiz-match-correct{box-shadow:0 0 0 3px #4ade80,0 0 18px 4px rgba(74,222,128,.75);}
   .quiz-match-card.quiz-match-wrong{box-shadow:0 0 0 3px #ff5252,0 0 18px 4px rgba(255,82,82,.75);}
+  .quiz-match-result-tag{position:absolute;inset:0;z-index:4;display:flex;align-items:center;justify-content:center;
+    font-family:var(--font-display);font-weight:900;font-size:22px;pointer-events:none;}
+  .quiz-match-result-tag.quiz-match-result-correct{color:#eafff0;
+    text-shadow:0 0 4px #4ade80,0 0 9px #4ade80,0 0 18px rgba(74,222,128,.85);}
+  .quiz-match-result-tag.quiz-match-result-wrong{color:#fff0f0;
+    text-shadow:0 0 4px #ff5252,0 0 9px #ff5252,0 0 18px rgba(255,82,82,.85);}
   .quiz-match-card .card-media img{pointer-events:none;-webkit-user-drag:none;}
   .quiz-match-pregame-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
     text-align:center;padding:24px;border-radius:10px;color:#fff;font-weight:800;font-size:14px;line-height:1.5;
@@ -1876,6 +1882,11 @@ document.getElementById('startBtn').addEventListener('click', function(){
     });
     document.getElementById('quizMatchActionBtn').addEventListener('click', onMatchActionClick);
     renderMatchCardsBlack();
+
+    var barEl = document.getElementById('quizMatchTimerBar');
+    var textEl = document.getElementById('quizMatchTimerText');
+    if (barEl) barEl.style.width = '100%';
+    if (textEl) textEl.textContent = quizMatchSet.timeLimit.toFixed(1) + '초';
   }
 
   function renderMatchCardsBlack(){
@@ -1983,12 +1994,19 @@ document.getElementById('startBtn').addEventListener('click', function(){
       el.classList.remove('quiz-match-correct', 'quiz-match-wrong');
       if (i === quizMatchState.correctIdx) el.classList.add('quiz-match-correct');
       if (i === clickedIdx && !won) el.classList.add('quiz-match-wrong');
+      if (i === clickedIdx) {
+        var tag = document.createElement('div');
+        tag.className = 'quiz-match-result-tag ' + (won ? 'quiz-match-result-correct' : 'quiz-match-result-wrong');
+        tag.textContent = won ? '정답' : '오답';
+        el.appendChild(tag);
+      }
     });
 
+    var remaining = Math.max(0, limit - elapsed);
     var bar = document.getElementById('quizMatchTimerBar');
     var text = document.getElementById('quizMatchTimerText');
-    if (bar) bar.style.width = '0%';
-    if (text) text.textContent = elapsed.toFixed(1) + '초';
+    if (bar) bar.style.width = (remaining / limit * 100) + '%';
+    if (text) text.textContent = remaining.toFixed(1) + '초';
     var preview = document.getElementById('quizMatchScorePreview');
     if (preview) preview.textContent = '';
 
