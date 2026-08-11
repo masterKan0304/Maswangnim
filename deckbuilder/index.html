@@ -53,8 +53,27 @@
   .stove-bar .wrap{height:100%;display:flex;align-items:center;justify-content:space-between;color:var(--stove-ink);}
   .stove-header-img{height:42px;width:auto;display:block;pointer-events:none;user-select:none;}
 
-  .page-row-wrap{background:var(--page);padding-top:24px;}
-  .row{display:flex;gap:24px;align-items:flex-start;padding:0 0 60px;}
+  /* ===== Cover header (channel) ===== */
+  .cover{background:linear-gradient(180deg, rgba(0,0,0,.08) 0%, rgba(0,0,0,.3) 55%, rgba(0,0,0,.9) 92%, var(--cover-bg) 100%), var(--cover-bg-image) center 0px/180% auto no-repeat, var(--cover-bg);color:var(--cover-text);}
+  .cover-inner{position:relative;padding:130px 40px 28px;min-height:750px;}
+  .content-row-wrap{margin-top:-470px;position:relative;}
+  .cover-top{position:absolute;top:20px;right:40px;}
+  .cover-start-wrap{position:relative;}
+  .cover-start-btn{display:inline-flex;align-items:center;gap:8px;background:var(--orange);color:#fff;font-size:13.5px;font-weight:800;padding:11px 20px;border-radius:8px;border:none;}
+  .cover-start-btn:hover{background:var(--orange-dim);}
+  .cover-start-menu{position:absolute;top:calc(100% + 8px);right:0;background:#fff;border-radius:10px;box-shadow:0 12px 28px rgba(0,0,0,.22);padding:6px;min-width:180px;display:none;z-index:20;}
+  .cover-start-menu.open{display:block;}
+  .cover-start-menu a{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:7px;font-size:13.5px;font-weight:600;color:#1a1a1a;}
+  .cover-start-menu a:hover{background:#f0f0f0;}
+  .cover-start-menu svg{width:18px;height:18px;flex:none;color:#4a4a4a;}
+  .cover-logo{display:block;max-width:320px;height:auto;margin-bottom:14px;}
+  .cover-tags{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;justify-content:flex-start;}
+  .cover-tags li{list-style:none;display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:#fff;}
+  .cover-tags li:not(:first-child)::before{content:"·";margin-right:4px;color:#fff;}
+  .cover-tags .official{color:#fff;}
+  .cover-tags .official::before{content:"✓";display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:var(--orange);color:#fff;font-size:9px;}
+
+  .row{display:flex;gap:24px;align-items:flex-start;padding:20px 0 60px;}
 
   /* ===== LNB ===== */
   .lnb-col{width:250px;flex:none;display:flex;flex-direction:column;gap:12px;}
@@ -133,6 +152,11 @@
 
   section.block{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:20px;box-shadow:0 2px 4px rgba(0,0,0,.05);}
 
+  @media (max-width:960px){
+    .content-row-wrap{margin-top:0;}
+    .cover-inner{min-height:auto;padding-right:20px;padding-left:20px;}
+  }
+
   @media (max-width:800px){
     .row{flex-direction:row;}
     .lnb-col{display:none;}
@@ -159,31 +183,50 @@
   .deck-board-head-icons{display:flex;align-items:center;gap:14px;color:var(--sub);}
   .deck-board-head-icons svg{width:19px;height:19px;display:block;}
 
+  .deck-hot-head{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:900;color:var(--ink);margin-bottom:14px;}
+  .deck-hot-head .deck-hot-tag{font-size:10.5px;padding:3px 7px;}
+  .deck-hot-row-wrap{position:relative;display:flex;align-items:center;gap:10px;}
+  .deck-hot-grid{flex:1;min-width:0;display:grid;grid-template-columns:repeat(2,1fr);gap:18px;overflow:hidden;}
+  .deck-hot-nav{flex:none;width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:var(--surface-2);
+    color:var(--sub);display:flex;align-items:center;justify-content:center;transition:background .15s;}
+  .deck-hot-nav:hover{background:var(--line);}
+  .deck-hot-nav:disabled{opacity:.3;cursor:default;pointer-events:none;}
+  .deck-hot-nav svg{width:14px;height:14px;}
+
   .deck-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;}
 
   .deck-post{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface);transition:box-shadow .15s,border-color .15s;}
   .deck-post:hover{box-shadow:0 6px 18px rgba(0,0,0,.08);border-color:#d6d6d6;}
-  .deck-post-title{padding:14px 16px 12px;font-size:14.5px;font-weight:800;color:var(--ink);
+  .deck-post-title{display:flex;align-items:center;gap:7px;padding:14px 16px 12px;}
+  .deck-post-title-text{min-width:0;flex:1;font-size:14.5px;font-weight:800;color:var(--ink);
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .deck-hot-tag{flex:none;background:#e5303d;color:#fff;font-size:10px;font-weight:800;padding:2px 6px;border-radius:4px;letter-spacing:.3px;}
 
   .deck-agents-row{display:flex;gap:10px;padding:0 16px;}
-  .deck-agent{flex:1;min-width:0;position:relative;aspect-ratio:220/360;border-radius:8px;overflow:hidden;background:#0f0d0d;}
+  .deck-agent{flex:1;min-width:0;position:relative;aspect-ratio:220/360;border-radius:8px;overflow:hidden;background:#dcdcdc;}
   .deck-agent-img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;-webkit-user-drag:none;}
 
-  .deck-agent-badges{position:absolute;top:6px;left:6px;z-index:5;display:flex;flex-direction:column;gap:4px;}
+  .deck-agent-badges{position:absolute;top:6px;left:6px;z-index:6;display:flex;flex-direction:column;gap:4px;}
   .deck-agent-badge{width:19px;height:19px;border-radius:5px;background:rgba(15,12,12,.6);display:flex;align-items:center;justify-content:center;padding:3px;}
   .deck-agent-badge img{width:100%;height:100%;object-fit:contain;display:block;}
   .deck-agent-badge.attr{padding:0;overflow:hidden;}
   .deck-agent-badge.attr img{object-fit:cover;}
 
   .deck-agent-black-band{position:absolute;left:0;right:0;bottom:5px;height:30px;background:rgba(0,0,0,.5);z-index:1;}
-  .deck-agent-gradient{position:absolute;left:0;right:0;bottom:35px;height:20px;z-index:2;}
+  .deck-agent-gradient{position:absolute;left:0;right:0;bottom:5px;height:20px;z-index:2;}
+  .deck-agent-gradient[data-grade="4"]{background:linear-gradient(to top, rgba(255,181,10,.55) 0%, rgba(255,181,10,0) 100%);}
+  .deck-agent-gradient[data-grade="5"]{
+    background:linear-gradient(to right, #202a6e 0%, #2b5fd6 33%, #9c2e8c 66%, #6f3fa0 100%);
+    -webkit-mask-image:linear-gradient(to top, #000 0%, transparent 100%);
+    mask-image:linear-gradient(to top, #000 0%, transparent 100%);
+    opacity:.65;
+  }
   .deck-agent-grade-band{position:absolute;left:0;right:0;bottom:0;height:5px;background-repeat:no-repeat;background-size:100% 100%;z-index:3;}
 
-  .deck-agent-name{position:absolute;right:8px;bottom:8px;z-index:5;color:#fff;font-size:11px;font-weight:800;
+  .deck-agent-name{position:absolute;right:8px;bottom:13px;z-index:6;color:#fff;font-size:16.5px;font-weight:800;
     text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000,0 0 4px rgba(0,0,0,.6);}
 
-  .deck-agent-partner{position:absolute;left:6px;bottom:6px;z-index:5;width:24px;height:24px;border-radius:50%;
+  .deck-agent-partner{position:absolute;left:6px;bottom:16px;z-index:6;width:29px;height:29px;border-radius:50%;
     overflow:hidden;border:1.5px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.55);background:#333;}
   .deck-agent-partner img{width:100%;height:100%;object-fit:cover;display:block;}
 
@@ -216,6 +259,7 @@
 
   @media (max-width:640px){
     .deck-grid{grid-template-columns:1fr;}
+    .deck-hot-grid{grid-template-columns:1fr;}
     .deck-board-controls{flex-wrap:wrap;}
   }
 </style>
@@ -228,7 +272,36 @@
   </div>
 </header>
 
-<div class="wrap page-row-wrap">
+<!-- ============ Cover header (채널 헤더) ============ -->
+<div class="cover" style="--cover-bg-image:url('https://d2x8kymwjom7h7.cloudfront.net/live/application_no/10009/partners-sns-api/260715_카제나-커뮤니티-헤더(시즌4)_CP커뮤니티_BG_ML2560x736_1a1516.jpg');">
+  <div class="wrap cover-inner">
+    <div class="cover-top">
+      <div class="cover-start-wrap">
+        <button class="cover-start-btn" id="startBtn" type="button">▶ 게임 시작</button>
+        <div class="cover-start-menu" id="startMenu">
+          <a href="#" onclick="return false;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="13" rx="1.5"/><path d="M8 21h8M12 17v4"/></svg>PC 클라이언트</a>
+          <a href="#" onclick="return false;"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.7 12.4c0-2.9 2.4-4.3 2.5-4.4-1.4-2-3.5-2.3-4.2-2.3-1.8-.2-3.5 1.1-4.4 1.1-.9 0-2.3-1-3.8-1-1.9 0-3.7 1.1-4.7 2.9-2 3.5-.5 8.7 1.4 11.5 1 1.4 2.1 2.9 3.6 2.9 1.4-.1 2-.9 3.7-.9 1.7 0 2.2.9 3.7.9 1.5 0 2.5-1.4 3.5-2.8 1.1-1.6 1.5-3.1 1.6-3.2-.1 0-3-1.2-3-4.7z"/><path d="M13.9 3.5c.8-1 1.4-2.3 1.2-3.7-1.2.1-2.6.8-3.4 1.8-.7.8-1.4 2.2-1.2 3.5 1.3.1 2.6-.7 3.4-1.6z"/></svg>App Store</a>
+          <a href="#" onclick="return false;"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>Google Play</a>
+        </div>
+      </div>
+    </div>
+    <img class="cover-logo" src="../assets/game-logo.png" alt="카오스 제로 나이트메어">
+    <ul class="cover-tags">
+      <li class="official">공식 커뮤니티</li>
+      <li>PC/MOBILE</li>
+      <li>로그라이트 RPG</li>
+      <li>주식회사 스마일게이트</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+document.getElementById('startBtn').addEventListener('click', function(){
+  document.getElementById('startMenu').classList.toggle('open');
+});
+</script>
+
+<div class="wrap content-row-wrap">
 <div class="row">
 
   <!-- ============ LNB ============ -->
@@ -368,6 +441,15 @@
       </div>
     </section>
 
+    <section class="block deck-hot-box">
+      <div class="deck-hot-head"><span class="deck-hot-tag">HOT</span>HOT 게시물</div>
+      <div class="deck-hot-row-wrap">
+        <button type="button" class="deck-hot-nav prev" id="deckHotPrev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 6l-6 6 6 6"/></svg></button>
+        <div class="deck-hot-grid" id="deckHotGrid"></div>
+        <button type="button" class="deck-hot-nav next" id="deckHotNext"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg></button>
+      </div>
+    </section>
+
     <section class="block deck-board">
       <div class="deck-grid" id="deckGrid"></div>
       <div class="deck-board-controls">
@@ -405,8 +487,22 @@
 <script src="../agents/agents-data.js"></script>
 <!-- 파트너 정보 데이터 -->
 <script src="../partner/partner-data.js"></script>
-<!-- 덱 빌딩 게시물 데이터 (deckbuilder-data.js 파일에서 직접 수정) -->
-<script src="deckbuilder-data.js"></script>
+<!-- 덱 빌딩 게시물 데이터 (게시물 폴더 안에 게시물 1개 = 파일 1개로 저장됨, 오래된 순으로 로드) -->
+<script src="게시물/20260730_00001.js"></script>
+<script src="게시물/20260801_00002.js"></script>
+<script src="게시물/20260802_00003.js"></script>
+<script src="게시물/20260803_00004.js"></script>
+<script src="게시물/20260804_00005.js"></script>
+<script src="게시물/20260805_00006.js"></script>
+<script src="게시물/20260806_00007.js"></script>
+<script src="게시물/20260807_00008.js"></script>
+<script src="게시물/20260807_00009.js"></script>
+<script src="게시물/20260808_00010.js"></script>
+<script src="게시물/20260808_00011.js"></script>
+<script src="게시물/20260809_00012.js"></script>
+<script src="게시물/20260809_00013.js"></script>
+<script src="게시물/20260810_00014.js"></script>
+<script src="게시물/20260810_00015.js"></script>
 
 <script>
 (function(){
@@ -444,11 +540,6 @@
     instinct: '../agents/instinct.webp',
     void: '../agents/void.webp'
   };
-  var GRADE_GRADIENT = {
-    5: 'linear-gradient(to top, rgba(255,224,138,.55) 0%, rgba(178,216,255,.4) 45%, rgba(242,184,224,.28) 75%, rgba(255,255,255,0) 100%)',
-    4: 'linear-gradient(to top, rgba(255,181,10,.55) 0%, rgba(255,181,10,0) 100%)'
-  };
-
   var viewIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>';
   var likeIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.35-9.5-8.5C.8 8.8 2.6 5 6.3 5c2 0 3.3 1 3.7 2 0.4-1 1.7-2 3.7-2 3.7 0 5.5 3.8 3.8 7.5C19 16.65 12 21 12 21z"/></svg>';
   var commentIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.5 8.5 0 0 1-12.5 7.5L3 20l1-4.5A8.5 8.5 0 1 1 21 11.5z"/></svg>';
@@ -478,7 +569,7 @@
           '<div class="deck-agent-badge attr"><img src="' + ATTR_ICON[a.attribute] + '" alt=""></div>' +
         '</div>' +
         '<div class="deck-agent-black-band"></div>' +
-        '<div class="deck-agent-gradient" style="background:' + (GRADE_GRADIENT[a.grade] || GRADE_GRADIENT[4]) + '"></div>' +
+        '<div class="deck-agent-gradient" data-grade="' + a.grade + '"></div>' +
         '<div class="deck-agent-grade-band" style="background-image:url(\'' + gradeBand + '\')"></div>' +
         partnerHtml +
         '<div class="deck-agent-name">' + a.name + '</div>' +
@@ -489,7 +580,10 @@
   function renderPost(post){
     return (
       '<div class="deck-post">' +
-        '<div class="deck-post-title" title="' + post.title.replace(/"/g,'&quot;') + '">' + post.title + '</div>' +
+        '<div class="deck-post-title">' +
+          '<span class="deck-post-title-text" title="' + post.title.replace(/"/g,'&quot;') + '">' + post.title + '</span>' +
+          (post.hot ? '<span class="deck-hot-tag">HOT</span>' : '') +
+        '</div>' +
         '<div class="deck-agents-row">' + post.agentIds.map(renderAgentSlot).join('') + '</div>' +
         '<div class="deck-post-footer">' +
           '<div class="deck-post-meta">' +
@@ -504,7 +598,13 @@
     );
   }
 
-  var POSTS = window.DECKBUILDER_POSTS || [];
+  // 게시물 파일들은 오래된 순으로 로드되므로, 최신순(작성일 최신/파일 순번 후번이 먼저)으로 뒤집는다.
+  var POSTS = (window.DECKBUILDER_POSTS || []).slice().reverse();
+
+  var HOT_COUNT = 4;
+  var hotPosts = POSTS.slice().sort(function(a, b){ return (b.view + b.like) - (a.view + a.like); }).slice(0, HOT_COUNT);
+  hotPosts.forEach(function(p){ p.hot = true; });
+
   var PAGE_SIZE = 10;
   var page = 1;
   var totalPages = Math.max(1, Math.ceil(POSTS.length / PAGE_SIZE));
@@ -546,5 +646,25 @@
 
   renderGrid();
   renderPager();
+
+  // HOT 게시물 미리보기: 2개씩 나눠서 좌우 화살표로 전환
+  var HOT_PAGE_SIZE = 2;
+  var hotPage = 0;
+  var hotTotalPages = Math.max(1, Math.ceil(hotPosts.length / HOT_PAGE_SIZE));
+  var hotGridEl = document.getElementById('deckHotGrid');
+  var hotPrevBtn = document.getElementById('deckHotPrev');
+  var hotNextBtn = document.getElementById('deckHotNext');
+
+  function renderHot(){
+    var start = hotPage * HOT_PAGE_SIZE;
+    var pagePosts = hotPosts.slice(start, start + HOT_PAGE_SIZE);
+    hotGridEl.innerHTML = pagePosts.map(renderPost).join('');
+    hotPrevBtn.disabled = hotPage <= 0;
+    hotNextBtn.disabled = hotPage >= hotTotalPages - 1;
+  }
+  hotPrevBtn.addEventListener('click', function(){ if (hotPage > 0) { hotPage--; renderHot(); } });
+  hotNextBtn.addEventListener('click', function(){ if (hotPage < hotTotalPages - 1) { hotPage++; renderHot(); } });
+
+  renderHot();
 })();
 </script>
