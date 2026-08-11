@@ -185,9 +185,9 @@
 
   .deck-hot-head{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:900;color:var(--ink);margin-bottom:14px;}
   .deck-hot-head .deck-hot-tag{font-size:10.5px;padding:3px 7px;}
-  .deck-hot-row-wrap{position:relative;display:flex;align-items:center;gap:10px;}
-  .deck-hot-grid{flex:1;min-width:0;display:grid;grid-template-columns:repeat(2,1fr);gap:18px;overflow:hidden;}
-  .deck-hot-nav{flex:none;width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:var(--surface-2);
+  .deck-hot-nav-group{margin-left:auto;display:flex;align-items:center;gap:6px;}
+  .deck-hot-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;}
+  .deck-hot-nav{flex:none;width:28px;height:28px;border-radius:50%;border:1px solid var(--line);background:var(--surface-2);
     color:var(--sub);display:flex;align-items:center;justify-content:center;transition:background .15s;}
   .deck-hot-nav:hover{background:var(--line);}
   .deck-hot-nav:disabled{opacity:.3;cursor:default;pointer-events:none;}
@@ -207,10 +207,10 @@
   .deck-agent-img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;-webkit-user-drag:none;}
 
   .deck-agent-badges{position:absolute;top:6px;left:6px;z-index:6;display:flex;flex-direction:column;gap:4px;}
-  .deck-agent-badge{width:19px;height:19px;border-radius:5px;background:rgba(15,12,12,.6);display:flex;align-items:center;justify-content:center;padding:3px;}
-  .deck-agent-badge img{width:100%;height:100%;object-fit:contain;display:block;}
-  .deck-agent-badge.attr{padding:0;overflow:hidden;}
-  .deck-agent-badge.attr img{object-fit:cover;}
+  .deck-agent-badge{width:20.9px;height:20.9px;border-radius:5px;background:rgba(15,12,12,.6);display:flex;align-items:center;justify-content:center;}
+  .deck-agent-badge img{width:77.8%;height:77.8%;object-fit:contain;display:block;}
+  .deck-agent-badge.attr{overflow:hidden;}
+  .deck-agent-badge.attr img{width:100%;height:100%;object-fit:cover;}
 
   .deck-agent-black-band{position:absolute;left:0;right:0;bottom:5px;height:30px;background:rgba(0,0,0,.5);z-index:1;}
   .deck-agent-gradient{position:absolute;left:0;right:0;bottom:5px;height:20px;z-index:2;}
@@ -223,7 +223,7 @@
   }
   .deck-agent-grade-band{position:absolute;left:0;right:0;bottom:0;height:5px;background-repeat:no-repeat;background-size:100% 100%;z-index:3;}
 
-  .deck-agent-name{position:absolute;right:8px;bottom:13px;z-index:6;color:#fff;font-size:16.5px;font-weight:800;
+  .deck-agent-name{position:absolute;right:8px;bottom:13px;z-index:6;color:#fff;font-size:14.85px;font-weight:800;
     text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000,0 0 4px rgba(0,0,0,.6);}
 
   .deck-agent-partner{position:absolute;left:6px;bottom:16px;z-index:6;width:29px;height:29px;border-radius:50%;
@@ -442,12 +442,14 @@ document.getElementById('startBtn').addEventListener('click', function(){
     </section>
 
     <section class="block deck-hot-box">
-      <div class="deck-hot-head"><span class="deck-hot-tag">HOT</span>HOT 게시물</div>
-      <div class="deck-hot-row-wrap">
-        <button type="button" class="deck-hot-nav prev" id="deckHotPrev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 6l-6 6 6 6"/></svg></button>
-        <div class="deck-hot-grid" id="deckHotGrid"></div>
-        <button type="button" class="deck-hot-nav next" id="deckHotNext"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg></button>
+      <div class="deck-hot-head">
+        <span class="deck-hot-tag">HOT</span>HOT 게시물
+        <div class="deck-hot-nav-group">
+          <button type="button" class="deck-hot-nav prev" id="deckHotPrev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 6l-6 6 6 6"/></svg></button>
+          <button type="button" class="deck-hot-nav next" id="deckHotNext"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg></button>
+        </div>
       </div>
+      <div class="deck-hot-grid" id="deckHotGrid"></div>
     </section>
 
     <section class="block deck-board">
