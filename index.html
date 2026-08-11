@@ -613,10 +613,15 @@
   .quiz-help-mode .quiz-msg-close-btn{display:block;margin:18px auto 0;}
 
   .quiz-match-prompt{text-align:center;font-family:var(--font-display);font-weight:900;font-size:18px;color:#fff;margin:4px 0 14px;min-height:24px;}
-  .quiz-match-timer-row{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+  .quiz-match-timer-row{position:relative;display:flex;align-items:center;gap:10px;margin-bottom:14px;}
   .quiz-match-timer-bar-wrap{flex:1;height:8px;border-radius:4px;background:rgba(255,255,255,.12);overflow:hidden;}
   .quiz-match-timer-bar{height:100%;width:100%;background:var(--orange);border-radius:4px;}
   .quiz-match-timer-text{flex:none;font-size:12.5px;font-weight:700;color:rgba(255,255,255,.7);min-width:44px;text-align:right;}
+  .quiz-match-timeout-tag{position:absolute;inset:-8px;z-index:5;display:none;align-items:center;justify-content:center;
+    border-radius:6px;background:rgba(10,8,8,.9);
+    font-family:var(--font-display);font-weight:900;font-size:14px;letter-spacing:.5px;pointer-events:none;
+    color:#fff0f0;text-shadow:0 0 4px #ff5252,0 0 9px #ff5252,0 0 18px rgba(255,82,82,.85);}
+  .quiz-match-timeout-tag.show{display:flex;}
   .quiz-match-grid-wrap{position:relative;}
   .quiz-match-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
   .quiz-match-card{position:relative;aspect-ratio:5/7;cursor:pointer;}
@@ -1868,6 +1873,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
       '<div class="quiz-match-timer-row">' +
         '<div class="quiz-match-timer-bar-wrap"><div class="quiz-match-timer-bar" id="quizMatchTimerBar"></div></div>' +
         '<div class="quiz-match-timer-text" id="quizMatchTimerText"></div>' +
+        '<div class="quiz-match-timeout-tag" id="quizMatchTimeoutTag">시간 초과!</div>' +
       '</div>' +
       '<div class="quiz-match-grid-wrap">' +
         '<div class="quiz-match-grid" id="quizMatchGrid"></div>' +
@@ -1925,6 +1931,9 @@ document.getElementById('startBtn').addEventListener('click', function(){
     quizMatchState.correctIdx = choices.indexOf(card);
     quizMatchState.answered = false;
     quizMatchState.startTime = performance.now();
+
+    var timeoutTag = document.getElementById('quizMatchTimeoutTag');
+    if (timeoutTag) timeoutTag.classList.remove('show');
 
     var promptEl = document.getElementById('quizMatchPrompt');
     if (promptEl) promptEl.textContent = card.name;
@@ -2009,6 +2018,8 @@ document.getElementById('startBtn').addEventListener('click', function(){
     if (text) text.textContent = remaining.toFixed(1) + '초';
     var preview = document.getElementById('quizMatchScorePreview');
     if (preview) preview.textContent = '';
+    var timeoutTag = document.getElementById('quizMatchTimeoutTag');
+    if (timeoutTag) timeoutTag.classList.toggle('show', clickedIdx === -1);
 
     updateMatchSetHeader();
     updateMatchActionVisibility();
