@@ -543,15 +543,6 @@ window.QUIZ_CARDS = [
     tooltip: '[ 소멸 ]\n사기 1 감소\n결의 3 감소'
   },
   {
-    name: '나락충',
-    rarity: 'gray',
-    attribute: 'monster',
-    type: 'skill',
-    cost: 0,
-    illust: 'quiz/나락충.webp',
-    tooltip: '[ 소멸 ]\n사기 1 감소\n결의 3 감소'
-  },
-  {
     name: '알비툼',
     rarity: 'blue',
     attribute: 'monster',
@@ -1331,7 +1322,7 @@ window.QUIZ_CARDS = [
     attribute: 'common',
     type: 'upgrade',
     cost: 1,
-    illust: 'quiz/직감점화.webp',
+    illust: 'quiz/철벽.webp',
     tooltip: '[ 개전 ]\n결의 1\n불굴 1'
   },
   {
