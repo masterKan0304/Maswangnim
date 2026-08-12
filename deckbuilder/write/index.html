@@ -288,15 +288,15 @@
   .deckbuild-equip-slot{flex:1;aspect-ratio:1/1;border-radius:8px;background:#fff;border:1.5px solid var(--line);
     display:flex;align-items:center;justify-content:center;cursor:pointer;transition:border-color .15s;}
   .deckbuild-equip-slot:hover{border-color:var(--orange);}
-  .deckbuild-equip-slot-icon{width:70%;height:70%;object-fit:contain;pointer-events:none;filter:drop-shadow(0 1px 3px rgba(0,0,0,.5));}
-  .deckbuild-equip-slot-icon.generic-icon{filter:brightness(0) invert(72%) drop-shadow(0 1px 3px rgba(0,0,0,.5));}
+  .deckbuild-equip-slot-icon{width:84%;height:84%;object-fit:contain;pointer-events:none;filter:drop-shadow(0 1px 3px rgba(0,0,0,.5));}
+  .deckbuild-equip-slot-icon.generic-icon{width:70%;height:70%;filter:brightness(0) invert(72%);}
 
-  .grade-blue,.deckbuild-equip-slot.grade-blue{background:linear-gradient(135deg,#152a6e 0%,#2469d6 38%,#3fd6c8 72%,#8ee9ff 100%);border-color:transparent;}
-  .grade-yellow,.deckbuild-equip-slot.grade-yellow{background:linear-gradient(135deg,#e0791e 0%,#6e4022 45%,#f5c518 100%);border-color:transparent;}
-  .grade-purple,.deckbuild-equip-slot.grade-purple{background:linear-gradient(135deg,#e01ed6 0%,#8a2be2 35%,#3a5ce8 68%,#3fe0c8 100%);border-color:transparent;}
+  .grade-blue,.deckbuild-equip-slot.grade-blue{background:linear-gradient(135deg,#152a6e 0%,#2469d6 38%,#3fd6c8 72%,#8ee9ff 100%);border-color:#4fc3f7;}
+  .grade-yellow,.deckbuild-equip-slot.grade-yellow{background:linear-gradient(135deg,#e0791e 0%,#6e4022 45%,#f5c518 100%);border-color:#f5c518;}
+  .grade-purple,.deckbuild-equip-slot.grade-purple{background:linear-gradient(135deg,#e01ed6 0%,#8a2be2 35%,#3a5ce8 68%,#3fe0c8 100%);border-color:#b26bff;}
   .deckbuild-equip-slot.grade-blue .deckbuild-equip-slot-icon.generic-icon,
   .deckbuild-equip-slot.grade-yellow .deckbuild-equip-slot-icon.generic-icon,
-  .deckbuild-equip-slot.grade-purple .deckbuild-equip-slot-icon.generic-icon{filter:brightness(0) invert(100%) drop-shadow(0 1px 3px rgba(0,0,0,.5));}
+  .deckbuild-equip-slot.grade-purple .deckbuild-equip-slot-icon.generic-icon{filter:brightness(0) invert(100%);}
 
   /* ============ 카드 구조 ============ */
   .card{position:relative;width:100%;aspect-ratio:5/7;border-radius:8px;overflow:hidden;background:#0c0c10;cursor:pointer;
@@ -357,6 +357,10 @@
     transform:scale(1.2);transform-origin:top left;}
   .equip-zoom-preview.visible{display:block;}
   .equip-zoom-preview .equip-cell{cursor:default;box-shadow:0 10px 34px rgba(0,0,0,.65);}
+  .equip-cell-source[data-full-source]{cursor:help;text-decoration:underline dotted;text-underline-offset:2px;}
+  .equip-source-tooltip{position:fixed;z-index:10000;display:none;pointer-events:none;background:#181820;color:#fff;
+    font-size:11px;font-weight:600;line-height:1.4;padding:8px 10px;border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.5);max-width:240px;}
+  .equip-source-tooltip.visible{display:block;}
 
   /* ============ 전투원 미리보기 박스 (파트너 아이콘 제외) ============ */
   .deck-agent{position:relative;aspect-ratio:220/360;border-radius:8px;overflow:hidden;background:#dcdcdc;}
@@ -730,6 +734,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
 <div class="card-zoom-preview" id="cardZoomPreview"></div>
 <div class="card-zoom-preview card-zoom-plus" id="cardZoomPlusPreview"></div>
 <div class="equip-zoom-preview" id="equipZoomPreview"></div>
+<div class="equip-source-tooltip" id="equipSourceTooltip"></div>
 
 <!-- 전투원 선택 팝업 -->
 <div class="wpop-overlay" id="agentPopOverlay">
@@ -895,14 +900,27 @@ document.getElementById('startBtn').addEventListener('click', function(){
     return { src: EQUIP_TYPE_ICON[type], cls: ' generic-icon' };
   }
 
+  function equipSourceList(item){
+    return Array.isArray(item.source) ? item.source : [item.source];
+  }
+  function equipSourceDisplayText(item){
+    var list = equipSourceList(item);
+    if (list.length <= 1) return list[0] || '';
+    return list[0] + ' 외 ' + (list.length - 1) + '곳';
+  }
+
   function renderEquipCellHtml(item){
     var ic = equipIconSrcAndClass(item, item.type);
     var statLabel = EQUIP_STAT_LABEL[item.type];
+    var sources = equipSourceList(item);
+    var sourceHtml = sources.length > 1 ?
+      '<span class="equip-cell-source" data-full-source="'+sources.join(', ').replace(/"/g, '&quot;')+'">'+equipSourceDisplayText(item)+'</span>' :
+      '<span class="equip-cell-source">'+equipSourceDisplayText(item)+'</span>';
     return (
       '<div class="equip-cell grade-'+item.grade+'">' +
         '<div class="equip-cell-icon-box grade-'+item.grade+'"><img src="'+ic.src+'" alt=""'+(ic.cls ? ' class="'+ic.cls.trim()+'"' : '')+'></div>' +
         '<div class="equip-cell-body">' +
-          '<div class="equip-cell-name-row"><span class="equip-cell-name">'+item.name+'</span><span class="equip-cell-source">'+item.source+'</span></div>' +
+          '<div class="equip-cell-name-row"><span class="equip-cell-name">'+item.name+'</span>'+sourceHtml+'</div>' +
           '<div class="equip-cell-stat-row"><span>'+statLabel+'</span><span class="equip-cell-stat-value">+'+item.stat+'</span></div>' +
           '<div class="equip-cell-tooltip">'+item.tooltip+'</div>' +
         '</div>' +
@@ -2093,6 +2111,24 @@ document.getElementById('startBtn').addEventListener('click', function(){
     equipZoomEl.innerHTML = '';
   }
 
+  var equipSourceTooltipEl = document.getElementById('equipSourceTooltip');
+  function showEquipSourceTooltip(text, x, y){
+    equipSourceTooltipEl.textContent = text;
+    equipSourceTooltipEl.classList.add('visible');
+    positionEquipSourceTooltip(x, y);
+  }
+  function positionEquipSourceTooltip(x, y){
+    var rect = equipSourceTooltipEl.getBoundingClientRect();
+    var left = x + 16, top = y + 16;
+    if (left + rect.width > window.innerWidth - 8) left = x - rect.width - 16;
+    if (top + rect.height > window.innerHeight - 8) top = y - rect.height - 16;
+    equipSourceTooltipEl.style.left = left + 'px';
+    equipSourceTooltipEl.style.top = top + 'px';
+  }
+  function hideEquipSourceTooltip(){
+    equipSourceTooltipEl.classList.remove('visible');
+  }
+
   // ============ 장비 선택 팝업 ============
   var equipPopOverlay = document.getElementById('equipPopOverlay');
   var equipPopGrid = document.getElementById('equipPopGrid');
@@ -2115,7 +2151,9 @@ document.getElementById('startBtn').addEventListener('click', function(){
   var EQUIP_SOURCES_LIST = (function(){
     var seen = {}, list = [];
     (window.EQUIPMENT_DATA || []).forEach(function(item){
-      if (item.source && !seen[item.source]) { seen[item.source] = true; list.push(item.source); }
+      equipSourceList(item).forEach(function(s){
+        if (s && !seen[s]) { seen[s] = true; list.push(s); }
+      });
     });
     return list;
   })();
@@ -2148,7 +2186,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
 
   function equipMatchesFilter(item){
     if (equipPopState.grade && item.grade !== equipPopState.grade) return false;
-    if (equipPopState.source && item.source !== equipPopState.source) return false;
+    if (equipPopState.source && equipSourceList(item).indexOf(equipPopState.source) === -1) return false;
     if (equipPopState.search && item.name.indexOf(equipPopState.search) === -1) return false;
     return true;
   }
@@ -2194,6 +2232,12 @@ document.getElementById('startBtn').addEventListener('click', function(){
       el.addEventListener('mouseenter', function(e){ showEquipZoom(item, e.clientX, e.clientY); });
       el.addEventListener('mousemove', function(e){ positionEquipZoom(e.clientX, e.clientY); });
       el.addEventListener('mouseleave', hideEquipZoom);
+      var sourceEl = el.querySelector('.equip-cell-source[data-full-source]');
+      if (sourceEl) {
+        sourceEl.addEventListener('mouseenter', function(e){ showEquipSourceTooltip(sourceEl.getAttribute('data-full-source'), e.clientX, e.clientY); });
+        sourceEl.addEventListener('mousemove', function(e){ positionEquipSourceTooltip(e.clientX, e.clientY); });
+        sourceEl.addEventListener('mouseleave', hideEquipSourceTooltip);
+      }
       if (isDisabled(x)) return;
       el.addEventListener('click', function(){ equipItem(equipPopState.row, type, idx); });
     });
