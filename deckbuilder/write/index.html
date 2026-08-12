@@ -435,7 +435,8 @@
   .equip-cell{display:flex;gap:10px;padding:12px;border-radius:10px;background:#181820;cursor:pointer;transition:transform .15s;}
   .equip-cell:hover{transform:translateY(-2px);}
   .equip-cell-icon-box{flex:none;width:64px;aspect-ratio:1/1;border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#2a2a34;}
-  .equip-cell-icon-box img{width:58%;height:58%;object-fit:contain;filter:brightness(0) invert(100%);}
+  .equip-cell-icon-box img{width:58%;height:58%;object-fit:contain;}
+  .equip-cell-icon-box img.generic-icon{filter:brightness(0) invert(100%);}
   .equip-cell-body{flex:1;min-width:0;display:flex;flex-direction:column;}
   .equip-cell-name{color:#fff;font-size:13px;font-weight:800;margin-bottom:7px;}
   .equip-cell-stat-row{display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.09);
@@ -804,7 +805,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
 <!-- 파트너 정보 데이터 -->
 <script src="../../partner/partner-data.js"></script>
 <!-- 장비 정보 데이터 -->
-<script src="../equipment-data.js"></script>
+<script src="../../weapon/equipment-data.js"></script>
 
 <script>
 (function(){
@@ -2021,9 +2022,11 @@ document.getElementById('startBtn').addEventListener('click', function(){
       var item = x.item;
       var dim = (item.grade === 'purple' && purpleBlocked) ? ' dim' : '';
       var statLabel = EQUIP_STAT_LABEL[item.type];
+      var iconSrc = item.media ? ('../../' + item.media) : EQUIP_TYPE_ICON[item.type];
+      var iconClass = item.media ? '' : ' class="generic-icon"';
       return (
         '<div class="wpop-cell equip-cell'+dim+'" data-equip-idx="'+x.idx+'">' +
-          '<div class="equip-cell-icon-box grade-'+item.grade+'"><img src="'+EQUIP_TYPE_ICON[item.type]+'" alt=""></div>' +
+          '<div class="equip-cell-icon-box grade-'+item.grade+'"><img src="'+iconSrc+'" alt=""'+iconClass+'></div>' +
           '<div class="equip-cell-body">' +
             '<div class="equip-cell-name">'+item.name+'</div>' +
             '<div class="equip-cell-stat-row"><span>'+statLabel+'</span><span class="equip-cell-stat-value">+'+item.stat+'</span></div>' +
