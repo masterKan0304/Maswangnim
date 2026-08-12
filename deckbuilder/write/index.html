@@ -214,11 +214,12 @@
     background:#e5303d;border:1.5px solid #fff;color:#fff;display:flex;align-items:center;justify-content:center;
     font-size:11px;line-height:1;padding:0;cursor:pointer;}
   .deckbuild-remove-btn:hover{background:#c92531;}
-  .deckbuild-partner-btn{position:absolute;left:4px;bottom:4px;z-index:7;width:20px;height:20px;border-radius:50%;
+  .deckbuild-partner-btn{position:absolute;left:4px;bottom:4px;z-index:7;width:24px;height:24px;border-radius:50%;
     background:rgba(255,255,255,.92);border:1.5px solid #fff;color:var(--ink);display:flex;align-items:center;justify-content:center;
-    font-size:14px;font-weight:700;line-height:1;padding:0;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.45);transition:box-shadow .15s;}
+    overflow:hidden;font-size:17px;font-weight:700;line-height:1;padding:0;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.45);transition:box-shadow .15s;}
   .deckbuild-partner-btn:hover{background:#fff;}
   .deckbuild-partner-btn.job-match{box-shadow:0 0 0 2px #4ade80,0 0 10px 4px rgba(74,222,128,.85);}
+  .deckbuild-partner-btn-img{width:100%;height:100%;object-fit:cover;display:block;}
   .deckbuild-select-footer{display:flex;align-items:center;justify-content:space-between;gap:4px;
     padding:4px 6px;border-top:1px solid var(--line);height:22px;}
   .deckbuild-select-name{min-width:0;flex:1;text-align:left;font-size:10px;font-weight:800;color:var(--ink);
@@ -380,6 +381,7 @@
     text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000,0 0 4px rgba(0,0,0,.6);}
   .deck-agent.selectable{cursor:pointer;transition:transform .15s;}
   .deck-agent.selectable:hover{transform:scale(1.03);}
+  .wpop-cell.partner-job-match .deck-agent{box-shadow:0 0 0 2px #4ade80,0 0 14px 4px rgba(74,222,128,.75);}
 
   /* ============ 필터로 제외된 항목 어둡게 처리 ============ */
   .wpop-cell{position:relative;}
@@ -438,16 +440,18 @@
   .awaken-confirm-btn:disabled{opacity:.4;cursor:default;}
 
   /* ============ 장비 선택 팝업 ============ */
-  .equip-grade-tag-btn{padding:6px 14px;border-radius:20px;border:2px solid transparent;color:#fff;font-weight:800;font-size:11.5px;
+  .wpop-filters.equip-filters{flex-direction:column;align-items:stretch;gap:10px;}
+  .equip-filters-top-row{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;}
+  .equip-grade-tag-btn{padding:6px 14px;border-radius:8px;border:2px solid transparent;color:#fff;font-weight:800;font-size:11.5px;
     cursor:pointer;text-shadow:0 1px 2px rgba(0,0,0,.5);opacity:.55;transition:opacity .15s,box-shadow .15s;}
   .equip-grade-tag-btn:hover{opacity:.85;}
-  .equip-grade-tag-btn.active{opacity:1;box-shadow:0 0 0 2px #fff;}
+  .equip-grade-tag-btn.active{opacity:1;box-shadow:0 0 0 2px #4ade80,0 0 10px 3px rgba(74,222,128,.8);}
   .equip-source-tag-btn{padding:6px 14px;border-radius:20px;border:1px solid var(--line);background:var(--surface-2);
     color:var(--sub);font-size:11.5px;font-weight:700;cursor:pointer;transition:background .15s,border-color .15s,color .15s;}
   .equip-source-tag-btn:hover{border-color:#c7c7c7;}
   .equip-source-tag-btn.active{background:var(--orange);border-color:var(--orange);color:#fff;}
   .equip-pop-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
-  .equip-cell{display:flex;gap:10px;padding:12px;border-radius:10px;background:#181820;cursor:pointer;
+  .equip-cell{display:flex;align-items:flex-start;gap:10px;padding:12px;border-radius:10px;background:#181820;cursor:pointer;
     border:2px solid transparent;transition:transform .15s,border-color .15s;}
   .equip-cell:hover{transform:translateY(-2px);}
   .equip-cell.grade-blue{border-color:#4fc3f7;}
@@ -466,7 +470,7 @@
   .equip-cell-stat-row{display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.09);
     border-radius:5px;padding:4px 8px;font-size:11.5px;font-weight:700;color:#cfd6e4;margin-bottom:7px;}
   .equip-cell-stat-value{color:#fff;font-weight:800;}
-  .equip-cell-tooltip{color:#d8d8e0;font-size:11px;font-weight:600;line-height:1.4;flex:1;}
+  .equip-cell-tooltip{color:#d8d8e0;font-size:11px;font-weight:600;line-height:1.4;min-height:2.8em;}
 
   /* ============ 툴바 / 본문 ============ */
   .write-toolbar{border:1px solid var(--line);border-radius:9px 9px 0 0;border-bottom:none;
@@ -814,15 +818,15 @@ document.getElementById('startBtn').addEventListener('click', function(){
       <div class="wpop-title" id="equipPopTitle">장비 선택</div>
       <button type="button" class="wpop-close" id="equipPopClose">&times;</button>
     </div>
-    <div class="wpop-filters">
-      <div class="wpop-filter-groups">
+    <div class="wpop-filters equip-filters">
+      <div class="equip-filters-top-row">
         <div class="wpop-filter-group"><span class="wpop-filter-group-label">등급</span><div class="wpop-filter-tags" id="equipPopGradeTags"></div></div>
-        <div class="wpop-filter-group"><span class="wpop-filter-group-label">획득처</span><div class="wpop-filter-tags" id="equipPopSourceTags"></div></div>
+        <div class="wpop-search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+          <input type="search" id="equipPopSearch" placeholder="장비 이름 검색">
+        </div>
       </div>
-      <div class="wpop-search">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
-        <input type="search" id="equipPopSearch" placeholder="장비 이름 검색">
-      </div>
+      <div class="wpop-filter-group"><span class="wpop-filter-group-label">획득처</span><div class="wpop-filter-tags" id="equipPopSourceTags"></div></div>
     </div>
     <div class="wpop-body"><div class="equip-pop-grid" id="equipPopGrid"></div></div>
   </div>
@@ -1105,6 +1109,11 @@ document.getElementById('startBtn').addEventListener('click', function(){
 
   function plainTooltipHtml(text){
     return String(text || '').replace(/;/g, ' ').replace(/\n/g, '<br>');
+  }
+
+  function scrollPopBodyToTop(gridEl){
+    var body = gridEl && gridEl.closest('.wpop-body');
+    if (body) body.scrollTop = 0;
   }
 
   function renderTooltip(text, awakenMode){
@@ -1705,12 +1714,13 @@ document.getElementById('startBtn').addEventListener('click', function(){
       var rowPtText = rowPtOver ? '초과' : (rowPt + 'pt');
       var partner = row.partnerId ? partnersById[row.partnerId] : null;
       var jobMatch = partner && partner.job === agent.job;
+      var partnerBtnContent = partner ? '<img class="deckbuild-partner-btn-img" src="../../'+partner.icon+'" alt="'+partner.name+'">' : '+';
       return (
         '<div class="deckbuild-select'+activeClass+'" data-row="'+i+'">' +
           '<div class="deckbuild-select-top">' +
             '<img class="deckbuild-select-portrait" src="../../'+agent.icon+'" alt="'+agent.name+'">' +
             '<button type="button" class="deckbuild-remove-btn" data-remove-row="'+i+'">&times;</button>' +
-            '<button type="button" class="deckbuild-partner-btn'+(jobMatch ? ' job-match' : '')+'" data-partner-row="'+i+'">+</button>' +
+            '<button type="button" class="deckbuild-partner-btn'+(jobMatch ? ' job-match' : '')+'" data-partner-row="'+i+'">'+partnerBtnContent+'</button>' +
           '</div>' +
           '<div class="deckbuild-select-footer"><span class="deckbuild-select-name">'+agent.name+'</span><span class="deckbuild-select-pt'+(rowPtOver ? ' over' : '')+'">'+rowPtText+'</span></div>' +
         '</div>'
@@ -1927,6 +1937,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
   }
 
   function renderAgentPopGrid(){
+    scrollPopBodyToTop(agentPopGrid);
     var usedIds = deckState.filter(function(r, i){ return i !== agentPopState.row && r.agentId; }).map(function(r){ return r.agentId; });
     var eligible = AGENTS_WITH_CARDS.filter(function(a){ return usedIds.indexOf(a.id) === -1; });
     if (!eligible.length) {
@@ -2019,17 +2030,21 @@ document.getElementById('startBtn').addEventListener('click', function(){
   }
 
   function renderPartnerPopGrid(){
+    scrollPopBodyToTop(partnerPopGrid);
     var all = window.PARTNER_DATA || [];
     if (!all.length) {
       partnerPopGrid.innerHTML = '<div class="wpop-empty">선택 가능한 파트너가 없습니다.</div>';
       return;
     }
+    var activeAgent = deckState[partnerPopState.row] && deckState[partnerPopState.row].agentId ?
+      agentsById[deckState[partnerPopState.row].agentId] : null;
     var sorted = all.slice().sort(function(a, b){
       return (partnerMatchesFilter(b) ? 1 : 0) - (partnerMatchesFilter(a) ? 1 : 0);
     });
     partnerPopGrid.innerHTML = sorted.map(function(p){
       var dimClass = partnerMatchesFilter(p) ? '' : ' dim';
-      return '<div class="wpop-cell'+dimClass+'">' + renderPartnerPreviewHtml(p) + '</div>';
+      var jobMatchClass = (activeAgent && p.job === activeAgent.job) ? ' partner-job-match' : '';
+      return '<div class="wpop-cell'+dimClass+jobMatchClass+'">' + renderPartnerPreviewHtml(p) + '</div>';
     }).join('');
     Array.prototype.forEach.call(partnerPopGrid.querySelectorAll('.deck-agent'), function(el){
       el.addEventListener('click', function(){ selectPartner(partnerPopState.row, el.getAttribute('data-partner-id')); });
@@ -2038,7 +2053,8 @@ document.getElementById('startBtn').addEventListener('click', function(){
 
   function openPartnerPopup(row){
     partnerPopState.row = row;
-    partnerPopState.job = null;
+    var agent = deckState[row].agentId ? agentsById[deckState[row].agentId] : null;
+    partnerPopState.job = agent ? agent.job : null;
     partnerPopState.grade = null;
     partnerPopState.search = '';
     partnerPopSearch.value = '';
@@ -2147,6 +2163,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
   }
 
   function renderEquipPopGrid(){
+    scrollPopBodyToTop(equipPopGrid);
     var row = deckState[equipPopState.row];
     var type = equipPopState.type;
     var currentIdx = row.equipment[type];
@@ -2252,6 +2269,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
   }
 
   function renderCardPopGrid(){
+    scrollPopBodyToTop(cardPopGrid);
     var row = deckState[cardPopState.row];
     if (!row) return;
     var all = allCandidateCardsForRow(row);
