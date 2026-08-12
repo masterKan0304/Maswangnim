@@ -959,7 +959,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
             '<img class="deckbuild-select-portrait" src="../../'+agent.icon+'" alt="'+agent.name+'">' +
             '<button type="button" class="deckbuild-remove-btn" data-remove-row="'+i+'">&times;</button>' +
           '</div>' +
-          '<div class="deckbuild-select-footer"><span class="deckbuild-select-name">'+agent.name+'</span><span class="deckbuild-select-pt">100pt</span></div>' +
+          '<div class="deckbuild-select-footer"><span class="deckbuild-select-name">'+agent.name+'</span><span class="deckbuild-select-pt">'+row.pt+'pt</span></div>' +
         '</div>'
       );
     }).join('');
