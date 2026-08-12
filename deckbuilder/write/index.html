@@ -225,11 +225,42 @@
   .deckbuild-cardgrid{width:515px;display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:172px;
     row-gap:8px;column-gap:8px;max-height:352px;overflow-y:auto;padding-right:2px;}
   .deckbuild-cardgrid .card{height:100%;}
+  .deckbuild-card-wrap{position:relative;width:100%;height:100%;}
+  .deckbuild-card-controls{position:absolute;top:4px;right:4px;z-index:15;display:flex;flex-direction:column;gap:4px;}
+  .deckbuild-card-btn{width:18px;height:18px;border-radius:50%;border:1.5px solid #fff;display:flex;align-items:center;justify-content:center;
+    font-size:10px;font-weight:800;line-height:1;padding:0;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.5);}
+  .deckbuild-card-remove-btn{background:#e5303d;color:#fff;}
+  .deckbuild-card-remove-btn:hover{background:#c92531;}
+  .deckbuild-card-dup-btn{background:#3a7bd5;color:#fff;}
+  .deckbuild-card-dup-btn:hover{background:#2f66b3;}
+  .deckbuild-card-dup-btn svg{width:10px;height:10px;display:block;}
   .deckbuild-add-cell{width:100%;height:100%;border-radius:6px;background:#fff;border:1.5px dashed #d6d6d6;
     display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;transition:border-color .15s;}
   .deckbuild-add-cell:hover{border-color:var(--orange);}
   .deckbuild-add-plus{font-size:20px;font-weight:300;color:var(--sub-dim);line-height:1;}
   .deckbuild-add-label{font-size:9px;font-weight:700;color:var(--sub);}
+
+  .deckbuild-side-panel{width:200px;flex:none;display:flex;flex-direction:column;gap:12px;}
+  .deckbuild-side-empty{flex:1;display:flex;align-items:center;justify-content:center;text-align:center;
+    color:var(--sub-dim);font-size:11.5px;line-height:1.6;padding:0 10px;}
+  .deckbuild-side-row{display:flex;gap:8px;}
+  .deckbuild-undo-btn,.deckbuild-reset-btn{flex:1;padding:9px 0;border-radius:7px;border:1px solid var(--line);
+    background:#fff;color:var(--ink);font-size:11.5px;font-weight:800;cursor:pointer;transition:background .15s,opacity .15s;}
+  .deckbuild-undo-btn:hover{background:var(--surface-2);}
+  .deckbuild-undo-btn:disabled,.deckbuild-reset-btn:disabled{opacity:.4;cursor:default;pointer-events:none;}
+  .deckbuild-reset-btn{background:#e5303d;color:#fff;border-color:#e5303d;}
+  .deckbuild-reset-btn:hover{background:#c92531;}
+
+  .deckbuild-info-box{flex:1;padding:9px 0;border-radius:7px;background:#fff;border:1px solid var(--line);
+    text-align:center;font-size:11.5px;font-weight:800;color:var(--sub);}
+
+  .deckbuild-pt-gauge-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+  .deckbuild-pt-badge{padding:3px 10px;border-radius:20px;background:rgba(74,222,128,.16);color:#1f9d5c;font-size:10.5px;font-weight:800;}
+  .deckbuild-pt-badge.over{background:#e5303d;color:#fff;}
+  .deckbuild-pt-label{font-size:11px;font-weight:700;color:var(--sub);}
+  .deckbuild-pt-bar-wrap{height:9px;border-radius:5px;background:#fff;border:1px solid var(--line);overflow:hidden;}
+  .deckbuild-pt-bar{height:100%;width:0%;background:#f5c518;border-radius:5px;transition:width .2s;}
+  .deckbuild-pt-bar.over{background:#e5303d;}
 
   /* ============ 카드 구조 ============ */
   .card{position:relative;width:100%;aspect-ratio:5/7;border-radius:8px;overflow:hidden;background:#0c0c10;cursor:pointer;
@@ -535,6 +566,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
       <div class="deckbuild-box" id="deckbuildBox">
         <div class="deckbuild-agents-col" id="deckbuildAgentsCol"></div>
         <div class="deckbuild-grid-wrap" id="deckbuildGridWrap"></div>
+        <div class="deckbuild-side-panel" id="deckbuildSidePanel"></div>
       </div>
 
       <div class="write-toolbar">
@@ -816,16 +848,93 @@ document.getElementById('startBtn').addEventListener('click', function(){
   }
 
   // ============ 덱 상태 ============
-  var deckState = [
-    { agentId: null, cards: [] },
-    { agentId: null, cards: [] },
-    { agentId: null, cards: [] }
-  ];
+  function emptyRow(){
+    return { agentId: null, cards: [], pt: 0, removeCount: 0, duplicateCount: 0, history: [] };
+  }
+  var deckState = [ emptyRow(), emptyRow(), emptyRow() ];
   var activeSlot = null;
 
   function firstFourCards(agentId){
     var list = (window.AGENTS_CARDS && window.AGENTS_CARDS[agentId]) || [];
     return list.filter(function(c){ return !!c.grade; }).slice(0, 4);
+  }
+
+  // ============ 실행 취소 / 초기화 / 제거 / 복제 ============
+  var PT_CAP = 220;
+  var GAUGE_MAX = 230;
+  var REMOVE_COST = 20;
+  var REMOVE_MAX_COUNT = 5;
+  var DUPLICATE_COST_TABLE = { 1: 0, 2: 0, 3: 40, 4: 80 };
+  var DUPLICATE_MAX_COUNT = 4;
+
+  function snapshotRow(row){
+    return {
+      cards: row.cards.map(function(c){ var copy = {}; for (var k in c) copy[k] = c[k]; return copy; }),
+      pt: row.pt, removeCount: row.removeCount, duplicateCount: row.duplicateCount
+    };
+  }
+  function pushHistory(row){
+    row.history.push(snapshotRow(row));
+  }
+  function undoRow(i){
+    var row = deckState[i];
+    if (!row || !row.history.length) return;
+    var snap = row.history.pop();
+    row.cards = snap.cards;
+    row.pt = snap.pt;
+    row.removeCount = snap.removeCount;
+    row.duplicateCount = snap.duplicateCount;
+    renderDeckBox();
+  }
+  function resetRow(i){
+    var row = deckState[i];
+    if (!row || !row.agentId) return;
+    row.cards = firstFourCards(row.agentId).map(function(c){ return fromAgentCard(c, agentsById[row.agentId]); });
+    row.pt = 0;
+    row.removeCount = 0;
+    row.duplicateCount = 0;
+    row.history = [];
+    renderDeckBox();
+  }
+  function canRemove(row){
+    return row.removeCount < REMOVE_MAX_COUNT && (PT_CAP - row.pt) >= REMOVE_COST;
+  }
+  function nextDuplicateCost(row){
+    return DUPLICATE_COST_TABLE[row.duplicateCount + 1] || 0;
+  }
+  function canDuplicate(row){
+    if (row.duplicateCount >= DUPLICATE_MAX_COUNT) return false;
+    return (PT_CAP - row.pt) >= nextDuplicateCost(row);
+  }
+  function addDuplicateTag(tooltip){
+    var t = tooltip || '';
+    var m = t.match(/^\[\s*([^\]]*?)\s*\]/);
+    if (m) return '[ 복제됨 / ' + m[1].trim() + ' ]' + t.slice(m[0].length);
+    return '[ 복제됨 ]' + (t ? '\n' + t : '');
+  }
+  function removeCardFromRow(rowIdx, cardIdx){
+    var row = deckState[rowIdx];
+    if (!row || !canRemove(row)) return;
+    pushHistory(row);
+    row.cards.splice(cardIdx, 1);
+    row.removeCount++;
+    row.pt += REMOVE_COST;
+    renderDeckBox();
+  }
+  function duplicateCardInRow(rowIdx, cardIdx){
+    var row = deckState[rowIdx];
+    if (!row || !canDuplicate(row)) return;
+    var cost = nextDuplicateCost(row);
+    pushHistory(row);
+    var orig = row.cards[cardIdx];
+    var clone = {};
+    for (var k in orig) clone[k] = orig[k];
+    clone.tooltip = addDuplicateTag(orig.tooltip);
+    clone.isDuplicate = true;
+    row.cards.splice(cardIdx + 1, 0, clone);
+    row.duplicateCount++;
+    row.pt += cost;
+    renderDeckBox();
   }
 
   function renderDeckBox(){
@@ -860,15 +969,36 @@ document.getElementById('startBtn').addEventListener('click', function(){
     if (!activeRow) {
       gridWrap.innerHTML = '<div class="deckbuild-cardgrid-empty">전투원을 먼저 선택해주세요.</div>';
     } else {
-      var cellsHtml = activeRow.cards.map(function(c){ return renderCardCellHtml(c); }).join('');
+      var dupIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="7" y="7" width="13" height="13" rx="2"/><path d="M4 15V5a2 2 0 0 1 2-2h10"/></svg>';
+      var cellsHtml = activeRow.cards.map(function(c, idx){
+        var controlsHtml = '<div class="deckbuild-card-controls">' +
+          (canRemove(activeRow) ? '<button type="button" class="deckbuild-card-btn deckbuild-card-remove-btn" data-card-idx="'+idx+'">&times;</button>' : '') +
+          (canDuplicate(activeRow) ? '<button type="button" class="deckbuild-card-btn deckbuild-card-dup-btn" data-dup-idx="'+idx+'">'+dupIcon+'</button>' : '') +
+        '</div>';
+        return '<div class="deckbuild-card-wrap">' + renderCardCellHtml(c) + controlsHtml + '</div>';
+      }).join('');
       cellsHtml += '<div class="deckbuild-add-cell" id="deckbuildAddCell">' +
         '<div class="deckbuild-add-plus">+</div><div class="deckbuild-add-label">카드 추가</div></div>';
       gridWrap.innerHTML = '<div class="deckbuild-cardgrid">'+cellsHtml+'</div>';
       document.getElementById('deckbuildAddCell').addEventListener('click', function(){ openCardPopup(activeSlot); });
-      Array.prototype.forEach.call(gridWrap.querySelectorAll('.deckbuild-cardgrid > .card'), function(cardEl, idx){
+      Array.prototype.forEach.call(gridWrap.querySelectorAll('.deckbuild-cardgrid .card'), function(cardEl, idx){
         bindCardZoomHover(cardEl, activeRow.cards[idx]);
       });
+      Array.prototype.forEach.call(gridWrap.querySelectorAll('.deckbuild-card-remove-btn'), function(el){
+        el.addEventListener('click', function(e){
+          e.stopPropagation();
+          removeCardFromRow(activeSlot, parseInt(el.getAttribute('data-card-idx'), 10));
+        });
+      });
+      Array.prototype.forEach.call(gridWrap.querySelectorAll('.deckbuild-card-dup-btn'), function(el){
+        el.addEventListener('click', function(e){
+          e.stopPropagation();
+          duplicateCardInRow(activeSlot, parseInt(el.getAttribute('data-dup-idx'), 10));
+        });
+      });
     }
+
+    renderSidePanel(activeRow);
 
     Array.prototype.forEach.call(agentsCol.querySelectorAll('.deckbuild-select'), function(el){
       el.addEventListener('click', function(){
@@ -885,7 +1015,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
       el.addEventListener('click', function(e){
         e.stopPropagation();
         var row = parseInt(el.getAttribute('data-remove-row'), 10);
-        deckState[row] = { agentId: null, cards: [] };
+        deckState[row] = emptyRow();
         if (activeSlot === row) {
           var next = -1;
           for (var i = 0; i < deckState.length; i++) { if (deckState[i].agentId) { next = i; break; } }
@@ -894,6 +1024,36 @@ document.getElementById('startBtn').addEventListener('click', function(){
         renderDeckBox();
       });
     });
+  }
+
+  function renderSidePanel(activeRow){
+    var panel = document.getElementById('deckbuildSidePanel');
+    if (!activeRow) {
+      panel.innerHTML = '<div class="deckbuild-side-empty">전투원을 선택하면<br>편집 도구가 나타납니다.</div>';
+      return;
+    }
+    var pt = activeRow.pt;
+    var over = pt > GAUGE_MAX;
+    var barPct = Math.min(100, (pt / GAUGE_MAX) * 100);
+    panel.innerHTML =
+      '<div class="deckbuild-side-row">' +
+        '<button type="button" class="deckbuild-undo-btn" id="deckbuildUndoBtn" '+(activeRow.history.length ? '' : 'disabled')+'>실행 취소</button>' +
+        '<button type="button" class="deckbuild-reset-btn" id="deckbuildResetBtn">초기화</button>' +
+      '</div>' +
+      '<div class="deckbuild-side-row">' +
+        '<div class="deckbuild-info-box">제거 '+activeRow.removeCount+'/'+REMOVE_MAX_COUNT+'</div>' +
+        '<div class="deckbuild-info-box">복제 '+activeRow.duplicateCount+'/'+DUPLICATE_MAX_COUNT+'</div>' +
+      '</div>' +
+      '<div class="deckbuild-pt-gauge">' +
+        '<div class="deckbuild-pt-gauge-top">' +
+          '<span class="deckbuild-pt-badge'+(over ? ' over' : '')+'">'+(over ? '초과' : '유효')+'</span>' +
+          '<span class="deckbuild-pt-label">'+pt+' / '+GAUGE_MAX+'pt</span>' +
+        '</div>' +
+        '<div class="deckbuild-pt-bar-wrap"><div class="deckbuild-pt-bar'+(over ? ' over' : '')+'" style="width:'+barPct+'%"></div></div>' +
+      '</div>';
+
+    document.getElementById('deckbuildUndoBtn').addEventListener('click', function(){ undoRow(activeSlot); });
+    document.getElementById('deckbuildResetBtn').addEventListener('click', function(){ resetRow(activeSlot); });
   }
 
   // ============ 전투원 선택 팝업 ============
@@ -990,6 +1150,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
   agentPopOverlay.addEventListener('click', function(e){ if (e.target === agentPopOverlay) closeAgentPopup(); });
 
   function selectAgent(row, agentId){
+    deckState[row] = emptyRow();
     deckState[row].agentId = agentId;
     deckState[row].cards = firstFourCards(agentId).map(function(c){ return fromAgentCard(c, agentsById[agentId]); });
     activeSlot = row;
@@ -1080,6 +1241,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
   cardPopOverlay.addEventListener('click', function(e){ if (e.target === cardPopOverlay) closeCardPopup(); });
 
   function addCardToRow(row, card){
+    pushHistory(deckState[row]);
     deckState[row].cards.push(card);
     closeCardPopup();
     renderDeckBox();
