@@ -2421,7 +2421,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
   }
 
   function renderCardHTML(card, attrId, gradeOverride, opts){
-    var grade = gradeOverride || card.grade;
+    var grade = card.grade_color || gradeOverride || card.grade;
     var typeIcon = TYPE_ICONS[card.type] || '';
     var typeLabel = TYPE_LABELS[card.type] || '';
     var showAwakenHint = !(opts && opts.noAwakenHint) && isAwakenable(card);

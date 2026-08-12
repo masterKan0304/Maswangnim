@@ -10,8 +10,12 @@
 //   type      : 카드 유형 — attack(공격) / skill(스킬) / upgrade(강화)
 //   grade     : 카드 등급 — gray(회색) / blue(파랑) / yellow(노랑) / purple(보라).
 //               비워두면('') 8장 목록에는 안 나오고, plus_card로만 참조되는 숨김 카드가 됩니다.
+//   grade_color : (선택) grade가 ''인 숨김 카드에서, 물려받는 등급 색 대신 무조건 이 색을 쓰고 싶을 때
+//               적습니다 — gray(회색) / blue(파랑) / yellow(노랑) / purple(보라) 중 하나.
+//               적어두면 커서를 올린 카드의 등급이 무엇이든 상관없이 항상 이 색으로 보여지고,
+//               적지 않으면 기존처럼 커서를 올린 카드의 등급 색을 그대로 물려받습니다.
 //   plus_card : (선택) 이 카드에 커서를 올렸을 때 왼쪽에 추가로 보여줄 다른 카드의 이름.
-//               그 카드는 등급을 비워두면 이 카드의 등급 색을 그대로 물려받습니다.
+//               그 카드는 등급을 비워두면 이 카드의 등급 색을 그대로 물려받습니다(grade_color가 있다면 그 색 우선).
 //   awakenings : (선택, grade가 blue나 yellow인 카드만) 번뜩임 5단계 배열.
 //               각 항목은 cost / type / tooltip 만 새로 적으면 되고(등급·일러스트는 원본 카드 그대로 사용),
 //               plus_card도 단계별로 다르게 적거나 아예 안 적을 수 있습니다(안 적으면 그 단계는 plus_card 없음).
@@ -383,7 +387,7 @@ window.AGENTS_CARDS = {
       cost: 1,
       type: 'skill',
       grade: 'gray',
-      media: 'cards/아델하이트/attack.webp',
+      media: 'cards/아델하이트/skill.webp',
       tooltip: '실드 100%'
     },
     {
@@ -391,7 +395,7 @@ window.AGENTS_CARDS = {
       cost: 1,
       type: 'skill',
       grade: 'gray',
-      media: 'cards/아델하이트/attack.webp',
+      media: 'cards/아델하이트/skill.webp',
       tooltip: '실드 100%'
     },
     {
@@ -429,7 +433,7 @@ window.AGENTS_CARDS = {
       cost: 1,
       type: 'upgrade',
       grade: 'blue',
-      plus_card: ['멍멍이', '곰돌이'],
+      plus_card: [ '멍멍이', '곰돌이' ],
       media: 'cards/아델하이트/blue3.webp',
       tooltip: '[ 유일 ]\n"멍멍이" 혹은 "곰돌이" 1장 선택 생성',
       awakenings: [
@@ -437,7 +441,7 @@ window.AGENTS_CARDS = {
         { cost: 1, type: 'upgrade', tooltip: '[ 유일 ]\n"곰돌이" 1장 생성\n|피해를 받을 시 "곰돌이" 핸드로 이동 (턴당 1회)|', plus_card: '곰돌이' },
         { cost: 1, type: 'upgrade', tooltip: '[ 유일 ]\n|뽑을 카드에 "멍멍이(무리)" 4|장 생성', plus_card: '멍멍이(무리)' },
         { cost: 1, type: 'upgrade', tooltip: '[ 유일 ]\n"곰돌이" 1장 생성\n|"곰돌이" 사용 시 반격 1, 1턴간 반격 보존|', plus_card: '곰돌이' },
-        { cost: 1, type: 'upgrade', tooltip: '[ 유일 ]\n|"멍멍이(변화)"| 1장 생성', plus_card: '멍멍이(변화)', plus_card: '곰돌이(변화)' }
+        { cost: 1, type: 'upgrade', tooltip: '[ 유일 ]\n|"멍멍이(변화)"| 1장 생성', plus_card: [ '멍멍이(변화)', '곰돌이(변화)' ] }
       ]
     },
     {
@@ -481,36 +485,139 @@ window.AGENTS_CARDS = {
       tooltip: '[ 신속 ]\n실드 200%\n피해 감소 2\n스킬 카드 발동 시 이 카드 "멍멍이(변화)"로 변경'
     },
     {
-      name: '혼염무',
-      cost: 'X',
+      name: '이야기 속 진실',
+      cost: 1,
       type: 'attack',
       grade: 'yellow',
-      media: 'cards/페이/yellow.webp',
-      tooltip: '피해 100% × X+1\n드로우 X',
+      media: 'cards/아델하이트/yellow.webp',
+      tooltip: '[ 신속 ]\n방어 기반 피해 200%\n1턴간 대상이 받는 피해량 +100%',
       awakenings: [
-        { cost: 'X', type: 'attack', tooltip: '피해 |180|% × X+1\n드로우 X' },
-        { cost: 'X', type: 'attack', tooltip: '|[ 유일 ]|\n피해 100% × X+1\n|타격횟수 만큼 대상에게 무덤의 "염무곡" 발동|', plus_card: '염무곡' },
-        { cost: 'X', type: 'attack', tooltip: '피해 |150|% × X+1\n|타격횟수 만큼 다음 "낙구천"의 피해량 50% 증가 (최대 500%)', plus_card: '낙구천' },
-        { cost: 'X', type: 'skill', tooltip: '드로우 X\n|염무 X × 2|\n강림 X' },
-        { cost: 2, type: 'upgrade', tooltip: '|[ 유일 ]|\n|염무의 타격 1회 추가|' }
+        { cost: 1, type: 'attack', tooltip: '[ 신속 ]\n방어 기반 피해 |300|%\n|약화 2|\n1턴간 대상이 받는 피해량 +100%' },
+        { cost: 1, type: 'attack', tooltip: '[ 신속 ]\n방어 기반 피해 200%\n|버린 카드에서 축복 카드 2장 핸드로 이동|' },
+        { cost: 1, type: 'attack', tooltip: '[ 신속 ]\n방어 기반 피해 200%\n1턴간 |"멍멍이", "곰돌이"의 피해량, 실드 획득량 100% 증가|', plus_card: [ '멍멍이', '곰돌이' ] },
+        { cost: 2, type: 'attack', tooltip: '|[ 안식 ]|\n방어 기반 피해 |400|%\n|핸드의 축복 카드 수만큼 피해량 30% 증가|' },
+        { cost: 1, type: 'attack', tooltip: '[ 신속 ]\n방어 기반 피해 |300|%\n|행동 카운트 4 증가|' }
       ]
     },
     {
-      name: '낙구천',
+      name: '비밀의 정원',
+      cost: 1,
+      type: 'upgrade',
+      grade: 'purple',
+      media: 'cards/아델하이트/purple.webp',
+      tooltip: '[ 유일 ]\n실드 200%\n실드 보존 25%'
+    }
+  ],
+  heidemarie: [
+    {
+      name: '검광',
+      cost: 1,
+      type: 'attack',
+      grade: 'gray',
+      media: 'cards/하이데마리/attack.webp',
+      tooltip: '피해 100%'
+    },
+    {
+      name: '검광',
+      cost: 1,
+      type: 'attack',
+      grade: 'gray',
+      media: 'cards/하이데마리/attack.webp',
+      tooltip: '피해 100%'
+    },
+    {
+      name: '검막',
+      cost: 1,
+      type: 'skill',
+      grade: 'gray',
+      media: 'cards/하이데마리/skill.webp',
+      tooltip: '실드 100%'
+    },
+    {
+      name: '검의 비',
+      cost: 1,
+      type: 'attack',
+      grade: 'blue',
+      plus_card: '극광검',
+      media: 'cards/하이데마리/blue1.webp',
+      tooltip: '피해 80% × 2\n감응 : "극광검" 1장 생성',
+      awakenings: [
+        { cost: 1, type: 'attack', tooltip: '|[ 안식 ]|\n피해 80% × 2\n감응 : "극광검" |2|장 생성', plus_card: '극광검' },
+        { cost: 2, type: 'attack', tooltip: '|[ 신속 ]|\n피해 |180|%\n|핸드의 "극광검" 수만큼 타격 1회 추가|\n감응 : "극광검" 1장 생성', plus_card: '극광검' },
+        { cost: 1, type: 'skill', tooltip: '|무덤의 "극광검" 5장 대상에게 추가 공격으로 발동|', plus_card: '극광검' },
+        { cost: 1, type: 'skill', tooltip: '"극광검" |2|장 생성, |그 카드에 회수 부여|', plus_card: '극광검' },
+        { cost: 3, type: 'attack', tooltip: '|[ 소멸 / 종극 / 보존 / 유일 ]|\n|모든 적 피해 500%|\n|핸드에 "극광 해방"이 있다면 소멸하고 무덤의 "극광검" 수만큼 피해량 +80%|', plus_card: [ '극광검', '극광 해방' ] }
+      ]
+    },
+    {
+      name: '극광검',
       cost: 0,
       type: 'attack',
       grade: '',
-      media: 'cards/페이/yellow_1.webp',
-      tooltip: '[ 증발 / 소멸 ]\n피해 110% × 3'
+      media: 'cards/하이데마리/blue1_1.webp',
+      tooltip: '[ 연결 ]\n피해 100%\n버려질 시 무작위 적 추가 공격 100%\n이 카드는 셔플 시 뽑을 카드로 이동하지 않음'
     },
     {
-      name: '염무무곡',
+      name: '극광 해방',
       cost: 0,
+      type: 'attack',
+      grade: '',
+      grade_color: 'purple',
+      media: 'cards/하이데마리/blue1_2.webp',
+      tooltip: '[ 유일 ]\n피해 300%\n무덤의 "극광검" 모두 소멸하고 그 수만큼 피해량 +60%\n턴 종료 시 이 카드 "극광 응축"으로 변경'
+    },
+    {
+      name: '만인의 영웅',
+      cost: 1,
       type: 'skill',
+      grade: 'blue',
+      media: 'cards/하이데마리/blue2.webp',
+      tooltip: '[ 안식 ]\n드로우 3\n그 카드들을 이번 턴 동안 연결',
+      awakenings: [
+        { cost: 1, type: 'skill', tooltip: '|[ 연결 / 안식 ]|\n드로우 3\n그 카드들을 이번 턴 동안 연결' },
+        { cost: 1, type: 'skill', tooltip: '[ 안식 ]\n드로우 3\n|핸드의 비용이 1 이하인| 카드들을 이번 턴 동안 연결' },
+        { cost: 0, type: 'skill', tooltip: '|[ 신속 ]|\n드로우 \\1\\\n|핸드의 안식 카드| 이번 턴 동안 연결' },
+        { cost: 0, type: 'skill', tooltip: '|[ 소멸 2 ]|\n|뽑을 카드 혹은 버린 카드에서 카드 1장 선택, 그 카드 연결 부여하고 핸드로 이동|' },
+        { cost: 1, type: 'skill', tooltip: '|[ 신속 ]|\n|자신의 공격 카드| 드로우 \\2\\\n|핸드의 모든 공격 카드| 이번 턴 동안 연결' }
+      ]
+    },
+    {
+      name: '한 줄기 빛',
+      cost: 1,
+      type: 'attack',
+      grade: 'blue',
+      media: 'cards/하이데마리/blue3.webp',
+      tooltip: '[ 연결 ]\n피해 120%\n핸드의 연결 카드 수만큼 피해량 +120%',
+      awakenings: [
+        { cost: 1, type: 'attack', tooltip: '[ 연결 ]\n피해 |180|%\n핸드의 연결 카드 수만큼 피해량 +|180|%' },
+        { cost: 1, type: 'attack', tooltip: '[ 유일 ]\n"곰돌이" 1장 생성\n|피해를 받을 시 "곰돌이" 핸드로 이동 (턴당 1회)|', plus_card: '곰돌이' },
+        { cost: 1, type: 'attack', tooltip: '[ 유일 ]\n|뽑을 카드에 "멍멍이(무리)" 4|장 생성', plus_card: '멍멍이(무리)' },
+        { cost: 1, type: 'skill', tooltip: '[ 유일 ]\n"곰돌이" 1장 생성\n|"곰돌이" 사용 시 반격 1, 1턴간 반격 보존|', plus_card: '곰돌이' },
+        { cost: 1, type: 'attack', tooltip: '[ 유일 ]\n|"멍멍이(변화)"| 1장 생성', plus_card: [ '멍멍이(변화)', '곰돌이(변화)' ] }
+      ]
+    },
+    {
+      name: '이야기 속 진실',
+      cost: 1,
+      type: 'attack',
+      grade: 'yellow',
+      media: 'cards/아델하이트/yellow.webp',
+      tooltip: '[ 신속 ]\n방어 기반 피해 200%\n1턴간 대상이 받는 피해량 +100%',
+      awakenings: [
+        { cost: 1, type: 'attack', tooltip: '[ 신속 ]\n방어 기반 피해 |300|%\n|약화 2|\n1턴간 대상이 받는 피해량 +100%' },
+        { cost: 1, type: 'attack', tooltip: '[ 신속 ]\n방어 기반 피해 200%\n|버린 카드에서 축복 카드 2장 핸드로 이동|' },
+        { cost: 1, type: 'attack', tooltip: '[ 신속 ]\n방어 기반 피해 200%\n1턴간 |"멍멍이", "곰돌이"의 피해량, 실드 획득량 100% 증가|', plus_card: [ '멍멍이', '곰돌이' ] },
+        { cost: 2, type: 'attack', tooltip: '|[ 안식 ]|\n방어 기반 피해 |400|%\n|핸드의 축복 카드 수만큼 피해량 30% 증가|' },
+        { cost: 1, type: 'attack', tooltip: '[ 신속 ]\n방어 기반 피해 |300|%\n|행동 카운트 4 증가|' }
+      ]
+    },
+    {
+      name: '비밀의 정원',
+      cost: 1,
+      type: 'upgrade',
       grade: 'purple',
-      plus_card: '염무곡',
-      media: 'cards/페이/purple.webp',
-      tooltip: '[ 소멸 / 유일 ]\n이번 턴에 획득한 강림 수만큼 "염무곡" 핸드로 이동'
+      media: 'cards/아델하이트/purple.webp',
+      tooltip: '[ 유일 ]\n실드 200%\n실드 보존 25%'
     }
   ]
 };

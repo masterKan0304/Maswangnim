@@ -704,12 +704,12 @@ document.getElementById('startBtn').addEventListener('click', function(){
 
   function fromAgentCard(card, agent){
     return { key:'a:'+card.name, name:card.name, cost:card.cost, type:card.type, grade:card.grade,
-      media:'../../'+card.media, tooltip:card.tooltip, egoAttr:agent.attribute, source:'agent',
+      gradeColor:card.grade_color, media:'../../'+card.media, tooltip:card.tooltip, egoAttr:agent.attribute, source:'agent',
       plusCard:card.plus_card, agentId:agent.id };
   }
   function fromQuizCard(card){
     return { key:'q:'+card.name, name:card.name, cost:card.cost, type:card.type, grade:card.rarity,
-      media:'../../'+card.illust, tooltip:card.tooltip, egoAttr:card.attribute, source:card.attribute,
+      gradeColor:null, media:'../../'+card.illust, tooltip:card.tooltip, egoAttr:card.attribute, source:card.attribute,
       plusCard:null, agentId:null };
   }
   function findPlusCard(name, agentId){
@@ -721,13 +721,14 @@ document.getElementById('startBtn').addEventListener('click', function(){
     return null;
   }
 
-  function renderCardCellHtml(c){
+  function renderCardCellHtml(c, gradeOverride){
+    var grade = c.gradeColor || gradeOverride || c.grade;
     return (
-      '<div class="card" data-grade="'+c.grade+'">' +
+      '<div class="card" data-grade="'+grade+'">' +
         '<div class="card-media">'+cardMediaHtml(c.media, c.name)+'</div>' +
         '<div class="card-top-grad"></div>' +
         '<div class="card-ego" style="background-image:url(\''+EGO_BAND[c.egoAttr]+'\')"></div>' +
-        '<div class="card-grade-star" style="background-image:url(\'../../cards/card_'+c.grade+'.webp\')"></div>' +
+        '<div class="card-grade-star" style="background-image:url(\'../../cards/card_'+grade+'.webp\')"></div>' +
         '<div class="card-bottom-grad"></div>' +
         '<div class="card-content">' +
           '<div class="card-header">' +
@@ -754,7 +755,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
     var plusNames = Array.isArray(c.plusCard) ? c.plusCard : (c.plusCard ? [c.plusCard] : []);
     var plusCards = plusNames.map(function(n){ return findPlusCard(n, c.agentId); }).filter(Boolean);
     if (plusCards.length) {
-      cardZoomPlusEl.innerHTML = plusCards.map(function(pc){ return renderCardCellHtml(pc); }).join('');
+      cardZoomPlusEl.innerHTML = plusCards.map(function(pc){ return renderCardCellHtml(pc, c.grade); }).join('');
       cardZoomPlusEl.classList.add('visible');
       positionCardZoomPlus();
       return;
