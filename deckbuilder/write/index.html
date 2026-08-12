@@ -220,11 +220,17 @@
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .deckbuild-select-pt{flex:none;text-align:right;font-size:9px;font-weight:700;color:var(--sub);}
 
-  .deckbuild-grid-wrap{flex:none;}
+  .deckbuild-grid-wrap{flex:none;display:flex;align-items:flex-start;gap:8px;}
   .deckbuild-cardgrid-empty{height:352px;width:515px;display:flex;align-items:center;color:var(--sub-dim);font-size:12px;padding-left:4px;}
   .deckbuild-cardgrid{width:515px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:172px;
-    row-gap:8px;column-gap:8px;max-height:352px;overflow-y:auto;overflow-x:hidden;padding-right:2px;}
+    row-gap:8px;column-gap:8px;max-height:352px;overflow-y:auto;overflow-x:hidden;
+    scrollbar-width:none;-ms-overflow-style:none;}
+  .deckbuild-cardgrid::-webkit-scrollbar{display:none;width:0;height:0;}
   .deckbuild-cardgrid .card{height:100%;}
+  .deckbuild-cardgrid-scrollbar{flex:none;width:5px;height:352px;border-radius:3px;background:rgba(0,0,0,.07);position:relative;}
+  .deckbuild-cardgrid-scrollbar.hidden{visibility:hidden;}
+  .deckbuild-cardgrid-scrollbar-thumb{position:absolute;left:0;right:0;top:0;border-radius:3px;background:#c2c2c2;cursor:grab;transition:background .15s;}
+  .deckbuild-cardgrid-scrollbar-thumb:hover,.deckbuild-cardgrid-scrollbar-thumb.dragging{background:#9c9c9c;}
   .deckbuild-card-wrap{position:relative;width:100%;height:100%;}
   .deckbuild-card-controls{position:absolute;top:4px;right:4px;z-index:15;display:flex;flex-direction:column;gap:4px;}
   .deckbuild-card-btn{width:18px;height:18px;border-radius:50%;border:1.5px solid #fff;display:flex;align-items:center;justify-content:center;
@@ -240,7 +246,7 @@
   .deckbuild-add-plus{font-size:20px;font-weight:300;color:var(--sub-dim);line-height:1;}
   .deckbuild-add-label{font-size:9px;font-weight:700;color:var(--sub);}
 
-  .deckbuild-side-panel{width:200px;flex:none;display:flex;flex-direction:column;gap:12px;}
+  .deckbuild-side-panel{width:200px;flex:none;display:flex;flex-direction:column;gap:12px;margin-left:auto;}
   .deckbuild-side-empty{flex:1;display:flex;align-items:center;justify-content:center;text-align:center;
     color:var(--sub-dim);font-size:11.5px;line-height:1.6;padding:0 10px;}
   .deckbuild-side-row{display:flex;gap:8px;}
@@ -565,7 +571,10 @@ document.getElementById('startBtn').addEventListener('click', function(){
 
       <div class="deckbuild-box" id="deckbuildBox">
         <div class="deckbuild-agents-col" id="deckbuildAgentsCol"></div>
-        <div class="deckbuild-grid-wrap" id="deckbuildGridWrap"></div>
+        <div class="deckbuild-grid-wrap" id="deckbuildGridWrap">
+          <div class="deckbuild-cardgrid-area" id="deckbuildCardgridArea"></div>
+          <div class="deckbuild-cardgrid-scrollbar hidden" id="deckbuildScrollbar"><div class="deckbuild-cardgrid-scrollbar-thumb" id="deckbuildScrollbarThumb"></div></div>
+        </div>
         <div class="deckbuild-side-panel" id="deckbuildSidePanel"></div>
       </div>
 
@@ -937,6 +946,65 @@ document.getElementById('startBtn').addEventListener('click', function(){
     renderDeckBox();
   }
 
+  function updateCardScrollbar(){
+    var track = document.getElementById('deckbuildScrollbar');
+    var thumb = document.getElementById('deckbuildScrollbarThumb');
+    var gridEl = document.querySelector('.deckbuild-cardgrid');
+    if (!gridEl || gridEl.scrollHeight <= gridEl.clientHeight + 1) {
+      track.classList.add('hidden');
+      return;
+    }
+    track.classList.remove('hidden');
+    var trackH = track.clientHeight;
+    var ratio = gridEl.clientHeight / gridEl.scrollHeight;
+    var thumbH = Math.max(24, trackH * ratio);
+    var maxScroll = gridEl.scrollHeight - gridEl.clientHeight;
+    var maxThumbTravel = trackH - thumbH;
+    var scrollRatio = maxScroll > 0 ? gridEl.scrollTop / maxScroll : 0;
+    thumb.style.height = thumbH + 'px';
+    thumb.style.top = (maxThumbTravel * scrollRatio) + 'px';
+  }
+
+  document.addEventListener('scroll', function(e){
+    if (e.target && e.target.classList && e.target.classList.contains('deckbuild-cardgrid')) {
+      updateCardScrollbar();
+    }
+  }, true);
+
+  (function(){
+    var thumb = document.getElementById('deckbuildScrollbarThumb');
+    var dragging = false, startY = 0, startScrollTop = 0;
+    thumb.addEventListener('mousedown', function(e){
+      var gridEl = document.querySelector('.deckbuild-cardgrid');
+      if (!gridEl) return;
+      dragging = true;
+      startY = e.clientY;
+      startScrollTop = gridEl.scrollTop;
+      thumb.classList.add('dragging');
+      document.body.style.userSelect = 'none';
+      e.preventDefault();
+    });
+    document.addEventListener('mousemove', function(e){
+      if (!dragging) return;
+      var gridEl = document.querySelector('.deckbuild-cardgrid');
+      var track = document.getElementById('deckbuildScrollbar');
+      if (!gridEl || !track) return;
+      var trackH = track.clientHeight;
+      var thumbH = thumb.offsetHeight;
+      var maxThumbTravel = trackH - thumbH;
+      var maxScroll = gridEl.scrollHeight - gridEl.clientHeight;
+      var deltaY = e.clientY - startY;
+      var deltaScroll = maxThumbTravel > 0 ? (deltaY / maxThumbTravel) * maxScroll : 0;
+      gridEl.scrollTop = startScrollTop + deltaScroll;
+    });
+    document.addEventListener('mouseup', function(){
+      if (!dragging) return;
+      dragging = false;
+      thumb.classList.remove('dragging');
+      document.body.style.userSelect = '';
+    });
+  })();
+
   function renderDeckBox(){
     var agentsCol = document.getElementById('deckbuildAgentsCol');
     agentsCol.innerHTML = deckState.map(function(row, i){
@@ -964,10 +1032,10 @@ document.getElementById('startBtn').addEventListener('click', function(){
       );
     }).join('');
 
-    var gridWrap = document.getElementById('deckbuildGridWrap');
+    var gridArea = document.getElementById('deckbuildCardgridArea');
     var activeRow = (activeSlot !== null) ? deckState[activeSlot] : null;
     if (!activeRow) {
-      gridWrap.innerHTML = '<div class="deckbuild-cardgrid-empty">전투원을 먼저 선택해주세요.</div>';
+      gridArea.innerHTML = '<div class="deckbuild-cardgrid-empty">전투원을 먼저 선택해주세요.</div>';
     } else {
       var dupIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="7" y="7" width="13" height="13" rx="2"/><path d="M4 15V5a2 2 0 0 1 2-2h10"/></svg>';
       var cellsHtml = activeRow.cards.map(function(c, idx){
@@ -979,18 +1047,18 @@ document.getElementById('startBtn').addEventListener('click', function(){
       }).join('');
       cellsHtml += '<div class="deckbuild-add-cell" id="deckbuildAddCell">' +
         '<div class="deckbuild-add-plus">+</div><div class="deckbuild-add-label">카드 추가</div></div>';
-      gridWrap.innerHTML = '<div class="deckbuild-cardgrid">'+cellsHtml+'</div>';
+      gridArea.innerHTML = '<div class="deckbuild-cardgrid">'+cellsHtml+'</div>';
       document.getElementById('deckbuildAddCell').addEventListener('click', function(){ openCardPopup(activeSlot); });
-      Array.prototype.forEach.call(gridWrap.querySelectorAll('.deckbuild-cardgrid .card'), function(cardEl, idx){
+      Array.prototype.forEach.call(gridArea.querySelectorAll('.deckbuild-cardgrid .card'), function(cardEl, idx){
         bindCardZoomHover(cardEl, activeRow.cards[idx]);
       });
-      Array.prototype.forEach.call(gridWrap.querySelectorAll('.deckbuild-card-remove-btn'), function(el){
+      Array.prototype.forEach.call(gridArea.querySelectorAll('.deckbuild-card-remove-btn'), function(el){
         el.addEventListener('click', function(e){
           e.stopPropagation();
           removeCardFromRow(activeSlot, parseInt(el.getAttribute('data-card-idx'), 10));
         });
       });
-      Array.prototype.forEach.call(gridWrap.querySelectorAll('.deckbuild-card-dup-btn'), function(el){
+      Array.prototype.forEach.call(gridArea.querySelectorAll('.deckbuild-card-dup-btn'), function(el){
         el.addEventListener('click', function(e){
           e.stopPropagation();
           duplicateCardInRow(activeSlot, parseInt(el.getAttribute('data-dup-idx'), 10));
@@ -998,6 +1066,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
       });
     }
 
+    updateCardScrollbar();
     renderSidePanel(activeRow);
 
     Array.prototype.forEach.call(agentsCol.querySelectorAll('.deckbuild-select'), function(el){
