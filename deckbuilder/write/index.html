@@ -1,0 +1,606 @@
+<title>글쓰기 | 덱 빌딩 게시판</title>
+<style>
+  :root{
+    --page:#1a1516;
+    --surface:#ffffff;
+    --surface-2:#f6f6f7;
+    --ink:#1a1a1a;
+    --sub:#6e6e6e;
+    --sub-dim:#999999;
+    --line:#ececec;
+    --orange:#ff5714;
+    --orange-dim:#e0480d;
+    --orange-soft:rgba(255,87,20,.16);
+    --font-display:"Pretendard","Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",-apple-system,sans-serif;
+    --font-body:"Pretendard","Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",-apple-system,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--page);color:var(--ink);font-family:var(--font-body);-webkit-font-smoothing:antialiased;min-height:100vh;}
+  h1,h2,h3,h4{font-family:var(--font-display);margin:0;}
+  button{font-family:inherit;cursor:pointer;}
+  input,textarea,select{font-family:inherit;}
+
+  .write-bg{position:fixed;inset:0;z-index:0;
+    background:linear-gradient(rgba(10,8,8,.72),rgba(10,8,8,.72)),
+      url('https://d2x8kymwjom7h7.cloudfront.net/live/application_no/10009/partners-sns-api/260715_카제나-커뮤니티-헤더(시즌4)_CP커뮤니티_BG_ML2560x736_1a1516.jpg') center/cover no-repeat;
+    filter:blur(6px);transform:scale(1.05);}
+
+  .write-wrap{position:relative;z-index:1;max-width:820px;margin:0 auto;padding:40px 20px 80px;}
+  .write-shell{background:var(--surface);border-radius:14px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.4);}
+
+  .write-topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-bottom:1px solid var(--line);}
+  .write-topbar-left{display:flex;align-items:center;gap:14px;}
+  .write-back-btn{background:none;border:none;color:var(--ink);padding:2px;display:flex;}
+  .write-back-btn svg{width:22px;height:22px;}
+  .write-topbar-title{font-size:16.5px;font-weight:900;color:var(--ink);}
+  .write-topbar-right{display:flex;align-items:center;gap:14px;}
+  .write-draft-count{font-size:12.5px;color:var(--sub);}
+  .write-draft-count b{color:var(--orange);font-weight:800;}
+  .write-draft-btn{background:none;border:1px solid var(--line);border-radius:7px;padding:8px 14px;font-size:12.5px;font-weight:700;color:var(--sub);}
+  .write-draft-btn:hover{background:var(--surface-2);}
+
+  .write-board-select{margin:18px 22px 0;padding:12px 14px;border:1px solid var(--line);border-radius:9px;
+    display:flex;align-items:center;justify-content:space-between;font-size:14px;font-weight:800;color:var(--ink);}
+  .write-board-select svg{width:16px;height:16px;color:var(--sub);}
+
+  .write-title-input{display:block;width:calc(100% - 44px);margin:18px 22px 0;border:none;outline:none;
+    font-size:20px;font-weight:800;color:var(--ink);font-family:var(--font-display);}
+  .write-title-input::placeholder{color:var(--sub-dim);}
+
+  /* ============ 덱 빌딩 항목 ============ */
+  .deckbuild-box{margin:20px 22px 0;padding:16px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);
+    display:flex;flex-direction:column;gap:14px;}
+  .deckbuild-row{display:flex;gap:14px;align-items:flex-start;}
+
+  .deckbuild-select{flex:none;width:180px;height:180px;border-radius:10px;background:#fff;border:1.5px solid var(--line);
+    position:relative;overflow:hidden;cursor:pointer;transition:border-color .15s;}
+  .deckbuild-select:hover{border-color:var(--orange);}
+  .deckbuild-select-empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;}
+  .deckbuild-select-label{position:absolute;top:12px;left:0;right:0;text-align:center;font-size:11.5px;font-weight:800;color:var(--sub);}
+  .deckbuild-select-plus{font-size:40px;font-weight:300;color:var(--sub-dim);line-height:1;}
+  .deckbuild-select-portrait{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;}
+
+  .deckbuild-cardgrid-wrap{flex:1;min-width:0;}
+  .deckbuild-cardgrid-empty{height:180px;display:flex;align-items:center;color:var(--sub-dim);font-size:12.5px;padding-left:4px;}
+  .deckbuild-cardgrid{width:235px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;align-content:start;}
+  .deckbuild-card-cell{width:100%;aspect-ratio:220/360;}
+  .deckbuild-add-cell{width:100%;aspect-ratio:220/360;border-radius:8px;background:#fff;border:1.5px dashed #d6d6d6;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;transition:border-color .15s;}
+  .deckbuild-add-cell:hover{border-color:var(--orange);}
+  .deckbuild-add-plus{font-size:20px;font-weight:300;color:var(--sub-dim);line-height:1;}
+  .deckbuild-add-label{font-size:9.5px;font-weight:700;color:var(--sub);}
+
+  /* ============ 카드 구조 (index.html의 .card 렌더링 그대로 이식) ============ */
+  .card{position:relative;width:100%;aspect-ratio:220/360;border-radius:8px;overflow:hidden;background:#0c0c10;cursor:pointer;
+    container-type:inline-size;user-select:none;-webkit-user-select:none;-webkit-user-drag:none;}
+  .card-media{position:absolute;inset:0;}
+  .card-media img,.card-media video{width:100%;height:100%;object-fit:cover;object-position:calc(50% + 4cqw) center;display:block;-webkit-user-drag:none;}
+  .card-top-grad{position:absolute;top:0;left:0;right:0;height:42%;background:linear-gradient(to bottom, rgba(0,0,0,.5) 0%, transparent 100%);}
+  .card-ego{position:absolute;left:0;top:0;bottom:0;width:9.45%;background-repeat:no-repeat;background-size:100% 105%;background-position:center;}
+  .card-grade-star{position:absolute;top:2%;left:-3.38cqw;width:15.2%;aspect-ratio:1/2;background-repeat:no-repeat;background-size:contain;background-position:top center;}
+  .card-bottom-grad{position:absolute;bottom:0;left:0;right:0;height:58%;background:linear-gradient(to top, rgba(0,0,0,.58) 0%, transparent 100%);}
+  .card-content{position:absolute;inset:0;padding:7% 7% 6% calc(9.45% + 5px);}
+  .card-header{display:flex;align-items:flex-start;gap:5px;}
+  .card-cost{flex:none;display:flex;flex-direction:column;align-items:center;}
+  .card-cost-num{font-family:var(--font-display);font-weight:900;font-size:11.54cqw;line-height:1;color:#eaf7ff;
+    text-shadow:0 0 4px #2ab6ff,0 0 9px #2ab6ff,0 0 16px rgba(42,182,255,.8);}
+  .card-cost-line{width:8.2cqw;height:0.42cqw;background:#eaf7ff;margin-top:3px;
+    box-shadow:0 0 4px #2ab6ff,0 0 9px #2ab6ff,0 0 16px rgba(42,182,255,.8);}
+  .card-title{min-width:0;flex:1;}
+  .card-name{font-size:7.3cqw;font-weight:800;line-height:1.28;word-break:keep-all;
+    text-shadow:0 1px 3px #000,0 0 5px #000;}
+  .card-type{display:flex;align-items:center;gap:3px;margin-top:3px;}
+  .card-type .card-type-icon{width:6.9cqw;height:6.9cqw;flex:none;border-radius:4px;object-fit:cover;display:block;}
+  .card-type span{font-size:5.9cqw;color:#fff;font-weight:700;text-shadow:0 1px 3px #000,0 0 5px #000;}
+  .card-tooltip{position:absolute;left:calc(9.45% + 5px);right:7%;bottom:11.8cqw;font-size:6cqw;line-height:1.45;color:#fff;font-weight:600;text-align:center;
+    text-shadow:0 1px 3px #000,0 0 5px #000,0 0 10px rgba(0,0,0,.8);}
+  .card[data-grade="gray"] .card-name{color:#fff;}
+  .card[data-grade="blue"] .card-name{color:#60c8ff;}
+  .card[data-grade="yellow"] .card-name{color:#ffd23d;}
+  .card[data-grade="purple"] .card-name{color:#d181ff;}
+
+  /* ============ 전투원 미리보기 박스 (덱 빌딩 게시판 카드에서 파트너 아이콘만 제외) ============ */
+  .deck-agent{position:relative;aspect-ratio:220/360;border-radius:8px;overflow:hidden;background:#dcdcdc;}
+  .deck-agent-img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;-webkit-user-drag:none;}
+  .deck-agent-badges{position:absolute;top:6px;left:6px;z-index:5;display:flex;flex-direction:column;gap:4px;}
+  .deck-agent-badge{width:20.9px;height:20.9px;border-radius:5px;background:rgba(15,12,12,.6);display:flex;align-items:center;justify-content:center;}
+  .deck-agent-badge img{width:77.8%;height:77.8%;object-fit:contain;display:block;}
+  .deck-agent-badge.attr{overflow:hidden;}
+  .deck-agent-badge.attr img{width:100%;height:100%;object-fit:cover;}
+  .deck-agent-black-band{position:absolute;left:0;right:0;bottom:5px;height:30px;background:rgba(0,0,0,.5);z-index:1;}
+  .deck-agent-gradient{position:absolute;left:0;right:0;bottom:5px;height:20px;z-index:2;}
+  .deck-agent-gradient[data-grade="4"]{background:linear-gradient(to top, rgba(255,181,10,.55) 0%, rgba(255,181,10,0) 100%);}
+  .deck-agent-gradient[data-grade="5"]{
+    background:linear-gradient(to right, #202a6e 0%, #2b5fd6 33%, #9c2e8c 66%, #6f3fa0 100%);
+    -webkit-mask-image:linear-gradient(to top, #000 0%, transparent 100%);
+    mask-image:linear-gradient(to top, #000 0%, transparent 100%);
+    opacity:.65;
+  }
+  .deck-agent-grade-band{position:absolute;left:0;right:0;bottom:0;height:5px;background-repeat:no-repeat;background-size:100% 100%;z-index:3;}
+  .deck-agent-name{position:absolute;right:8px;bottom:13px;z-index:6;color:#fff;font-size:14.85px;font-weight:800;
+    text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000,0 0 4px rgba(0,0,0,.6);}
+  .deck-agent.selectable{cursor:pointer;transition:transform .15s;}
+  .deck-agent.selectable:hover{transform:scale(1.03);}
+
+  /* ============ 팝업 ============ */
+  .wpop-overlay{position:fixed;inset:0;z-index:500;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);padding:20px;}
+  .wpop-overlay.open{display:flex;}
+  .wpop-panel{background:#fff;border-radius:14px;width:760px;max-width:100%;max-height:86vh;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,.35);}
+  .wpop-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--line);flex:none;}
+  .wpop-title{font-size:16px;font-weight:900;color:var(--ink);}
+  .wpop-close{background:none;border:none;font-size:22px;color:var(--sub);cursor:pointer;padding:4px;line-height:1;}
+  .wpop-close:hover{color:var(--ink);}
+  .wpop-filters{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 22px;border-bottom:1px solid var(--line);flex-wrap:wrap;flex:none;}
+  .wpop-filter-groups{display:flex;align-items:center;gap:20px;flex-wrap:wrap;}
+  .wpop-filter-group{display:flex;align-items:center;gap:8px;}
+  .wpop-filter-tags{display:flex;gap:7px;flex-wrap:wrap;}
+  .wpop-tag-btn{width:34px;height:34px;border-radius:9px;background:var(--surface-2);border:2px solid transparent;
+    display:flex;align-items:center;justify-content:center;padding:5px;cursor:pointer;opacity:.55;transition:opacity .15s,border-color .15s;}
+  .wpop-tag-btn img{width:100%;height:100%;object-fit:contain;display:block;}
+  .wpop-tag-btn.attr{padding:0;overflow:hidden;}
+  .wpop-tag-btn.attr img{object-fit:cover;}
+  .wpop-tag-btn.grade{background-size:cover;background-position:center;color:#fff;font-weight:900;font-size:13px;text-shadow:0 1px 2px rgba(0,0,0,.5);}
+  .wpop-tag-btn:hover{opacity:.8;}
+  .wpop-tag-btn.active{opacity:1;border-color:var(--orange);}
+  .wpop-cat-row{display:flex;gap:8px;flex-wrap:wrap;}
+  .wpop-cat-btn{padding:7px 16px;border-radius:20px;border:1px solid var(--line);background:var(--surface-2);color:var(--sub);font-size:12.5px;font-weight:700;}
+  .wpop-cat-btn.active{background:var(--orange);border-color:var(--orange);color:#fff;}
+  .wpop-search{display:flex;align-items:center;gap:6px;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:0 10px;flex:none;}
+  .wpop-search svg{width:13px;height:13px;color:var(--sub-dim);flex:none;}
+  .wpop-search input{border:none;background:none;padding:8px 0;font-size:12.5px;width:150px;outline:none;color:var(--ink);}
+  .wpop-body{padding:18px 22px;overflow-y:auto;flex:1;min-height:0;}
+  .wpop-agent-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+  .wpop-card-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+  .wpop-empty{text-align:center;color:var(--sub-dim);font-size:13px;padding:40px 0;}
+
+  /* ============ 툴바 / 본문 ============ */
+  .write-toolbar{margin:20px 22px 0;border:1px solid var(--line);border-radius:9px 9px 0 0;border-bottom:none;
+    display:flex;align-items:center;gap:4px;padding:8px 10px;flex-wrap:wrap;}
+  .write-toolbar button{background:none;border:none;color:var(--sub);font-size:13px;font-weight:700;padding:7px 8px;border-radius:6px;}
+  .write-toolbar button:hover{background:var(--surface-2);color:var(--ink);}
+  .write-toolbar .sep{width:1px;height:18px;background:var(--line);margin:0 4px;}
+
+  .write-body-textarea{display:block;width:calc(100% - 44px);margin:0 22px 22px;min-height:260px;
+    border:1px solid var(--line);border-top:none;border-radius:0 0 9px 9px;padding:16px;
+    font-size:13.5px;line-height:1.7;color:var(--ink);resize:vertical;outline:none;}
+  .write-body-textarea::placeholder{color:var(--sub-dim);}
+
+  @media (max-width:640px){
+    .deckbuild-row{flex-direction:column;}
+    .deckbuild-select{width:100%;height:140px;}
+    .deckbuild-cardgrid{width:100%;}
+    .wpop-agent-grid,.wpop-card-grid{grid-template-columns:repeat(2,1fr);}
+  }
+</style>
+
+<div class="write-bg"></div>
+
+<div class="write-wrap">
+  <div class="write-shell">
+    <div class="write-topbar">
+      <div class="write-topbar-left">
+        <a class="write-back-btn" href="../"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 6l-6 6 6 6"/></svg></a>
+        <div class="write-topbar-title">글쓰기</div>
+      </div>
+      <div class="write-topbar-right">
+        <div class="write-draft-count">임시<b>0</b></div>
+        <button type="button" class="write-draft-btn">임시저장</button>
+      </div>
+    </div>
+
+    <div class="write-board-select">
+      덱 빌딩 게시판
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+
+    <input type="text" class="write-title-input" placeholder="제목을 입력해주세요.">
+
+    <div class="deckbuild-box" id="deckbuildBox"></div>
+
+    <div class="write-toolbar">
+      <button type="button"><b>B</b></button>
+      <button type="button"><i>I</i></button>
+      <button type="button" style="text-decoration:underline;">U</button>
+      <button type="button" style="text-decoration:line-through;">S</button>
+      <div class="sep"></div>
+      <button type="button">Tr</button>
+      <button type="button">🎨</button>
+      <button type="button">✎</button>
+      <button type="button">❝</button>
+      <div class="sep"></div>
+      <button type="button">▦</button>
+      <button type="button">☰</button>
+      <button type="button">1.</button>
+      <button type="button">•</button>
+      <button type="button">—</button>
+      <div class="sep"></div>
+      <button type="button">🔗</button>
+      <button type="button">🙂</button>
+      <button type="button">🖼</button>
+      <button type="button">▶</button>
+      <button type="button">📎</button>
+    </div>
+    <textarea class="write-body-textarea" placeholder="본문 내용과 함께 #태그를 입력하면 더 많은 사람들이 볼 수 있어요!"></textarea>
+  </div>
+</div>
+
+<!-- 전투원 선택 팝업 -->
+<div class="wpop-overlay" id="agentPopOverlay">
+  <div class="wpop-panel">
+    <div class="wpop-head">
+      <div class="wpop-title">전투원 선택</div>
+      <button type="button" class="wpop-close" id="agentPopClose">&times;</button>
+    </div>
+    <div class="wpop-filters">
+      <div class="wpop-filter-groups">
+        <div class="wpop-filter-group"><div class="wpop-filter-tags" id="agentPopJobTags"></div></div>
+        <div class="wpop-filter-group"><div class="wpop-filter-tags" id="agentPopAttrTags"></div></div>
+        <div class="wpop-filter-group"><div class="wpop-filter-tags" id="agentPopGradeTags"></div></div>
+      </div>
+      <div class="wpop-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input type="search" id="agentPopSearch" placeholder="전투원 이름 검색">
+      </div>
+    </div>
+    <div class="wpop-body"><div class="wpop-agent-grid" id="agentPopGrid"></div></div>
+  </div>
+</div>
+
+<!-- 카드 추가 팝업 -->
+<div class="wpop-overlay" id="cardPopOverlay">
+  <div class="wpop-panel">
+    <div class="wpop-head">
+      <div class="wpop-title">카드 추가</div>
+      <button type="button" class="wpop-close" id="cardPopClose">&times;</button>
+    </div>
+    <div class="wpop-filters">
+      <div class="wpop-cat-row" id="cardPopCatRow">
+        <button type="button" class="wpop-cat-btn active" data-cat="all">전체</button>
+        <button type="button" class="wpop-cat-btn" data-cat="agent">전투원</button>
+        <button type="button" class="wpop-cat-btn" data-cat="common">중립</button>
+        <button type="button" class="wpop-cat-btn" data-cat="monster">몬스터</button>
+      </div>
+      <div class="wpop-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input type="search" id="cardPopSearch" placeholder="카드 이름 검색">
+      </div>
+    </div>
+    <div class="wpop-body"><div class="wpop-card-grid" id="cardPopGrid"></div></div>
+  </div>
+</div>
+
+<script src="../../agents/agents-data.js"></script>
+<script src="../../cards/cards-data.js"></script>
+<script src="../../quiz/quiz-data.js"></script>
+
+<script>
+(function(){
+  var JOB_ICON = {
+    striker: '../../agents/striker.webp',
+    ranger: '../../agents/ranger.webp',
+    vanguard: '../../agents/vanguard.webp',
+    hunter: '../../agents/hunter.png',
+    controller: '../../agents/controller.webp',
+    psionic: '../../agents/psionic.webp'
+  };
+  var JOB_LABEL = { striker:'스트라이커', ranger:'레인저', vanguard:'뱅가드', hunter:'헌터', controller:'컨트롤러', psionic:'사이오닉' };
+  var ATTR_ICON = {
+    passion: '../../agents/passion.webp',
+    justice: '../../agents/justice.webp',
+    order: '../../agents/order.webp',
+    instinct: '../../agents/instinct.webp',
+    void: '../../agents/void.webp'
+  };
+  var ATTR_LABEL = { passion:'열정', justice:'정의', order:'질서', instinct:'본능', void:'공허' };
+  var TYPE_ICON = { attack:'../../cards/attack.png', skill:'../../cards/skill.png', upgrade:'../../cards/upgrade.png' };
+  var TYPE_LABEL = { attack:'공격', skill:'스킬', upgrade:'강화' };
+  var EGO_BAND = {
+    passion:'../../cards/card_ego_passion.webp', justice:'../../cards/card_ego_justice.webp', order:'../../cards/card_ego_order.webp',
+    instinct:'../../cards/card_ego_instinct.webp', void:'../../cards/card_ego_void.webp',
+    common:'../../cards/card_ego_normal.webp', monster:'../../cards/card_ego_monster.webp'
+  };
+
+  var agentsById = {};
+  (window.AGENTS_DATA || []).forEach(function(a){ agentsById[a.id] = a; });
+  var AGENTS_WITH_CARDS = (window.AGENTS_DATA || []).filter(function(a){
+    return !!(window.AGENTS_CARDS && window.AGENTS_CARDS[a.id] && window.AGENTS_CARDS[a.id].length);
+  });
+
+  function isVideoSrc(src){ return /\.(webm|mp4)$/i.test(src || ''); }
+  function cardMediaHtml(mediaSrc, name){
+    if (isVideoSrc(mediaSrc)) return '<video src="'+mediaSrc+'" autoplay muted loop playsinline disablepictureinpicture></video>';
+    return '<img src="'+mediaSrc+'" alt="'+name+'" draggable="false" ondragstart="return false">';
+  }
+  function renderTooltip(text){
+    var s = String(text || '').replace(/;/g, ' ');
+    return s.replace(/\[([^\]]*)\]|"([^"]*)"|-([^-]*)-|(\d+)/g, function(match, br, q, dash, digits){
+      if (br !== undefined) return '<span style="color:#EAAA00">[' + br + ']</span>';
+      if (q !== undefined) return '<span style="color:#7EE4FF;text-decoration:underline">' + q + '</span>';
+      if (dash !== undefined) return '<span style="color:#7EE4FF">' + dash + '</span>';
+      if (digits !== undefined) return '<span style="color:#7EE4FF">' + digits + '</span>';
+      return match;
+    }).replace(/\n/g, '<br>');
+  }
+
+  // 통일된 카드 형태로 변환: agents-data 카드 / quiz-data(중립,몬스터) 카드
+  function fromAgentCard(card, agent){
+    return { key:'a:'+card.name, name:card.name, cost:card.cost, type:card.type, grade:card.grade,
+      media:'../../'+card.media, tooltip:card.tooltip, egoAttr:agent.attribute, source:'agent' };
+  }
+  function fromQuizCard(card){
+    return { key:'q:'+card.name, name:card.name, cost:card.cost, type:card.type, grade:card.rarity,
+      media:'../../'+card.illust, tooltip:card.tooltip, egoAttr:card.attribute, source:card.attribute };
+  }
+
+  function renderCardCellHtml(c){
+    return (
+      '<div class="card" data-grade="'+c.grade+'">' +
+        '<div class="card-media">'+cardMediaHtml(c.media, c.name)+'</div>' +
+        '<div class="card-top-grad"></div>' +
+        '<div class="card-ego" style="background-image:url(\''+EGO_BAND[c.egoAttr]+'\')"></div>' +
+        '<div class="card-grade-star" style="background-image:url(\'../../cards/card_'+c.grade+'.webp\')"></div>' +
+        '<div class="card-bottom-grad"></div>' +
+        '<div class="card-content">' +
+          '<div class="card-header">' +
+            '<div class="card-cost"><div class="card-cost-num">'+c.cost+'</div><div class="card-cost-line"></div></div>' +
+            '<div class="card-title">' +
+              '<div class="card-name">'+c.name+'</div>' +
+              '<div class="card-type"><img class="card-type-icon" src="'+TYPE_ICON[c.type]+'" alt="">'+
+                '<span>'+TYPE_LABEL[c.type]+'</span></div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="card-tooltip">'+renderTooltip(c.tooltip)+'</div>' +
+        '</div>' +
+      '</div>'
+    );
+  }
+
+  function renderAgentPreviewHtml(agent){
+    var illust = '../../agents/' + agent.name + '_C.png';
+    var gradeBand = '../../agents/grade_' + agent.grade + '_tag.png';
+    return (
+      '<div class="deck-agent selectable" data-agent-id="'+agent.id+'">' +
+        '<img class="deck-agent-img" src="'+illust+'" alt="'+agent.name+'" draggable="false" oncontextmenu="return false">' +
+        '<div class="deck-agent-badges">' +
+          '<div class="deck-agent-badge"><img src="'+JOB_ICON[agent.job]+'" alt=""></div>' +
+          '<div class="deck-agent-badge attr"><img src="'+ATTR_ICON[agent.attribute]+'" alt=""></div>' +
+        '</div>' +
+        '<div class="deck-agent-black-band"></div>' +
+        '<div class="deck-agent-gradient" data-grade="'+agent.grade+'"></div>' +
+        '<div class="deck-agent-grade-band" style="background-image:url(\''+gradeBand+'\')"></div>' +
+        '<div class="deck-agent-name">'+agent.name+'</div>' +
+      '</div>'
+    );
+  }
+
+  // ============ 덱 상태 ============
+  var deckState = [
+    { agentId: null, cards: [] },
+    { agentId: null, cards: [] },
+    { agentId: null, cards: [] }
+  ];
+
+  function firstFourCards(agentId){
+    var list = (window.AGENTS_CARDS && window.AGENTS_CARDS[agentId]) || [];
+    return list.filter(function(c){ return !!c.grade; }).slice(0, 4);
+  }
+
+  function renderDeckBox(){
+    var box = document.getElementById('deckbuildBox');
+    box.innerHTML = deckState.map(function(row, i){
+      var agent = row.agentId ? agentsById[row.agentId] : null;
+      var selectHtml = agent ?
+        '<img class="deckbuild-select-portrait" src="../../'+agent.icon+'" alt="'+agent.name+'">' :
+        '<div class="deckbuild-select-empty"><div class="deckbuild-select-plus">+</div></div>';
+      var cardsHtml;
+      if (!agent) {
+        cardsHtml = '<div class="deckbuild-cardgrid-empty">전투원을 먼저 선택해주세요.</div>';
+      } else {
+        var cellsHtml = row.cards.map(function(c){
+          return '<div class="deckbuild-card-cell">' + renderCardCellHtml(c) + '</div>';
+        }).join('');
+        cellsHtml += '<div class="deckbuild-add-cell" data-row="'+i+'">' +
+          '<div class="deckbuild-add-plus">+</div><div class="deckbuild-add-label">카드 추가</div></div>';
+        cardsHtml = '<div class="deckbuild-cardgrid">'+cellsHtml+'</div>';
+      }
+      return (
+        '<div class="deckbuild-row">' +
+          '<div class="deckbuild-select" data-row="'+i+'">' +
+            '<div class="deckbuild-select-label">전투원 선택</div>' +
+            selectHtml +
+          '</div>' +
+          '<div class="deckbuild-cardgrid-wrap">'+cardsHtml+'</div>' +
+        '</div>'
+      );
+    }).join('');
+
+    Array.prototype.forEach.call(box.querySelectorAll('.deckbuild-select'), function(el){
+      el.addEventListener('click', function(){ openAgentPopup(parseInt(el.getAttribute('data-row'), 10)); });
+    });
+    Array.prototype.forEach.call(box.querySelectorAll('.deckbuild-add-cell'), function(el){
+      el.addEventListener('click', function(){ openCardPopup(parseInt(el.getAttribute('data-row'), 10)); });
+    });
+  }
+
+  // ============ 전투원 선택 팝업 ============
+  var agentPopOverlay = document.getElementById('agentPopOverlay');
+  var agentPopGrid = document.getElementById('agentPopGrid');
+  var agentPopSearch = document.getElementById('agentPopSearch');
+  var agentPopState = { row: -1, job: null, attribute: null, grade: null, search: '' };
+
+  var JOBS_LIST = ['striker','ranger','vanguard','hunter','controller','psionic'];
+  var ATTRS_LIST = ['passion','justice','order','instinct','void'];
+  var GRADES_LIST = [5,4];
+
+  document.getElementById('agentPopJobTags').innerHTML = JOBS_LIST.map(function(j){
+    return '<button type="button" class="wpop-tag-btn" data-job="'+j+'" title="'+JOB_LABEL[j]+'"><img src="'+JOB_ICON[j]+'" alt=""></button>';
+  }).join('');
+  document.getElementById('agentPopAttrTags').innerHTML = ATTRS_LIST.map(function(a){
+    return '<button type="button" class="wpop-tag-btn attr" data-attr="'+a+'" title="'+ATTR_LABEL[a]+'"><img src="'+ATTR_ICON[a]+'" alt=""></button>';
+  }).join('');
+  document.getElementById('agentPopGradeTags').innerHTML = GRADES_LIST.map(function(g){
+    return '<button type="button" class="wpop-tag-btn grade" data-grade="'+g+'" style="background-image:url(\'../../agents/grade_'+g+'.png\')">'+g+'</button>';
+  }).join('');
+
+  function bindToggleGroup(containerId, attr, stateKey){
+    Array.prototype.forEach.call(document.getElementById(containerId).querySelectorAll('[data-'+attr+']'), function(btn){
+      btn.addEventListener('click', function(){
+        var val = btn.getAttribute('data-'+attr);
+        agentPopState[stateKey] = (agentPopState[stateKey] === val) ? null : val;
+        renderAgentPopFilters();
+        renderAgentPopGrid();
+      });
+    });
+  }
+  bindToggleGroup('agentPopJobTags', 'job', 'job');
+  bindToggleGroup('agentPopAttrTags', 'attr', 'attribute');
+  bindToggleGroup('agentPopGradeTags', 'grade', 'grade');
+
+  function renderAgentPopFilters(){
+    Array.prototype.forEach.call(document.querySelectorAll('#agentPopJobTags [data-job]'), function(b){
+      b.classList.toggle('active', b.getAttribute('data-job') === agentPopState.job);
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('#agentPopAttrTags [data-attr]'), function(b){
+      b.classList.toggle('active', b.getAttribute('data-attr') === agentPopState.attribute);
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('#agentPopGradeTags [data-grade]'), function(b){
+      b.classList.toggle('active', b.getAttribute('data-grade') === String(agentPopState.grade));
+    });
+  }
+
+  agentPopSearch.addEventListener('input', function(){
+    agentPopState.search = agentPopSearch.value.trim();
+    renderAgentPopGrid();
+  });
+
+  function renderAgentPopGrid(){
+    var usedIds = deckState.filter(function(r, i){ return i !== agentPopState.row && r.agentId; }).map(function(r){ return r.agentId; });
+    var list = AGENTS_WITH_CARDS.filter(function(a){
+      if (usedIds.indexOf(a.id) !== -1) return false;
+      if (agentPopState.job && a.job !== agentPopState.job) return false;
+      if (agentPopState.attribute && a.attribute !== agentPopState.attribute) return false;
+      if (agentPopState.grade && a.grade !== parseInt(agentPopState.grade, 10)) return false;
+      if (agentPopState.search && a.name.indexOf(agentPopState.search) === -1) return false;
+      return true;
+    });
+    if (!list.length) {
+      agentPopGrid.innerHTML = '<div class="wpop-empty">조건에 맞는 전투원이 없습니다.</div>';
+      return;
+    }
+    agentPopGrid.innerHTML = list.map(renderAgentPreviewHtml).join('');
+    Array.prototype.forEach.call(agentPopGrid.querySelectorAll('.deck-agent'), function(el){
+      el.addEventListener('click', function(){ selectAgent(agentPopState.row, el.getAttribute('data-agent-id')); });
+    });
+  }
+
+  function openAgentPopup(row){
+    agentPopState.row = row;
+    agentPopState.job = null;
+    agentPopState.attribute = null;
+    agentPopState.grade = null;
+    agentPopState.search = '';
+    agentPopSearch.value = '';
+    renderAgentPopFilters();
+    renderAgentPopGrid();
+    agentPopOverlay.classList.add('open');
+  }
+  function closeAgentPopup(){ agentPopOverlay.classList.remove('open'); }
+  document.getElementById('agentPopClose').addEventListener('click', closeAgentPopup);
+  agentPopOverlay.addEventListener('click', function(e){ if (e.target === agentPopOverlay) closeAgentPopup(); });
+
+  function selectAgent(row, agentId){
+    deckState[row].agentId = agentId;
+    deckState[row].cards = firstFourCards(agentId).map(function(c){ return fromAgentCard(c, agentsById[agentId]); });
+    closeAgentPopup();
+    renderDeckBox();
+  }
+
+  // ============ 카드 추가 팝업 ============
+  var cardPopOverlay = document.getElementById('cardPopOverlay');
+  var cardPopGrid = document.getElementById('cardPopGrid');
+  var cardPopSearch = document.getElementById('cardPopSearch');
+  var cardPopState = { row: -1, cat: 'all', search: '' };
+
+  document.getElementById('cardPopCatRow').addEventListener('click', function(e){
+    var btn = e.target.closest('[data-cat]');
+    if (!btn) return;
+    cardPopState.cat = btn.getAttribute('data-cat');
+    Array.prototype.forEach.call(document.querySelectorAll('#cardPopCatRow [data-cat]'), function(b){
+      b.classList.toggle('active', b === btn);
+    });
+    renderCardPopGrid();
+  });
+  cardPopSearch.addEventListener('input', function(){
+    cardPopState.search = cardPopSearch.value.trim();
+    renderCardPopGrid();
+  });
+
+  function candidateCardsForRow(row){
+    var agent = agentsById[row.agentId];
+    var addedNames = row.cards.map(function(c){ return c.name; });
+    var agentCards = ((window.AGENTS_CARDS && window.AGENTS_CARDS[row.agentId]) || [])
+      .filter(function(c){ return !!c.grade; })
+      .filter(function(c){ return addedNames.indexOf(c.name) === -1; })
+      .map(function(c){ return fromAgentCard(c, agent); });
+    var commonCards = (window.QUIZ_CARDS || [])
+      .filter(function(c){ return c.attribute === 'common'; })
+      .filter(function(c){ return addedNames.indexOf(c.name) === -1; })
+      .map(fromQuizCard);
+    var monsterCards = (window.QUIZ_CARDS || [])
+      .filter(function(c){ return c.attribute === 'monster'; })
+      .filter(function(c){ return addedNames.indexOf(c.name) === -1; })
+      .map(fromQuizCard);
+    return { agent: agentCards, common: commonCards, monster: monsterCards };
+  }
+
+  function renderCardPopGrid(){
+    var row = deckState[cardPopState.row];
+    if (!row) return;
+    var groups = candidateCardsForRow(row);
+    var list;
+    if (cardPopState.cat === 'agent') list = groups.agent;
+    else if (cardPopState.cat === 'common') list = groups.common;
+    else if (cardPopState.cat === 'monster') list = groups.monster;
+    else list = groups.agent.concat(groups.common, groups.monster);
+
+    if (cardPopState.search) {
+      list = list.filter(function(c){ return c.name.indexOf(cardPopState.search) !== -1; });
+    }
+
+    if (!list.length) {
+      cardPopGrid.innerHTML = '<div class="wpop-empty">조건에 맞는 카드가 없습니다.</div>';
+      return;
+    }
+    cardPopGrid.innerHTML = list.map(function(c){
+      return '<div class="deckbuild-add-target" data-key="'+c.key.replace(/"/g,'&quot;')+'">' + renderCardCellHtml(c) + '</div>';
+    }).join('');
+    Array.prototype.forEach.call(cardPopGrid.querySelectorAll('.deckbuild-add-target'), function(el, idx){
+      el.addEventListener('click', function(){ addCardToRow(cardPopState.row, list[idx]); });
+    });
+  }
+
+  function openCardPopup(row){
+    cardPopState.row = row;
+    cardPopState.cat = 'all';
+    cardPopState.search = '';
+    cardPopSearch.value = '';
+    Array.prototype.forEach.call(document.querySelectorAll('#cardPopCatRow [data-cat]'), function(b){
+      b.classList.toggle('active', b.getAttribute('data-cat') === 'all');
+    });
+    renderCardPopGrid();
+    cardPopOverlay.classList.add('open');
+  }
+  function closeCardPopup(){ cardPopOverlay.classList.remove('open'); }
+  document.getElementById('cardPopClose').addEventListener('click', closeCardPopup);
+  cardPopOverlay.addEventListener('click', function(e){ if (e.target === cardPopOverlay) closeCardPopup(); });
+
+  function addCardToRow(row, card){
+    deckState[row].cards.push(card);
+    closeCardPopup();
+    renderDeckBox();
+  }
+
+  renderDeckBox();
+})();
+</script>
