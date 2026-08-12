@@ -268,6 +268,12 @@
   .deckbuild-pt-bar{height:100%;width:0%;background:#f5c518;border-radius:5px;transition:width .2s;}
   .deckbuild-pt-bar.over{background:#e5303d;}
 
+  .deckbuild-pt-usage-title{font-size:11.5px;font-weight:800;color:var(--ink);margin-bottom:8px;}
+  .deckbuild-pt-usage-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+  .deckbuild-pt-usage-item{font-size:10px;font-weight:700;color:var(--sub);background:#fff;border:1px solid var(--line);
+    border-radius:6px;padding:6px 4px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .deckbuild-pt-usage-item.span2{grid-column:span 2;}
+
   /* ============ 카드 구조 ============ */
   .card{position:relative;width:100%;aspect-ratio:5/7;border-radius:8px;overflow:hidden;background:#0c0c10;cursor:pointer;
     container-type:inline-size;user-select:none;-webkit-user-select:none;-webkit-user-drag:none;}
@@ -284,18 +290,31 @@
     text-shadow:0 0 4px #2ab6ff,0 0 9px #2ab6ff,0 0 16px rgba(42,182,255,.8);}
   .card-cost-line{width:8.2cqw;height:0.42cqw;background:#eaf7ff;margin-top:3px;
     box-shadow:0 0 4px #2ab6ff,0 0 9px #2ab6ff,0 0 16px rgba(42,182,255,.8);}
+  .card-awaken-badge{width:9.5cqw;margin-top:5px;display:block;filter:drop-shadow(0 1px 3px rgba(0,0,0,.7));}
+  .card-tooltip-extra{display:flex;align-items:flex-start;justify-content:center;gap:2px;margin-top:2px;}
+  .card-tooltip-extra-icon{width:6cqw;height:6cqw;flex:none;margin-top:0.3cqw;}
   .card-title{min-width:0;flex:1;}
   .card-name{font-size:8.4cqw;font-weight:800;line-height:1.28;word-break:keep-all;
     text-shadow:0 1px 3px #000,0 0 5px #000;}
   .card-type{display:flex;align-items:center;gap:3px;margin-top:3px;}
   .card-type .card-type-icon{width:6.9cqw;height:6.9cqw;flex:none;border-radius:4px;object-fit:cover;display:block;}
   .card-type span{font-size:6.79cqw;color:#fff;font-weight:700;text-shadow:0 1px 3px #000,0 0 5px #000;}
-  .card-tooltip{position:absolute;left:calc(9.45% + 5px);right:7%;bottom:11.8cqw;font-size:6.9cqw;line-height:1.45;color:#fff;font-weight:600;text-align:center;
+  .card-tooltip{position:absolute;left:calc(9.45% + 5px);right:7%;bottom:11.8cqw;font-size:6.9cqw;line-height:1.45;color:#fff;font-weight:600;
+    display:flex;flex-direction:column;align-items:center;gap:2px;
     text-shadow:0 1px 3px #000,0 0 5px #000,0 0 10px rgba(0,0,0,.8);}
+  .card-tooltip-base{text-align:center;}
   .card[data-grade="gray"] .card-name{color:#fff;}
   .card[data-grade="blue"] .card-name{color:#60c8ff;}
   .card[data-grade="yellow"] .card-name{color:#ffd23d;}
   .card[data-grade="purple"] .card-name{color:#d181ff;}
+
+  /* ============ 카드 번뜩임 힌트 오버레이 (덱빌드 그리드 전용) ============ */
+  .card-awaken-hint{position:absolute;inset:0;z-index:20;opacity:0;transition:opacity .2s;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6%;
+    background:rgba(0,0,0,.5);pointer-events:none;text-align:center;}
+  .card[data-awaken="1"]:hover .card-awaken-hint{opacity:1;}
+  .card-awaken-hint-icon{width:34%;display:block;filter:drop-shadow(0 0 5px #fff) drop-shadow(0 0 9px #fff);}
+  .card-awaken-hint-label{color:#fff;font-size:7.2cqw;font-weight:700;line-height:1.4;padding:0 8%;}
 
   /* ============ 카드 확대 미리보기 ============ */
   .card-zoom-preview{position:fixed;z-index:9999;width:220px;border-radius:10px;overflow:hidden;
@@ -364,6 +383,25 @@
   .wpop-agent-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;}
   .wpop-card-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;}
   .wpop-empty{text-align:center;color:var(--sub-dim);font-size:13px;padding:40px 0;}
+
+  /* ============ 번뜩임 선택 팝업 ============ */
+  .wpop-panel.awaken-pop-panel{width:760px;}
+  .awaken-pop-section{margin-bottom:22px;}
+  .awaken-pop-section:last-child{margin-bottom:0;}
+  .awaken-pop-section-title{font-size:13px;font-weight:800;color:var(--ink);margin-bottom:12px;}
+  .awaken-pop-cards{display:flex;gap:14px;align-items:flex-start;justify-content:center;flex-wrap:wrap;}
+  .awaken-pop-cards .card{width:118px;flex:none;cursor:pointer;transition:transform .15s,box-shadow .15s;border:2px solid transparent;}
+  .awaken-pop-cards .card:hover{transform:translateY(-3px);}
+  .awaken-pop-cards .card.selected{border-color:var(--orange);box-shadow:0 0 0 3px var(--orange-soft);}
+  .awaken-opt-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+  .awaken-opt-box{border:1.5px solid var(--line);border-radius:9px;background:#fff;padding:12px 10px;min-height:64px;
+    display:flex;align-items:center;justify-content:center;text-align:center;font-size:11.5px;line-height:1.5;font-weight:700;color:var(--ink);
+    cursor:pointer;transition:border-color .15s,box-shadow .15s,background .15s;}
+  .awaken-opt-box:hover{border-color:#c7c7c7;}
+  .awaken-opt-box.selected{border-color:var(--orange);box-shadow:0 0 0 2px var(--orange-soft);background:var(--orange-soft);}
+  .wpop-foot{flex:none;padding:14px 22px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;}
+  .awaken-confirm-btn{padding:10px 28px;border-radius:8px;border:none;background:var(--orange);color:#fff;font-size:13px;font-weight:800;cursor:pointer;transition:opacity .15s;}
+  .awaken-confirm-btn:disabled{opacity:.4;cursor:default;}
 
   /* ============ 툴바 / 본문 ============ */
   .write-toolbar{border:1px solid var(--line);border-radius:9px 9px 0 0;border-bottom:none;
@@ -668,6 +706,20 @@ document.getElementById('startBtn').addEventListener('click', function(){
   </div>
 </div>
 
+<!-- 번뜩임 선택 팝업 -->
+<div class="wpop-overlay" id="awakenPopOverlay">
+  <div class="wpop-panel awaken-pop-panel">
+    <div class="wpop-head">
+      <div class="wpop-title">번뜩임 선택</div>
+      <button type="button" class="wpop-close" id="awakenPopClose">&times;</button>
+    </div>
+    <div class="wpop-body" id="awakenPopBody"></div>
+    <div class="wpop-foot">
+      <button type="button" class="awaken-confirm-btn" id="awakenPopConfirmBtn" disabled>선택</button>
+    </div>
+  </div>
+</div>
+
 <!-- 전투원 정보 데이터 -->
 <script src="../../agents/agents-data.js"></script>
 <!-- 전투원 카드 정보 데이터 -->
@@ -721,6 +773,175 @@ document.getElementById('startBtn').addEventListener('click', function(){
     common:'../../cards/card_ego_normal.webp', monster:'../../cards/card_ego_monster.webp'
   };
 
+  // ============ 번뜩임(awakening) 시스템 ============
+  var NEW_AWAKENINGS = [
+    { tooltip:'대상에게 취약 2', types:['attack'] },
+    { tooltip:'대상에게 고통 4', types:['attack'] },
+    { tooltip:'드로우 1', types:['skill'] },
+    { tooltip:'사기 1, 결의 1', types:['upgrade'] },
+    { tooltip:'이 카드의 치유량 30% 증가', types:['skill'] },
+    { tooltip:'이 카드의 실드량 30% 증가', types:['skill'] },
+    { tooltip:'항상 약점 공격', types:['attack'] },
+    { tooltip:'무작위 아군이 대상에게 협공', types:['attack','skill'] },
+    { tooltip:'행동 포인트 1 획득', types:null },
+    { tooltip:'이 카드의 비용 1 감소', types:null, excludeCost:true },
+    { tooltip:'이 카드의 강인도 피해 100% 증가', types:['attack'] },
+    { tooltip:'이 카드의 피해량 30% 증가', types:['attack'] },
+    { tooltip:'자신의 카드 드로우 1', types:null },
+    { tooltip:'이 카드에 개전 부여', types:['attack','skill'], excludeTags:['개전'] },
+    { tooltip:'약점 공격 : 이번 턴 불굴 2 감소', types:['attack'] },
+    { tooltip:'이 카드에 분쇄 부여, 모든 적 손상 3', types:['attack'], excludeTags:['분쇄'] },
+    { tooltip:'이 카드에 보존 부여', types:null, excludeTags:['보존'] },
+    { tooltip:'실드가 없다면 실드량 100% 증가', types:['skill'] },
+    { tooltip:'턴 시작 시마다 처음 사용하는 카드일 시 드로우 2', types:null, excludeTags:['종극'] },
+    { tooltip:'체력 50% 미만이면 치유량 100% 증가', types:['skill'] },
+    { tooltip:'턴 시작 시 무작위 적에게 표식 2', types:['upgrade'] },
+    { tooltip:'스트레스 5 감소', types:null, requireTag:'소멸' },
+    { tooltip:'조율 : 다음 턴 행동 포인트 2', types:null, excludeCost:true },
+    { tooltip:'이번 턴 에고 스킬 비용 1 감소', types:null },
+    { tooltip:'턴 시작 시 비용 0 ~ 3 변경', types:null, excludeCost:true },
+    { tooltip:'버린 카드의 소멸 카드 2장 핸드로 이동', types:null },
+    { tooltip:'치유량 100% 증가, 이 카드에 종극 부여', types:null, excludeTags:['종극'] },
+    { tooltip:'처치 : 드로우 3', types:['attack'] },
+    { tooltip:'이 카드에 연계 2 부여', types:null, excludeTags:['종극','연계'] },
+    { tooltip:'공용 카드로 취급, 공용 카드 드로우 1', types:null }
+  ];
+  var NEW_AWAKEN_PT = 20;
+
+  var COMMON_AWAKENINGS = [
+    { types: ["attack", "skill"], tooltip: "모든 적 표식 1 ~ 2", jobs: ["ranger", "hunter"], include: null, exclude: ["사용 불가", "소멸"] },
+    { types: ["attack", "skill"], tooltip: "모든 적 표식 2 ~ 3", jobs: ["ranger", "hunter"], include: ["소멸"], exclude: ["사용 불가"] },
+    { types: ["attack", "skill"], tooltip: "대상에게 표식 1 ~ 2", jobs: ["ranger", "hunter"], include: null, exclude: ["사용 불가", "소멸"] },
+    { types: ["attack", "skill"], tooltip: "대상에게 표식 2 ~ 3", jobs: ["ranger", "hunter"], include: ["소멸"], exclude: ["사용 불가"] },
+    { types: ["attack", "skill", "upgrade"], tooltip: "드로우 1", jobs: null, include: null, exclude: ["사용 불가"] },
+    { types: ["attack", "skill"], tooltip: "다음 턴 드로우 1 ~ 2", jobs: ["ranger", "hunter", "controller"], include: ["종극"], exclude: ["사용 불가", "소멸"] },
+    { types: ["attack", "skill"], tooltip: "다음 턴 드로우 1 ~ 3", jobs: ["ranger", "hunter", "controller"], include: ["소멸", "종극"], exclude: ["사용 불가"] },
+    { types: ["attack", "skill"], tooltip: "드로우 1 ~ 2", jobs: ["ranger", "hunter", "controller"], include: null, exclude: ["사용 불가", "소멸", "종극"] },
+    { types: ["attack", "skill"], tooltip: "드로우 1 ~ 3", jobs: ["ranger", "hunter", "controller"], include: ["소멸"], exclude: ["사용 불가", "종극"] },
+    { types: ["upgrade"], tooltip: "이 카드의 비용 1 감소", jobs: ["striker", "vanguard", "ranger", "hunter", "psionic", "controller"], include: null, exclude: ["소멸", "사용 불가"] },
+    { types: ["attack", "skill"], tooltip: "이 카드의 비용 1 감소", jobs: ["striker", "vanguard", "ranger", "hunter", "psionic", "controller"], include: null, exclude: ["소멸", "사용 불가"] },
+    { types: ["attack", "skill"], tooltip: "이 카드의 비용 1 감소", jobs: ["striker", "vanguard", "ranger", "hunter", "psionic", "controller"], include: ["소멸"], exclude: ["사용 불가"] },
+    { types: ["attack", "skill"], tooltip: "다음 턴 행동 포인트 1 ~ 2", jobs: ["vanguard", "ranger", "hunter", "controller"], include: ["소멸", "종극"], exclude: ["사용 불가"] },
+    { types: ["attack", "skill"], tooltip: "행동 포인트 1 획득", jobs: ["vanguard", "ranger", "hunter", "controller"], include: null, exclude: ["사용 불가", "소멸"] },
+    { types: ["attack", "skill"], tooltip: "행동 포인트 1 ~ 2 획득", jobs: ["vanguard", "ranger", "hunter", "controller"], include: ["소멸"], exclude: ["사용 불가", "종극"] },
+    { types: ["upgrade"], tooltip: "턴 종료 시 실드 20%, 40%, 60%", jobs: ["striker", "vanguard", "ranger", "hunter"], include: null, exclude: ["사용 불가", "소멸"] },
+    { types: ["upgrade"], tooltip: "턴 종료 시 치유 20%, 40%, 60%", jobs: ["psionic", "controller"], include: null, exclude: ["사용 불가", "소멸"] },
+    { types: ["attack", "skill"], tooltip: "강인도 피해 0.5 ~ 2", jobs: ["striker", "psionic"], include: null, exclude: ["사용 불가", "소멸"] },
+    { types: ["attack", "skill"], tooltip: "강인도 피해 1 ~ 3", jobs: ["striker", "psionic"], include: ["소멸"], exclude: ["사용 불가"] },
+    { types: ["upgrade"], tooltip: "에고 포인트 1 ~ 3 획득", jobs: ["controller"], include: null, exclude: ["사용 불가", "소멸"] },
+    { types: ["attack", "skill"], tooltip: "에고 포인트 1 ~ 3 획득", jobs: ["controller"], include: ["소멸"], exclude: ["사용 불가"] },
+    { types: ["attack", "skill"], tooltip: "모든 적 행동 카운트 1 ~ 2 증가", jobs: ["vanguard", "ranger", "hunter", "psionic"], include: null, exclude: ["사용 불가", "소멸"] },
+    { types: ["attack", "skill"], tooltip: "행동 카운트 1 ~ 2 증가", jobs: ["vanguard", "ranger", "hunter", "psionic"], include: null, exclude: ["사용 불가", "소멸"] },
+    { types: ["attack", "skill"], tooltip: "다음 턴 사기 1~4", jobs: ["striker", "psionic", "controller"], include: ["종극"], exclude: ["사용 불가", "소멸"] },
+    { types: ["attack", "skill"], tooltip: "1턴간 사기 1~4", jobs: ["striker", "psionic", "controller"], include: null, exclude: ["사용 불가", "소멸", "종극"] },
+    { types: ["upgrade"], tooltip: "사기 1~2", jobs: ["striker", "psionic", "controller"], include: null, exclude: ["사용 불가", "소멸"] },
+    { types: ["attack", "skill"], tooltip: "사기 1~2", jobs: ["striker", "psionic", "controller"], include: ["소멸"], exclude: ["사용 불가"] },
+    { types: ["attack", "skill"], tooltip: "다음 턴 결의 1~4", jobs: ["striker", "ranger", "hunter", "psionic", "controller"], include: ["종극"], exclude: ["사용 불가", "소멸"] },
+    { types: ["attack", "skill"], tooltip: "1턴간 결의 1~4", jobs: ["striker", "ranger", "hunter", "psionic", "controller"], include: null, exclude: ["사용 불가", "소멸", "종극"] },
+    { types: ["attack", "skill"], tooltip: "결의 1~2", jobs: ["striker", "ranger", "hunter", "psionic", "controller"], include: ["소멸"], exclude: ["사용 불가"] },
+    { types: ["upgrade"], tooltip: "결의 1~2", jobs: ["striker", "ranger", "hunter", "psionic", "controller"], include: null, exclude: ["사용 불가", "소멸"] },
+    { types: ["attack", "skill"], tooltip: "다음 턴 불굴 1~4", jobs: ["vanguard", "psionic", "controller"], include: ["종극"], exclude: ["사용 불가", "소멸"] },
+    { types: ["attack", "skill"], tooltip: "한 턴간 불굴 1~4", jobs: ["vanguard", "psionic", "controller"], include: null, exclude: ["사용 불가", "소멸", "종극"] },
+    { types: ["upgrade"], tooltip: "불굴 1~2", jobs: ["vanguard", "psionic", "controller"], include: null, exclude: ["사용 불가", "소멸"] },
+    { types: ["attack", "skill"], tooltip: "불굴 1~2", jobs: ["vanguard", "psionic", "controller"], include: ["소멸"], exclude: ["사용 불가"] },
+    { types: ["upgrade"], tooltip: "매 턴 시작 시 반격 1~2", jobs: ["vanguard"], include: null, exclude: ["사용 불가", "소멸"] },
+    { types: ["attack", "skill"], tooltip: "매 턴 시작 시 반격 1~2", jobs: ["vanguard"], include: ["소멸"], exclude: ["사용 불가"] },
+    { types: ["attack", "skill"], tooltip: "반격 1~2", jobs: ["vanguard"], include: null, exclude: ["사용 불가", "소멸"] },
+    { types: ["upgrade"], tooltip: "면역 1", jobs: ["striker", "vanguard"], include: null, exclude: ["사용 불가", "소멸"] },
+    { types: ["attack", "skill"], tooltip: "면역 1", jobs: ["striker", "vanguard"], include: ["소멸"], exclude: ["사용 불가"] },
+    { types: ["attack", "skill"], tooltip: "피해 감소 1~2", jobs: ["striker", "vanguard"], include: null, exclude: ["사용 불가", "소멸"] },
+    { types: ["attack", "skill"], tooltip: "피해 감소 2~3", jobs: ["striker", "vanguard"], include: ["소멸"], exclude: ["사용 불가"] },
+    { types: ["attack", "skill"], tooltip: "모든 적 고통 1~2", jobs: ["ranger", "hunter", "psionic"], include: null, exclude: ["사용 불가", "소멸"] },
+    { types: ["attack", "skill"], tooltip: "모든 적 고통 2~3", jobs: ["ranger", "hunter", "psionic"], include: ["소멸"], exclude: ["사용 불가"] },
+    { types: ["upgrade"], tooltip: "턴 시작 시 모든 적 고통 2, 4", jobs: ["ranger", "hunter", "psionic"], include: null, exclude: ["사용 불가", "소멸"] },
+    { types: ["attack", "skill"], tooltip: "대상에게 고통 2, 4", jobs: ["ranger", "hunter", "psionic"], include: null, exclude: ["사용 불가", "소멸"] },
+    { types: ["attack", "skill"], tooltip: "대상에게 고통 4, 6", jobs: ["ranger", "hunter", "psionic"], include: ["소멸"], exclude: ["사용 불가"] },
+    { types: ["attack", "skill"], tooltip: "모든 적 약화 1~2", jobs: ["ranger", "hunter"], include: null, exclude: ["사용 불가", "소멸"] },
+    { types: ["attack", "skill"], tooltip: "모든 적 약화 2~3", jobs: ["ranger", "hunter"], include: ["소멸"], exclude: ["사용 불가"] },
+    { types: ["attack", "skill"], tooltip: "대상에게 약화 1~2", jobs: ["ranger", "hunter"], include: null, exclude: ["사용 불가", "소멸"] },
+    { types: ["attack", "skill"], tooltip: "대상에게 약화 2~3", jobs: ["ranger", "hunter"], include: ["소멸"], exclude: ["사용 불가"] },
+    { types: ["attack", "skill"], tooltip: "모든 적 취약 1~2", jobs: ["striker", "vanguard"], include: null, exclude: ["사용 불가", "소멸"] },
+    { types: ["attack", "skill"], tooltip: "모든 적 취약 2~3", jobs: ["striker", "vanguard"], include: ["소멸"], exclude: ["사용 불가"] },
+    { types: ["attack", "skill"], tooltip: "대상에게 취약 1~2", jobs: ["striker", "vanguard"], include: null, exclude: ["사용 불가", "소멸"] },
+    { types: ["attack", "skill"], tooltip: "대상에게 취약 2~3", jobs: ["striker", "vanguard"], include: ["소멸"], exclude: ["사용 불가"] }
+  ];
+
+  function isCostExcluded(cost){ return cost === 0 || cost === 'X' || cost === '-'; }
+
+  function tooltipTags(tooltip){
+    var tags = [];
+    var re = /\[([^\]]*)\]/g;
+    var m;
+    while ((m = re.exec(String(tooltip || '')))) {
+      m[1].split('/').forEach(function(t){
+        var clean = t.trim().replace(/\s*\d+(\.\d+)?\s*$/, '').replace(/\s+/g, '');
+        if (clean) tags.push(clean);
+      });
+    }
+    return tags;
+  }
+  function hasTag(tags, tagName){ return tags.indexOf(String(tagName).replace(/\s+/g, '')) !== -1; }
+
+  function resolveCommonAwakeningTooltip(template, cost){
+    var numCost = (typeof cost === 'number') ? cost : 2;
+    var tildeMatch = template.match(/(\d+(?:\.\d+)?)\s*~\s*(\d+(?:\.\d+)?)/);
+    if (tildeMatch) {
+      var min = parseFloat(tildeMatch[1]), max = parseFloat(tildeMatch[2]);
+      var hasDecimal = tildeMatch[1].indexOf('.') !== -1 || tildeMatch[2].indexOf('.') !== -1;
+      var step = hasDecimal ? 0.5 : 1;
+      var count = Math.round((max - min) / step) + 1;
+      var idx = Math.max(0, Math.min(count - 1, Math.floor(numCost * count / 4)));
+      var val = min + idx * step;
+      return template.slice(0, tildeMatch.index) + val + template.slice(tildeMatch.index + tildeMatch[0].length);
+    }
+    var commaMatch = template.match(/\d+(?:\.\d+)?%?(?:\s*,\s*\d+(?:\.\d+)?%?){1,}/);
+    if (commaMatch) {
+      var tokens = commaMatch[0].split(',').map(function(s){ return s.trim(); });
+      var idx2 = Math.max(0, Math.min(tokens.length - 1, Math.floor(numCost * tokens.length / 4)));
+      return template.slice(0, commaMatch.index) + tokens[idx2] + template.slice(commaMatch.index + commaMatch[0].length);
+    }
+    return template;
+  }
+
+  function newAwakenEligible(item, effType, effCost, effTags){
+    if (item.types && item.types.indexOf(effType) === -1) return false;
+    if (item.excludeCost && isCostExcluded(effCost)) return false;
+    if (item.requireTag && !hasTag(effTags, item.requireTag)) return false;
+    if (item.excludeTags && item.excludeTags.some(function(t){ return hasTag(effTags, t); })) return false;
+    return true;
+  }
+
+  function commonAwakenEligible(entry, effType, agentJob, effTags){
+    if (entry.types.indexOf(effType) === -1) return false;
+    if (entry.jobs && entry.jobs.indexOf(agentJob) === -1) return false;
+    if (entry.include && !entry.include.some(function(t){ return hasTag(effTags, t); })) return false;
+    if (entry.exclude && entry.exclude.some(function(t){ return hasTag(effTags, t); })) return false;
+    return true;
+  }
+
+  function isFixedAwakenCard(c){
+    return c.source === 'agent' && (c.grade === 'blue' || c.grade === 'yellow') && !!(c.awakenings && c.awakenings.length);
+  }
+  function isCommonAwakenCard(c){
+    return c.source === 'common' || c.source === 'monster';
+  }
+  function isAwakenEligible(c){
+    return isFixedAwakenCard(c) || isCommonAwakenCard(c);
+  }
+
+  function effectiveCardFields(c){
+    var cost = c.fixedAwaken ? c.fixedAwaken.cost : c.cost;
+    var type = c.fixedAwaken ? c.fixedAwaken.type : c.type;
+    var plusCard = c.fixedAwaken ? c.fixedAwaken.plusCard : c.plusCard;
+    var baseTooltip = c.fixedAwaken ? c.fixedAwaken.tooltip : c.tooltip;
+    var lines = [{ text: baseTooltip, mode: (c.fixedAwaken || c._alwaysAwakenMode) ? 'awaken' : 'normal' }];
+    if (c.commonAwaken) lines.push({ text: c.commonAwaken.tooltip, mode: 'flat', color: '#60c8ff' });
+    if (c.newAwaken) lines.push({ text: c.newAwaken.tooltip, mode: 'flat', color: '#ffd23d', icon: '../../cards/diallos.png' });
+    var combinedPlain = lines.map(function(l){ return l.text; }).join('\n');
+    return { cost: cost, type: type, plusCard: plusCard, lines: lines, tags: tooltipTags(combinedPlain),
+      hasAwaken: !!(c.fixedAwaken || c.commonAwaken), hasNewAwaken: !!c.newAwaken };
+  }
+
   var agentsById = {};
   (window.AGENTS_DATA || []).forEach(function(a){ agentsById[a.id] = a; });
   var AGENTS_WITH_CARDS = (window.AGENTS_DATA || []).filter(function(a){
@@ -732,26 +953,53 @@ document.getElementById('startBtn').addEventListener('click', function(){
     if (isVideoSrc(mediaSrc)) return '<video src="'+mediaSrc+'" autoplay muted loop playsinline disablepictureinpicture></video>';
     return '<img src="'+mediaSrc+'" alt="'+name+'" draggable="false" ondragstart="return false">';
   }
-  function renderTooltip(text){
-    var s = String(text || '').replace(/;/g, ' ');
-    return s.replace(/\[([^\]]*)\]|"([^"]*)"|-([^-]*)-|(\d+)/g, function(match, br, q, dash, digits){
-      if (br !== undefined) return '<span style="color:#EAAA00">[' + br + ']</span>';
-      if (q !== undefined) return '<span style="color:#7EE4FF;text-decoration:underline">' + q + '</span>';
-      if (dash !== undefined) return '<span style="color:#7EE4FF">' + dash + '</span>';
-      if (digits !== undefined) return '<span style="color:#7EE4FF">' + digits + '</span>';
+  function parseNormalInline(str, bracketColor, quoteColor, digitColor){
+    return String(str).replace(/\[([^\]]*)\]|"([^"]*)"|-([^-]*)-|(\d+)/g, function(match, br, q, dash, digits){
+      if (br !== undefined) return '<span style="color:'+bracketColor+'">[' + br + ']</span>';
+      if (q !== undefined) return '<span style="color:'+quoteColor+';text-decoration:underline">' + q + '</span>';
+      if (dash !== undefined) return '<span style="color:'+quoteColor+'">' + dash + '</span>';
+      if (digits !== undefined) return '<span style="color:'+digitColor+'">' + digits + '</span>';
       return match;
-    }).replace(/\n/g, '<br>');
+    });
+  }
+
+  function renderTooltip(text, awakenMode){
+    var s = String(text || '').replace(/;/g, ' ');
+    if (!awakenMode) {
+      return parseNormalInline(s, '#EAAA00', '#7EE4FF', '#7EE4FF').replace(/\n/g, '<br>');
+    }
+
+    var placeholders = [];
+    function stash(html){
+      placeholders.push(html);
+      return 'PH' + String.fromCharCode(65 + placeholders.length - 1) + '';
+    }
+
+    var step1 = s.replace(/\\([^\\]*)\\/g, function(m, inner){
+      return stash('<span style="color:#E08C99">' + inner + '</span>');
+    });
+    var step2 = step1.replace(/\|([^|]*)\|/g, function(m, inner){
+      var innerHtml = parseNormalInline(inner, '#99D81F', '#99D81F', '#99D81F');
+      return stash('<span style="color:#E1FFD2">' + innerHtml + '</span>');
+    });
+    var step3 = parseNormalInline(step2, '#EAAA00', '#7EE4FF', '#7EE4FF');
+    var restored = step3.replace(/PH([A-Z])/g, function(m, letter){
+      return placeholders[letter.charCodeAt(0) - 65];
+    });
+    return restored.replace(/\n/g, '<br>');
   }
 
   function fromAgentCard(card, agent){
     return { key:'a:'+card.name, name:card.name, cost:card.cost, type:card.type, grade:card.grade,
       gradeColor:card.grade_color, media:'../../'+card.media, tooltip:card.tooltip, egoAttr:agent.attribute, source:'agent',
-      plusCard:card.plus_card, agentId:agent.id };
+      plusCard:card.plus_card, agentId:agent.id, awakenings:card.awakenings || null, job:null,
+      fixedAwaken:null, commonAwaken:null, newAwaken:null };
   }
   function fromQuizCard(card){
     return { key:'q:'+card.name, name:card.name, cost:card.cost, type:card.type, grade:card.rarity,
       gradeColor:null, media:'../../'+card.illust, tooltip:card.tooltip, egoAttr:card.attribute, source:card.attribute,
-      plusCard:null, agentId:null };
+      plusCard:null, agentId:null, awakenings:null, job:card.job || null,
+      fixedAwaken:null, commonAwaken:null, newAwaken:null };
   }
   function findPlusCard(name, agentId){
     var agentList = (agentId && window.AGENTS_CARDS && window.AGENTS_CARDS[agentId]) || [];
@@ -762,10 +1010,26 @@ document.getElementById('startBtn').addEventListener('click', function(){
     return null;
   }
 
-  function renderCardCellHtml(c, gradeOverride){
+  function renderCardCellHtml(c, gradeOverride, opts){
     var grade = c.gradeColor || gradeOverride || c.grade;
+    var fields = effectiveCardFields(c);
+    var showAwakenHint = !!(opts && opts.showAwakenHint) && isAwakenEligible(c);
+    var badgeSrc = fields.hasNewAwaken ? '../../cards/awakening_diallos.png' : (fields.hasAwaken ? '../../cards/awakening.png' : '');
+    var tooltipLinesHtml = fields.lines.map(function(l, idx){
+      if (idx === 0) {
+        return '<div class="card-tooltip-base">' + renderTooltip(l.text, l.mode === 'awaken') + '</div>';
+      }
+      var iconHtml = l.icon ? '<img class="card-tooltip-extra-icon" src="'+l.icon+'" alt="">' : '';
+      var flatText = String(l.text || '').replace(/;/g, ' ').replace(/\n/g, '<br>');
+      return '<div class="card-tooltip-extra">' + iconHtml + '<span style="color:'+l.color+'">' + flatText + '</span></div>';
+    }).join('');
+    var awakenHintHtml = showAwakenHint ?
+      '<div class="card-awaken-hint">' +
+        '<img class="card-awaken-hint-icon" src="../../cards/awake.png" alt="" draggable="false" ondragstart="return false">' +
+        '<div class="card-awaken-hint-label">클릭 시 번뜩임을 부여합니다.</div>' +
+      '</div>' : '';
     return (
-      '<div class="card" data-grade="'+grade+'">' +
+      '<div class="card" data-grade="'+grade+'"'+(showAwakenHint ? ' data-awaken="1"' : '')+'>' +
         '<div class="card-media">'+cardMediaHtml(c.media, c.name)+'</div>' +
         '<div class="card-top-grad"></div>' +
         '<div class="card-ego" style="background-image:url(\''+EGO_BAND[c.egoAttr]+'\')"></div>' +
@@ -773,15 +1037,18 @@ document.getElementById('startBtn').addEventListener('click', function(){
         '<div class="card-bottom-grad"></div>' +
         '<div class="card-content">' +
           '<div class="card-header">' +
-            '<div class="card-cost"><div class="card-cost-num">'+c.cost+'</div><div class="card-cost-line"></div></div>' +
+            '<div class="card-cost"><div class="card-cost-num">'+fields.cost+'</div><div class="card-cost-line"></div>' +
+              (badgeSrc ? '<img class="card-awaken-badge" src="'+badgeSrc+'" alt="">' : '') +
+            '</div>' +
             '<div class="card-title">' +
               '<div class="card-name">'+c.name+'</div>' +
-              '<div class="card-type"><img class="card-type-icon" src="'+TYPE_ICON[c.type]+'" alt="">'+
-                '<span>'+TYPE_LABEL[c.type]+'</span></div>' +
+              '<div class="card-type"><img class="card-type-icon" src="'+TYPE_ICON[fields.type]+'" alt="">'+
+                '<span>'+TYPE_LABEL[fields.type]+'</span></div>' +
             '</div>' +
           '</div>' +
-          '<div class="card-tooltip">'+renderTooltip(c.tooltip)+'</div>' +
+          '<div class="card-tooltip">'+tooltipLinesHtml+'</div>' +
         '</div>' +
+        awakenHintHtml +
       '</div>'
     );
   }
@@ -793,7 +1060,8 @@ document.getElementById('startBtn').addEventListener('click', function(){
     cardZoomEl.innerHTML = renderCardCellHtml(c);
     cardZoomEl.classList.add('visible');
     positionCardZoom(x, y);
-    var plusNames = Array.isArray(c.plusCard) ? c.plusCard : (c.plusCard ? [c.plusCard] : []);
+    var effPlusCard = effectiveCardFields(c).plusCard;
+    var plusNames = Array.isArray(effPlusCard) ? effPlusCard : (effPlusCard ? [effPlusCard] : []);
     var plusCards = plusNames.map(function(n){ return findPlusCard(n, c.agentId); }).filter(Boolean);
     if (plusCards.length) {
       cardZoomPlusEl.innerHTML = plusCards.map(function(pc){ return renderCardCellHtml(pc, c.grade); }).join('');
@@ -838,6 +1106,215 @@ document.getElementById('startBtn').addEventListener('click', function(){
     cardEl.addEventListener('mouseleave', hideCardZoom);
   }
 
+  // ============ 번뜩임 선택 팝업 ============
+  var awakenPopOverlay = document.getElementById('awakenPopOverlay');
+  var awakenPopBody = document.getElementById('awakenPopBody');
+  var awakenPopConfirmBtn = document.getElementById('awakenPopConfirmBtn');
+  var awakenPopState = { rowIdx: -1, cardIdx: -1, mode: null, primaryIdx: null, newAwakenIdx: null,
+    fixedOptions: [], commonOptions: [], newOptions: [] };
+
+  function findIdx(arr, pred){
+    for (var i = 0; i < arr.length; i++) { if (pred(arr[i])) return i; }
+    return -1;
+  }
+
+  function currentAwakenCard(){
+    var row = deckState[awakenPopState.rowIdx];
+    return row ? row.cards[awakenPopState.cardIdx] : null;
+  }
+
+  function buildFixedOptions(card){
+    return card.awakenings.map(function(aw){
+      var merged = {};
+      for (var k in card) { merged[k] = card[k]; }
+      delete merged.awakenings;
+      merged.cost = aw.cost;
+      merged.type = aw.type;
+      merged.tooltip = aw.tooltip;
+      merged.plusCard = ('plus_card' in aw) ? aw.plus_card : null;
+      merged.fixedAwaken = null;
+      merged.commonAwaken = null;
+      merged.newAwaken = null;
+      merged._alwaysAwakenMode = true;
+      return merged;
+    });
+  }
+
+  function computePendingEffective(){
+    var card = currentAwakenCard();
+    if (!card) return { type: null, cost: null, tags: [] };
+    if (awakenPopState.mode === 'fixed') {
+      var opt = (awakenPopState.primaryIdx !== null) ? awakenPopState.fixedOptions[awakenPopState.primaryIdx] : null;
+      var type = opt ? opt.type : card.type;
+      var cost = opt ? opt.cost : card.cost;
+      var text = opt ? opt.tooltip : card.tooltip;
+      return { type: type, cost: cost, tags: tooltipTags(text) };
+    }
+    var entryText = card.tooltip;
+    if (awakenPopState.primaryIdx !== null) {
+      entryText += '\n' + awakenPopState.commonOptions[awakenPopState.primaryIdx].resolvedText;
+    }
+    return { type: card.type, cost: card.cost, tags: tooltipTags(entryText) };
+  }
+
+  function computeNewOptionsForCurrentState(){
+    var eff = computePendingEffective();
+    var opts = [];
+    NEW_AWAKENINGS.forEach(function(item, i){
+      if (newAwakenEligible(item, eff.type, eff.cost, eff.tags)) opts.push({ item: item, origIdx: i });
+    });
+    return opts;
+  }
+
+  function openAwakenPopup(rowIdx, cardIdx){
+    var row = deckState[rowIdx];
+    var card = row.cards[cardIdx];
+    awakenPopState.rowIdx = rowIdx;
+    awakenPopState.cardIdx = cardIdx;
+    awakenPopState.mode = isFixedAwakenCard(card) ? 'fixed' : 'common';
+    awakenPopState.primaryIdx = null;
+    awakenPopState.newAwakenIdx = null;
+    awakenPopState.fixedOptions = [];
+    awakenPopState.commonOptions = [];
+    awakenPopState.newOptions = [];
+
+    if (awakenPopState.mode === 'fixed') {
+      awakenPopState.fixedOptions = buildFixedOptions(card);
+      if (card.fixedAwaken) {
+        var fi = findIdx(awakenPopState.fixedOptions, function(o){
+          return o.tooltip === card.fixedAwaken.tooltip && o.cost === card.fixedAwaken.cost && o.type === card.fixedAwaken.type;
+        });
+        if (fi !== -1) awakenPopState.primaryIdx = fi;
+      }
+    } else {
+      var agent = row.agentId ? agentsById[row.agentId] : null;
+      var agentJob = agent ? agent.job : null;
+      var baseTags = tooltipTags(card.tooltip);
+      awakenPopState.commonOptions = COMMON_AWAKENINGS
+        .filter(function(entry){ return commonAwakenEligible(entry, card.type, agentJob, baseTags); })
+        .map(function(entry){ return { entry: entry, resolvedText: resolveCommonAwakeningTooltip(entry.tooltip, card.cost) }; });
+      if (card.commonAwaken) {
+        var ci = findIdx(awakenPopState.commonOptions, function(o){ return o.resolvedText === card.commonAwaken.tooltip; });
+        if (ci !== -1) awakenPopState.primaryIdx = ci;
+      }
+    }
+
+    if (card.newAwaken && awakenPopState.primaryIdx !== null) {
+      var newOpts0 = computeNewOptionsForCurrentState();
+      var ni = findIdx(newOpts0, function(o){ return o.origIdx === card.newAwaken.origIdx; });
+      if (ni !== -1) awakenPopState.newAwakenIdx = ni;
+    }
+
+    renderAwakenPopup();
+    awakenPopOverlay.classList.add('open');
+  }
+
+  function closeAwakenPopup(){
+    awakenPopOverlay.classList.remove('open');
+    awakenPopBody.innerHTML = '';
+    hideCardZoom();
+  }
+
+  function renderAwakenPopup(){
+    var card = currentAwakenCard();
+    if (!card) return;
+    var html = '';
+
+    if (awakenPopState.mode === 'fixed') {
+      html += '<div class="awaken-pop-section"><div class="awaken-pop-section-title">번뜩임 선택</div>' +
+        '<div class="awaken-pop-cards" id="awakenPrimaryCards">' +
+        awakenPopState.fixedOptions.map(function(opt){ return renderCardCellHtml(opt); }).join('') +
+        '</div></div>';
+    } else {
+      html += '<div class="awaken-pop-section"><div class="awaken-pop-section-title">일반 번뜩임 선택</div>';
+      if (!awakenPopState.commonOptions.length) {
+        html += '<div class="wpop-empty">선택 가능한 일반 번뜩임이 없습니다.</div>';
+      } else {
+        html += '<div class="awaken-opt-grid" id="awakenPrimaryGrid">' +
+          awakenPopState.commonOptions.map(function(o){ return '<div class="awaken-opt-box">'+renderTooltip(o.resolvedText, false)+'</div>'; }).join('') +
+        '</div>';
+      }
+      html += '</div>';
+    }
+
+    if (awakenPopState.primaryIdx !== null) {
+      awakenPopState.newOptions = computeNewOptionsForCurrentState();
+      html += '<div class="awaken-pop-section"><div class="awaken-pop-section-title">신 번뜩임 선택</div>';
+      if (!awakenPopState.newOptions.length) {
+        html += '<div class="wpop-empty">선택 가능한 신 번뜩임이 없습니다.</div>';
+      } else {
+        html += '<div class="awaken-opt-grid" id="awakenNewGrid">' +
+          awakenPopState.newOptions.map(function(o){ return '<div class="awaken-opt-box">'+renderTooltip(o.item.tooltip, false)+'</div>'; }).join('') +
+        '</div>';
+      }
+      html += '</div>';
+    } else {
+      awakenPopState.newOptions = [];
+    }
+
+    awakenPopBody.innerHTML = html;
+
+    if (awakenPopState.mode === 'fixed') {
+      var cardEls = awakenPopBody.querySelectorAll('#awakenPrimaryCards .card');
+      Array.prototype.forEach.call(cardEls, function(el, i){
+        if (i === awakenPopState.primaryIdx) el.classList.add('selected');
+        el.addEventListener('click', function(){
+          awakenPopState.primaryIdx = i;
+          awakenPopState.newAwakenIdx = null;
+          renderAwakenPopup();
+        });
+        bindCardZoomHover(el, awakenPopState.fixedOptions[i]);
+      });
+    } else if (awakenPopState.commonOptions.length) {
+      var boxEls = awakenPopBody.querySelectorAll('#awakenPrimaryGrid .awaken-opt-box');
+      Array.prototype.forEach.call(boxEls, function(el, i){
+        if (i === awakenPopState.primaryIdx) el.classList.add('selected');
+        el.addEventListener('click', function(){
+          awakenPopState.primaryIdx = i;
+          awakenPopState.newAwakenIdx = null;
+          renderAwakenPopup();
+        });
+      });
+    }
+
+    if (awakenPopState.newOptions.length) {
+      var newEls = awakenPopBody.querySelectorAll('#awakenNewGrid .awaken-opt-box');
+      Array.prototype.forEach.call(newEls, function(el, i){
+        if (i === awakenPopState.newAwakenIdx) el.classList.add('selected');
+        el.addEventListener('click', function(){
+          awakenPopState.newAwakenIdx = (awakenPopState.newAwakenIdx === i) ? null : i;
+          renderAwakenPopup();
+        });
+      });
+    }
+
+    awakenPopConfirmBtn.disabled = awakenPopState.primaryIdx === null;
+  }
+
+  awakenPopConfirmBtn.addEventListener('click', function(){
+    if (awakenPopState.primaryIdx === null) return;
+    var row = deckState[awakenPopState.rowIdx];
+    var card = row.cards[awakenPopState.cardIdx];
+    pushHistory(row);
+    if (awakenPopState.mode === 'fixed') {
+      var opt = awakenPopState.fixedOptions[awakenPopState.primaryIdx];
+      card.fixedAwaken = { cost: opt.cost, type: opt.type, tooltip: opt.tooltip, plusCard: opt.plusCard };
+    } else {
+      var co = awakenPopState.commonOptions[awakenPopState.primaryIdx];
+      card.commonAwaken = { tooltip: co.resolvedText };
+    }
+    if (awakenPopState.newAwakenIdx !== null) {
+      var no = awakenPopState.newOptions[awakenPopState.newAwakenIdx];
+      card.newAwaken = { tooltip: no.item.tooltip, origIdx: no.origIdx };
+    } else {
+      card.newAwaken = null;
+    }
+    closeAwakenPopup();
+    renderDeckBox();
+  });
+  document.getElementById('awakenPopClose').addEventListener('click', closeAwakenPopup);
+  awakenPopOverlay.addEventListener('click', function(e){ if (e.target === awakenPopOverlay) closeAwakenPopup(); });
+
   function renderAgentPreviewHtml(agent){
     var illust = '../../agents/' + agent.name + '_C.png';
     var gradeBand = '../../agents/grade_' + agent.grade + '_tag.png';
@@ -858,7 +1335,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
 
   // ============ 덱 상태 ============
   function emptyRow(){
-    return { agentId: null, cards: [], pt: 0, removeCount: 0, duplicateCount: 0, history: [] };
+    return { agentId: null, cards: [], removePt: 0, duplicatePt: 0, removeCount: 0, duplicateCount: 0, history: [] };
   }
   var deckState = [ emptyRow(), emptyRow(), emptyRow() ];
   var activeSlot = null;
@@ -875,11 +1352,31 @@ document.getElementById('startBtn').addEventListener('click', function(){
   var REMOVE_MAX_COUNT = 5;
   var DUPLICATE_COST_TABLE = { 1: 0, 2: 0, 3: 40, 4: 80 };
   var DUPLICATE_MAX_COUNT = 4;
+  var NEUTRAL_PT = 20;
+  var MONSTER_PT = { gray: 20, blue: 50, yellow: 80, purple: 80 };
+
+  function ptBreakdown(row){
+    var neutralCount = 0, monsterCounts = { gray: 0, blue: 0, yellow: 0, purple: 0 }, newAwakenCount = 0;
+    row.cards.forEach(function(c){
+      if (c.source === 'common') neutralCount++;
+      if (c.source === 'monster' && MONSTER_PT.hasOwnProperty(c.grade)) monsterCounts[c.grade]++;
+      if (c.newAwaken) newAwakenCount++;
+    });
+    var neutralPt = neutralCount * NEUTRAL_PT;
+    var monsterPt = monsterCounts.gray * MONSTER_PT.gray + monsterCounts.blue * MONSTER_PT.blue +
+      monsterCounts.yellow * MONSTER_PT.yellow + monsterCounts.purple * MONSTER_PT.purple;
+    var newAwakenPt = newAwakenCount * NEW_AWAKEN_PT;
+    return { neutralCount: neutralCount, neutralPt: neutralPt, monsterCounts: monsterCounts, monsterPt: monsterPt,
+      newAwakenCount: newAwakenCount, newAwakenPt: newAwakenPt, livePt: neutralPt + monsterPt + newAwakenPt };
+  }
+  function totalPt(row){
+    return row.removePt + row.duplicatePt + ptBreakdown(row).livePt;
+  }
 
   function snapshotRow(row){
     return {
       cards: row.cards.map(function(c){ var copy = {}; for (var k in c) copy[k] = c[k]; return copy; }),
-      pt: row.pt, removeCount: row.removeCount, duplicateCount: row.duplicateCount
+      removePt: row.removePt, duplicatePt: row.duplicatePt, removeCount: row.removeCount, duplicateCount: row.duplicateCount
     };
   }
   function pushHistory(row){
@@ -890,7 +1387,8 @@ document.getElementById('startBtn').addEventListener('click', function(){
     if (!row || !row.history.length) return;
     var snap = row.history.pop();
     row.cards = snap.cards;
-    row.pt = snap.pt;
+    row.removePt = snap.removePt;
+    row.duplicatePt = snap.duplicatePt;
     row.removeCount = snap.removeCount;
     row.duplicateCount = snap.duplicateCount;
     renderDeckBox();
@@ -899,21 +1397,22 @@ document.getElementById('startBtn').addEventListener('click', function(){
     var row = deckState[i];
     if (!row || !row.agentId) return;
     row.cards = firstFourCards(row.agentId).map(function(c){ return fromAgentCard(c, agentsById[row.agentId]); });
-    row.pt = 0;
+    row.removePt = 0;
+    row.duplicatePt = 0;
     row.removeCount = 0;
     row.duplicateCount = 0;
     row.history = [];
     renderDeckBox();
   }
   function canRemove(row){
-    return row.removeCount < REMOVE_MAX_COUNT && (PT_CAP - row.pt) >= REMOVE_COST;
+    return row.removeCount < REMOVE_MAX_COUNT && (PT_CAP - totalPt(row)) >= REMOVE_COST;
   }
   function nextDuplicateCost(row){
     return DUPLICATE_COST_TABLE[row.duplicateCount + 1] || 0;
   }
   function canDuplicate(row){
     if (row.duplicateCount >= DUPLICATE_MAX_COUNT) return false;
-    return (PT_CAP - row.pt) >= nextDuplicateCost(row);
+    return (PT_CAP - totalPt(row)) >= nextDuplicateCost(row);
   }
   function addDuplicateTag(tooltip){
     var t = tooltip || '';
@@ -927,7 +1426,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
     pushHistory(row);
     row.cards.splice(cardIdx, 1);
     row.removeCount++;
-    row.pt += REMOVE_COST;
+    row.removePt += REMOVE_COST;
     renderDeckBox();
   }
   function duplicateCardInRow(rowIdx, cardIdx){
@@ -942,7 +1441,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
     clone.isDuplicate = true;
     row.cards.splice(cardIdx + 1, 0, clone);
     row.duplicateCount++;
-    row.pt += cost;
+    row.duplicatePt += cost;
     renderDeckBox();
   }
 
@@ -1027,7 +1526,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
             '<img class="deckbuild-select-portrait" src="../../'+agent.icon+'" alt="'+agent.name+'">' +
             '<button type="button" class="deckbuild-remove-btn" data-remove-row="'+i+'">&times;</button>' +
           '</div>' +
-          '<div class="deckbuild-select-footer"><span class="deckbuild-select-name">'+agent.name+'</span><span class="deckbuild-select-pt">'+row.pt+'pt</span></div>' +
+          '<div class="deckbuild-select-footer"><span class="deckbuild-select-name">'+agent.name+'</span><span class="deckbuild-select-pt">'+totalPt(row)+'pt</span></div>' +
         '</div>'
       );
     }).join('');
@@ -1043,7 +1542,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
           (canRemove(activeRow) ? '<button type="button" class="deckbuild-card-btn deckbuild-card-remove-btn" data-card-idx="'+idx+'">&times;</button>' : '') +
           (canDuplicate(activeRow) ? '<button type="button" class="deckbuild-card-btn deckbuild-card-dup-btn" data-dup-idx="'+idx+'">'+dupIcon+'</button>' : '') +
         '</div>';
-        return '<div class="deckbuild-card-wrap">' + renderCardCellHtml(c) + controlsHtml + '</div>';
+        return '<div class="deckbuild-card-wrap">' + renderCardCellHtml(c, null, {showAwakenHint:true}) + controlsHtml + '</div>';
       }).join('');
       cellsHtml += '<div class="deckbuild-add-cell" id="deckbuildAddCell">' +
         '<div class="deckbuild-add-plus">+</div><div class="deckbuild-add-label">카드 추가</div></div>';
@@ -1051,6 +1550,13 @@ document.getElementById('startBtn').addEventListener('click', function(){
       document.getElementById('deckbuildAddCell').addEventListener('click', function(){ openCardPopup(activeSlot); });
       Array.prototype.forEach.call(gridArea.querySelectorAll('.deckbuild-cardgrid .card'), function(cardEl, idx){
         bindCardZoomHover(cardEl, activeRow.cards[idx]);
+        if (cardEl.getAttribute('data-awaken') === '1') {
+          cardEl.addEventListener('click', function(e){
+            e.stopPropagation();
+            hideCardZoom();
+            openAwakenPopup(activeSlot, idx);
+          });
+        }
       });
       Array.prototype.forEach.call(gridArea.querySelectorAll('.deckbuild-card-remove-btn'), function(el){
         el.addEventListener('click', function(e){
@@ -1101,9 +1607,11 @@ document.getElementById('startBtn').addEventListener('click', function(){
       panel.innerHTML = '<div class="deckbuild-side-empty">전투원을 선택하면<br>편집 도구가 나타납니다.</div>';
       return;
     }
-    var pt = activeRow.pt;
+    var brk = ptBreakdown(activeRow);
+    var pt = activeRow.removePt + activeRow.duplicatePt + brk.livePt;
     var over = pt > GAUGE_MAX;
     var barPct = Math.min(100, (pt / GAUGE_MAX) * 100);
+    var monsterYellowPurple = brk.monsterCounts.yellow + brk.monsterCounts.purple;
     panel.innerHTML =
       '<div class="deckbuild-side-row">' +
         '<button type="button" class="deckbuild-undo-btn" id="deckbuildUndoBtn" '+(activeRow.history.length ? '' : 'disabled')+'>실행 취소</button>' +
@@ -1119,6 +1627,16 @@ document.getElementById('startBtn').addEventListener('click', function(){
           '<span class="deckbuild-pt-label">'+pt+' / '+GAUGE_MAX+'pt</span>' +
         '</div>' +
         '<div class="deckbuild-pt-bar-wrap"><div class="deckbuild-pt-bar'+(over ? ' over' : '')+'" style="width:'+barPct+'%"></div></div>' +
+      '</div>' +
+      '<div class="deckbuild-pt-usage">' +
+        '<div class="deckbuild-pt-usage-title">포인트 사용 여부</div>' +
+        '<div class="deckbuild-pt-usage-grid">' +
+          '<div class="deckbuild-pt-usage-item">제거 '+activeRow.removeCount+'회 +'+activeRow.removePt+'pt</div>' +
+          '<div class="deckbuild-pt-usage-item">복제 '+activeRow.duplicateCount+'회 +'+activeRow.duplicatePt+'pt</div>' +
+          '<div class="deckbuild-pt-usage-item">신 번뜩임 '+brk.newAwakenCount+'개 +'+brk.newAwakenPt+'pt</div>' +
+          '<div class="deckbuild-pt-usage-item">중립 카드 '+brk.neutralCount+'장 +'+brk.neutralPt+'pt</div>' +
+          '<div class="deckbuild-pt-usage-item span2">몬스터 카드 '+brk.monsterCounts.gray+'/'+brk.monsterCounts.blue+'/'+monsterYellowPurple+'장 +'+brk.monsterPt+'pt</div>' +
+        '</div>' +
       '</div>';
 
     document.getElementById('deckbuildUndoBtn').addEventListener('click', function(){ undoRow(activeSlot); });
@@ -1256,6 +1774,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
       .map(function(c){ return fromAgentCard(c, agent); });
     var commonCards = (window.QUIZ_CARDS || [])
       .filter(function(c){ return c.attribute === 'common'; })
+      .filter(function(c){ return !c.job || !c.job.length || (agent && c.job.indexOf(agent.job) !== -1); })
       .filter(function(c){ return addedNames.indexOf(c.name) === -1; })
       .map(fromQuizCard);
     var monsterCards = (window.QUIZ_CARDS || [])
