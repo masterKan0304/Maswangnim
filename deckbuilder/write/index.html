@@ -260,6 +260,14 @@
   .card[data-grade="yellow"] .card-name{color:#ffd23d;}
   .card[data-grade="purple"] .card-name{color:#d181ff;}
 
+  /* ============ 카드 확대 미리보기 ============ */
+  .card-zoom-preview{position:fixed;z-index:9999;width:220px;border-radius:10px;overflow:hidden;
+    box-shadow:0 10px 34px rgba(0,0,0,.65);display:none;pointer-events:none;}
+  .card-zoom-preview.visible{display:block;}
+  .card-zoom-preview.card-zoom-plus{z-index:9998;width:auto;overflow:visible;box-shadow:none;gap:10px;}
+  .card-zoom-preview.card-zoom-plus.visible{display:flex;}
+  .card-zoom-plus .card{width:176px;flex:none;box-shadow:0 10px 34px rgba(0,0,0,.65);}
+
   /* ============ 전투원 미리보기 박스 (파트너 아이콘 제외) ============ */
   .deck-agent{position:relative;aspect-ratio:220/360;border-radius:8px;overflow:hidden;background:#dcdcdc;}
   .deck-agent-img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;-webkit-user-drag:none;}
@@ -571,6 +579,9 @@ document.getElementById('startBtn').addEventListener('click', function(){
   </div>
 </footer>
 
+<div class="card-zoom-preview" id="cardZoomPreview"></div>
+<div class="card-zoom-preview card-zoom-plus" id="cardZoomPlusPreview"></div>
+
 <!-- 전투원 선택 팝업 -->
 <div class="wpop-overlay" id="agentPopOverlay">
   <div class="wpop-panel">
@@ -693,11 +704,21 @@ document.getElementById('startBtn').addEventListener('click', function(){
 
   function fromAgentCard(card, agent){
     return { key:'a:'+card.name, name:card.name, cost:card.cost, type:card.type, grade:card.grade,
-      media:'../../'+card.media, tooltip:card.tooltip, egoAttr:agent.attribute, source:'agent' };
+      media:'../../'+card.media, tooltip:card.tooltip, egoAttr:agent.attribute, source:'agent',
+      plusCard:card.plus_card, agentId:agent.id };
   }
   function fromQuizCard(card){
     return { key:'q:'+card.name, name:card.name, cost:card.cost, type:card.type, grade:card.rarity,
-      media:'../../'+card.illust, tooltip:card.tooltip, egoAttr:card.attribute, source:card.attribute };
+      media:'../../'+card.illust, tooltip:card.tooltip, egoAttr:card.attribute, source:card.attribute,
+      plusCard:null, agentId:null };
+  }
+  function findPlusCard(name, agentId){
+    var agentList = (agentId && window.AGENTS_CARDS && window.AGENTS_CARDS[agentId]) || [];
+    var found = agentList.filter(function(c){ return c.name === name; })[0];
+    if (found) return fromAgentCard(found, agentsById[agentId]);
+    var quizFound = (window.QUIZ_CARDS || []).filter(function(c){ return c.name === name; })[0];
+    if (quizFound) return fromQuizCard(quizFound);
+    return null;
   }
 
   function renderCardCellHtml(c){
@@ -721,6 +742,58 @@ document.getElementById('startBtn').addEventListener('click', function(){
         '</div>' +
       '</div>'
     );
+  }
+
+  var cardZoomEl = document.getElementById('cardZoomPreview');
+  var cardZoomPlusEl = document.getElementById('cardZoomPlusPreview');
+
+  function showCardZoom(c, x, y){
+    cardZoomEl.innerHTML = renderCardCellHtml(c);
+    cardZoomEl.classList.add('visible');
+    positionCardZoom(x, y);
+    var plusNames = Array.isArray(c.plusCard) ? c.plusCard : (c.plusCard ? [c.plusCard] : []);
+    var plusCards = plusNames.map(function(n){ return findPlusCard(n, c.agentId); }).filter(Boolean);
+    if (plusCards.length) {
+      cardZoomPlusEl.innerHTML = plusCards.map(function(pc){ return renderCardCellHtml(pc); }).join('');
+      cardZoomPlusEl.classList.add('visible');
+      positionCardZoomPlus();
+      return;
+    }
+    hideCardZoomPlus();
+  }
+  function positionCardZoom(x, y){
+    var rect = cardZoomEl.getBoundingClientRect();
+    var left = x - rect.width - 16;
+    var top = y - rect.height - 16;
+    if (left < 8) left = x + 16;
+    if (top < 8) top = y + 16;
+    cardZoomEl.style.left = left + 'px';
+    cardZoomEl.style.top = top + 'px';
+    if (cardZoomPlusEl.classList.contains('visible')) positionCardZoomPlus();
+  }
+  function positionCardZoomPlus(){
+    var mainRect = cardZoomEl.getBoundingClientRect();
+    var plusRect = cardZoomPlusEl.getBoundingClientRect();
+    var left = mainRect.left - plusRect.width - 12;
+    var onRight = false;
+    if (left < 8) { left = mainRect.right + 12; onRight = true; }
+    cardZoomPlusEl.style.flexDirection = onRight ? 'row' : 'row-reverse';
+    cardZoomPlusEl.style.left = left + 'px';
+    cardZoomPlusEl.style.top = (mainRect.bottom - plusRect.height) + 'px';
+  }
+  function hideCardZoomPlus(){
+    cardZoomPlusEl.classList.remove('visible');
+    cardZoomPlusEl.innerHTML = '';
+  }
+  function hideCardZoom(){
+    cardZoomEl.classList.remove('visible');
+    cardZoomEl.innerHTML = '';
+    hideCardZoomPlus();
+  }
+  function bindCardZoomHover(cardEl, cardObj){
+    cardEl.addEventListener('mouseenter', function(e){ showCardZoom(cardObj, e.clientX, e.clientY); });
+    cardEl.addEventListener('mousemove', function(e){ positionCardZoom(e.clientX, e.clientY); });
+    cardEl.addEventListener('mouseleave', hideCardZoom);
   }
 
   function renderAgentPreviewHtml(agent){
@@ -791,6 +864,9 @@ document.getElementById('startBtn').addEventListener('click', function(){
         '<div class="deckbuild-add-plus">+</div><div class="deckbuild-add-label">카드 추가</div></div>';
       gridWrap.innerHTML = '<div class="deckbuild-cardgrid">'+cellsHtml+'</div>';
       document.getElementById('deckbuildAddCell').addEventListener('click', function(){ openCardPopup(activeSlot); });
+      Array.prototype.forEach.call(gridWrap.querySelectorAll('.deckbuild-cardgrid > .card'), function(cardEl, idx){
+        bindCardZoomHover(cardEl, activeRow.cards[idx]);
+      });
     }
 
     Array.prototype.forEach.call(agentsCol.querySelectorAll('.deckbuild-select'), function(el){
@@ -983,6 +1059,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
     }).join('');
     Array.prototype.forEach.call(cardPopGrid.querySelectorAll('.deckbuild-add-target'), function(el, idx){
       el.addEventListener('click', function(){ addCardToRow(cardPopState.row, sorted[idx]); });
+      bindCardZoomHover(el.querySelector('.card'), sorted[idx]);
     });
   }
 
