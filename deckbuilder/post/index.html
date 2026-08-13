@@ -1,4 +1,4 @@
-<title>글쓰기 | 덱 빌딩 게시판</title>
+<title>게시물 | 덱 빌딩 게시판</title>
 <style>
   :root{
     --stove-bg:#ffffff;
@@ -199,9 +199,13 @@
     display:flex;align-items:center;justify-content:space-between;font-size:14px;font-weight:800;color:var(--ink);margin-bottom:16px;}
   .write-board-select svg{width:16px;height:16px;color:var(--sub);}
 
-  .write-title-input{display:block;width:100%;border:none;outline:none;margin-bottom:16px;
-    font-size:20px;font-weight:800;color:var(--ink);font-family:var(--font-display);}
-  .write-title-input::placeholder{color:var(--sub-dim);}
+  .post-detail-title{font-size:20px;font-weight:800;color:var(--ink);font-family:var(--font-display);margin-bottom:8px;line-height:1.35;}
+  .post-detail-meta{display:flex;align-items:center;gap:12px;padding-bottom:16px;margin-bottom:16px;border-bottom:1px solid var(--line);
+    font-size:12.5px;color:var(--sub);}
+  .post-detail-meta .deck-author{display:flex;align-items:center;gap:6px;}
+  .post-detail-meta .deck-author-avatar{width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,#ff9466,#ff5714);flex:none;}
+  .post-detail-meta .deck-author-name{font-weight:700;color:var(--ink);}
+  .post-detail-content{padding:20px 2px;min-height:120px;font-size:13.5px;line-height:1.8;color:var(--ink);white-space:pre-wrap;word-break:break-word;}
 
   /* ============ 덱 빌딩 항목 ============ */
   .deckbuild-box{margin-bottom:16px;padding:14px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);
@@ -672,21 +676,12 @@ document.getElementById('startBtn').addEventListener('click', function(){
       <div class="write-topbar">
         <div class="write-topbar-left">
           <a class="write-back-btn" href="../"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 6l-6 6 6 6"/></svg></a>
-          <div class="write-topbar-title">글쓰기</div>
-        </div>
-        <div class="write-topbar-right">
-          <div class="write-draft-count">임시<b>0</b></div>
-          <button type="button" class="write-draft-btn">임시저장</button>
-          <button type="button" class="write-submit-btn" id="writeSubmitBtn">등록</button>
+          <div class="write-topbar-title">덱 빌딩 게시판</div>
         </div>
       </div>
 
-      <div class="write-board-select">
-        덱 빌딩 게시판
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
-      </div>
-
-      <input type="text" class="write-title-input" placeholder="제목을 입력해주세요.">
+      <h1 class="post-detail-title" id="postDetailTitle"></h1>
+      <div class="post-detail-meta" id="postDetailMeta"></div>
 
       <div class="deckbuild-box" id="deckbuildBox">
         <div class="deckbuild-agents-col" id="deckbuildAgentsCol"></div>
@@ -697,30 +692,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
         <div class="deckbuild-side-panel" id="deckbuildSidePanel"></div>
       </div>
 
-      <div class="write-toolbar">
-        <button type="button"><b>B</b></button>
-        <button type="button"><i>I</i></button>
-        <button type="button" style="text-decoration:underline;">U</button>
-        <button type="button" style="text-decoration:line-through;">S</button>
-        <div class="sep"></div>
-        <button type="button">Tr</button>
-        <button type="button">🎨</button>
-        <button type="button">✎</button>
-        <button type="button">❝</button>
-        <div class="sep"></div>
-        <button type="button">▦</button>
-        <button type="button">☰</button>
-        <button type="button">1.</button>
-        <button type="button">•</button>
-        <button type="button">—</button>
-        <div class="sep"></div>
-        <button type="button">🔗</button>
-        <button type="button">🙂</button>
-        <button type="button">🖼</button>
-        <button type="button">▶</button>
-        <button type="button">📎</button>
-      </div>
-      <textarea class="write-body-textarea" placeholder="본문 내용과 함께 #태그를 입력하면 더 많은 사람들이 볼 수 있어요!"></textarea>
+      <div class="post-detail-content" id="postDetailContent"></div>
     </section>
   </main>
 </div>
@@ -744,121 +716,6 @@ document.getElementById('startBtn').addEventListener('click', function(){
 <div class="equip-zoom-preview" id="equipZoomPreview"></div>
 <div class="equip-source-tooltip" id="equipSourceTooltip"></div>
 
-<!-- 전투원 선택 팝업 -->
-<div class="wpop-overlay" id="agentPopOverlay">
-  <div class="wpop-panel">
-    <div class="wpop-head">
-      <div class="wpop-title">전투원 선택</div>
-      <button type="button" class="wpop-close" id="agentPopClose">&times;</button>
-    </div>
-    <div class="wpop-filters">
-      <div class="wpop-filter-groups">
-        <div class="wpop-filter-group"><span class="wpop-filter-group-label">직업</span><div class="wpop-filter-tags" id="agentPopJobTags"></div></div>
-        <div class="wpop-filter-group"><span class="wpop-filter-group-label">속성</span><div class="wpop-filter-tags" id="agentPopAttrTags"></div></div>
-        <div class="wpop-filter-group"><span class="wpop-filter-group-label">등급</span><div class="wpop-filter-tags" id="agentPopGradeTags"></div></div>
-      </div>
-      <div class="wpop-search">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
-        <input type="search" id="agentPopSearch" placeholder="전투원 이름 검색">
-      </div>
-    </div>
-    <div class="wpop-body"><div class="wpop-agent-grid" id="agentPopGrid"></div></div>
-  </div>
-</div>
-
-<!-- 파트너 선택 팝업 -->
-<div class="wpop-overlay" id="partnerPopOverlay">
-  <div class="wpop-panel">
-    <div class="wpop-head">
-      <div class="wpop-title">파트너 선택</div>
-      <button type="button" class="wpop-close" id="partnerPopClose">&times;</button>
-    </div>
-    <div class="wpop-filters">
-      <div class="wpop-filter-groups">
-        <div class="wpop-filter-group"><span class="wpop-filter-group-label">직업</span><div class="wpop-filter-tags" id="partnerPopJobTags"></div></div>
-        <div class="wpop-filter-group"><span class="wpop-filter-group-label">등급</span><div class="wpop-filter-tags" id="partnerPopGradeTags"></div></div>
-      </div>
-      <div class="wpop-search">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
-        <input type="search" id="partnerPopSearch" placeholder="파트너 이름 검색">
-      </div>
-    </div>
-    <div class="wpop-body"><div class="wpop-agent-grid" id="partnerPopGrid"></div></div>
-  </div>
-</div>
-
-<!-- 카드 추가 팝업 -->
-<div class="wpop-overlay" id="cardPopOverlay">
-  <div class="wpop-panel">
-    <div class="wpop-head">
-      <div class="wpop-title">카드 추가</div>
-      <button type="button" class="wpop-close" id="cardPopClose">&times;</button>
-    </div>
-    <div class="wpop-filters">
-      <div class="wpop-cat-row" id="cardPopCatRow">
-        <button type="button" class="wpop-cat-btn active" data-cat="all">전체</button>
-        <button type="button" class="wpop-cat-btn" data-cat="agent">전투원</button>
-        <button type="button" class="wpop-cat-btn" data-cat="common">중립</button>
-        <button type="button" class="wpop-cat-btn" data-cat="monster">몬스터</button>
-      </div>
-      <div class="wpop-search">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
-        <input type="search" id="cardPopSearch" placeholder="카드 이름 검색">
-      </div>
-    </div>
-    <div class="wpop-body"><div class="wpop-card-grid" id="cardPopGrid"></div></div>
-  </div>
-</div>
-
-<!-- 번뜩임 선택 팝업 -->
-<div class="wpop-overlay" id="awakenPopOverlay">
-  <div class="wpop-panel awaken-pop-panel">
-    <div class="wpop-head">
-      <div class="wpop-title">번뜩임 선택</div>
-      <button type="button" class="wpop-close" id="awakenPopClose">&times;</button>
-    </div>
-    <div class="wpop-body" id="awakenPopBody"></div>
-    <div class="wpop-foot">
-      <button type="button" class="awaken-confirm-btn" id="awakenPopConfirmBtn" disabled>선택</button>
-    </div>
-  </div>
-</div>
-
-<!-- 장비 선택 팝업 -->
-<div class="wpop-overlay" id="equipPopOverlay">
-  <div class="wpop-panel">
-    <div class="wpop-head">
-      <div class="wpop-title" id="equipPopTitle">장비 선택</div>
-      <button type="button" class="wpop-close" id="equipPopClose">&times;</button>
-    </div>
-    <div class="wpop-filters equip-filters">
-      <div class="equip-filters-top-row">
-        <div class="wpop-filter-group"><span class="wpop-filter-group-label">등급</span><div class="wpop-filter-tags" id="equipPopGradeTags"></div></div>
-        <div class="wpop-search">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
-          <input type="search" id="equipPopSearch" placeholder="장비 이름 검색">
-        </div>
-      </div>
-      <div class="wpop-filter-group"><span class="wpop-filter-group-label">획득처</span><div class="wpop-filter-tags" id="equipPopSourceTags"></div></div>
-    </div>
-    <div class="wpop-body"><div class="equip-pop-grid" id="equipPopGrid"></div></div>
-  </div>
-</div>
-
-<!-- 알림 팝업 (글쓰기 유효성 검사 / 안내) -->
-<div class="wpop-overlay" id="writeNoticeOverlay">
-  <div class="wpop-panel write-notice-panel">
-    <div class="wpop-head">
-      <div class="wpop-title" id="writeNoticeTitle">알림</div>
-      <button type="button" class="wpop-close" id="writeNoticeXBtn">&times;</button>
-    </div>
-    <div class="write-notice-body" id="writeNoticeBody"></div>
-    <div class="wpop-foot">
-      <button type="button" class="awaken-confirm-btn" id="writeNoticeCloseBtn">닫기</button>
-    </div>
-  </div>
-</div>
-
 <!-- 전투원 정보 데이터 -->
 <script src="../../agents/agents-data.js"></script>
 <!-- 전투원 카드 정보 데이터 -->
@@ -869,6 +726,9 @@ document.getElementById('startBtn').addEventListener('click', function(){
 <script src="../../partner/partner-data.js"></script>
 <!-- 장비 정보 데이터 -->
 <script src="../../weapon/equipment-data.js"></script>
+
+<!-- 덱 빌딩 게시물 데이터 (게시물 폴더 안에 게시물 1개 = 파일 1개로 저장됨) -->
+<!-- 새 게시물 파일을 deckbuilder/게시물/ 에 추가한 뒤, 아래에 <script src="../게시물/{파일명}.js"></script> 줄을 추가하세요. -->
 
 <script>
 (function(){
@@ -1300,234 +1160,6 @@ document.getElementById('startBtn').addEventListener('click', function(){
     cardEl.addEventListener('mouseleave', hideCardZoom);
   }
 
-  // ============ 번뜩임 선택 팝업 ============
-  var awakenPopOverlay = document.getElementById('awakenPopOverlay');
-  var awakenPopBody = document.getElementById('awakenPopBody');
-  var awakenPopConfirmBtn = document.getElementById('awakenPopConfirmBtn');
-  var awakenPopState = { rowIdx: -1, cardIdx: -1, mode: null, primaryIdx: null, newAwakenIdx: null,
-    fixedOptions: [], commonOptions: [], newOptions: [] };
-
-  function findIdx(arr, pred){
-    for (var i = 0; i < arr.length; i++) { if (pred(arr[i])) return i; }
-    return -1;
-  }
-
-  function currentAwakenCard(){
-    var row = deckState[awakenPopState.rowIdx];
-    return row ? row.cards[awakenPopState.cardIdx] : null;
-  }
-
-  function buildFixedOptions(card){
-    return card.awakenings.map(function(aw){
-      var merged = {};
-      for (var k in card) { merged[k] = card[k]; }
-      delete merged.awakenings;
-      merged.cost = aw.cost;
-      merged.type = aw.type;
-      merged.tooltip = aw.tooltip;
-      merged.plusCard = ('plus_card' in aw) ? aw.plus_card : null;
-      merged.fixedAwaken = null;
-      merged.commonAwaken = null;
-      merged.newAwaken = null;
-      merged._alwaysAwakenMode = true;
-      return merged;
-    });
-  }
-
-  function computePendingEffective(){
-    var card = currentAwakenCard();
-    if (!card) return { type: null, cost: null, tags: [] };
-    if (awakenPopState.mode === 'fixed') {
-      var opt = (awakenPopState.primaryIdx !== null) ? awakenPopState.fixedOptions[awakenPopState.primaryIdx] : null;
-      var type = opt ? opt.type : card.type;
-      var cost = opt ? opt.cost : card.cost;
-      var text = opt ? opt.tooltip : card.tooltip;
-      return { type: type, cost: cost, tags: tooltipTags(text) };
-    }
-    var entryText = card.tooltip;
-    if (awakenPopState.primaryIdx !== null) {
-      entryText += '\n' + awakenPopState.commonOptions[awakenPopState.primaryIdx].resolvedText;
-    }
-    return { type: card.type, cost: card.cost, tags: tooltipTags(entryText) };
-  }
-
-  function computeNewOptionsForCurrentState(){
-    var eff = computePendingEffective();
-    var opts = [];
-    NEW_AWAKENINGS.forEach(function(item, i){
-      if (newAwakenEligible(item, eff.type, eff.cost, eff.tags)) opts.push({ item: item, origIdx: i });
-    });
-    return opts;
-  }
-
-  function openAwakenPopup(rowIdx, cardIdx){
-    var row = deckState[rowIdx];
-    var card = row.cards[cardIdx];
-    awakenPopState.rowIdx = rowIdx;
-    awakenPopState.cardIdx = cardIdx;
-    awakenPopState.mode = isFixedAwakenCard(card) ? 'fixed' : 'common';
-    awakenPopState.primaryIdx = null;
-    awakenPopState.newAwakenIdx = null;
-    awakenPopState.fixedOptions = [];
-    awakenPopState.commonOptions = [];
-    awakenPopState.newOptions = [];
-
-    if (awakenPopState.mode === 'fixed') {
-      awakenPopState.fixedOptions = buildFixedOptions(card);
-      if (card.fixedAwaken) {
-        var fi = findIdx(awakenPopState.fixedOptions, function(o){
-          return o.tooltip === card.fixedAwaken.tooltip && o.cost === card.fixedAwaken.cost && o.type === card.fixedAwaken.type;
-        });
-        if (fi !== -1) awakenPopState.primaryIdx = fi;
-      }
-    } else {
-      var agent = row.agentId ? agentsById[row.agentId] : null;
-      var agentJob = agent ? agent.job : null;
-      var baseTags = tooltipTags(card.tooltip);
-      awakenPopState.commonOptions = COMMON_AWAKENINGS
-        .filter(function(entry){ return commonAwakenEligible(entry, card.type, agentJob, baseTags); })
-        .map(function(entry){ return { entry: entry, resolvedText: resolveCommonAwakeningTooltip(entry.tooltip, card.cost) }; });
-      if (card.commonAwaken) {
-        var ci = findIdx(awakenPopState.commonOptions, function(o){ return o.resolvedText === card.commonAwaken.tooltip; });
-        if (ci !== -1) awakenPopState.primaryIdx = ci;
-      }
-    }
-
-    if (card.newAwaken && awakenPopState.primaryIdx !== null) {
-      var newOpts0 = computeNewOptionsForCurrentState();
-      var ni = findIdx(newOpts0, function(o){ return o.origIdx === card.newAwaken.origIdx; });
-      if (ni !== -1) awakenPopState.newAwakenIdx = ni;
-    }
-
-    renderAwakenPopup();
-    awakenPopOverlay.classList.add('open');
-  }
-
-  function closeAwakenPopup(){
-    awakenPopOverlay.classList.remove('open');
-    awakenPopBody.innerHTML = '';
-    hideCardZoom();
-  }
-
-  function renderAwakenPopup(){
-    var card = currentAwakenCard();
-    if (!card) return;
-    hideCardZoom();
-    var html = '';
-
-    if (awakenPopState.mode === 'fixed') {
-      html += '<div class="awaken-pop-section"><div class="awaken-pop-section-title">번뜩임 선택</div>' +
-        '<div class="awaken-pop-cards" id="awakenPrimaryCards">' +
-        awakenPopState.fixedOptions.map(function(opt){ return renderCardCellHtml(opt); }).join('') +
-        '</div></div>';
-    } else {
-      html += '<div class="awaken-pop-section"><div class="awaken-pop-section-title">일반 번뜩임 선택</div>';
-      if (!awakenPopState.commonOptions.length) {
-        html += '<div class="wpop-empty">선택 가능한 일반 번뜩임이 없습니다.</div>';
-      } else {
-        html += '<div class="awaken-opt-grid" id="awakenPrimaryGrid">' +
-          awakenPopState.commonOptions.map(function(o){ return '<div class="awaken-opt-box">'+plainTooltipHtml(o.resolvedText)+'</div>'; }).join('') +
-        '</div>';
-      }
-      html += '</div>';
-    }
-
-    if (awakenPopState.primaryIdx !== null) {
-      awakenPopState.newOptions = computeNewOptionsForCurrentState();
-      html += '<div class="awaken-pop-section"><div class="awaken-pop-section-title">신 번뜩임 선택</div>';
-      if (!awakenPopState.newOptions.length) {
-        html += '<div class="wpop-empty">선택 가능한 신 번뜩임이 없습니다.</div>';
-      } else {
-        html += '<div class="awaken-opt-grid" id="awakenNewGrid">' +
-          awakenPopState.newOptions.map(function(o){ return '<div class="awaken-opt-box">'+plainTooltipHtml(o.item.tooltip)+'</div>'; }).join('') +
-        '</div>';
-      }
-      html += '</div>';
-    } else {
-      awakenPopState.newOptions = [];
-    }
-
-    awakenPopBody.innerHTML = html;
-
-    if (awakenPopState.mode === 'fixed') {
-      var cardEls = awakenPopBody.querySelectorAll('#awakenPrimaryCards .card');
-      Array.prototype.forEach.call(cardEls, function(el, i){
-        if (i === awakenPopState.primaryIdx) el.classList.add('selected');
-        el.addEventListener('click', function(){
-          awakenPopState.primaryIdx = i;
-          awakenPopState.newAwakenIdx = null;
-          renderAwakenPopup();
-        });
-        bindCardZoomHover(el, awakenPopState.fixedOptions[i]);
-      });
-    } else if (awakenPopState.commonOptions.length) {
-      var boxEls = awakenPopBody.querySelectorAll('#awakenPrimaryGrid .awaken-opt-box');
-      Array.prototype.forEach.call(boxEls, function(el, i){
-        if (i === awakenPopState.primaryIdx) el.classList.add('selected');
-        el.addEventListener('click', function(){
-          awakenPopState.primaryIdx = i;
-          awakenPopState.newAwakenIdx = null;
-          renderAwakenPopup();
-        });
-      });
-    }
-
-    if (awakenPopState.newOptions.length) {
-      var newEls = awakenPopBody.querySelectorAll('#awakenNewGrid .awaken-opt-box');
-      Array.prototype.forEach.call(newEls, function(el, i){
-        if (i === awakenPopState.newAwakenIdx) el.classList.add('selected');
-        el.addEventListener('click', function(){
-          awakenPopState.newAwakenIdx = (awakenPopState.newAwakenIdx === i) ? null : i;
-          renderAwakenPopup();
-        });
-      });
-    }
-
-    awakenPopConfirmBtn.disabled = awakenPopState.primaryIdx === null;
-  }
-
-  awakenPopConfirmBtn.addEventListener('click', function(){
-    if (awakenPopState.primaryIdx === null) return;
-    var row = deckState[awakenPopState.rowIdx];
-    var card = row.cards[awakenPopState.cardIdx];
-    pushHistory(row);
-    if (awakenPopState.mode === 'fixed') {
-      var opt = awakenPopState.fixedOptions[awakenPopState.primaryIdx];
-      card.fixedAwaken = { cost: opt.cost, type: opt.type, tooltip: opt.tooltip, plusCard: opt.plusCard };
-    } else {
-      var co = awakenPopState.commonOptions[awakenPopState.primaryIdx];
-      card.commonAwaken = { tooltip: co.resolvedText };
-    }
-    if (awakenPopState.newAwakenIdx !== null) {
-      var no = awakenPopState.newOptions[awakenPopState.newAwakenIdx];
-      card.newAwaken = { tooltip: no.item.tooltip, origIdx: no.origIdx };
-    } else {
-      card.newAwaken = null;
-    }
-    closeAwakenPopup();
-    renderDeckBox();
-  });
-  document.getElementById('awakenPopClose').addEventListener('click', closeAwakenPopup);
-  awakenPopOverlay.addEventListener('click', function(e){ if (e.target === awakenPopOverlay) closeAwakenPopup(); });
-
-  function renderAgentPreviewHtml(agent){
-    var illust = '../../agents/' + agent.name + '_C.png';
-    var gradeBand = '../../agents/grade_' + agent.grade + '_tag.png';
-    return (
-      '<div class="deck-agent selectable" data-agent-id="'+agent.id+'">' +
-        '<img class="deck-agent-img" src="'+illust+'" alt="'+agent.name+'" draggable="false" oncontextmenu="return false">' +
-        '<div class="deck-agent-badges">' +
-          '<div class="deck-agent-badge"><img src="'+JOB_ICON[agent.job]+'" alt=""></div>' +
-          '<div class="deck-agent-badge attr"><img src="'+ATTR_ICON[agent.attribute]+'" alt=""></div>' +
-        '</div>' +
-        '<div class="deck-agent-black-band"></div>' +
-        '<div class="deck-agent-gradient" data-grade="'+agent.grade+'"></div>' +
-        '<div class="deck-agent-grade-band" style="background-image:url(\''+gradeBand+'\')"></div>' +
-        '<div class="deck-agent-name">'+agent.name+'</div>' +
-      '</div>'
-    );
-  }
-
   function renderPartnerPreviewHtml(partner){
     var illust = '../../partner/' + partner.name + '_C.png';
     var gradeBand = '../../agents/grade_' + partner.grade + '_tag.png';
@@ -1545,26 +1177,30 @@ document.getElementById('startBtn').addEventListener('click', function(){
     );
   }
 
-  // ============ 덱 상태 ============
-  function emptyRow(){
-    return { agentId: null, cards: [], removePt: 0, duplicatePt: 0, removeCount: 0, duplicateCount: 0, history: [],
-      partnerId: null, equipment: { weapon: null, armor: null, accessory: null } };
+  // ============ 게시물 데이터 로드 ============
+  function findPost(id){
+    return (window.DECKBUILDER_POSTS || []).filter(function(p){ return p.id === id; })[0] || null;
   }
-  var deckState = [ emptyRow(), emptyRow(), emptyRow() ];
+
+  var postId = new URLSearchParams(location.search).get('id');
+  var post = postId ? findPost(postId) : null;
+
+  var deckState = [];
   var activeSlot = null;
-
-  function firstFourCards(agentId){
-    var list = (window.AGENTS_CARDS && window.AGENTS_CARDS[agentId]) || [];
-    return list.filter(function(c){ return !!c.grade; }).slice(0, 4);
+  if (post) {
+    deckState = (post.rows || []).map(function(r){
+      return {
+        agentId: r.agentId, cards: r.cards || [],
+        removePt: 0, duplicatePt: 0, removeCount: 0, duplicateCount: 0, history: [],
+        partnerId: r.partnerId || null,
+        equipment: r.equipment || { weapon: null, armor: null, accessory: null }
+      };
+    });
+    if (deckState.length) activeSlot = 0;
   }
 
-  // ============ 실행 취소 / 초기화 / 제거 / 복제 ============
-  var PT_CAP = 220;
+  // ============ pt 계산 ============
   var GAUGE_MAX = 230;
-  var REMOVE_COST = 20;
-  var REMOVE_MAX_COUNT = 5;
-  var DUPLICATE_COST_TABLE = { 1: 0, 2: 0, 3: 40, 4: 80 };
-  var DUPLICATE_MAX_COUNT = 4;
   var NEUTRAL_PT = 20;
   var MONSTER_PT = { gray: 20, blue: 50, yellow: 80, purple: 80 };
 
@@ -1584,94 +1220,6 @@ document.getElementById('startBtn').addEventListener('click', function(){
   }
   function totalPt(row){
     return row.removePt + row.duplicatePt + ptBreakdown(row).livePt;
-  }
-
-  function snapshotRow(row){
-    return {
-      cards: row.cards.map(function(c){ var copy = {}; for (var k in c) copy[k] = c[k]; return copy; }),
-      removePt: row.removePt, duplicatePt: row.duplicatePt, removeCount: row.removeCount, duplicateCount: row.duplicateCount
-    };
-  }
-  function pushHistory(row){
-    row.history.push(snapshotRow(row));
-  }
-  function undoRow(i){
-    var row = deckState[i];
-    if (!row || !row.history.length) return;
-    var snap = row.history.pop();
-    row.cards = snap.cards;
-    row.removePt = snap.removePt;
-    row.duplicatePt = snap.duplicatePt;
-    row.removeCount = snap.removeCount;
-    row.duplicateCount = snap.duplicateCount;
-    renderDeckBox();
-  }
-  function resetRow(i){
-    var row = deckState[i];
-    if (!row || !row.agentId) return;
-    row.cards = firstFourCards(row.agentId).map(function(c){ return fromAgentCard(c, agentsById[row.agentId]); });
-    row.removePt = 0;
-    row.duplicatePt = 0;
-    row.removeCount = 0;
-    row.duplicateCount = 0;
-    row.history = [];
-    row.partnerId = null;
-    row.equipment = { weapon: null, armor: null, accessory: null };
-    renderDeckBox();
-  }
-  function canRemove(row){
-    return row.removeCount < REMOVE_MAX_COUNT && (PT_CAP - totalPt(row)) >= REMOVE_COST;
-  }
-  function nextDuplicateCost(row){
-    return DUPLICATE_COST_TABLE[row.duplicateCount + 1] || 0;
-  }
-  function canDuplicate(row){
-    if (row.duplicateCount >= DUPLICATE_MAX_COUNT) return false;
-    return (PT_CAP - totalPt(row)) >= nextDuplicateCost(row);
-  }
-  function isNonDuplicableCard(c){
-    return c.source === 'agent' && c.grade === 'gray';
-  }
-  function addDuplicateTag(tooltip){
-    var t = tooltip || '';
-    var m = t.match(/^\[\s*([^\]]*?)\s*\]/);
-    if (m) {
-      var existingTags = m[1].split('/').map(function(s){ return s.trim(); });
-      if (existingTags.indexOf('복제됨') !== -1) return t;
-      return '[ 복제됨 / ' + m[1].trim() + ' ]' + t.slice(m[0].length);
-    }
-    return '[ 복제됨 ]' + (t ? '\n' + t : '');
-  }
-  function removeCardFromRow(rowIdx, cardIdx){
-    var row = deckState[rowIdx];
-    if (!row || !canRemove(row)) return;
-    pushHistory(row);
-    row.cards.splice(cardIdx, 1);
-    row.removeCount++;
-    row.removePt += REMOVE_COST;
-    renderDeckBox();
-  }
-  function duplicateCardInRow(rowIdx, cardIdx){
-    var row = deckState[rowIdx];
-    if (!row || !canDuplicate(row) || isNonDuplicableCard(row.cards[cardIdx])) return;
-    var cost = nextDuplicateCost(row);
-    pushHistory(row);
-    var orig = row.cards[cardIdx];
-    var clone = {};
-    for (var k in orig) clone[k] = orig[k];
-    if (clone.fixedAwaken) {
-      var fa = {};
-      for (var k2 in orig.fixedAwaken) fa[k2] = orig.fixedAwaken[k2];
-      fa.tooltip = addDuplicateTag(orig.fixedAwaken.tooltip);
-      clone.fixedAwaken = fa;
-    } else {
-      clone.tooltip = addDuplicateTag(orig.tooltip);
-    }
-    clone.isDuplicate = true;
-    row.cards.splice(cardIdx + 1, 0, clone);
-    row.duplicateCount++;
-    row.duplicatePt += cost;
-    renderDeckBox();
   }
 
   function updateCardScrollbar(){
@@ -1735,32 +1283,25 @@ document.getElementById('startBtn').addEventListener('click', function(){
 
   function renderDeckBox(){
     var agentsCol = document.getElementById('deckbuildAgentsCol');
-    agentsCol.innerHTML = deckState.map(function(row, i){
-      var agent = row.agentId ? agentsById[row.agentId] : null;
+    var usedRows = [];
+    deckState.forEach(function(row, i){ if (row.agentId) usedRows.push(i); });
+
+    agentsCol.innerHTML = usedRows.map(function(i){
+      var row = deckState[i];
+      var agent = agentsById[row.agentId];
       var activeClass = (i === activeSlot) ? ' active' : '';
-      if (!agent) {
-        return (
-          '<div class="deckbuild-select'+activeClass+'" data-row="'+i+'">' +
-            '<div class="deckbuild-select-top">' +
-              '<div class="deckbuild-select-label">전투원 선택</div>' +
-              '<div class="deckbuild-select-empty"><div class="deckbuild-select-plus">+</div></div>' +
-            '</div>' +
-            '<div class="deckbuild-select-footer"><span class="deckbuild-select-name"></span><span class="deckbuild-select-pt"></span></div>' +
-          '</div>'
-        );
-      }
       var rowPt = totalPt(row);
       var rowPtOver = rowPt > GAUGE_MAX;
       var rowPtText = rowPtOver ? '초과' : (rowPt + 'pt');
       var partner = row.partnerId ? partnersById[row.partnerId] : null;
       var jobMatch = partner && partner.job === agent.job;
-      var partnerBtnContent = partner ? '<img class="deckbuild-partner-btn-img" src="../../'+partner.icon+'" alt="'+partner.name+'">' : '+';
+      var partnerBtnHtml = partner ?
+        '<div class="deckbuild-partner-btn'+(jobMatch ? ' job-match' : '')+'"><img class="deckbuild-partner-btn-img" src="../../'+partner.icon+'" alt="'+partner.name+'"></div>' : '';
       return (
         '<div class="deckbuild-select'+activeClass+'" data-row="'+i+'">' +
           '<div class="deckbuild-select-top">' +
             '<img class="deckbuild-select-portrait" src="../../'+agent.icon+'" alt="'+agent.name+'">' +
-            '<button type="button" class="deckbuild-remove-btn" data-remove-row="'+i+'">&times;</button>' +
-            '<button type="button" class="deckbuild-partner-btn'+(jobMatch ? ' job-match' : '')+'" data-partner-row="'+i+'">'+partnerBtnContent+'</button>' +
+            partnerBtnHtml +
           '</div>' +
           '<div class="deckbuild-select-footer"><span class="deckbuild-select-name">'+agent.name+'</span><span class="deckbuild-select-pt'+(rowPtOver ? ' over' : '')+'">'+rowPtText+'</span></div>' +
         '</div>'
@@ -1770,41 +1311,14 @@ document.getElementById('startBtn').addEventListener('click', function(){
     var gridArea = document.getElementById('deckbuildCardgridArea');
     var activeRow = (activeSlot !== null) ? deckState[activeSlot] : null;
     if (!activeRow) {
-      gridArea.innerHTML = '<div class="deckbuild-cardgrid-empty">전투원을 먼저 선택해주세요.</div>';
+      gridArea.innerHTML = '<div class="deckbuild-cardgrid-empty">전투원이 없습니다.</div>';
     } else {
-      var dupIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="7" y="7" width="13" height="13" rx="2"/><path d="M4 15V5a2 2 0 0 1 2-2h10"/></svg>';
-      var cellsHtml = activeRow.cards.map(function(c, idx){
-        var controlsHtml = '<div class="deckbuild-card-controls">' +
-          (canRemove(activeRow) ? '<button type="button" class="deckbuild-card-btn deckbuild-card-remove-btn" data-card-idx="'+idx+'">&times;</button>' : '') +
-          (canDuplicate(activeRow) && !isNonDuplicableCard(c) ? '<button type="button" class="deckbuild-card-btn deckbuild-card-dup-btn" data-dup-idx="'+idx+'">'+dupIcon+'</button>' : '') +
-        '</div>';
-        return '<div class="deckbuild-card-wrap">' + renderCardCellHtml(c, null, {showAwakenHint:true}) + controlsHtml + '</div>';
+      var cellsHtml = activeRow.cards.map(function(c){
+        return '<div class="deckbuild-card-wrap">' + renderCardCellHtml(c) + '</div>';
       }).join('');
-      cellsHtml += '<div class="deckbuild-add-cell" id="deckbuildAddCell">' +
-        '<div class="deckbuild-add-plus">+</div><div class="deckbuild-add-label">카드 추가</div></div>';
       gridArea.innerHTML = '<div class="deckbuild-cardgrid">'+cellsHtml+'</div>';
-      document.getElementById('deckbuildAddCell').addEventListener('click', function(){ openCardPopup(activeSlot); });
       Array.prototype.forEach.call(gridArea.querySelectorAll('.deckbuild-cardgrid .card'), function(cardEl, idx){
         bindCardZoomHover(cardEl, activeRow.cards[idx]);
-        if (cardEl.getAttribute('data-awaken') === '1') {
-          cardEl.addEventListener('click', function(e){
-            e.stopPropagation();
-            hideCardZoom();
-            openAwakenPopup(activeSlot, idx);
-          });
-        }
-      });
-      Array.prototype.forEach.call(gridArea.querySelectorAll('.deckbuild-card-remove-btn'), function(el){
-        el.addEventListener('click', function(e){
-          e.stopPropagation();
-          removeCardFromRow(activeSlot, parseInt(el.getAttribute('data-card-idx'), 10));
-        });
-      });
-      Array.prototype.forEach.call(gridArea.querySelectorAll('.deckbuild-card-dup-btn'), function(el){
-        el.addEventListener('click', function(e){
-          e.stopPropagation();
-          duplicateCardInRow(activeSlot, parseInt(el.getAttribute('data-dup-idx'), 10));
-        });
       });
     }
 
@@ -1813,44 +1327,18 @@ document.getElementById('startBtn').addEventListener('click', function(){
 
     Array.prototype.forEach.call(agentsCol.querySelectorAll('.deckbuild-select'), function(el){
       el.addEventListener('click', function(){
-        var row = parseInt(el.getAttribute('data-row'), 10);
-        if (deckState[row].agentId) {
-          activeSlot = row;
-          renderDeckBox();
-        } else {
-          openAgentPopup(row);
-        }
-      });
-    });
-    Array.prototype.forEach.call(agentsCol.querySelectorAll('.deckbuild-remove-btn'), function(el){
-      el.addEventListener('click', function(e){
-        e.stopPropagation();
-        var row = parseInt(el.getAttribute('data-remove-row'), 10);
-        deckState[row] = emptyRow();
-        if (activeSlot === row) {
-          var next = -1;
-          for (var i = 0; i < deckState.length; i++) { if (deckState[i].agentId) { next = i; break; } }
-          activeSlot = next === -1 ? null : next;
-        }
+        activeSlot = parseInt(el.getAttribute('data-row'), 10);
         renderDeckBox();
-      });
-    });
-    Array.prototype.forEach.call(agentsCol.querySelectorAll('.deckbuild-partner-btn'), function(el){
-      el.addEventListener('click', function(e){
-        e.stopPropagation();
-        var row = parseInt(el.getAttribute('data-partner-row'), 10);
-        openPartnerPopup(row);
       });
     });
   }
 
   function renderEquipSection(row){
     var slotsHtml = EQUIP_TYPES_ORDER.map(function(t){
-      var idx = row.equipment[t];
-      var item = (idx !== null && idx !== undefined) ? (window.EQUIPMENT_DATA || [])[idx] : null;
+      var item = row.equipment[t] ? (window.EQUIPMENT_DATA || []).filter(function(e){ return e.name === row.equipment[t]; })[0] : null;
       var gradeClass = item ? ' grade-'+item.grade : '';
       var ic = equipIconSrcAndClass(item, t);
-      return '<div class="deckbuild-equip-slot'+gradeClass+'" data-equip-type="'+t+'" data-equip-idx="'+(item ? idx : '')+'">' +
+      return '<div class="deckbuild-equip-slot'+gradeClass+'"'+(item ? ' data-equip-name="'+item.name.replace(/"/g,'&quot;')+'"' : '')+'>' +
         '<img class="deckbuild-equip-slot-icon'+ic.cls+'" src="'+ic.src+'" alt="">' +
       '</div>';
     }).join('');
@@ -1872,14 +1360,6 @@ document.getElementById('startBtn').addEventListener('click', function(){
     var barPct = Math.min(100, (pt / GAUGE_MAX) * 100);
     var monsterYellowPurple = brk.monsterCounts.yellow + brk.monsterCounts.purple;
     panel.innerHTML =
-      '<div class="deckbuild-side-row">' +
-        '<button type="button" class="deckbuild-undo-btn" id="deckbuildUndoBtn" '+(activeRow.history.length ? '' : 'disabled')+'>실행 취소</button>' +
-        '<button type="button" class="deckbuild-reset-btn" id="deckbuildResetBtn">초기화</button>' +
-      '</div>' +
-      '<div class="deckbuild-side-row">' +
-        '<div class="deckbuild-info-box">제거 '+activeRow.removeCount+'/'+REMOVE_MAX_COUNT+'</div>' +
-        '<div class="deckbuild-info-box">복제 '+activeRow.duplicateCount+'/'+DUPLICATE_MAX_COUNT+'</div>' +
-      '</div>' +
       '<div class="deckbuild-pt-gauge">' +
         '<div class="deckbuild-pt-gauge-top">' +
           '<span class="deckbuild-pt-badge'+(over ? ' over' : '')+'">'+(over ? '초과' : '유효')+'</span>' +
@@ -1899,217 +1379,15 @@ document.getElementById('startBtn').addEventListener('click', function(){
       '</div>' +
       renderEquipSection(activeRow);
 
-    document.getElementById('deckbuildUndoBtn').addEventListener('click', function(){ undoRow(activeSlot); });
-    document.getElementById('deckbuildResetBtn').addEventListener('click', function(){ resetRow(activeSlot); });
     Array.prototype.forEach.call(panel.querySelectorAll('.deckbuild-equip-slot'), function(el){
-      el.addEventListener('click', function(){
-        openEquipPopup(activeSlot, el.getAttribute('data-equip-type'));
-      });
-      var idxAttr = el.getAttribute('data-equip-idx');
-      if (idxAttr) {
-        var item = (window.EQUIPMENT_DATA || [])[parseInt(idxAttr, 10)];
-        if (item) {
-          el.addEventListener('mouseenter', function(e){ showEquipZoom(item, e.clientX, e.clientY); });
-          el.addEventListener('mousemove', function(e){ positionEquipZoom(e.clientX, e.clientY); });
-          el.addEventListener('mouseleave', hideEquipZoom);
-        }
-      }
+      var name = el.getAttribute('data-equip-name');
+      if (!name) return;
+      var item = (window.EQUIPMENT_DATA || []).filter(function(e){ return e.name === name; })[0];
+      if (!item) return;
+      el.addEventListener('mouseenter', function(e){ showEquipZoom(item, e.clientX, e.clientY); });
+      el.addEventListener('mousemove', function(e){ positionEquipZoom(e.clientX, e.clientY); });
+      el.addEventListener('mouseleave', hideEquipZoom);
     });
-  }
-
-  // ============ 전투원 선택 팝업 ============
-  var agentPopOverlay = document.getElementById('agentPopOverlay');
-  var agentPopGrid = document.getElementById('agentPopGrid');
-  var agentPopSearch = document.getElementById('agentPopSearch');
-  var agentPopState = { row: -1, job: null, attribute: null, grade: null, search: '' };
-
-  var JOBS_LIST = ['striker','ranger','vanguard','hunter','controller','psionic'];
-  var ATTRS_LIST = ['passion','justice','order','instinct','void'];
-  var GRADES_LIST = [5,4];
-
-  document.getElementById('agentPopJobTags').innerHTML = JOBS_LIST.map(function(j){
-    return '<button type="button" class="wpop-tag-btn job" data-job="'+j+'" title="'+JOB_LABEL[j]+'"><img src="'+JOB_ICON[j]+'" alt=""></button>';
-  }).join('');
-  document.getElementById('agentPopAttrTags').innerHTML = ATTRS_LIST.map(function(a){
-    return '<button type="button" class="wpop-tag-btn attr" data-attr="'+a+'" title="'+ATTR_LABEL[a]+'"><img src="'+ATTR_ICON[a]+'" alt=""></button>';
-  }).join('');
-  document.getElementById('agentPopGradeTags').innerHTML = GRADES_LIST.map(function(g){
-    return '<button type="button" class="wpop-tag-btn grade" data-grade="'+g+'" style="background-image:url(\'../../agents/grade_'+g+'.png\')">'+g+'</button>';
-  }).join('');
-
-  function bindToggleGroup(containerId, attr, stateKey){
-    Array.prototype.forEach.call(document.getElementById(containerId).querySelectorAll('[data-'+attr+']'), function(btn){
-      btn.addEventListener('click', function(){
-        var val = btn.getAttribute('data-'+attr);
-        agentPopState[stateKey] = (agentPopState[stateKey] === val) ? null : val;
-        renderAgentPopFilters();
-        renderAgentPopGrid();
-      });
-    });
-  }
-  bindToggleGroup('agentPopJobTags', 'job', 'job');
-  bindToggleGroup('agentPopAttrTags', 'attr', 'attribute');
-  bindToggleGroup('agentPopGradeTags', 'grade', 'grade');
-
-  function renderAgentPopFilters(){
-    Array.prototype.forEach.call(document.querySelectorAll('#agentPopJobTags [data-job]'), function(b){
-      b.classList.toggle('active', b.getAttribute('data-job') === agentPopState.job);
-    });
-    Array.prototype.forEach.call(document.querySelectorAll('#agentPopAttrTags [data-attr]'), function(b){
-      b.classList.toggle('active', b.getAttribute('data-attr') === agentPopState.attribute);
-    });
-    Array.prototype.forEach.call(document.querySelectorAll('#agentPopGradeTags [data-grade]'), function(b){
-      b.classList.toggle('active', b.getAttribute('data-grade') === String(agentPopState.grade));
-    });
-  }
-
-  agentPopSearch.addEventListener('input', function(){
-    agentPopState.search = agentPopSearch.value.trim();
-    renderAgentPopGrid();
-  });
-
-  function agentMatchesFilter(a){
-    if (agentPopState.job && a.job !== agentPopState.job) return false;
-    if (agentPopState.attribute && a.attribute !== agentPopState.attribute) return false;
-    if (agentPopState.grade && a.grade !== parseInt(agentPopState.grade, 10)) return false;
-    if (agentPopState.search && a.name.indexOf(agentPopState.search) === -1) return false;
-    return true;
-  }
-
-  function renderAgentPopGrid(){
-    scrollPopBodyToTop(agentPopGrid);
-    var usedIds = deckState.filter(function(r, i){ return i !== agentPopState.row && r.agentId; }).map(function(r){ return r.agentId; });
-    var eligible = AGENTS_WITH_CARDS.filter(function(a){ return usedIds.indexOf(a.id) === -1; });
-    if (!eligible.length) {
-      agentPopGrid.innerHTML = '<div class="wpop-empty">선택 가능한 전투원이 없습니다.</div>';
-      return;
-    }
-    var sorted = eligible.slice().sort(function(a, b){
-      return (agentMatchesFilter(b) ? 1 : 0) - (agentMatchesFilter(a) ? 1 : 0);
-    });
-    agentPopGrid.innerHTML = sorted.map(function(a){
-      var dimClass = agentMatchesFilter(a) ? '' : ' dim';
-      return '<div class="wpop-cell'+dimClass+'">' + renderAgentPreviewHtml(a) + '</div>';
-    }).join('');
-    Array.prototype.forEach.call(agentPopGrid.querySelectorAll('.deck-agent'), function(el){
-      el.addEventListener('click', function(){ selectAgent(agentPopState.row, el.getAttribute('data-agent-id')); });
-    });
-  }
-
-  function openAgentPopup(row){
-    agentPopState.row = row;
-    agentPopState.job = null;
-    agentPopState.attribute = null;
-    agentPopState.grade = null;
-    agentPopState.search = '';
-    agentPopSearch.value = '';
-    renderAgentPopFilters();
-    renderAgentPopGrid();
-    agentPopOverlay.classList.add('open');
-  }
-  function closeAgentPopup(){ agentPopOverlay.classList.remove('open'); }
-  document.getElementById('agentPopClose').addEventListener('click', closeAgentPopup);
-  agentPopOverlay.addEventListener('click', function(e){ if (e.target === agentPopOverlay) closeAgentPopup(); });
-
-  function selectAgent(row, agentId){
-    deckState[row] = emptyRow();
-    deckState[row].agentId = agentId;
-    deckState[row].cards = firstFourCards(agentId).map(function(c){ return fromAgentCard(c, agentsById[agentId]); });
-    activeSlot = row;
-    closeAgentPopup();
-    renderDeckBox();
-  }
-
-  // ============ 파트너 선택 팝업 ============
-  var partnerPopOverlay = document.getElementById('partnerPopOverlay');
-  var partnerPopGrid = document.getElementById('partnerPopGrid');
-  var partnerPopSearch = document.getElementById('partnerPopSearch');
-  var partnerPopState = { row: -1, job: null, grade: null, search: '' };
-
-  var PARTNER_GRADES_LIST = [5, 4, 3];
-
-  document.getElementById('partnerPopJobTags').innerHTML = JOBS_LIST.map(function(j){
-    return '<button type="button" class="wpop-tag-btn job" data-job="'+j+'" title="'+JOB_LABEL[j]+'"><img src="'+JOB_ICON[j]+'" alt=""></button>';
-  }).join('');
-  document.getElementById('partnerPopGradeTags').innerHTML = PARTNER_GRADES_LIST.map(function(g){
-    return '<button type="button" class="wpop-tag-btn grade" data-grade="'+g+'" style="background-image:url(\'../../agents/grade_'+g+'.png\')">'+g+'</button>';
-  }).join('');
-
-  function bindPartnerToggleGroup(containerId, attr, stateKey){
-    Array.prototype.forEach.call(document.getElementById(containerId).querySelectorAll('[data-'+attr+']'), function(btn){
-      btn.addEventListener('click', function(){
-        var val = btn.getAttribute('data-'+attr);
-        partnerPopState[stateKey] = (partnerPopState[stateKey] === val) ? null : val;
-        renderPartnerPopFilters();
-        renderPartnerPopGrid();
-      });
-    });
-  }
-  bindPartnerToggleGroup('partnerPopJobTags', 'job', 'job');
-  bindPartnerToggleGroup('partnerPopGradeTags', 'grade', 'grade');
-
-  function renderPartnerPopFilters(){
-    Array.prototype.forEach.call(document.querySelectorAll('#partnerPopJobTags [data-job]'), function(b){
-      b.classList.toggle('active', b.getAttribute('data-job') === partnerPopState.job);
-    });
-    Array.prototype.forEach.call(document.querySelectorAll('#partnerPopGradeTags [data-grade]'), function(b){
-      b.classList.toggle('active', b.getAttribute('data-grade') === String(partnerPopState.grade));
-    });
-  }
-
-  partnerPopSearch.addEventListener('input', function(){
-    partnerPopState.search = partnerPopSearch.value.trim();
-    renderPartnerPopGrid();
-  });
-
-  function partnerMatchesFilter(p){
-    if (partnerPopState.job && p.job !== partnerPopState.job) return false;
-    if (partnerPopState.grade && p.grade !== parseInt(partnerPopState.grade, 10)) return false;
-    if (partnerPopState.search && p.name.indexOf(partnerPopState.search) === -1) return false;
-    return true;
-  }
-
-  function renderPartnerPopGrid(){
-    scrollPopBodyToTop(partnerPopGrid);
-    var all = window.PARTNER_DATA || [];
-    if (!all.length) {
-      partnerPopGrid.innerHTML = '<div class="wpop-empty">선택 가능한 파트너가 없습니다.</div>';
-      return;
-    }
-    var activeAgent = deckState[partnerPopState.row] && deckState[partnerPopState.row].agentId ?
-      agentsById[deckState[partnerPopState.row].agentId] : null;
-    var sorted = all.slice().sort(function(a, b){
-      return (partnerMatchesFilter(b) ? 1 : 0) - (partnerMatchesFilter(a) ? 1 : 0);
-    });
-    partnerPopGrid.innerHTML = sorted.map(function(p){
-      var dimClass = partnerMatchesFilter(p) ? '' : ' dim';
-      var jobMatchClass = (activeAgent && p.job === activeAgent.job) ? ' partner-job-match' : '';
-      return '<div class="wpop-cell'+dimClass+jobMatchClass+'">' + renderPartnerPreviewHtml(p) + '</div>';
-    }).join('');
-    Array.prototype.forEach.call(partnerPopGrid.querySelectorAll('.deck-agent'), function(el){
-      el.addEventListener('click', function(){ selectPartner(partnerPopState.row, el.getAttribute('data-partner-id')); });
-    });
-  }
-
-  function openPartnerPopup(row){
-    partnerPopState.row = row;
-    var agent = deckState[row].agentId ? agentsById[deckState[row].agentId] : null;
-    partnerPopState.job = agent ? agent.job : null;
-    partnerPopState.grade = null;
-    partnerPopState.search = '';
-    partnerPopSearch.value = '';
-    renderPartnerPopFilters();
-    renderPartnerPopGrid();
-    partnerPopOverlay.classList.add('open');
-  }
-  function closePartnerPopup(){ partnerPopOverlay.classList.remove('open'); }
-  document.getElementById('partnerPopClose').addEventListener('click', closePartnerPopup);
-  partnerPopOverlay.addEventListener('click', function(e){ if (e.target === partnerPopOverlay) closePartnerPopup(); });
-
-  function selectPartner(row, partnerId){
-    deckState[row].partnerId = partnerId;
-    closePartnerPopup();
-    renderDeckBox();
   }
 
   // ============ 장비 확대 미리보기 ============
@@ -2151,372 +1429,23 @@ document.getElementById('startBtn').addEventListener('click', function(){
     equipSourceTooltipEl.classList.remove('visible');
   }
 
-  // ============ 장비 선택 팝업 ============
-  var equipPopOverlay = document.getElementById('equipPopOverlay');
-  var equipPopGrid = document.getElementById('equipPopGrid');
-  var equipPopTitle = document.getElementById('equipPopTitle');
-  var equipPopSearch = document.getElementById('equipPopSearch');
-  var equipPopState = { row: -1, type: null, grade: null, source: null, search: '' };
+  var titleEl = document.getElementById('postDetailTitle');
+  var metaEl = document.getElementById('postDetailMeta');
+  var contentEl = document.getElementById('postDetailContent');
+  var boxEl = document.getElementById('deckbuildBox');
 
-  document.getElementById('equipPopGradeTags').innerHTML = EQUIP_GRADES_LIST.map(function(g){
-    return '<button type="button" class="equip-grade-tag-btn grade-'+g+'" data-grade="'+g+'">'+EQUIP_GRADE_LABEL[g]+'</button>';
-  }).join('');
-  Array.prototype.forEach.call(document.getElementById('equipPopGradeTags').querySelectorAll('[data-grade]'), function(btn){
-    btn.addEventListener('click', function(){
-      var val = btn.getAttribute('data-grade');
-      equipPopState.grade = (equipPopState.grade === val) ? null : val;
-      renderEquipPopFilters();
-      renderEquipPopGrid();
-    });
-  });
-
-  var EQUIP_SOURCE_WILDCARD = '세넥투스 처치';
-  var EQUIP_SOURCES_LIST = (function(){
-    var seen = {}, list = [];
-    (window.EQUIPMENT_DATA || []).forEach(function(item){
-      equipSourceList(item).forEach(function(s){
-        if (s && s !== EQUIP_SOURCE_WILDCARD && !seen[s]) { seen[s] = true; list.push(s); }
-      });
-    });
-    return list;
-  })();
-  document.getElementById('equipPopSourceTags').innerHTML = EQUIP_SOURCES_LIST.map(function(s){
-    return '<button type="button" class="equip-source-tag-btn" data-source="'+s.replace(/"/g, '&quot;')+'">'+s+'</button>';
-  }).join('');
-  Array.prototype.forEach.call(document.getElementById('equipPopSourceTags').querySelectorAll('[data-source]'), function(btn){
-    btn.addEventListener('click', function(){
-      var val = btn.getAttribute('data-source');
-      equipPopState.source = (equipPopState.source === val) ? null : val;
-      renderEquipPopFilters();
-      renderEquipPopGrid();
-    });
-  });
-
-  equipPopSearch.addEventListener('input', function(){
-    equipPopState.search = equipPopSearch.value.trim();
-    renderEquipPopGrid();
-  });
-
-  function purpleEquippedElsewhere(row, excludeType){
-    return EQUIP_TYPES_ORDER.some(function(t){
-      if (t === excludeType) return false;
-      var idx = row.equipment[t];
-      if (idx === null || idx === undefined) return false;
-      var item = (window.EQUIPMENT_DATA || [])[idx];
-      return item && item.grade === 'purple';
-    });
-  }
-
-  function equipMatchesFilter(item){
-    if (equipPopState.grade && item.grade !== equipPopState.grade) return false;
-    if (equipPopState.source) {
-      var itemSources = equipSourceList(item);
-      if (itemSources.indexOf(equipPopState.source) === -1 && itemSources.indexOf(EQUIP_SOURCE_WILDCARD) === -1) return false;
-    }
-    if (equipPopState.search && item.name.indexOf(equipPopState.search) === -1) return false;
-    return true;
-  }
-
-  function renderEquipPopFilters(){
-    Array.prototype.forEach.call(document.querySelectorAll('#equipPopGradeTags [data-grade]'), function(b){
-      b.classList.toggle('active', b.getAttribute('data-grade') === equipPopState.grade);
-    });
-    Array.prototype.forEach.call(document.querySelectorAll('#equipPopSourceTags [data-source]'), function(b){
-      b.classList.toggle('active', b.getAttribute('data-source') === equipPopState.source);
-    });
-  }
-
-  function renderEquipPopGrid(){
-    scrollPopBodyToTop(equipPopGrid);
-    var row = deckState[equipPopState.row];
-    var type = equipPopState.type;
-    var currentIdx = row.equipment[type];
-    var all = (window.EQUIPMENT_DATA || []).map(function(item, idx){ return { item: item, idx: idx }; })
-      .filter(function(x){ return x.item.type === type; });
-    if (!all.length) {
-      equipPopGrid.innerHTML = '<div class="wpop-empty">선택 가능한 장비가 없습니다.</div>';
-      return;
-    }
-    var purpleBlocked = purpleEquippedElsewhere(row, type);
-    function isDisabled(x){
-      if (x.idx === currentIdx) return true;
-      if (x.item.grade === 'purple' && purpleBlocked) return true;
-      if (!equipMatchesFilter(x.item)) return true;
-      return false;
-    }
-    var sorted = all.slice().sort(function(a, b){
-      return (isDisabled(a) ? 1 : 0) - (isDisabled(b) ? 1 : 0);
-    });
-    equipPopGrid.innerHTML = sorted.map(function(x){
-      var dim = isDisabled(x) ? ' dim' : '';
-      return '<div class="wpop-cell'+dim+'" data-equip-idx="'+x.idx+'">' + renderEquipCellHtml(x.item) + '</div>';
-    }).join('');
-    Array.prototype.forEach.call(equipPopGrid.querySelectorAll('.wpop-cell'), function(el){
-      var idx = parseInt(el.getAttribute('data-equip-idx'), 10);
-      var x = { item: (window.EQUIPMENT_DATA || [])[idx], idx: idx };
-      var item = x.item;
-      el.addEventListener('mouseenter', function(e){ showEquipZoom(item, e.clientX, e.clientY); });
-      el.addEventListener('mousemove', function(e){ positionEquipZoom(e.clientX, e.clientY); });
-      el.addEventListener('mouseleave', hideEquipZoom);
-      var sourceEl = el.querySelector('.equip-cell-source[data-full-source]');
-      if (sourceEl) {
-        sourceEl.addEventListener('mouseenter', function(e){ showEquipSourceTooltip(sourceEl.getAttribute('data-full-source'), e.clientX, e.clientY); });
-        sourceEl.addEventListener('mousemove', function(e){ positionEquipSourceTooltip(e.clientX, e.clientY); });
-        sourceEl.addEventListener('mouseleave', hideEquipSourceTooltip);
-      }
-      if (isDisabled(x)) return;
-      el.addEventListener('click', function(){ equipItem(equipPopState.row, type, idx); });
-    });
-  }
-
-  function openEquipPopup(row, type){
-    equipPopState.row = row;
-    equipPopState.type = type;
-    equipPopState.grade = null;
-    equipPopState.source = null;
-    equipPopState.search = '';
-    equipPopSearch.value = '';
-    equipPopTitle.textContent = EQUIP_TYPE_LABEL[type] + ' 선택';
-    renderEquipPopFilters();
-    renderEquipPopGrid();
-    equipPopOverlay.classList.add('open');
-  }
-  function closeEquipPopup(){ equipPopOverlay.classList.remove('open'); hideEquipZoom(); }
-  document.getElementById('equipPopClose').addEventListener('click', closeEquipPopup);
-  equipPopOverlay.addEventListener('click', function(e){ if (e.target === equipPopOverlay) closeEquipPopup(); });
-
-  function equipItem(row, type, idx){
-    deckState[row].equipment[type] = idx;
-    closeEquipPopup();
+  if (!post) {
+    titleEl.textContent = '게시물을 찾을 수 없습니다.';
+    metaEl.style.display = 'none';
+    boxEl.style.display = 'none';
+    contentEl.textContent = '';
+  } else {
+    titleEl.textContent = post.title;
+    metaEl.innerHTML =
+      '<div class="deck-author"><div class="deck-author-avatar"></div><span class="deck-author-name">'+post.author+'</span></div>' +
+      '<span>'+post.date+'</span>';
+    contentEl.textContent = post.content || '';
     renderDeckBox();
   }
-
-  // ============ 카드 추가 팝업 ============
-  var cardPopOverlay = document.getElementById('cardPopOverlay');
-  var cardPopGrid = document.getElementById('cardPopGrid');
-  var cardPopSearch = document.getElementById('cardPopSearch');
-  var cardPopState = { row: -1, cat: 'all', search: '' };
-
-  document.getElementById('cardPopCatRow').addEventListener('click', function(e){
-    var btn = e.target.closest('[data-cat]');
-    if (!btn) return;
-    cardPopState.cat = btn.getAttribute('data-cat');
-    Array.prototype.forEach.call(document.querySelectorAll('#cardPopCatRow [data-cat]'), function(b){
-      b.classList.toggle('active', b === btn);
-    });
-    renderCardPopGrid();
-  });
-  cardPopSearch.addEventListener('input', function(){
-    cardPopState.search = cardPopSearch.value.trim();
-    renderCardPopGrid();
-  });
-
-  function allCandidateCardsForRow(row){
-    var agent = agentsById[row.agentId];
-    var addedNames = row.cards.map(function(c){ return c.name; });
-    var agentCards = ((window.AGENTS_CARDS && window.AGENTS_CARDS[row.agentId]) || [])
-      .filter(function(c){ return !!c.grade; })
-      .filter(function(c){ return addedNames.indexOf(c.name) === -1; })
-      .map(function(c){ return fromAgentCard(c, agent); });
-    var commonCards = (window.QUIZ_CARDS || [])
-      .filter(function(c){ return c.attribute === 'common'; })
-      .filter(function(c){ return !c.job || !c.job.length || (agent && c.job.indexOf(agent.job) !== -1); })
-      .filter(function(c){ return addedNames.indexOf(c.name) === -1; })
-      .map(fromQuizCard);
-    var monsterCards = (window.QUIZ_CARDS || [])
-      .filter(function(c){ return c.attribute === 'monster'; })
-      .filter(function(c){ return addedNames.indexOf(c.name) === -1; })
-      .map(fromQuizCard);
-    return agentCards.concat(commonCards, monsterCards);
-  }
-
-  function cardMatchesFilter(c){
-    if (cardPopState.cat === 'agent' && c.source !== 'agent') return false;
-    if (cardPopState.cat === 'common' && c.source !== 'common') return false;
-    if (cardPopState.cat === 'monster' && c.source !== 'monster') return false;
-    if (cardPopState.search && c.name.indexOf(cardPopState.search) === -1) return false;
-    return true;
-  }
-
-  function renderCardPopGrid(){
-    scrollPopBodyToTop(cardPopGrid);
-    var row = deckState[cardPopState.row];
-    if (!row) return;
-    var all = allCandidateCardsForRow(row);
-    if (!all.length) {
-      cardPopGrid.innerHTML = '<div class="wpop-empty">추가할 수 있는 카드가 없습니다.</div>';
-      return;
-    }
-    var sorted = all.slice().sort(function(a, b){
-      return (cardMatchesFilter(b) ? 1 : 0) - (cardMatchesFilter(a) ? 1 : 0);
-    });
-    cardPopGrid.innerHTML = sorted.map(function(c){
-      var dimClass = cardMatchesFilter(c) ? '' : ' dim';
-      return '<div class="wpop-cell'+dimClass+' deckbuild-add-target" data-key="'+c.key.replace(/"/g,'&quot;')+'">' + renderCardCellHtml(c) + '</div>';
-    }).join('');
-    Array.prototype.forEach.call(cardPopGrid.querySelectorAll('.deckbuild-add-target'), function(el, idx){
-      el.addEventListener('click', function(){ addCardToRow(cardPopState.row, sorted[idx]); });
-      bindCardZoomHover(el.querySelector('.card'), sorted[idx]);
-    });
-  }
-
-  function openCardPopup(row){
-    cardPopState.row = row;
-    cardPopState.cat = 'all';
-    cardPopState.search = '';
-    cardPopSearch.value = '';
-    Array.prototype.forEach.call(document.querySelectorAll('#cardPopCatRow [data-cat]'), function(b){
-      b.classList.toggle('active', b.getAttribute('data-cat') === 'all');
-    });
-    renderCardPopGrid();
-    cardPopOverlay.classList.add('open');
-  }
-  function closeCardPopup(){ cardPopOverlay.classList.remove('open'); }
-  document.getElementById('cardPopClose').addEventListener('click', closeCardPopup);
-  cardPopOverlay.addEventListener('click', function(e){ if (e.target === cardPopOverlay) closeCardPopup(); });
-
-  function addCardToRow(row, card){
-    pushHistory(deckState[row]);
-    deckState[row].cards.push(card);
-    closeCardPopup();
-    renderDeckBox();
-  }
-
-  // ============ 글쓰기 등록 ============
-  var writeNoticeOverlay = document.getElementById('writeNoticeOverlay');
-  var writeNoticeTitle = document.getElementById('writeNoticeTitle');
-  var writeNoticeBody = document.getElementById('writeNoticeBody');
-  function showWriteNotice(title, bodyHtml){
-    writeNoticeTitle.textContent = title;
-    writeNoticeBody.innerHTML = bodyHtml;
-    writeNoticeOverlay.classList.add('open');
-  }
-  function closeWriteNotice(){ writeNoticeOverlay.classList.remove('open'); }
-  document.getElementById('writeNoticeXBtn').addEventListener('click', closeWriteNotice);
-  document.getElementById('writeNoticeCloseBtn').addEventListener('click', closeWriteNotice);
-  writeNoticeOverlay.addEventListener('click', function(e){ if (e.target === writeNoticeOverlay) closeWriteNotice(); });
-
-  function randomAuthor(){
-    var digits = '';
-    for (var i = 0; i < 12; i++) digits += Math.floor(Math.random() * 10);
-    return 'S' + digits;
-  }
-  function pad2(n){ return n < 10 ? '0' + n : String(n); }
-  function todayDateStr(){
-    var d = new Date();
-    return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
-  }
-  function todayDateCompact(){
-    var d = new Date();
-    return String(d.getFullYear()) + pad2(d.getMonth() + 1) + pad2(d.getDate());
-  }
-  function stripCardForSave(c){
-    var copy = {};
-    for (var k in c) { if (k !== 'awakenings') copy[k] = c[k]; }
-    return copy;
-  }
-  function equipmentForSave(equipment){
-    var out = {};
-    EQUIP_TYPES_ORDER.forEach(function(t){
-      var idx = equipment[t];
-      var item = (idx !== null && idx !== undefined) ? (window.EQUIPMENT_DATA || [])[idx] : null;
-      out[t] = item ? item.name : null;
-    });
-    return out;
-  }
-  function jsStringLiteral(s){
-    return JSON.stringify(String(s == null ? '' : s));
-  }
-  function buildPostFileContent(post){
-    var rowsJs = post.rows.map(function(r){
-      return '    {\n' +
-        '      agentId: ' + jsStringLiteral(r.agentId) + ',\n' +
-        '      cards: ' + JSON.stringify(r.cards) + ',\n' +
-        '      partnerId: ' + (r.partnerId ? jsStringLiteral(r.partnerId) : 'null') + ',\n' +
-        '      equipment: ' + JSON.stringify(r.equipment) + '\n' +
-        '    }';
-    }).join(',\n');
-    return '// ============================================================\n' +
-      '// 덱 빌딩 게시판 게시물 파일 (1개 파일 = 게시물 1개)\n' +
-      '// 글쓰기 화면에서 작성한 내용이 자동 저장된 파일입니다.\n' +
-      '// view/like/comment 숫자는 필요하면 직접 수정해도 됩니다.\n' +
-      '// ============================================================\n\n' +
-      'window.DECKBUILDER_POSTS = window.DECKBUILDER_POSTS || [];\n' +
-      'window.DECKBUILDER_POSTS.push({\n' +
-      '  id: ' + jsStringLiteral(post.id) + ',\n' +
-      '  title: ' + jsStringLiteral(post.title) + ',\n' +
-      '  content: ' + jsStringLiteral(post.content) + ',\n' +
-      '  agentIds: ' + JSON.stringify(post.agentIds) + ',\n' +
-      '  rows: [\n' + rowsJs + '\n  ],\n' +
-      '  author: ' + jsStringLiteral(post.author) + ',\n' +
-      '  view: 0,\n' +
-      '  like: 0,\n' +
-      '  comment: 0,\n' +
-      '  date: ' + jsStringLiteral(post.date) + '\n' +
-      '});\n';
-  }
-  function validateForSubmit(){
-    var errors = [];
-    if (!writeTitleInput.value.trim()) errors.push('게시글 제목을 입력해주세요.');
-    if (!writeBodyTextarea.value.trim()) errors.push('내용글을 입력해주세요.');
-    var hasAgent = deckState.some(function(r){ return !!r.agentId; });
-    if (!hasAgent) errors.push('전투원을 한 명 이상 선택해주세요.');
-    return errors;
-  }
-
-  var writeTitleInput = document.querySelector('.write-title-input');
-  var writeBodyTextarea = document.querySelector('.write-body-textarea');
-
-  document.getElementById('writeSubmitBtn').addEventListener('click', function(){
-    var errors = validateForSubmit();
-    if (errors.length) {
-      showWriteNotice('작성을 완료할 수 없습니다', '<ul>' + errors.map(function(e){ return '<li>' + e + '</li>'; }).join('') + '</ul>');
-      return;
-    }
-    if (location.protocol !== 'file:') {
-      showWriteNotice('알림', '아직 지원하지 않는 기능입니다.');
-      return;
-    }
-
-    var activeRows = deckState.filter(function(r){ return !!r.agentId; });
-    var post = {
-      id: todayDateCompact() + '_' + (Math.floor(Math.random() * 90000) + 10000),
-      title: writeTitleInput.value.trim(),
-      content: writeBodyTextarea.value.trim(),
-      agentIds: activeRows.map(function(r){ return r.agentId; }),
-      rows: activeRows.map(function(r){
-        return {
-          agentId: r.agentId,
-          cards: r.cards.map(stripCardForSave),
-          partnerId: r.partnerId || null,
-          equipment: equipmentForSave(r.equipment)
-        };
-      }),
-      author: randomAuthor(),
-      date: todayDateStr()
-    };
-
-    var fileContent = buildPostFileContent(post);
-    var blob = new Blob([fileContent], { type: 'text/javascript' });
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url;
-    a.download = post.id + '.js';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-
-    showWriteNotice('게시글 파일이 생성되었습니다',
-      '<div>"' + post.id + '.js" 파일이 다운로드되었습니다.</div>' +
-      '<ul>' +
-        '<li>다운로드된 파일을 <b>deckbuilder/게시물/</b> 폴더에 넣어주세요.</li>' +
-        '<li><b>deckbuilder/index.html</b>에 <code>&lt;script src="게시물/' + post.id + '.js"&gt;&lt;/script&gt;</code> 줄을 추가해주세요.</li>' +
-        '<li><b>deckbuilder/post/index.html</b>에는 <code>&lt;script src="../게시물/' + post.id + '.js"&gt;&lt;/script&gt;</code> 줄을 추가해주세요. (경로가 한 단계 다릅니다)</li>' +
-        '<li>그다음 git push 하면 게시판에 반영됩니다.</li>' +
-      '</ul>');
-  });
-
-  renderDeckBox();
 })();
 </script>

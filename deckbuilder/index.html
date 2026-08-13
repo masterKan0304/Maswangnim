@@ -195,7 +195,7 @@
 
   .deck-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;}
 
-  .deck-post{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface);transition:box-shadow .15s,border-color .15s;}
+  .deck-post{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface);cursor:pointer;transition:box-shadow .15s,border-color .15s;}
   .deck-post:hover{box-shadow:0 6px 18px rgba(0,0,0,.08);border-color:#d6d6d6;}
   .deck-post-title{display:flex;align-items:center;gap:7px;padding:14px 16px 12px;}
   .deck-post-title-text{min-width:0;flex:1;font-size:14.5px;font-weight:800;color:var(--ink);
@@ -490,21 +490,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
 <!-- 파트너 정보 데이터 -->
 <script src="../partner/partner-data.js"></script>
 <!-- 덱 빌딩 게시물 데이터 (게시물 폴더 안에 게시물 1개 = 파일 1개로 저장됨, 오래된 순으로 로드) -->
-<script src="게시물/20260730_00001.js"></script>
-<script src="게시물/20260801_00002.js"></script>
-<script src="게시물/20260802_00003.js"></script>
-<script src="게시물/20260803_00004.js"></script>
-<script src="게시물/20260804_00005.js"></script>
-<script src="게시물/20260805_00006.js"></script>
-<script src="게시물/20260806_00007.js"></script>
-<script src="게시물/20260807_00008.js"></script>
-<script src="게시물/20260807_00009.js"></script>
-<script src="게시물/20260808_00010.js"></script>
-<script src="게시물/20260808_00011.js"></script>
-<script src="게시물/20260809_00012.js"></script>
-<script src="게시물/20260809_00013.js"></script>
-<script src="게시물/20260810_00014.js"></script>
-<script src="게시물/20260810_00015.js"></script>
+<!-- 새 게시물 파일을 deckbuilder/게시물/ 에 추가한 뒤, 아래에 <script src="게시물/{파일명}.js"></script> 줄을 추가하세요. -->
 
 <script>
 (function(){
@@ -581,7 +567,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
 
   function renderPost(post){
     return (
-      '<div class="deck-post">' +
+      '<div class="deck-post" data-post-id="' + (post.id ? post.id.replace(/"/g,'&quot;') : '') + '">' +
         '<div class="deck-post-title">' +
           '<span class="deck-post-title-text" title="' + post.title.replace(/"/g,'&quot;') + '">' + post.title + '</span>' +
           (post.hot ? '<span class="deck-hot-tag">HOT</span>' : '') +
@@ -668,5 +654,13 @@ document.getElementById('startBtn').addEventListener('click', function(){
   hotNextBtn.addEventListener('click', function(){ if (hotPage < hotTotalPages - 1) { hotPage++; renderHot(); } });
 
   renderHot();
+
+  document.addEventListener('click', function(e){
+    var el = e.target.closest('.deck-post[data-post-id]');
+    if (!el) return;
+    var id = el.getAttribute('data-post-id');
+    if (!id) return;
+    location.href = 'post/?id=' + encodeURIComponent(id);
+  });
 })();
 </script>
