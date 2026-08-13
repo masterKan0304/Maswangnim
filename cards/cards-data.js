@@ -957,5 +957,375 @@ window.AGENTS_CARDS = {
       media: 'cards/티페라/purple.webp',
       tooltip: '[ 유일 / 형상 강화 (0/3) ]\n행동 포인트 1\n드로우 1\n다음 공격 카드의 첫 타격 피해량 40% 증가'
     }
+  ],
+  nine: [
+    {
+      name: '참격',
+      cost: 1,
+      type: 'attack',
+      grade: 'gray',
+      media: 'cards/나인/attack.webp',
+      tooltip: '방어 기반 피해 100%'
+    },
+    {
+      name: '참격',
+      cost: 1,
+      type: 'attack',
+      grade: 'gray',
+      media: 'cards/나인/attack.webp',
+      tooltip: '방어 기반 피해 100%'
+    },
+    {
+      name: '칼등 막기',
+      cost: 1,
+      type: 'skill',
+      grade: 'gray',
+      media: 'cards/나인/skill.webp',
+      tooltip: '실드 100%'
+    },
+    {
+      name: '파쇄',
+      cost: 3,
+      type: 'attack',
+      grade: 'blue',
+      plus_card: [ '파쇄 Lv. 1', '파쇄 Lv. 2', '파쇄 Lv. 3' ],
+      media: 'cards/나인/blue1.webp',
+      tooltip: '[ 유일 / 개전 / 소멸 / 증발 ]\n방어 기반 피해 350%\n소각 : "파쇄 Lv. 1" 1장 생성',
+      awakenings: [
+        { name: '파쇄(철갑)', cost: 3, type: 'attack', tooltip: '[ 유일 / 개전 / 소멸 / 증발 ]\n방어 기반 피해 |400|%\n|실드 200%|\n소각 : |"파쇄(철갑) Lv. 1"| 1장 생성', plus_card: [ '파쇄(철갑) Lv. 1', '파쇄(철갑) Lv. 2', '파쇄(철갑) Lv. 3' ] },
+        { name: '파쇄(극강)', cost: 3, type: 'attack', tooltip: '[ 유일 / 개전 / 소멸 / 증발 ]\n방어 기반 피해 \\300\\%\n소각 : |"파쇄(극강) Lv. 1"| 1장 생성', plus_card: [ '파쇄(극강) Lv. 1', '파쇄(극강) Lv. 2', '파쇄(극강) Lv. 3', '파쇄(극강) Lv. 4', '파쇄(극강) Lv. 5' ] },
+        { name: '파쇄(섬광)', cost: 3, type: 'attack', tooltip: '|[ 유일 / 개전 / 점화 / 소멸 / 증발 ]|\n방어 기반 피해 |400|%\n소각 : |"파쇄(섬광) Lv. 1"| 1장 생성', plus_card: [ '파쇄(섬광) Lv. 1', '파쇄(섬광) Lv. 2', '파쇄(섬광) Lv. 3' ] },
+        { name: '파쇄(몰살)', cost: 3, type: 'attack', tooltip: '[ 유일 / 개전 / 소멸 / 증발 ]\n|모든 적| 방어 기반 피해 |400|%\n|대상 수만큼 피해량 10% 감소|\n소각 : |"파쇄(몰살) Lv. 1"| 1장 생성', plus_card: [ '파쇄(몰살) Lv. 1', '파쇄(몰살) Lv. 2', '파쇄(몰살) Lv. 3' ] },
+        { name: '파쇄(기습)', cost: 3, type: 'attack', tooltip: '|[ 유일 / 개전 / 소멸 / 보존 ]|\n방어 기반 피해 |400|%\n|아군이 반격 시 이 카드 발동|\n소각 : |"파쇄(기습) Lv. 1"| 1장 생성', plus_card: [ '파쇄(기습) Lv. 1', '파쇄(기습) Lv. 2', '파쇄(기습) Lv. 3' ] }
+      ]
+    },
+    {
+      name: '파쇄 Lv. 1',
+      cost: 3,
+      type: 'attack',
+      grade: '',
+      grade_color: 'blue',
+      media: 'cards/나인/blue1.webp',
+      tooltip: '[ 유일 / 소멸 / 증발 ]\n방어 기반 피해 420%\n소각 : "파쇄 Lv. 2" 1장 생성'
+    },
+    {
+      name: '파쇄 Lv. 2',
+      cost: 3,
+      type: 'attack',
+      grade: '',
+      grade_color: 'yellow',
+      media: 'cards/나인/blue1.webp',
+      tooltip: '[ 유일 / 소멸 / 증발 ]\n방어 기반 피해 500%\n소각 : "파쇄 Lv. 3" 1장 생성'
+    },
+    {
+      name: '파쇄 Lv. 3',
+      cost: 2,
+      type: 'attack',
+      grade: '',
+      grade_color: 'purple',
+      media: 'cards/나인/blue1.webp',
+      tooltip: '[ 유일 / 소멸 / 보존 ]\n방어 기반 피해 600%\n소각 : 턴 시작 시 핸드에 "파쇄" 1장 생성'
+    },
+    {
+      name: '파쇄(철갑) Lv. 1',
+      cost: 3,
+      type: 'attack',
+      grade: '',
+      grade_color: 'blue',
+      media: 'cards/나인/blue1.webp',
+      tooltip: '[ 유일 / 소멸 / 증발 ]\n방어 기반 피해 480%\n실드 200%\n소각 : "파쇄(철갑) Lv. 2" 1장 생성'
+    },
+    {
+      name: '파쇄(철갑) Lv. 2',
+      cost: 3,
+      type: 'attack',
+      grade: '',
+      grade_color: 'yellow',
+      media: 'cards/나인/blue1.webp',
+      tooltip: '[ 유일 / 소멸 / 증발 ]\n방어 기반 피해 580%\n실드 200%\n소각 : "파쇄(철갑) Lv. 3" 1장 생성'
+    },
+    {
+      name: '파쇄(철갑) Lv. 3',
+      cost: 2,
+      type: 'attack',
+      grade: '',
+      grade_color: 'purple',
+      media: 'cards/나인/blue1.webp',
+      tooltip: '[ 유일 / 소멸 / 보존 ]\n방어 기반 피해 700%\n실드 200%\n소각 : 턴 시작 시 핸드에 "파쇄(철갑)" 1장 생성'
+    },
+    {
+      name: '파쇄(극강) Lv. 1',
+      cost: 3,
+      type: 'attack',
+      grade: '',
+      grade_color: 'blue',
+      media: 'cards/나인/blue1.webp',
+      tooltip: '[ 유일 / 소멸 / 증발 ]\n방어 기반 피해 360%\n소각 : "파쇄(극강) Lv. 2" 1장 생성'
+    },
+    {
+      name: '파쇄(극강) Lv. 2',
+      cost: 3,
+      type: 'attack',
+      grade: '',
+      grade_color: 'blue',
+      media: 'cards/나인/blue1.webp',
+      tooltip: '[ 유일 / 소멸 / 증발 ]\n방어 기반 피해 420%\n소각 : "파쇄(극강) Lv. 3" 1장 생성'
+    },
+    {
+      name: '파쇄(극강) Lv. 3',
+      cost: 3,
+      type: 'attack',
+      grade: '',
+      grade_color: 'yellow',
+      media: 'cards/나인/blue1.webp',
+      tooltip: '[ 유일 / 소멸 / 증발 ]\n방어 기반 피해 550%\n소각 : "파쇄(극강) Lv. 4" 1장 생성'
+    },
+    {
+      name: '파쇄(극강) Lv. 4',
+      cost: 3,
+      type: 'attack',
+      grade: '',
+      grade_color: 'yellow',
+      media: 'cards/나인/blue1.webp',
+      tooltip: '[ 유일 / 소멸 / 증발 ]\n방어 기반 피해 680%\n소각 : "파쇄(극강) Lv. 5" 1장 생성'
+    },
+    {
+      name: '파쇄(극강) Lv. 5',
+      cost: 2,
+      type: 'attack',
+      grade: '',
+      grade_color: 'purple',
+      media: 'cards/나인/blue1.webp',
+      tooltip: '[ 유일 / 소멸 / 보존 ]\n방어 기반 피해 1000%\n소각 : 턴 시작 시 핸드에 "파쇄(극강)" 1장 생성'
+    },
+    {
+      name: '파쇄(섬광) Lv. 1',
+      cost: 3,
+      type: 'attack',
+      grade: '',
+      grade_color: 'blue',
+      media: 'cards/나인/blue1.webp',
+      tooltip: '[ 유일 / 점화 / 소멸 / 증발 ]\n방어 기반 피해 480%\n소각 : "파쇄(섬광) Lv. 2" 1장 생성'
+    },
+    {
+      name: '파쇄(섬광) Lv. 2',
+      cost: 3,
+      type: 'attack',
+      grade: '',
+      grade_color: 'yellow',
+      media: 'cards/나인/blue1.webp',
+      tooltip: '[ 유일 / 점화 / 소멸 / 증발 ]\n방어 기반 피해 580%\n소각 : "파쇄(섬광) Lv. 3" 1장 생성'
+    },
+    {
+      name: '파쇄(섬광) Lv. 3',
+      cost: 2,
+      type: 'attack',
+      grade: '',
+      grade_color: 'purple',
+      media: 'cards/나인/blue1.webp',
+      tooltip: '[ 유일 / 점화 / 소멸 / 보존 ]\n방어 기반 피해 700%\n소각 : 턴 시작 시 핸드에 "파쇄(섬광)" 1장 생성'
+    },
+    {
+      name: '파쇄(몰살) Lv. 1',
+      cost: 3,
+      type: 'attack',
+      grade: '',
+      grade_color: 'blue',
+      media: 'cards/나인/blue1.webp',
+      tooltip: '[ 유일 / 소멸 / 증발 ]\n모든 적 방어 기반 피해 480%\n대상 수만큼 피해량 10% 감소\n소각 : "파쇄(몰살) Lv. 2" 1장 생성'
+    },
+    {
+      name: '파쇄(몰살) Lv. 2',
+      cost: 3,
+      type: 'attack',
+      grade: '',
+      grade_color: 'yellow',
+      media: 'cards/나인/blue1.webp',
+      tooltip: '[ 유일 / 소멸 / 증발 ]\n모든 적 방어 기반 피해 580%\n대상 수만큼 피해량 10% 감소\n소각 : "파쇄(몰살) Lv. 3" 1장 생성'
+    },
+    {
+      name: '파쇄(몰살) Lv. 3',
+      cost: 2,
+      type: 'attack',
+      grade: '',
+      grade_color: 'purple',
+      media: 'cards/나인/blue1.webp',
+      tooltip: '[ 유일 / 소멸 / 보존 ]\n모든 적 방어 기반 피해 700%\n대상 수만큼 피해량 10% 감소\n소각 : 턴 시작 시 핸드에 "파쇄(몰살)" 1장 생성'
+    },
+    {
+      name: '파쇄(기습) Lv. 1',
+      cost: 3,
+      type: 'attack',
+      grade: '',
+      grade_color: 'blue',
+      media: 'cards/나인/blue1.webp',
+      tooltip: '[ 유일 / 소멸 / 증발 ]\n방어 기반 피해 480%\n아군이 반격 시 이 카드 발동\n소각 : "파쇄(기습) Lv. 2" 1장 생성'
+    },
+    {
+      name: '파쇄(기습) Lv. 2',
+      cost: 3,
+      type: 'attack',
+      grade: '',
+      grade_color: 'yellow',
+      media: 'cards/나인/blue1.webp',
+      tooltip: '[ 유일 / 소멸 / 증발 ]\n방어 기반 피해 580%\n아군이 반격 시 이 카드 발동\n소각 : "파쇄(기습) Lv. 3" 1장 생성'
+    },
+    {
+      name: '파쇄(기습) Lv. 3',
+      cost: 2,
+      type: 'attack',
+      grade: '',
+      grade_color: 'purple',
+      media: 'cards/나인/blue1.webp',
+      tooltip: '[ 유일 / 소멸 / 보존 ]\n방어 기반 피해 700%\n아군이 반격 시 이 카드 발동\n소각 : 턴 시작 시 핸드에 "파쇄(기습)" 1장 생성'
+    },
+    {
+      name: '노련한 일격',
+      cost: 1,
+      type: 'attack',
+      grade: 'blue',
+      media: 'cards/나인/blue2.webp',
+      tooltip: '방어 기반 피해 140%\n피해 기반 실드 20%\n1턴간 소멸 카드의 피해량 20% 증가',
+      awakenings: [
+        { cost: 1, type: 'attack', tooltip: '방어 기반 피해 |210|%\n피해 기반 실드 20%\n1턴간 소멸 카드의 피해량 |30|% 증가' },
+        { cost: 1, type: 'attack', tooltip: '방어 기반 피해 |210|%\n피해 기반 실드 20%\n|이번 턴 소멸한 카드가 있다면 이 카드 1턴간 사용 시까지| 피해량 |30|% 증가' },
+        { cost: 1, type: 'attack', tooltip: '방어 기반 피해 |210|%\n피해 기반 실드 20%\n1턴간 |스킬 카드의 실드 획득량 30|% 증가' },
+        { cost: 1, type: 'attack', tooltip: '방어 기반 피해 140%\n피해 기반 실드 20%\n|핸드의 소멸 카드 수만큼 피해량 +60%|' },
+        { cost: 1, type: 'attack', tooltip: '방어 기반 피해 |210|%\n피해 기반 실드 20%\n1턴간 소멸 카드 |발동 시 반격 1|' }
+      ]
+    },
+    {
+      name: '치명적 일격',
+      cost: 1,
+      type: 'attack',
+      grade: 'blue',
+      media: 'cards/나인/blue3.webp',
+      tooltip: '방어 기반 피해 140%\n비용이 가장 높은 소멸 카드의 비용만큼 피해량 20% 증가, 그 카드 소멸',
+      awakenings: [
+        { cost: 1, type: 'attack', tooltip: '방어 기반 피해 |210|%\n비용이 가장 높은 소멸 카드의 비용만큼 피해량 |30|% 증가, 그 카드 소멸' },
+        { cost: 2, type: 'attack', tooltip: '방어 기반 피해 |260|%\n비용이 가장 높은 카드의 비용만큼 피해량 20% 증가' },
+        { cost: 5, type: 'skill', tooltip: '|[ 유일 / 점화 / 보존 ]|\n|핸드의 "파쇄" 카드를 최종 단계로 변경|' },
+        { cost: 1, type: 'skill', tooltip: '|핸드의 무작위 다른 전투원의 소멸 카드 2장을 소멸|\n|그 수만큼 다음 사용하는 자신의 공격 카드 사용 시까지 피해량 30% 증가|' },
+        { cost: 1, type: 'attack', tooltip: '|[ 보존 ]|\n방어 기반 피해 |210|%\n|반격을 보유한 아군 수만큼 피해량 80% 증가|' }
+      ]
+    },
+    {
+      name: '역전의 칼날',
+      cost: 0,
+      type: 'upgrade',
+      grade: 'yellow',
+      media: 'cards/나인/yellow.webp',
+      tooltip: '[ 유일 ]\n능력으로 실드 획득 시 칼날 벼리기 1',
+      awakenings: [
+        { cost: 0, type: 'upgrade', tooltip: '[ 유일 ]\n|카드 소멸 시| 칼날 벼리기 1' },
+        { cost: 0, type: 'upgrade', tooltip: '[ 유일 ]\n|실드 획득량 15% 증가|, 능력으로 실드 획득 시 칼날 벼리기 1' },
+        { cost: 0, type: 'upgrade', tooltip: '|[ 유일 / 개전 ]|\n능력으로 실드 획득 시 칼날 벼리기 1' },
+        { cost: 0, type: 'upgrade', tooltip: '[ 유일 ]\n|반격 획득 시 칼날 벼리기+ 1|' },
+        { cost: 1, type: 'upgrade', tooltip: '[ 유일 ]\n|턴 시작 시 핸드의 파쇄 카드 1회 발동|' }
+      ]
+    },
+    {
+      name: '투지',
+      cost: 1,
+      type: 'skill',
+      grade: 'purple',
+      media: 'cards/나인/purple.webp',
+      tooltip: '비용이 가장 높은 자신의 공격 카드 1장 발동, 그 카드 소멸'
+    }
+  ],
+  narja: [
+    {
+      name: 'NA : 공격 반응',
+      cost: 1,
+      type: 'attack',
+      grade: 'gray',
+      media: 'cards/나르쟈/attack.webp',
+      tooltip: '방어 기반 피해 100%'
+    },
+    {
+      name: 'NA : 보호 반응',
+      cost: 1,
+      type: 'skill',
+      grade: 'gray',
+      media: 'cards/나르쟈/skill.webp',
+      tooltip: '치유 100%'
+    },
+    {
+      name: 'NA : 보호 반응',
+      cost: 1,
+      type: 'skill',
+      grade: 'gray',
+      media: 'cards/나르쟈/skill.webp',
+      tooltip: '치유 100%'
+    },
+    {
+      name: '굶주림의 굴레',
+      cost: 1,
+      type: 'attack',
+      grade: 'blue',
+      media: 'cards/나르쟈/blue1.webp',
+      tooltip: '감응 : 탐식 4\n방어 기반 피해 30% × 3',
+      awakenings: [
+        { cost: 1, type: 'attack', tooltip: '감응 : 탐식 |6|\n방어 기반 피해 30% × |4|' },
+        { cost: 0, type: 'attack', tooltip: '감응 : 탐식 \\1\\\n방어 기반 피해 30% × \\2\\\n|턴 시작 시 이전 턴에 탐식을 3회 이상 발동했다면 핸드로 이동|' },
+        { cost: 1, type: 'attack', tooltip: '방어 기반 피해 |50|% × 3\n|보유한 탐식 4마다 타격 1회 추가 (최대 3회)|' },
+        { cost: 1, type: 'skill', tooltip: '|[ 보존 ]|\n|탐식 최대 5 감소|\n|그 수만큼 다음 사용하는 공격 카드의 피해 +40%|\n|5 감소했다면 포식 3|' },
+        { cost: 0, type: 'skill', tooltip: '|실드 60%|\n|탐식 최대 3 감소|\n|그 수만큼 반복|' }
+      ]
+    },
+    {
+      name: '무한한 허기',
+      cost: 0,
+      type: 'skill',
+      grade: 'blue',
+      media: 'cards/나르쟈/blue2.webp',
+      tooltip: '다음 2번의 탐식 발동 시 핸드의 무작위 카드 1장 1턴간 비용 1 감소',
+      awakenings: [
+        { cost: 0, type: 'skill', tooltip: '|탐식 3|\n다음 2번의 탐식 발동 시 핸드의 무작위 카드 1장 1턴간 비용 1 감소' },
+        { cost: 0, type: 'skill', tooltip: '핸드의 무작위 카드 |2|장 1턴간 비용 1 감소' },
+        { cost: 1, type: 'upgrade', tooltip: '|[ 유일 ]|\n|1턴간 탐식 3번 발동 시| 핸드의 무작위 카드 1장 |사용 시까지| 비용 1 감소\n|(턴당 1회)|' },
+        { cost: 0, type: 'skill', tooltip: '|[ 보존 ]|\n|1턴간 방어 기반 피해 +100%|' },
+        { cost: 1, type: 'skill', tooltip: '|[ 주도 ]|\n|탐식 7|\n|1턴간 탐식 발동 시마다 다음 "완전한 식사"의 피해량 +40%|', plus_card: '완전한 식사' }
+      ]
+    },
+    {
+      name: '능동 제어',
+      cost: 1,
+      type: 'skill',
+      grade: 'blue',
+      media: 'cards/나르쟈/blue3.webp',
+      tooltip: '탐식이 6 미만이라면 탐식 6\n6 이상이라면 포식 2',
+      awakenings: [
+        { cost: 1, type: 'skill', tooltip: '탐식이 6 미만이라면 탐식 |9|\n6 이상이라면 포식 |3|' },
+        { cost: 0, type: 'skill', tooltip: '|"완전한 식사"가 뽑을 카드에 있다면 핸드로 이동|\n|버린 카드에 있다면 1턴간 사기 3|', plus_card: '완전한 식사' },
+        { cost: 1, type: 'skill', tooltip: '|2턴간 대상의 행동 카운트가 감소할 때마다 탐식 1|' },
+        { cost: 1, type: 'upgrade', tooltip: '|[ 유일 ]|\n|탐식 10|\n|공격 카드 1장 선택|\n|그 카드가 핸드로 이동할 때마다 포식 1|' },
+        { cost: 1, type: 'upgrade', tooltip: '|[ 유일 ]|\n|기본 공격 카드로 타격 시마다 탐식 1|\n|기본 공격 카드의 피해량 +50%|' }
+      ]
+    },
+    {
+      name: '역전의 칼날',
+      cost: 1,
+      type: 'attack',
+      grade: 'yellow',
+      media: 'cards/나르쟈/yellow.webp',
+      tooltip: '모든 적 방어 기반 피해 100%\n대상의 다음 격파 시까지 받는 강인도 피해 100% 증가',
+      awakenings: [
+        { cost: 1, type: 'attack', tooltip: '모든 적 방어 기반 피해 100%\n대상의 다음 격파 시까지 받는 강인도 피해 100% 증가, |격파 시 탐식 3|' },
+        { cost: 1, type: 'attack', tooltip: '모든 적 방어 기반 피해 100%\n|2턴간 대상이 받는 방어 기반 피해 +100%|' },
+        { cost: 1, type: 'attack', tooltip: '모든 적 방어 기반 피해 |150|%\n|다음 5번의 대상 타격 시 치유 40%|' },
+        { cost: 3, type: 'attack', tooltip: '|[ 보존 ]|\n모든 적 방어 기반 피해 |320|%\n|탐식과 포식이 있다면 1번 더 발동|' },
+        { cost: 1, type: 'upgrade', tooltip: '|[ 유일 ]|\n|"완전한 식사" 사용 시마다 치유 200%|', plus_card: '완전한 식사' }
+      ]
+    },
+    {
+      name: '완전한 식사',
+      cost: 6,
+      type: 'attack',
+      grade: 'purple',
+      grade_color: 'purple',
+      media: 'cards/나르쟈/purple.webp',
+      tooltip: '[ 보존 / 유일 ]\n탐식이 감소되면 사용 시까지 비용 1 감소, 치유량 +30% (최대 10)\n모든 적 방어 기반 피해 160%\n치유 100%\n포식 4'
+    }
   ]
 };
