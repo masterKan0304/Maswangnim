@@ -1468,9 +1468,13 @@ document.getElementById('startBtn').addEventListener('click', function(){
     var keys = Object.keys(found);
     return keys.length === 1 ? keys[0] : null;
   }
+  function chaosNameSpan(name){
+    return '<span style="color:#EAAA00">' + name + '</span>';
+  }
+
   function computeChaosManifestation(row){
     var hardLock = computeChaosLock(row);
-    if (hardLock) return { names: [hardLock], text: '이 덱은 [' + hardLock + ']에서 완성할 수 있습니다.' };
+    if (hardLock) return { names: [hardLock], text: '이 덱은 ' + chaosNameSpan(hardLock) + '에서 완성할 수 있습니다.' };
     var perItemSources = [];
     EQUIP_TYPES_ORDER.forEach(function(t){
       var enh = row.equipment[t];
@@ -1486,8 +1490,8 @@ document.getElementById('startBtn').addEventListener('click', function(){
     });
     if (!intersection.length) return { names: [], text: '이 덱은 모든 카오스에서 완성할 수 있습니다.' };
     var text = intersection.length === 1
-      ? '이 덱은 [' + intersection[0] + ']에서 완성할 수 있습니다.'
-      : '이 덱은 ' + intersection.map(function(n){ return '[' + n + ']'; }).join(', ') + '에서 완성할 수 있습니다.';
+      ? '이 덱은 ' + chaosNameSpan(intersection[0]) + '에서 완성할 수 있습니다.'
+      : '이 덱은 ' + intersection.map(chaosNameSpan).join(', ') + '에서 완성할 수 있습니다.';
     return { names: intersection, text: text };
   }
 
@@ -1609,8 +1613,8 @@ document.getElementById('startBtn').addEventListener('click', function(){
 
   // ============ 카오스 구현 호버 팝업 ============
   var chaosZoomEl = document.getElementById('chaosZoomPreview');
-  function showChaosZoom(text, x, y){
-    chaosZoomEl.textContent = text;
+  function showChaosZoom(html, x, y){
+    chaosZoomEl.innerHTML = html;
     chaosZoomEl.classList.add('visible');
     positionChaosZoom(x, y);
   }
@@ -1625,7 +1629,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
   }
   function hideChaosZoom(){
     chaosZoomEl.classList.remove('visible');
-    chaosZoomEl.textContent = '';
+    chaosZoomEl.innerHTML = '';
   }
 
   // ============ 장비 확대 미리보기 ============
