@@ -537,7 +537,9 @@ document.getElementById('startBtn').addEventListener('click', function(){
 
   var agentsById = {};
   (window.AGENTS_DATA || []).forEach(function(a){ agentsById[a.id] = a; });
-  var uniPartner = (window.PARTNER_DATA || []).filter(function(p){ return p.id === 'yuni'; })[0] || (window.PARTNER_DATA || [])[0];
+  var partnersById = {};
+  (window.PARTNER_DATA || []).forEach(function(p){ partnersById[p.id] = p; });
+  var MAX_AGENT_SLOTS = 3;
 
   function formatCount(n){
     if (n < 1000) return String(n);
@@ -545,12 +547,13 @@ document.getElementById('startBtn').addEventListener('click', function(){
     return (k % 1 === 0 ? k.toFixed(0) : k.toFixed(1)) + 'K';
   }
 
-  function renderAgentSlot(agentId){
-    var a = agentsById[agentId];
-    if (!a) return '<div class="deck-agent"></div>';
+  function renderAgentSlot(row){
+    var a = row ? agentsById[row.agentId] : null;
+    if (!a) return '<div class="deck-agent deck-agent-empty"></div>';
     var illust = '../agents/' + a.name + '_C.png';
     var gradeBand = '../agents/grade_' + a.grade + '_tag.png';
-    var partnerIcon = uniPartner ? (uniPartner.icon || uniPartner.illust) : '';
+    var partner = row.partnerId ? partnersById[row.partnerId] : null;
+    var partnerIcon = partner ? (partner.icon || partner.illust) : '';
     var partnerHtml = partnerIcon ? '<div class="deck-agent-partner"><img src="../' + partnerIcon + '" alt=""></div>' : '';
     return (
       '<div class="deck-agent">' +
@@ -569,13 +572,15 @@ document.getElementById('startBtn').addEventListener('click', function(){
   }
 
   function renderPost(post){
+    var slotRows = (post.rows || []).slice(0, MAX_AGENT_SLOTS);
+    while (slotRows.length < MAX_AGENT_SLOTS) slotRows.push(null);
     return (
       '<div class="deck-post" data-post-id="' + (post.id ? post.id.replace(/"/g,'&quot;') : '') + '">' +
         '<div class="deck-post-title">' +
           '<span class="deck-post-title-text" title="' + post.title.replace(/"/g,'&quot;') + '">' + post.title + '</span>' +
           (post.hot ? '<span class="deck-hot-tag">HOT</span>' : '') +
         '</div>' +
-        '<div class="deck-agents-row">' + post.agentIds.map(renderAgentSlot).join('') + '</div>' +
+        '<div class="deck-agents-row">' + slotRows.map(renderAgentSlot).join('') + '</div>' +
         '<div class="deck-post-footer">' +
           '<div class="deck-post-meta">' +
             '<div class="deck-author"><div class="deck-author-avatar"></div><span class="deck-author-name">' + post.author + '</span></div>' +
