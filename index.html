@@ -1058,6 +1058,9 @@ document.getElementById('startBtn').addEventListener('click', function(){
 
   if (!quizBannerBtn || !window.QUIZ_CARDS || !QUIZ_CARDS.length) return;
 
+  // 이름이 전부 동일한('페르소나') 카드는 정답 판정/출제 풀에서 제외한다.
+  var QUIZ_CARDS_POOL = QUIZ_CARDS.filter(function(c){ return c.attribute !== 'persona'; });
+
   var QUIZ_ATTR_LABEL = { passion:'열정', order:'질서', instinct:'본능', justice:'정의', void:'공허', common:'공용', monster:'몬스터' };
   var QUIZ_ATTR_ICON = { passion:'agents/passion.webp', order:'agents/order.webp', instinct:'agents/instinct.webp', justice:'agents/justice.webp', void:'agents/void.webp', common:'agents/grade_3.png', monster:'agents/grade_5.png' };
   var QUIZ_ATTR_BAND = { passion:'cards/card_ego_passion.webp', order:'cards/card_ego_order.webp', instinct:'cards/card_ego_instinct.webp', justice:'cards/card_ego_justice.webp', void:'cards/card_ego_void.webp', common:'cards/card_ego_normal.webp', monster:'cards/card_ego_monster.webp' };
@@ -1086,7 +1089,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
     var s = todayStr();
     var h = 0;
     for (var i=0;i<s.length;i++) h = (h*31 + s.charCodeAt(i)) >>> 0;
-    return h % QUIZ_CARDS.length;
+    return h % QUIZ_CARDS_POOL.length;
   }
   function isDailyDone(){
     return localStorage.getItem('czn_quiz_daily_' + todayStr()) === '1';
@@ -1200,8 +1203,8 @@ document.getElementById('startBtn').addEventListener('click', function(){
     return card.attribute === cat;
   }
   function quizFilteredCardsByAttr(){
-    var list = QUIZ_CARDS.filter(function(c){ return quizCardMatchesCategory(c, quizCategoryFilter); });
-    return list.length ? list : QUIZ_CARDS;
+    var list = QUIZ_CARDS_POOL.filter(function(c){ return quizCardMatchesCategory(c, quizCategoryFilter); });
+    return list.length ? list : QUIZ_CARDS_POOL;
   }
   function shuffleArray(arr){
     var a = arr.slice();
@@ -1342,7 +1345,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
   }
 
   function startGame(mode){
-    var card = mode === 'daily' ? QUIZ_CARDS[dailyIndex()] : quizSet.cards[quizSet.index];
+    var card = mode === 'daily' ? QUIZ_CARDS_POOL[dailyIndex()] : quizSet.cards[quizSet.index];
     quizState = {
       mode: mode,
       card: card,
@@ -1587,7 +1590,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
     input.addEventListener('input', function(){
       var v = input.value.trim();
       if (!v) { ac.classList.remove('open'); ac.innerHTML = ''; return; }
-      var matches = QUIZ_CARDS.filter(function(c){
+      var matches = QUIZ_CARDS_POOL.filter(function(c){
         return c.name.indexOf(v) === 0 && quizState.wrongGuesses.indexOf(c.name) === -1;
       }).slice(0, 8);
       if (!matches.length) { ac.classList.remove('open'); ac.innerHTML = ''; return; }
@@ -1639,7 +1642,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
       input.value = '';
       if (ac) ac.classList.remove('open');
       return;
-    } else if (!QUIZ_CARDS.some(function(c){ return c.name === v; })) {
+    } else if (!QUIZ_CARDS_POOL.some(function(c){ return c.name === v; })) {
       showInvalidNameFlash('존재하지 않는 카드입니다.');
       input.value = '';
       if (ac) ac.classList.remove('open');
@@ -1799,8 +1802,8 @@ document.getElementById('startBtn').addEventListener('click', function(){
     });
   });
   document.getElementById('quizCategoryStartBtn2').addEventListener('click', function(){
-    var qty = Math.min(parseInt(quizQuantityFilter2, 10), QUIZ_CARDS.length);
-    var cards = shuffleArray(QUIZ_CARDS).slice(0, qty);
+    var qty = Math.min(parseInt(quizQuantityFilter2, 10), QUIZ_CARDS_POOL.length);
+    var cards = shuffleArray(QUIZ_CARDS_POOL).slice(0, qty);
     quizMatchSet = {
       cards: cards, index: 0, correctCount: 0, totalScore: 0,
       timeLimit: parseInt(quizTimeFilter, 10)
@@ -1820,11 +1823,11 @@ document.getElementById('startBtn').addEventListener('click', function(){
   }
 
   function pickMatchChoices(correctCard, rng){
-    var sameAttr = QUIZ_CARDS.filter(function(c){ return c !== correctCard && c.attribute === correctCard.attribute; });
+    var sameAttr = QUIZ_CARDS_POOL.filter(function(c){ return c !== correctCard && c.attribute === correctCard.attribute; });
     var shuffled = rng ? seededShuffle(sameAttr, rng) : shuffleArray(sameAttr);
     var distractors = shuffled.slice(0, 3);
     if (distractors.length < 3) {
-      var others = QUIZ_CARDS.filter(function(c){ return c !== correctCard && distractors.indexOf(c) === -1; });
+      var others = QUIZ_CARDS_POOL.filter(function(c){ return c !== correctCard && distractors.indexOf(c) === -1; });
       var shuffledOthers = rng ? seededShuffle(others, rng) : shuffleArray(others);
       distractors = distractors.concat(shuffledOthers.slice(0, 3 - distractors.length));
     }
@@ -1879,7 +1882,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
   function startMatchGame(mode){
     if (mode === 'daily') {
       var rng = mulberry32(dateSeed());
-      var pool = seededShuffle(QUIZ_CARDS, rng).slice(0, Math.min(5, QUIZ_CARDS.length));
+      var pool = seededShuffle(QUIZ_CARDS_POOL, rng).slice(0, Math.min(5, QUIZ_CARDS_POOL.length));
       quizMatchSet = { cards: pool, index: 0, correctCount: 0, totalScore: 0, timeLimit: 10, dailyRng: rng };
     }
     quizMatchState = { mode: mode, phase: 'pregame', answered: false, choices: [], correctIdx: -1, startTime: 0 };

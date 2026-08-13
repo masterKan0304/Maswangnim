@@ -3066,5 +3066,219 @@ window.QUIZ_CARDS = [
     cost: 0,
     illust: 'quiz/운명왜곡.webp',
     tooltip: '[ 증발 / 소멸 ]\n다음 사용하는 자신의 공격 카드 피해량 30% 증가\n그 카드 비용만큼 피해량 추가로 10% 증가'
+  },
+  {
+    name: '페르소나',
+    rarity: 'purple',
+    attribute: 'persona',
+    personaNo: 1,
+    type: 'attack',
+    cost: 1,
+    illust: 'quiz/페르소나.webp',
+    tooltip: '[ 유일 ]\n피해 250%\n충격파 3'
+  },
+  {
+    name: '페르소나',
+    rarity: 'purple',
+    attribute: 'persona',
+    personaNo: 2,
+    type: 'attack',
+    cost: 1,
+    illust: 'quiz/페르소나.webp',
+    tooltip: '[ 유일 ]\n피해 200%\n죽음의 낙인 1'
+  },
+  {
+    name: '페르소나',
+    rarity: 'purple',
+    attribute: 'persona',
+    personaNo: 3,
+    type: 'skill',
+    cost: 1,
+    illust: 'quiz/페르소나.webp',
+    tooltip: '[ 유일 ]\n2장까지 버리기\n버린 수만큼 1턴간 자신의 공격 카드 피해량 +60%'
+  },
+  {
+    name: '페르소나',
+    rarity: 'purple',
+    attribute: 'persona',
+    personaNo: 4,
+    type: 'skill',
+    cost: 1,
+    illust: 'quiz/페르소나.webp',
+    tooltip: '[ 유일 ]\n드로우 1\n공격 카드 드로우 시 1턴간 사기'
+  },
+  {
+    name: '페르소나',
+    rarity: 'purple',
+    attribute: 'persona',
+    personaNo: 5,
+    type: 'attack',
+    cost: 1,
+    illust: 'quiz/페르소나.webp',
+    tooltip: '[ 유일 ]\n피해 250%\n이번 턴에 카드를 생성했다면 피해량 50% 증가'
+  },
+  {
+    name: '페르소나',
+    rarity: 'purple',
+    attribute: 'persona',
+    personaNo: 6,
+    type: 'skill',
+    cost: 1,
+    illust: 'quiz/페르소나.webp',
+    tooltip: '[ 유일 ]\n뽑을 카드에 무작위 안식 카드 1장 버리기'
+  },
+  {
+    name: '페르소나',
+    rarity: 'purple',
+    attribute: 'persona',
+    personaNo: 7,
+    type: 'skill',
+    job: 'ranger',
+    cost: 1,
+    illust: 'quiz/페르소나.webp',
+    tooltip: '[ 유일 ]\n드로우 2\n공격 카드를 드로우한 수만큼 협공 100%'
+  },
+  {
+    name: '페르소나',
+    rarity: 'purple',
+    attribute: 'persona',
+    personaNo: 8,
+    type: 'attack',
+    job: [ 'vanguard', 'controller' ],
+    cost: 1,
+    illust: 'quiz/페르소나.webp',
+    tooltip: '[ 유일 ]\n방어 기반 피해 250%\n취약 1'
+  },
+  {
+    name: '페르소나',
+    rarity: 'purple',
+    attribute: 'persona',
+    personaNo: 9,
+    type: 'attack',
+    job: 'vanguard',
+    cost: 1,
+    illust: 'quiz/페르소나.webp',
+    tooltip: '[ 유일 ]\n방어 기반 피해 250%\n행동 카운트가 1인 대상이 있을 시 반격 2'
+  },
+  {
+    name: '페르소나',
+    rarity: 'purple',
+    attribute: 'persona',
+    personaNo: 10,
+    type: 'attack',
+    job: 'psionic',
+    cost: 1,
+    illust: 'quiz/페르소나.webp',
+    tooltip: '[ 유일 ]\n피해 150%\n대상이 보유한 자신의 고통 중첩 수만큼 피해량 +30%'
+  },
+  {
+    name: '페르소나',
+    rarity: 'purple',
+    attribute: 'persona',
+    personaNo: 11,
+    type: 'attack',
+    job: 'striker',
+    cost: 1,
+    illust: 'quiz/페르소나.webp',
+    tooltip: '[ 유일 ]\n피해 100%\n핸드의 자신의 공격 카드 피해량 +50%'
+  },
+  {
+    name: '페르소나',
+    rarity: 'purple',
+    attribute: 'persona',
+    personaNo: 12,
+    type: 'skill',
+    job: 'controller',
+    cost: 1,
+    illust: 'quiz/페르소나.webp',
+    tooltip: '[ 유일 ]\n무덤의 카드 수만큼 다음 사용하는 공격 카드 피해량 +15% (최대 150%)'
+  },
+  {
+    name: '페르소나',
+    rarity: 'purple',
+    attribute: 'persona',
+    personaNo: 13,
+    type: 'attack',
+    job: 'controller',
+    cost: 1,
+    illust: 'quiz/페르소나.webp',
+    tooltip: '[ 유일 ]\n방어 기반 피해 250%\n행동 카운트 2'
+  },
+  {
+    name: '페르소나',
+    rarity: 'purple',
+    attribute: 'persona',
+    personaNo: 14,
+    type: 'skill',
+    job: 'vanguard',
+    cost: 1,
+    illust: 'quiz/페르소나.webp',
+    tooltip: '[ 유일 ]\n실드 250%\n반격 2'
+  },
+  {
+    name: '페르소나',
+    rarity: 'purple',
+    attribute: 'persona',
+    personaNo: 15,
+    type: 'attack',
+    job: 'hunter',
+    cost: 1,
+    illust: 'quiz/페르소나.webp',
+    tooltip: '[ 유일 ]\n피해 250%\n핸드의 모든 탄환 카드 사용 시까지 피해량 +30%'
+  },
+  {
+    name: '페르소나',
+    rarity: 'purple',
+    attribute: 'persona',
+    personaNo: 16,
+    type: 'attack',
+    job: 'ranger',
+    cost: 1,
+    illust: 'quiz/페르소나.webp',
+    tooltip: '[ 유일 ]\n피해 250%\n표식 2'
+  },
+  {
+    name: '페르소나',
+    rarity: 'purple',
+    attribute: 'persona',
+    personaNo: 17,
+    type: 'skill',
+    job: 'hunter',
+    cost: 1,
+    illust: 'quiz/페르소나.webp',
+    tooltip: '[ 유일 ]\n탄환 카드 피해량 +30%'
+  },
+  {
+    name: '페르소나',
+    rarity: 'purple',
+    attribute: 'persona',
+    personaNo: 18,
+    type: 'skill',
+    job: 'psionic',
+    cost: 1,
+    illust: 'quiz/페르소나.webp',
+    tooltip: '[ 유일 ]\n치유 250%\n1턴간 카드를 버릴 시 무작위 적 고통 1'
+  },
+  {
+    name: '페르소나',
+    rarity: 'purple',
+    attribute: 'persona',
+    personaNo: 19,
+    type: 'skill',
+    job: [ 'psionic', 'controller' ],
+    cost: 1,
+    illust: 'quiz/페르소나.webp',
+    tooltip: '[ 유일 ]\n치유 250%\n행동 둔화 3'
+  },
+  {
+    name: '페르소나',
+    rarity: 'purple',
+    attribute: 'persona',
+    personaNo: 20,
+    type: 'skill',
+    job: 'striker',
+    cost: 1,
+    illust: 'quiz/페르소나.webp',
+    tooltip: '[ 유일 ]\n실드 250%\n무덤에서 자신의 무작위 공격 카드 1장 핸드로 이동'
   }
 ];

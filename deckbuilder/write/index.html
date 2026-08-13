@@ -326,6 +326,11 @@
     width:19cqw;z-index:6;display:block;filter:drop-shadow(0 1px 3px rgba(0,0,0,.7));}
   .card-awaken-badge-diallos{position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:5px;
     width:14.25cqw;z-index:6;display:block;filter:drop-shadow(0 1px 3px rgba(0,0,0,.7));}
+  .card-persona-slots{position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:5px;
+    z-index:6;display:flex;flex-direction:column;gap:2.5px;align-items:center;}
+  .card-persona-slot{width:9.5cqw;height:9.5cqw;border-radius:50%;background:rgba(0,0,0,.55);
+    border:1px solid rgba(255,255,255,.25);overflow:hidden;flex:none;}
+  .card-persona-slot img{width:100%;height:100%;object-fit:cover;display:block;}
   .card-tooltip-extra{display:flex;align-items:flex-start;justify-content:center;gap:2px;margin-top:2px;text-align:center;}
   .card-tooltip-extra-icon{width:9cqw;height:9cqw;flex:none;margin-top:calc(0.3cqw + 3px);}
   .card-title{min-width:0;flex:1;}
@@ -449,6 +454,31 @@
   .wpop-foot{flex:none;padding:14px 22px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;}
   .awaken-confirm-btn{padding:10px 28px;border-radius:8px;border:none;background:var(--orange);color:#fff;font-size:13px;font-weight:800;cursor:pointer;transition:opacity .15s;}
   .awaken-confirm-btn:disabled{opacity:.4;cursor:default;}
+
+  /* ============ 각인 선택 팝업 ============ */
+  .wpop-filters.persona-filters{flex-direction:column;align-items:stretch;gap:10px;}
+  .persona-slot-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .persona-slot-btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:10px;border-radius:9px;
+    border:2px solid var(--line);background:var(--surface-2);font-size:12.5px;font-weight:800;color:var(--ink);cursor:pointer;transition:border-color .15s,box-shadow .15s;}
+  .persona-slot-btn.active{border-color:var(--orange);box-shadow:0 0 0 2px var(--orange-soft);}
+  .persona-slot-btn-icon{width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,.3);flex:none;overflow:hidden;}
+  .persona-slot-btn-icon img{width:100%;height:100%;object-fit:cover;display:block;}
+  .persona-remove-row{display:flex;justify-content:flex-end;}
+  .persona-remove-btn{padding:6px 16px;border-radius:20px;border:1px solid #e5303d;background:#fff;color:#e5303d;font-size:11.5px;font-weight:800;cursor:pointer;transition:background .15s,color .15s;}
+  .persona-remove-btn:hover{background:#e5303d;color:#fff;}
+  .persona-type-tags{display:flex;gap:10px;}
+  .persona-type-tag-btn{width:38px;height:38px;border-radius:50%;border:2px solid var(--line);background:var(--surface-2);padding:6px;cursor:pointer;transition:box-shadow .15s,border-color .15s;}
+  .persona-type-tag-btn img{width:100%;height:100%;object-fit:contain;display:block;}
+  .persona-type-tag-btn.active{border-color:#4ade80;box-shadow:0 0 0 2px rgba(74,222,128,.25),0 0 10px 3px rgba(74,222,128,.8);}
+  .persona-pop-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+  .persona-opt-box{border:1.5px solid var(--line);border-radius:9px;background:#fff;padding:10px;min-height:64px;
+    display:flex;flex-direction:column;align-items:center;text-align:center;gap:5px;cursor:pointer;transition:border-color .15s,box-shadow .15s,background .15s;}
+  .persona-opt-box:hover{border-color:#c7c7c7;}
+  .persona-opt-box.selected{border-color:var(--orange);box-shadow:0 0 0 2px var(--orange-soft);background:var(--orange-soft);}
+  .persona-opt-box.dim{opacity:.35;pointer-events:none;}
+  .persona-opt-icon{width:22px;height:22px;object-fit:contain;flex:none;}
+  .persona-opt-text{font-size:11px;line-height:1.5;font-weight:700;color:var(--ink);}
+  .persona-opt-footnote{font-size:7.7px;color:var(--sub-dim);font-weight:600;line-height:1.4;}
 
   /* ============ 장비 선택 팝업 ============ */
   .wpop-filters.equip-filters{flex-direction:column;align-items:stretch;gap:10px;}
@@ -800,6 +830,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
         <button type="button" class="wpop-cat-btn" data-cat="agent">전투원</button>
         <button type="button" class="wpop-cat-btn" data-cat="common">중립</button>
         <button type="button" class="wpop-cat-btn" data-cat="monster">몬스터</button>
+        <button type="button" class="wpop-cat-btn" data-cat="persona">페르소나</button>
       </div>
       <div class="wpop-search">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
@@ -821,6 +852,22 @@ document.getElementById('startBtn').addEventListener('click', function(){
     <div class="wpop-foot">
       <button type="button" class="awaken-confirm-btn" id="awakenPopConfirmBtn" disabled>선택</button>
     </div>
+  </div>
+</div>
+
+<!-- 각인 선택 팝업 -->
+<div class="wpop-overlay" id="personaPopOverlay">
+  <div class="wpop-panel">
+    <div class="wpop-head">
+      <div class="wpop-title">각인 선택</div>
+      <button type="button" class="wpop-close" id="personaPopClose">&times;</button>
+    </div>
+    <div class="wpop-filters persona-filters">
+      <div class="persona-slot-row" id="personaSlotRow"></div>
+      <div class="persona-remove-row"><button type="button" class="persona-remove-btn" id="personaRemoveBtn">제거</button></div>
+      <div class="wpop-filter-group"><span class="wpop-filter-group-label">각인 유형</span><div class="persona-type-tags" id="personaPopTypeTags"></div></div>
+    </div>
+    <div class="wpop-body"><div class="persona-pop-grid" id="personaPopGrid"></div></div>
   </div>
 </div>
 
@@ -869,6 +916,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
 <script src="../../partner/partner-data.js"></script>
 <!-- 장비 정보 데이터 -->
 <script src="../../weapon/equipment-data.js"></script>
+<script src="../페르소나.js"></script>
 
 <script>
 (function(){
@@ -952,7 +1000,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
   var EGO_BAND = {
     passion:'../../cards/card_ego_passion.webp', justice:'../../cards/card_ego_justice.webp', order:'../../cards/card_ego_order.webp',
     instinct:'../../cards/card_ego_instinct.webp', void:'../../cards/card_ego_void.webp',
-    common:'../../cards/card_ego_normal.webp', monster:'../../cards/card_ego_monster.webp'
+    common:'../../cards/card_ego_normal.webp', monster:'../../cards/card_ego_monster.webp', persona:'../../cards/card_ego_normal.webp'
   };
 
   // ============ 번뜩임(awakening) 시스템 ============
@@ -1111,7 +1159,51 @@ document.getElementById('startBtn').addEventListener('click', function(){
     return isFixedAwakenCard(c) || isCommonAwakenCard(c);
   }
 
+  function mergeKeywordTag(baseTooltip, slot1, slot2){
+    var m = String(baseTooltip || '').match(/^\[\s*([^\]]*?)\s*\]/);
+    var baseTags = m ? m[1].split('/').map(function(s){ return s.trim(); }).filter(Boolean) : [];
+    var addOrder = [], sums = {}, occ = {};
+    [slot1, slot2].forEach(function(slot){
+      if (!slot) return;
+      (slot.keywordAdds || []).forEach(function(ka){
+        if (addOrder.indexOf(ka.tag) === -1) addOrder.push(ka.tag);
+        sums[ka.tag] = (sums[ka.tag] || 0) + (ka.value != null ? ka.value : 1);
+        occ[ka.tag] = (occ[ka.tag] || 0) + 1;
+      });
+    });
+    var addedTags = addOrder.map(function(t){
+      return (occ[t] === 1 && sums[t] === 1) ? t : (t + ' ' + sums[t]);
+    });
+    var finalTags = baseTags.concat(addedTags);
+    if (!finalTags.length) return baseTooltip;
+    var newBracket = '[ ' + finalTags.join(' / ') + ' ]';
+    if (m) return newBracket + String(baseTooltip).slice(m[0].length);
+    return newBracket + (baseTooltip ? '\n' + baseTooltip : '');
+  }
+
+  function personaMediaFor(slot1, slot2){
+    var l = (slot1 && slot1.type === 'light' ? 1 : 0) + (slot2 && slot2.type === 'light' ? 1 : 0);
+    var d = (slot1 && slot1.type === 'dark' ? 1 : 0) + (slot2 && slot2.type === 'dark' ? 1 : 0);
+    var suffix = '';
+    if (l === 1 && d === 0) suffix = '_1';
+    else if (l === 0 && d === 1) suffix = '_2';
+    else if (l === 1 && d === 1) suffix = '_3';
+    else if (l === 2 && d === 0) suffix = '_4';
+    else if (l === 0 && d === 2) suffix = '_5';
+    return '../../quiz/페르소나' + suffix + '.webp';
+  }
+
   function effectiveCardFields(c){
+    if (c.source === 'persona') {
+      var slot1 = c.personaSlot1, slot2 = c.personaSlot2;
+      var pCost = c.cost + (slot1 ? slot1.costDelta : 0) + (slot2 ? slot2.costDelta : 0);
+      var pLines = [{ text: mergeKeywordTag(c.tooltip, slot1, slot2), mode: 'normal' }];
+      if (slot1) pLines.push({ text: slot1.tooltip, mode: 'flat', color: '#ffd23d', icon: slot1.type === 'light' ? '../../cards/icon_light.webp' : '../../cards/icon_dark.webp' });
+      if (slot2) pLines.push({ text: slot2.tooltip, mode: 'flat', color: '#ffd23d', icon: slot2.type === 'light' ? '../../cards/icon_light.webp' : '../../cards/icon_dark.webp' });
+      var pCombinedPlain = pLines.map(function(l){ return l.text; }).join('\n');
+      return { cost: pCost, type: c.type, plusCard: c.plusCard, lines: pLines, tags: tooltipTags(pCombinedPlain),
+        hasAwaken: false, hasNewAwaken: false, media: personaMediaFor(slot1, slot2) };
+    }
     var cost = c.fixedAwaken ? c.fixedAwaken.cost : c.cost;
     var type = c.fixedAwaken ? c.fixedAwaken.type : c.type;
     var plusCard = c.fixedAwaken ? c.fixedAwaken.plusCard : c.plusCard;
@@ -1121,7 +1213,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
     if (c.newAwaken) lines.push({ text: c.newAwaken.tooltip, mode: 'flat', color: '#ffd23d', icon: '../../cards/diallos.png' });
     var combinedPlain = lines.map(function(l){ return l.text; }).join('\n');
     return { cost: cost, type: type, plusCard: plusCard, lines: lines, tags: tooltipTags(combinedPlain),
-      hasAwaken: !!(c.fixedAwaken || c.commonAwaken), hasNewAwaken: !!c.newAwaken };
+      hasAwaken: !!(c.fixedAwaken || c.commonAwaken), hasNewAwaken: !!c.newAwaken, media: c.media };
   }
 
   var agentsById = {};
@@ -1186,13 +1278,17 @@ document.getElementById('startBtn').addEventListener('click', function(){
     return { key:'a:'+card.name, name:card.name, cost:card.cost, type:card.type, grade:card.grade,
       gradeColor:card.grade_color, media:'../../'+card.media, tooltip:card.tooltip, egoAttr:agent.attribute, source:'agent',
       plusCard:card.plus_card, agentId:agent.id, awakenings:card.awakenings || null, job:null,
-      fixedAwaken:null, commonAwaken:null, newAwaken:null };
+      fixedAwaken:null, commonAwaken:null, newAwaken:null,
+      personaSlot1:null, personaSlot2:null };
   }
   function fromQuizCard(card){
-    return { key:'q:'+card.name, name:card.name, cost:card.cost, type:card.type, grade:card.rarity,
+    var isPersona = card.attribute === 'persona';
+    return { key:(isPersona && card.personaNo) ? 'q:persona:'+card.personaNo : 'q:'+card.name,
+      name:card.name, cost:card.cost, type:card.type, grade:card.rarity,
       gradeColor:null, media:'../../'+card.illust, tooltip:card.tooltip, egoAttr:card.attribute, source:card.attribute,
       plusCard:null, agentId:null, awakenings:null, job:card.job || null,
-      fixedAwaken:null, commonAwaken:null, newAwaken:null };
+      fixedAwaken:null, commonAwaken:null, newAwaken:null,
+      personaSlot1:null, personaSlot2:null };
   }
   function findPlusCard(name, agentId){
     var agentList = (agentId && window.AGENTS_CARDS && window.AGENTS_CARDS[agentId]) || [];
@@ -1206,8 +1302,10 @@ document.getElementById('startBtn').addEventListener('click', function(){
   function renderCardCellHtml(c, gradeOverride, opts){
     var grade = c.gradeColor || gradeOverride || c.grade;
     var fields = effectiveCardFields(c);
-    var showAwakenHint = !!(opts && opts.showAwakenHint) && isAwakenEligible(c);
-    var badgeSrc = fields.hasNewAwaken ? '../../cards/awakening_diallos.png' : (fields.hasAwaken ? '../../cards/awakening.png' : '');
+    var isPersona = c.source === 'persona';
+    var showAwakenHint = !!(opts && opts.showAwakenHint) && !isPersona && isAwakenEligible(c);
+    var showPersonaHint = !!(opts && opts.showAwakenHint) && isPersona;
+    var badgeSrc = (!isPersona && fields.hasNewAwaken) ? '../../cards/awakening_diallos.png' : ((!isPersona && fields.hasAwaken) ? '../../cards/awakening.png' : '');
     var badgeClass = fields.hasNewAwaken ? 'card-awaken-badge-diallos' : 'card-awaken-badge';
     var tooltipLinesHtml = fields.lines.map(function(l, idx){
       if (idx === 0) {
@@ -1221,10 +1319,23 @@ document.getElementById('startBtn').addEventListener('click', function(){
       '<div class="card-awaken-hint">' +
         '<img class="card-awaken-hint-icon" src="../../cards/awake.png" alt="" draggable="false" ondragstart="return false">' +
         '<div class="card-awaken-hint-label">클릭 시 번뜩임을 부여합니다.</div>' +
-      '</div>' : '';
+      '</div>' : (showPersonaHint ?
+      '<div class="card-awaken-hint">' +
+        '<img class="card-awaken-hint-icon" src="../../cards/icon_light.webp" alt="" draggable="false" ondragstart="return false">' +
+        '<div class="card-awaken-hint-label">클릭 시 각인을 부여합니다.</div>' +
+      '</div>' : '');
+    var personaSlotsHtml = '';
+    if (isPersona) {
+      var filled = [c.personaSlot1, c.personaSlot2].filter(Boolean);
+      while (filled.length < 2) filled.push(null);
+      personaSlotsHtml = '<div class="card-persona-slots">' + filled.map(function(slot){
+        var iconHtml = slot ? '<img src="'+(slot.type === 'light' ? '../../cards/icon_light.webp' : '../../cards/icon_dark.webp')+'" alt="">' : '';
+        return '<div class="card-persona-slot">' + iconHtml + '</div>';
+      }).join('') + '</div>';
+    }
     return (
-      '<div class="card" data-grade="'+grade+'"'+(showAwakenHint ? ' data-awaken="1"' : '')+(c.isDuplicate ? ' data-duplicate="1"' : '')+'>' +
-        '<div class="card-media">'+cardMediaHtml(c.media, c.name)+'</div>' +
+      '<div class="card" data-grade="'+grade+'"'+(showAwakenHint ? ' data-awaken="1"' : '')+(showPersonaHint ? ' data-persona-hint="1"' : '')+(c.isDuplicate ? ' data-duplicate="1"' : '')+'>' +
+        '<div class="card-media">'+cardMediaHtml(fields.media, c.name)+'</div>' +
         '<div class="card-top-grad"></div>' +
         '<div class="card-ego" style="background-image:url(\''+EGO_BAND[c.egoAttr]+'\')"></div>' +
         '<div class="card-grade-star" style="background-image:url(\'../../cards/card_'+grade+'.webp\')"></div>' +
@@ -1233,6 +1344,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
           '<div class="card-header">' +
             '<div class="card-cost"><div class="card-cost-num">'+fields.cost+'</div><div class="card-cost-line"></div>' +
               (badgeSrc ? '<img class="'+badgeClass+'" src="'+badgeSrc+'" alt="">' : '') +
+              personaSlotsHtml +
             '</div>' +
             '<div class="card-title">' +
               '<div class="card-name">'+c.name+'</div>' +
@@ -1509,6 +1621,138 @@ document.getElementById('startBtn').addEventListener('click', function(){
   });
   document.getElementById('awakenPopClose').addEventListener('click', closeAwakenPopup);
   awakenPopOverlay.addEventListener('click', function(e){ if (e.target === awakenPopOverlay) closeAwakenPopup(); });
+
+  // ============ 각인 선택 팝업 ============
+  var personaPopOverlay = document.getElementById('personaPopOverlay');
+  var personaPopGrid = document.getElementById('personaPopGrid');
+  var personaSlotRow = document.getElementById('personaSlotRow');
+  var personaPopTypeTags = document.getElementById('personaPopTypeTags');
+  var personaRemoveBtn = document.getElementById('personaRemoveBtn');
+  var personaPopState = { rowIdx: -1, cardIdx: -1, activeSlot: 1, typeFilter: null };
+
+  function currentPersonaCard(){
+    var row = deckState[personaPopState.rowIdx];
+    return row ? row.cards[personaPopState.cardIdx] : null;
+  }
+
+  function personaImprintMatchesEligibility(item, card, agentJob){
+    if (item.cardTypes && item.cardTypes.indexOf(card.type) === -1) return false;
+    if (item.jobsExclude) {
+      if (item.jobsExclude.indexOf(agentJob) !== -1) return false;
+    } else if (item.jobs && item.jobs.indexOf(agentJob) === -1) {
+      return false;
+    }
+    return true;
+  }
+
+  function personaImprintIsSame(a, b){
+    return !!a && !!b && a.tooltip === b.tooltip && a.type === b.type;
+  }
+
+  function renderPersonaSlotRow(){
+    var card = currentPersonaCard();
+    personaSlotRow.innerHTML = [1, 2].map(function(n){
+      var slot = card['personaSlot' + n];
+      var iconHtml = slot ?
+        '<div class="persona-slot-btn-icon"><img src="'+(slot.type === 'light' ? '../../cards/icon_light.webp' : '../../cards/icon_dark.webp')+'" alt=""></div>' :
+        '<div class="persona-slot-btn-icon"></div>';
+      var activeClass = personaPopState.activeSlot === n ? ' active' : '';
+      return '<button type="button" class="persona-slot-btn'+activeClass+'" data-slot="'+n+'">'+iconHtml+'<span>각인 슬롯 '+n+'</span></button>';
+    }).join('');
+    Array.prototype.forEach.call(personaSlotRow.querySelectorAll('[data-slot]'), function(btn){
+      btn.addEventListener('click', function(){
+        personaPopState.activeSlot = parseInt(btn.getAttribute('data-slot'), 10);
+        renderPersonaPopup();
+      });
+    });
+  }
+
+  function renderPersonaTypeTags(){
+    personaPopTypeTags.innerHTML = ['light', 'dark'].map(function(t){
+      var activeClass = personaPopState.typeFilter === t ? ' active' : '';
+      return '<button type="button" class="persona-type-tag-btn'+activeClass+'" data-type="'+t+'"><img src="'+(t === 'light' ? '../../cards/icon_light.webp' : '../../cards/icon_dark.webp')+'" alt=""></button>';
+    }).join('');
+    Array.prototype.forEach.call(personaPopTypeTags.querySelectorAll('[data-type]'), function(btn){
+      btn.addEventListener('click', function(){
+        var val = btn.getAttribute('data-type');
+        personaPopState.typeFilter = (personaPopState.typeFilter === val) ? null : val;
+        renderPersonaPopup();
+      });
+    });
+  }
+
+  function renderPersonaGrid(){
+    var card = currentPersonaCard();
+    var row = deckState[personaPopState.rowIdx];
+    var agent = (row && row.agentId) ? agentsById[row.agentId] : null;
+    var agentJob = agent ? agent.job : null;
+    var pool = window.PERSONA_IMPRINTS || [];
+    var all = pool.filter(function(item){ return personaImprintMatchesEligibility(item, card, agentJob); });
+    if (personaPopState.typeFilter) all = all.filter(function(item){ return item.type === personaPopState.typeFilter; });
+    if (!all.length) {
+      personaPopGrid.innerHTML = '<div class="wpop-empty">선택 가능한 각인이 없습니다.</div>';
+      return;
+    }
+    var activeSlotVal = card['personaSlot' + personaPopState.activeSlot];
+    var otherSlotVal = card['personaSlot' + (personaPopState.activeSlot === 1 ? 2 : 1)];
+    personaPopGrid.innerHTML = all.map(function(item){
+      var selected = personaImprintIsSame(activeSlotVal, item);
+      var disabled = !selected && !item.duplicable && personaImprintIsSame(otherSlotVal, item);
+      var cls = 'persona-opt-box' + (selected ? ' selected' : '') + (disabled ? ' dim' : '');
+      var footnoteHtml = item.footnotes.length ? '<div class="persona-opt-footnote">'+item.footnotes.join(', ')+'</div>' : '';
+      return '<div class="'+cls+'" data-idx="'+pool.indexOf(item)+'">' +
+        '<img class="persona-opt-icon" src="'+(item.type === 'light' ? '../../cards/icon_light.webp' : '../../cards/icon_dark.webp')+'" alt="">' +
+        '<div class="persona-opt-text">'+item.tooltip+'</div>' +
+        footnoteHtml +
+      '</div>';
+    }).join('');
+    Array.prototype.forEach.call(personaPopGrid.querySelectorAll('.persona-opt-box:not(.dim)'), function(el){
+      el.addEventListener('click', function(){
+        var idx = parseInt(el.getAttribute('data-idx'), 10);
+        var item = pool[idx];
+        pushHistory(row);
+        card['personaSlot' + personaPopState.activeSlot] = {
+          type: item.type, tooltip: item.tooltip, costDelta: item.costDelta,
+          keywordAdds: item.keywordAdds, footnotes: item.footnotes
+        };
+        renderPersonaPopup();
+        renderDeckBox();
+      });
+    });
+  }
+
+  function renderPersonaPopup(){
+    var card = currentPersonaCard();
+    if (!card) return;
+    renderPersonaSlotRow();
+    renderPersonaTypeTags();
+    personaRemoveBtn.style.display = card['personaSlot' + personaPopState.activeSlot] ? '' : 'none';
+    renderPersonaGrid();
+  }
+
+  function openPersonaPopup(rowIdx, cardIdx){
+    personaPopState.rowIdx = rowIdx;
+    personaPopState.cardIdx = cardIdx;
+    personaPopState.activeSlot = 1;
+    personaPopState.typeFilter = null;
+    renderPersonaPopup();
+    personaPopOverlay.classList.add('open');
+  }
+  function closePersonaPopup(){
+    personaPopOverlay.classList.remove('open');
+    renderDeckBox();
+  }
+  personaRemoveBtn.addEventListener('click', function(){
+    var card = currentPersonaCard();
+    var row = deckState[personaPopState.rowIdx];
+    if (!card) return;
+    pushHistory(row);
+    card['personaSlot' + personaPopState.activeSlot] = null;
+    renderPersonaPopup();
+    renderDeckBox();
+  });
+  document.getElementById('personaPopClose').addEventListener('click', closePersonaPopup);
+  personaPopOverlay.addEventListener('click', function(e){ if (e.target === personaPopOverlay) closePersonaPopup(); });
 
   function renderAgentPreviewHtml(agent){
     var illust = '../../agents/' + agent.name + '_C.png';
@@ -1793,6 +2037,13 @@ document.getElementById('startBtn').addEventListener('click', function(){
             e.stopPropagation();
             hideCardZoom();
             openAwakenPopup(activeSlot, idx);
+          });
+        }
+        if (cardEl.getAttribute('data-persona-hint') === '1') {
+          cardEl.addEventListener('click', function(e){
+            e.stopPropagation();
+            hideCardZoom();
+            openPersonaPopup(activeSlot, idx);
           });
         }
       });
@@ -2363,13 +2614,19 @@ document.getElementById('startBtn').addEventListener('click', function(){
       .filter(function(c){ return c.attribute === 'monster'; })
       .filter(function(c){ return addedNames.indexOf(c.name) === -1; })
       .map(fromQuizCard);
-    return agentCards.concat(commonCards, monsterCards);
+    // 페르소나 카드는 전부 이름이 같아서(name:'페르소나') addedNames 중복 제거를 적용하지 않는다.
+    var personaCards = (window.QUIZ_CARDS || [])
+      .filter(function(c){ return c.attribute === 'persona'; })
+      .filter(function(c){ return !c.job || !c.job.length || (agent && [].concat(c.job).indexOf(agent.job) !== -1); })
+      .map(fromQuizCard);
+    return agentCards.concat(commonCards, monsterCards, personaCards);
   }
 
   function cardMatchesFilter(c){
     if (cardPopState.cat === 'agent' && c.source !== 'agent') return false;
     if (cardPopState.cat === 'common' && c.source !== 'common') return false;
     if (cardPopState.cat === 'monster' && c.source !== 'monster') return false;
+    if (cardPopState.cat === 'persona' && c.source !== 'persona') return false;
     if (cardPopState.search && c.name.indexOf(cardPopState.search) === -1) return false;
     return true;
   }

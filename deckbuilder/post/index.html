@@ -330,6 +330,11 @@
     width:19cqw;z-index:6;display:block;filter:drop-shadow(0 1px 3px rgba(0,0,0,.7));}
   .card-awaken-badge-diallos{position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:5px;
     width:14.25cqw;z-index:6;display:block;filter:drop-shadow(0 1px 3px rgba(0,0,0,.7));}
+  .card-persona-slots{position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:5px;
+    z-index:6;display:flex;flex-direction:column;gap:2.5px;align-items:center;}
+  .card-persona-slot{width:9.5cqw;height:9.5cqw;border-radius:50%;background:rgba(0,0,0,.55);
+    border:1px solid rgba(255,255,255,.25);overflow:hidden;flex:none;}
+  .card-persona-slot img{width:100%;height:100%;object-fit:cover;display:block;}
   .card-tooltip-extra{display:flex;align-items:flex-start;justify-content:center;gap:2px;margin-top:2px;text-align:center;}
   .card-tooltip-extra-icon{width:9cqw;height:9cqw;flex:none;margin-top:calc(0.3cqw + 3px);}
   .card-title{min-width:0;flex:1;}
@@ -815,7 +820,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
   var EGO_BAND = {
     passion:'../../cards/card_ego_passion.webp', justice:'../../cards/card_ego_justice.webp', order:'../../cards/card_ego_order.webp',
     instinct:'../../cards/card_ego_instinct.webp', void:'../../cards/card_ego_void.webp',
-    common:'../../cards/card_ego_normal.webp', monster:'../../cards/card_ego_monster.webp'
+    common:'../../cards/card_ego_normal.webp', monster:'../../cards/card_ego_monster.webp', persona:'../../cards/card_ego_normal.webp'
   };
 
   // ============ 번뜩임(awakening) 시스템 ============
@@ -974,7 +979,51 @@ document.getElementById('startBtn').addEventListener('click', function(){
     return isFixedAwakenCard(c) || isCommonAwakenCard(c);
   }
 
+  function mergeKeywordTag(baseTooltip, slot1, slot2){
+    var m = String(baseTooltip || '').match(/^\[\s*([^\]]*?)\s*\]/);
+    var baseTags = m ? m[1].split('/').map(function(s){ return s.trim(); }).filter(Boolean) : [];
+    var addOrder = [], sums = {}, occ = {};
+    [slot1, slot2].forEach(function(slot){
+      if (!slot) return;
+      (slot.keywordAdds || []).forEach(function(ka){
+        if (addOrder.indexOf(ka.tag) === -1) addOrder.push(ka.tag);
+        sums[ka.tag] = (sums[ka.tag] || 0) + (ka.value != null ? ka.value : 1);
+        occ[ka.tag] = (occ[ka.tag] || 0) + 1;
+      });
+    });
+    var addedTags = addOrder.map(function(t){
+      return (occ[t] === 1 && sums[t] === 1) ? t : (t + ' ' + sums[t]);
+    });
+    var finalTags = baseTags.concat(addedTags);
+    if (!finalTags.length) return baseTooltip;
+    var newBracket = '[ ' + finalTags.join(' / ') + ' ]';
+    if (m) return newBracket + String(baseTooltip).slice(m[0].length);
+    return newBracket + (baseTooltip ? '\n' + baseTooltip : '');
+  }
+
+  function personaMediaFor(slot1, slot2){
+    var l = (slot1 && slot1.type === 'light' ? 1 : 0) + (slot2 && slot2.type === 'light' ? 1 : 0);
+    var d = (slot1 && slot1.type === 'dark' ? 1 : 0) + (slot2 && slot2.type === 'dark' ? 1 : 0);
+    var suffix = '';
+    if (l === 1 && d === 0) suffix = '_1';
+    else if (l === 0 && d === 1) suffix = '_2';
+    else if (l === 1 && d === 1) suffix = '_3';
+    else if (l === 2 && d === 0) suffix = '_4';
+    else if (l === 0 && d === 2) suffix = '_5';
+    return '../../quiz/페르소나' + suffix + '.webp';
+  }
+
   function effectiveCardFields(c){
+    if (c.source === 'persona') {
+      var slot1 = c.personaSlot1, slot2 = c.personaSlot2;
+      var pCost = c.cost + (slot1 ? slot1.costDelta : 0) + (slot2 ? slot2.costDelta : 0);
+      var pLines = [{ text: mergeKeywordTag(c.tooltip, slot1, slot2), mode: 'normal' }];
+      if (slot1) pLines.push({ text: slot1.tooltip, mode: 'flat', color: '#ffd23d', icon: slot1.type === 'light' ? '../../cards/icon_light.webp' : '../../cards/icon_dark.webp' });
+      if (slot2) pLines.push({ text: slot2.tooltip, mode: 'flat', color: '#ffd23d', icon: slot2.type === 'light' ? '../../cards/icon_light.webp' : '../../cards/icon_dark.webp' });
+      var pCombinedPlain = pLines.map(function(l){ return l.text; }).join('\n');
+      return { cost: pCost, type: c.type, plusCard: c.plusCard, lines: pLines, tags: tooltipTags(pCombinedPlain),
+        hasAwaken: false, hasNewAwaken: false, media: personaMediaFor(slot1, slot2) };
+    }
     var cost = c.fixedAwaken ? c.fixedAwaken.cost : c.cost;
     var type = c.fixedAwaken ? c.fixedAwaken.type : c.type;
     var plusCard = c.fixedAwaken ? c.fixedAwaken.plusCard : c.plusCard;
@@ -984,7 +1033,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
     if (c.newAwaken) lines.push({ text: c.newAwaken.tooltip, mode: 'flat', color: '#ffd23d', icon: '../../cards/diallos.png' });
     var combinedPlain = lines.map(function(l){ return l.text; }).join('\n');
     return { cost: cost, type: type, plusCard: plusCard, lines: lines, tags: tooltipTags(combinedPlain),
-      hasAwaken: !!(c.fixedAwaken || c.commonAwaken), hasNewAwaken: !!c.newAwaken };
+      hasAwaken: !!(c.fixedAwaken || c.commonAwaken), hasNewAwaken: !!c.newAwaken, media: c.media };
   }
 
   var agentsById = {};
@@ -1049,13 +1098,17 @@ document.getElementById('startBtn').addEventListener('click', function(){
     return { key:'a:'+card.name, name:card.name, cost:card.cost, type:card.type, grade:card.grade,
       gradeColor:card.grade_color, media:'../../'+card.media, tooltip:card.tooltip, egoAttr:agent.attribute, source:'agent',
       plusCard:card.plus_card, agentId:agent.id, awakenings:card.awakenings || null, job:null,
-      fixedAwaken:null, commonAwaken:null, newAwaken:null };
+      fixedAwaken:null, commonAwaken:null, newAwaken:null,
+      personaSlot1:null, personaSlot2:null };
   }
   function fromQuizCard(card){
-    return { key:'q:'+card.name, name:card.name, cost:card.cost, type:card.type, grade:card.rarity,
+    var isPersona = card.attribute === 'persona';
+    return { key:(isPersona && card.personaNo) ? 'q:persona:'+card.personaNo : 'q:'+card.name,
+      name:card.name, cost:card.cost, type:card.type, grade:card.rarity,
       gradeColor:null, media:'../../'+card.illust, tooltip:card.tooltip, egoAttr:card.attribute, source:card.attribute,
       plusCard:null, agentId:null, awakenings:null, job:card.job || null,
-      fixedAwaken:null, commonAwaken:null, newAwaken:null };
+      fixedAwaken:null, commonAwaken:null, newAwaken:null,
+      personaSlot1:null, personaSlot2:null };
   }
   function findPlusCard(name, agentId){
     var agentList = (agentId && window.AGENTS_CARDS && window.AGENTS_CARDS[agentId]) || [];
@@ -1069,8 +1122,10 @@ document.getElementById('startBtn').addEventListener('click', function(){
   function renderCardCellHtml(c, gradeOverride, opts){
     var grade = c.gradeColor || gradeOverride || c.grade;
     var fields = effectiveCardFields(c);
-    var showAwakenHint = !!(opts && opts.showAwakenHint) && isAwakenEligible(c);
-    var badgeSrc = fields.hasNewAwaken ? '../../cards/awakening_diallos.png' : (fields.hasAwaken ? '../../cards/awakening.png' : '');
+    var isPersona = c.source === 'persona';
+    var showAwakenHint = !!(opts && opts.showAwakenHint) && !isPersona && isAwakenEligible(c);
+    var showPersonaHint = !!(opts && opts.showAwakenHint) && isPersona;
+    var badgeSrc = (!isPersona && fields.hasNewAwaken) ? '../../cards/awakening_diallos.png' : ((!isPersona && fields.hasAwaken) ? '../../cards/awakening.png' : '');
     var badgeClass = fields.hasNewAwaken ? 'card-awaken-badge-diallos' : 'card-awaken-badge';
     var tooltipLinesHtml = fields.lines.map(function(l, idx){
       if (idx === 0) {
@@ -1084,10 +1139,23 @@ document.getElementById('startBtn').addEventListener('click', function(){
       '<div class="card-awaken-hint">' +
         '<img class="card-awaken-hint-icon" src="../../cards/awake.png" alt="" draggable="false" ondragstart="return false">' +
         '<div class="card-awaken-hint-label">클릭 시 번뜩임을 부여합니다.</div>' +
-      '</div>' : '';
+      '</div>' : (showPersonaHint ?
+      '<div class="card-awaken-hint">' +
+        '<img class="card-awaken-hint-icon" src="../../cards/icon_light.webp" alt="" draggable="false" ondragstart="return false">' +
+        '<div class="card-awaken-hint-label">클릭 시 각인을 부여합니다.</div>' +
+      '</div>' : '');
+    var personaSlotsHtml = '';
+    if (isPersona) {
+      var filled = [c.personaSlot1, c.personaSlot2].filter(Boolean);
+      while (filled.length < 2) filled.push(null);
+      personaSlotsHtml = '<div class="card-persona-slots">' + filled.map(function(slot){
+        var iconHtml = slot ? '<img src="'+(slot.type === 'light' ? '../../cards/icon_light.webp' : '../../cards/icon_dark.webp')+'" alt="">' : '';
+        return '<div class="card-persona-slot">' + iconHtml + '</div>';
+      }).join('') + '</div>';
+    }
     return (
-      '<div class="card" data-grade="'+grade+'"'+(showAwakenHint ? ' data-awaken="1"' : '')+(c.isDuplicate ? ' data-duplicate="1"' : '')+'>' +
-        '<div class="card-media">'+cardMediaHtml(c.media, c.name)+'</div>' +
+      '<div class="card" data-grade="'+grade+'"'+(showAwakenHint ? ' data-awaken="1"' : '')+(showPersonaHint ? ' data-persona-hint="1"' : '')+(c.isDuplicate ? ' data-duplicate="1"' : '')+'>' +
+        '<div class="card-media">'+cardMediaHtml(fields.media, c.name)+'</div>' +
         '<div class="card-top-grad"></div>' +
         '<div class="card-ego" style="background-image:url(\''+EGO_BAND[c.egoAttr]+'\')"></div>' +
         '<div class="card-grade-star" style="background-image:url(\'../../cards/card_'+grade+'.webp\')"></div>' +
@@ -1096,6 +1164,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
           '<div class="card-header">' +
             '<div class="card-cost"><div class="card-cost-num">'+fields.cost+'</div><div class="card-cost-line"></div>' +
               (badgeSrc ? '<img class="'+badgeClass+'" src="'+badgeSrc+'" alt="">' : '') +
+              personaSlotsHtml +
             '</div>' +
             '<div class="card-title">' +
               '<div class="card-name">'+c.name+'</div>' +
