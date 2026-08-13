@@ -381,9 +381,11 @@
   .card-zoom-preview{position:fixed;z-index:9999;width:220px;border-radius:10px;overflow:hidden;
     box-shadow:0 10px 34px rgba(0,0,0,.65);display:none;pointer-events:none;}
   .card-zoom-preview.visible{display:block;}
-  .card-zoom-preview.card-zoom-plus{z-index:9998;width:auto;overflow:visible;box-shadow:none;gap:10px;}
+  .card-zoom-preview.card-zoom-plus{z-index:9998;width:auto;overflow:visible;box-shadow:none;flex-direction:column;gap:10px;}
   .card-zoom-preview.card-zoom-plus.visible{display:flex;}
+  .card-zoom-plus-row{display:flex;gap:10px;}
   .card-zoom-plus .card{width:176px;flex:none;box-shadow:0 10px 34px rgba(0,0,0,.65);}
+  .card-zoom-plus.size-sm .card{width:150px;}
 
   /* ============ 장비 확대 미리보기 ============ */
   .equip-zoom-preview{position:fixed;z-index:9999;width:280px;display:none;pointer-events:none;
@@ -1462,6 +1464,20 @@ document.getElementById('startBtn').addEventListener('click', function(){
   var cardZoomEl = document.getElementById('cardZoomPreview');
   var cardZoomPlusEl = document.getElementById('cardZoomPlusPreview');
 
+  function renderCardZoomPlusRows(plusCards, baseGrade){
+    cardZoomPlusEl.classList.toggle('size-sm', plusCards.length === 3);
+    if (plusCards.length <= 3) {
+      cardZoomPlusEl.innerHTML = '<div class="card-zoom-plus-row">' +
+        plusCards.map(function(pc){ return renderCardCellHtml(pc, baseGrade); }).join('') +
+      '</div>';
+      return;
+    }
+    var headCards = plusCards.slice(0, 3);
+    var tailCards = plusCards.slice(3);
+    cardZoomPlusEl.innerHTML =
+      '<div class="card-zoom-plus-row">' + headCards.map(function(pc){ return renderCardCellHtml(pc, baseGrade); }).join('') + '</div>' +
+      '<div class="card-zoom-plus-row">' + tailCards.map(function(pc){ return renderCardCellHtml(pc, baseGrade); }).join('') + '</div>';
+  }
   function showCardZoom(c, x, y){
     cardZoomEl.innerHTML = renderCardCellHtml(c);
     cardZoomEl.classList.add('visible');
@@ -1470,7 +1486,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
     var plusNames = Array.isArray(effPlusCard) ? effPlusCard : (effPlusCard ? [effPlusCard] : []);
     var plusCards = plusNames.map(function(n){ return findPlusCard(n, c.agentId); }).filter(Boolean);
     if (plusCards.length) {
-      cardZoomPlusEl.innerHTML = plusCards.map(function(pc){ return renderCardCellHtml(pc, c.grade); }).join('');
+      renderCardZoomPlusRows(plusCards, c.grade);
       cardZoomPlusEl.classList.add('visible');
       positionCardZoomPlus();
       return;
@@ -1493,7 +1509,10 @@ document.getElementById('startBtn').addEventListener('click', function(){
     var left = mainRect.left - plusRect.width - 12;
     var onRight = false;
     if (left < 8) { left = mainRect.right + 12; onRight = true; }
-    cardZoomPlusEl.style.flexDirection = onRight ? 'row' : 'row-reverse';
+    var dir = onRight ? 'row' : 'row-reverse';
+    Array.prototype.forEach.call(cardZoomPlusEl.querySelectorAll('.card-zoom-plus-row'), function(rowEl){
+      rowEl.style.flexDirection = dir;
+    });
     cardZoomPlusEl.style.left = left + 'px';
     cardZoomPlusEl.style.top = (mainRect.bottom - plusRect.height) + 'px';
   }
