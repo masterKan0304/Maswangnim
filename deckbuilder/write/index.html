@@ -2467,6 +2467,128 @@ document.getElementById('startBtn').addEventListener('click', function(){
   var writeTitleInput = document.querySelector('.write-title-input');
   var writeBodyTextarea = document.querySelector('.write-body-textarea');
 
+  // ---- 로컬 파일시스템 자동 저장 (File System Access API) ----
+  var FS_DB_NAME = 'deckbuilderFsDb';
+  var FS_STORE_NAME = 'handles';
+  var FS_HANDLE_KEY = 'deckbuilderDir';
+
+  function idbOpen(){
+    return new Promise(function(resolve, reject){
+      var req = indexedDB.open(FS_DB_NAME, 1);
+      req.onupgradeneeded = function(){ req.result.createObjectStore(FS_STORE_NAME); };
+      req.onsuccess = function(){ resolve(req.result); };
+      req.onerror = function(){ reject(req.error); };
+    });
+  }
+  function idbGet(key){
+    return idbOpen().then(function(db){
+      return new Promise(function(resolve, reject){
+        var tx = db.transaction(FS_STORE_NAME, 'readonly');
+        var req = tx.objectStore(FS_STORE_NAME).get(key);
+        req.onsuccess = function(){ resolve(req.result || null); };
+        req.onerror = function(){ reject(req.error); };
+      });
+    });
+  }
+  function idbSet(key, value){
+    return idbOpen().then(function(db){
+      return new Promise(function(resolve, reject){
+        var tx = db.transaction(FS_STORE_NAME, 'readwrite');
+        tx.objectStore(FS_STORE_NAME).put(value, key);
+        tx.oncomplete = function(){ resolve(); };
+        tx.onerror = function(){ reject(tx.error); };
+      });
+    });
+  }
+
+  function getDeckbuilderDirHandle(){
+    return idbGet(FS_HANDLE_KEY).then(function(handle){
+      if (!handle) return null;
+      return handle.queryPermission({ mode: 'readwrite' }).then(function(perm){
+        if (perm === 'granted') return handle;
+        return handle.requestPermission({ mode: 'readwrite' }).then(function(perm2){
+          return perm2 === 'granted' ? handle : null;
+        });
+      }).catch(function(){ return null; });
+    }).then(function(handle){
+      if (handle) return handle;
+      return window.showDirectoryPicker().then(function(dir){
+        return dir.getDirectoryHandle('게시물').then(function(){
+          return idbSet(FS_HANDLE_KEY, dir).then(function(){ return dir; });
+        }, function(){
+          throw new Error('WRONG_FOLDER');
+        });
+      });
+    });
+  }
+
+  function insertScriptLineAfterMarker(text, srcPrefix, newLine){
+    var lines = text.split('\n');
+    var markerIdx = -1;
+    for (var i = 0; i < lines.length; i++){
+      if (lines[i].indexOf('새 게시물 파일을 deckbuilder/게시물/') !== -1) { markerIdx = i; break; }
+    }
+    if (markerIdx === -1) return text.replace(/\n$/, '') + '\n' + newLine + '\n';
+    var insertAt = markerIdx + 1;
+    while (insertAt < lines.length && lines[insertAt].indexOf(srcPrefix) === 0) insertAt++;
+    lines.splice(insertAt, 0, newLine);
+    return lines.join('\n');
+  }
+
+  function writeFileToHandle(dirHandle, filename, content){
+    return dirHandle.getFileHandle(filename, { create: true }).then(function(fileHandle){
+      return fileHandle.createWritable();
+    }).then(function(writable){
+      return writable.write(content).then(function(){ return writable.close(); });
+    });
+  }
+  function readFileFromHandle(dirHandle, filename){
+    return dirHandle.getFileHandle(filename).then(function(fileHandle){
+      return fileHandle.getFile();
+    }).then(function(file){ return file.text(); });
+  }
+
+  function savePostLocallyViaFs(dirHandle, post, fileContent){
+    var scriptLine1 = '<scr' + 'ipt src="게시물/' + post.id + '.js"></scr' + 'ipt>';
+    var scriptLine2 = '<scr' + 'ipt src="../게시물/' + post.id + '.js"></scr' + 'ipt>';
+    return dirHandle.getDirectoryHandle('게시물', { create: true }).then(function(postsDir){
+      return writeFileToHandle(postsDir, post.id + '.js', fileContent);
+    }).then(function(){
+      return readFileFromHandle(dirHandle, 'index.html');
+    }).then(function(text){
+      var updated = insertScriptLineAfterMarker(text, '<script src="게시물/', scriptLine1);
+      return writeFileToHandle(dirHandle, 'index.html', updated);
+    }).then(function(){
+      return dirHandle.getDirectoryHandle('post');
+    }).then(function(postDir){
+      return readFileFromHandle(postDir, 'index.html').then(function(text){
+        var updated = insertScriptLineAfterMarker(text, '<script src="../게시물/', scriptLine2);
+        return writeFileToHandle(postDir, 'index.html', updated);
+      });
+    });
+  }
+
+  function downloadPostFile(post, fileContent){
+    var blob = new Blob([fileContent], { type: 'text/javascript' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = post.id + '.js';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    showWriteNotice('게시글 파일이 생성되었습니다',
+      '<div>"' + post.id + '.js" 파일이 다운로드되었습니다.</div>' +
+      '<ul>' +
+        '<li>다운로드된 파일을 <b>deckbuilder/게시물/</b> 폴더에 넣어주세요.</li>' +
+        '<li><b>deckbuilder/index.html</b>에 <code>&lt;script src="게시물/' + post.id + '.js"&gt;&lt;/script&gt;</code> 줄을 추가해주세요.</li>' +
+        '<li><b>deckbuilder/post/index.html</b>에는 <code>&lt;script src="../게시물/' + post.id + '.js"&gt;&lt;/script&gt;</code> 줄을 추가해주세요. (경로가 한 단계 다릅니다)</li>' +
+        '<li>그다음 git push 하면 게시판에 반영됩니다.</li>' +
+      '</ul>');
+  }
+
   document.getElementById('writeSubmitBtn').addEventListener('click', function(){
     var errors = validateForSubmit();
     if (errors.length) {
@@ -2497,24 +2619,30 @@ document.getElementById('startBtn').addEventListener('click', function(){
     };
 
     var fileContent = buildPostFileContent(post);
-    var blob = new Blob([fileContent], { type: 'text/javascript' });
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url;
-    a.download = post.id + '.js';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
 
-    showWriteNotice('게시글 파일이 생성되었습니다',
-      '<div>"' + post.id + '.js" 파일이 다운로드되었습니다.</div>' +
-      '<ul>' +
-        '<li>다운로드된 파일을 <b>deckbuilder/게시물/</b> 폴더에 넣어주세요.</li>' +
-        '<li><b>deckbuilder/index.html</b>에 <code>&lt;script src="게시물/' + post.id + '.js"&gt;&lt;/script&gt;</code> 줄을 추가해주세요.</li>' +
-        '<li><b>deckbuilder/post/index.html</b>에는 <code>&lt;script src="../게시물/' + post.id + '.js"&gt;&lt;/script&gt;</code> 줄을 추가해주세요. (경로가 한 단계 다릅니다)</li>' +
-        '<li>그다음 git push 하면 게시판에 반영됩니다.</li>' +
-      '</ul>');
+    if (typeof window.showDirectoryPicker !== 'function') {
+      downloadPostFile(post, fileContent);
+      return;
+    }
+
+    getDeckbuilderDirHandle().then(function(dirHandle){
+      if (!dirHandle) throw new Error('NO_PERMISSION');
+      return savePostLocallyViaFs(dirHandle, post, fileContent);
+    }).then(function(){
+      showWriteNotice('게시글이 등록되었습니다',
+        '<div>덱 빌딩 게시판에 자동으로 저장되었습니다.</div>' +
+        '<div style="margin-top:6px;">실제 사이트에도 반영하려면 git push 해주세요.</div>');
+    }).catch(function(err){
+      if (err && err.name === 'AbortError') {
+        showWriteNotice('알림', '폴더 선택이 취소되어 저장되지 않았습니다. 등록 버튼을 다시 눌러주세요.');
+        return;
+      }
+      if (err && err.message === 'WRONG_FOLDER') {
+        showWriteNotice('알림', '선택한 폴더가 올바르지 않습니다. <b>deckbuilder</b> 폴더를 선택해주세요.');
+        return;
+      }
+      downloadPostFile(post, fileContent);
+    });
   });
 
   renderDeckBox();
