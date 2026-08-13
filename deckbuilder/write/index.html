@@ -2148,11 +2148,12 @@ document.getElementById('startBtn').addEventListener('click', function(){
     });
   });
 
+  var EQUIP_SOURCE_WILDCARD = '세넥투스 처치';
   var EQUIP_SOURCES_LIST = (function(){
     var seen = {}, list = [];
     (window.EQUIPMENT_DATA || []).forEach(function(item){
       equipSourceList(item).forEach(function(s){
-        if (s && !seen[s]) { seen[s] = true; list.push(s); }
+        if (s && s !== EQUIP_SOURCE_WILDCARD && !seen[s]) { seen[s] = true; list.push(s); }
       });
     });
     return list;
@@ -2186,7 +2187,10 @@ document.getElementById('startBtn').addEventListener('click', function(){
 
   function equipMatchesFilter(item){
     if (equipPopState.grade && item.grade !== equipPopState.grade) return false;
-    if (equipPopState.source && equipSourceList(item).indexOf(equipPopState.source) === -1) return false;
+    if (equipPopState.source) {
+      var itemSources = equipSourceList(item);
+      if (itemSources.indexOf(equipPopState.source) === -1 && itemSources.indexOf(EQUIP_SOURCE_WILDCARD) === -1) return false;
+    }
     if (equipPopState.search && item.name.indexOf(equipPopState.search) === -1) return false;
     return true;
   }
