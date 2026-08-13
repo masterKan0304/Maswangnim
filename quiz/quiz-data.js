@@ -503,7 +503,7 @@ window.QUIZ_CARDS = [
     attribute: 'justice',
     type: 'attack',
     cost: 2,
-    illust: 'quiz/시간축 파괴.webp',
+    illust: 'quiz/시간축파괴.webp',
     tooltip: '피해 300%\n핸드의 카드 비용 합만큼;피해량 20% 증가 (최대 200%)'
   },
   {
@@ -997,6 +997,7 @@ window.QUIZ_CARDS = [
     rarity: 'blue',
     attribute: 'common',
     type: 'attack',
+    job: [ 'striker', 'vanguard' ],
     cost: 2,
     illust: 'quiz/숲의굶주림.webp',
     tooltip: '방어 기반 피해 300%\n핸드의 소멸 카드 모두 소멸,;그 수만큼 피해량 +25%'
@@ -1006,6 +1007,7 @@ window.QUIZ_CARDS = [
     rarity: 'blue',
     attribute: 'common',
     type: 'skill',
+    job: [ 'ranger', 'hunter' ],
     cost: 6,
     illust: 'quiz/잊혀진무덤.webp',
     tooltip: '[ 점화 / 보존 / 소멸 ]\n이 카드 비용 감소 시 1턴간 자신의 치명확률 +10%\n소각 : "오염된 포자" 1장 생성'
@@ -1015,6 +1017,7 @@ window.QUIZ_CARDS = [
     rarity: 'blue',
     attribute: 'common',
     type: 'attack',
+    job: [ 'ranger', 'hunter' ],
     cost: 3,
     illust: 'quiz/버섯탄환.webp',
     tooltip: '[ 탄환 / 소멸 ]\n피해 450%\n포자증식 효과 2배'
@@ -1024,6 +1027,7 @@ window.QUIZ_CARDS = [
     rarity: 'blue',
     attribute: 'common',
     type: 'skill',
+    job: [ 'psionic', 'controller' ],
     cost: 1,
     illust: 'quiz/자연의선물.webp',
     tooltip: '[ 소멸 ]\n핸드의 카드 수만큼 치유 20%\n조율 : 핸드의 카드 수만큼 "오염된 포자" 1장 생성'
@@ -1042,6 +1046,7 @@ window.QUIZ_CARDS = [
     rarity: 'blue',
     attribute: 'common',
     type: 'skill',
+    job: [ 'striker', 'vanguard' ],
     cost: 0,
     illust: 'quiz/잔상초.webp',
     tooltip: '[ 회수 2 / 소멸 3 ]\n실드 60%\n소각 : "오염된 포자" 1장 생성'
@@ -1060,6 +1065,7 @@ window.QUIZ_CARDS = [
     rarity: 'gray',
     attribute: 'common',
     type: 'skill',
+    job: [ 'ranger', 'hunter' ],
     cost: 0,
     illust: 'quiz/산성가스.webp',
     tooltip: '[ 회수 / 소멸 ]\n모든 적 손상 3'
@@ -1069,6 +1075,7 @@ window.QUIZ_CARDS = [
     rarity: 'blue',
     attribute: 'common',
     type: 'skill',
+    job: [ 'striker', 'vanguard' ],
     cost: 0,
     illust: 'quiz/공격성돌연변이.webp',
     tooltip: '[ 소멸 ]\n자신의 공격 카드 드로우 1,;1턴간 그 카드 피해량 +50%'
@@ -1078,6 +1085,7 @@ window.QUIZ_CARDS = [
     rarity: 'yellow',
     attribute: 'common',
     type: 'attack',
+    job: [ 'ranger', 'hunter' ],
     cost: 2,
     illust: 'quiz/조준사격.webp',
     tooltip: '피해 400%\n처치 : 크레딧 20 획득'
@@ -1087,6 +1095,7 @@ window.QUIZ_CARDS = [
     rarity: 'blue',
     attribute: 'common',
     type: 'attack',
+    job: [ 'ranger', 'hunter' ],
     cost: 0,
     illust: 'quiz/기습.webp',
     tooltip: '피해 80%\n격파 시 이 카드를;무덤에서 핸드로 이동'
@@ -1096,6 +1105,7 @@ window.QUIZ_CARDS = [
     rarity: 'gray',
     attribute: 'common',
     type: 'upgrade',
+    job: [ 'striker', 'vanguard' ],
     cost: 1,
     illust: 'quiz/마력폭주.webp',
     tooltip: '면역 2'
@@ -1105,6 +1115,7 @@ window.QUIZ_CARDS = [
     rarity: 'blue',
     attribute: 'common',
     type: 'attack',
+    job: 'controller',
     cost: 2,
     illust: 'quiz/원자분해.webp',
     tooltip: '모든 적 관통;피해 230%'
@@ -1114,6 +1125,7 @@ window.QUIZ_CARDS = [
     rarity: 'gray',
     attribute: 'common',
     type: 'skill',
+    job: [ 'psionic', 'controller' ],
     cost: 0,
     illust: 'quiz/공격하라.webp',
     tooltip: '뽑을 카드의 공격 카드 1장 선택,;그 카드 핸드로 이동'
@@ -1123,6 +1135,7 @@ window.QUIZ_CARDS = [
     rarity: 'yellow',
     attribute: 'common',
     type: 'skill',
+    job: [ 'striker', 'vanguard' ],
     cost: 0,
     illust: 'quiz/호전성.webp',
     tooltip: '핸드에 공격 카드가 없을 시;드로우 2'
@@ -1132,6 +1145,7 @@ window.QUIZ_CARDS = [
     rarity: 'blue',
     attribute: 'common',
     type: 'skill',
+    job: [ 'striker', 'vanguard' ],
     cost: 2,
     illust: 'quiz/카모플라쥬.webp',
     tooltip: '[ 소멸 ]\n회피 1\n다음 턴 드로우 2'
@@ -1150,6 +1164,7 @@ window.QUIZ_CARDS = [
     rarity: 'gray',
     attribute: 'common',
     type: 'attack',
+    job: [ 'ranger', 'hunter' ],
     cost: 1,
     illust: 'quiz/연속공격.webp',
     tooltip: '피해 50%;× 3'
@@ -1159,6 +1174,7 @@ window.QUIZ_CARDS = [
     rarity: 'gray',
     attribute: 'common',
     type: 'skill',
+    job: [ 'psionic', 'controller' ],
     cost: 1,
     illust: 'quiz/반격준비.webp',
     tooltip: '[ 소멸 ]\n에고 스킬 슬롯을 다른 에고 스킬들로 교체'
@@ -1168,6 +1184,7 @@ window.QUIZ_CARDS = [
     rarity: 'blue',
     attribute: 'common',
     type: 'attack',
+    job: [ 'ranger', 'hunter' ],
     cost: 2,
     illust: 'quiz/필살의사격.webp',
     tooltip: '피해 350%\n다음 턴 시작 시;드로우 1'
@@ -1177,6 +1194,7 @@ window.QUIZ_CARDS = [
     rarity: 'gray',
     attribute: 'common',
     type: 'attack',
+    job: [ 'ranger', 'hunter' ],
     cost: 1,
     illust: 'quiz/파멸.webp',
     tooltip: '[ 소멸 ]\n피해 300%\n버리기 1'
@@ -1186,6 +1204,7 @@ window.QUIZ_CARDS = [
     rarity: 'gray',
     attribute: 'common',
     type: 'upgrade',
+    job: [ 'ranger', 'hunter' ],
     cost: 2,
     illust: 'quiz/각오.webp',
     tooltip: '턴 시작 시 핸드의 무작위;공격 카드 1장;1턴간 피해량 +50%'
@@ -1195,6 +1214,7 @@ window.QUIZ_CARDS = [
     rarity: 'gray',
     attribute: 'common',
     type: 'attack',
+    job: [ 'striker', 'vanguard' ],
     cost: 2,
     illust: 'quiz/혼신.webp',
     tooltip: '방어 기반 피해 100% × 2\n결의 수만큼 피해량 +20%'
@@ -1204,6 +1224,7 @@ window.QUIZ_CARDS = [
     rarity: 'blue',
     attribute: 'common',
     type: 'skill',
+    job: [ 'striker', 'vanguard' ],
     cost: 0,
     illust: 'quiz/에너지보호막.webp',
     tooltip: '[ 소멸 ]\n실드 100%\n행동 포인트 1 획득'
@@ -1213,6 +1234,7 @@ window.QUIZ_CARDS = [
     rarity: 'gray',
     attribute: 'common',
     type: 'skill',
+    job: [ 'psionic', 'controller' ],
     cost: 1,
     illust: 'quiz/금융치료.webp',
     tooltip: '[ 소멸 ]\n치유 200%\n체력이 가득 찬 상태라면 크레딧 30 획득'
@@ -1222,6 +1244,7 @@ window.QUIZ_CARDS = [
     rarity: 'gray',
     attribute: 'common',
     type: 'skill',
+    job: [ 'psionic', 'controller' ],
     cost: 2,
     illust: 'quiz/구급키트.webp',
     tooltip: '[ 천상 / 소멸 ]\n치유 250%'
@@ -1240,6 +1263,7 @@ window.QUIZ_CARDS = [
     rarity: 'blue',
     attribute: 'common',
     type: 'upgrade',
+    job: [ 'psionic', 'controller' ],
     cost: 2,
     illust: 'quiz/강제학습장치.webp',
     tooltip: '[ 주도 ]\n카드 4장 사용 시;드로우 1 (턴당 1회)'
@@ -1249,6 +1273,7 @@ window.QUIZ_CARDS = [
     rarity: 'gray',
     attribute: 'common',
     type: 'skill',
+    job: [ 'striker', 'vanguard' ],
     cost: 1,
     illust: 'quiz/견고함.webp',
     tooltip: '실드 150%\n연속 : 다음 턴 시작 시;실드 150%'
@@ -1258,6 +1283,7 @@ window.QUIZ_CARDS = [
     rarity: 'yellow',
     attribute: 'common',
     type: 'skill',
+    job: [ 'psionic', 'controller' ],
     cost: 1,
     illust: 'quiz/장비가방.webp',
     tooltip: '[ 소멸 ]\n드로우 2'
@@ -1267,6 +1293,7 @@ window.QUIZ_CARDS = [
     rarity: 'gray',
     attribute: 'common',
     type: 'upgrade',
+    job: [ 'psionic', 'controller' ],
     cost: 3,
     illust: 'quiz/영광의저항.webp',
     tooltip: '턴 시작 시 아군에게;최대 체력 10% 고정 피해\n행동 포인트 1 획득'
@@ -1276,6 +1303,7 @@ window.QUIZ_CARDS = [
     rarity: 'blue',
     attribute: 'common',
     type: 'attack',
+    job: [ 'striker', 'vanguard' ],
     cost: 1,
     illust: 'quiz/육탄전.webp',
     tooltip: '[ 소멸 ]\n방어 기반 피해 200%\n결정화 2'
@@ -1285,6 +1313,7 @@ window.QUIZ_CARDS = [
     rarity: 'gray',
     attribute: 'common',
     type: 'attack',
+    job: [ 'striker', 'vanguard' ],
     cost: 2,
     illust: 'quiz/무거운강타.webp',
     tooltip: '피해 200%\n취약 2\n약화 2'
@@ -1303,6 +1332,7 @@ window.QUIZ_CARDS = [
     rarity: 'gray',
     attribute: 'common',
     type: 'attack',
+    job: [ 'ranger', 'hunter' ],
     cost: 0,
     illust: 'quiz/비장의한발.webp',
     tooltip: '[ 보존 / 소멸 ]\n피해 100%\n보존 : 피해량 +50%'
@@ -1312,6 +1342,7 @@ window.QUIZ_CARDS = [
     rarity: 'gray',
     attribute: 'common',
     type: 'upgrade',
+    job: [ 'psionic', 'controller' ],
     cost: 1,
     illust: 'quiz/직감점화.webp',
     tooltip: '카드 생성 시;무작위 번뜩임 부여 (턴당 1회)'
@@ -1339,6 +1370,7 @@ window.QUIZ_CARDS = [
     rarity: 'blue',
     attribute: 'common',
     type: 'skill',
+    job: [ 'psionic', 'controller' ],
     cost: 1,
     illust: 'quiz/어둠의지식.webp',
     tooltip: '[ 종극 / 소멸 ]\n드로우 1\n그 카드 발동'
@@ -1348,6 +1380,7 @@ window.QUIZ_CARDS = [
     rarity: 'gray',
     attribute: 'common',
     type: 'attack',
+    job: [ 'ranger', 'hunter' ],
     cost: 1,
     illust: 'quiz/도약공격.webp',
     tooltip: '피해 200%\n영감 : 비용 1 감소,;드로우 1'
@@ -1357,6 +1390,7 @@ window.QUIZ_CARDS = [
     rarity: 'blue',
     attribute: 'common',
     type: 'attack',
+    job: [ 'ranger', 'hunter' ],
     cost: 0,
     illust: 'quiz/기동사격.webp',
     tooltip: '[ 개전 / 소멸 ]\n모든 적 피해 200%'
@@ -1366,6 +1400,7 @@ window.QUIZ_CARDS = [
     rarity: 'blue',
     attribute: 'common',
     type: 'attack',
+    job: [ 'ranger', 'hunter' ],
     cost: 1,
     illust: 'quiz/근육강화진화체.webp',
     tooltip: '피해 80% × 2\n영감 : 타격 2회 추가'
@@ -1375,6 +1410,7 @@ window.QUIZ_CARDS = [
     rarity: 'gray',
     attribute: 'common',
     type: 'skill',
+    job: 'hunter',
     cost: 1,
     illust: 'quiz/협상.webp',
     tooltip: '[ 보존 / 소멸 ]\n사기 2\n모든 적 사기 2'
@@ -1384,6 +1420,7 @@ window.QUIZ_CARDS = [
     rarity: 'gray',
     attribute: 'common',
     type: 'attack',
+    job: [ 'striker', 'vanguard' ],
     cost: 0,
     illust: 'quiz/압도.webp',
     tooltip: '[ 소멸 ]\n모든 적 피해 100% × 3\n뽑을 카드에 "과부하" 2장 생성'
@@ -1402,6 +1439,7 @@ window.QUIZ_CARDS = [
     rarity: 'yellow',
     attribute: 'common',
     type: 'attack',
+    job: [ 'ranger', 'hunter' ],
     cost: 0,
     illust: 'quiz/정밀조준.webp',
     tooltip: '피해 120%\n드로우 1\n핸드의 카드 1장 선택,;그 카드 뽑을 카드 맨 위로 이동'
@@ -1420,6 +1458,7 @@ window.QUIZ_CARDS = [
     rarity: 'blue',
     attribute: 'common',
     type: 'attack',
+    job: [ 'ranger', 'hunter' ],
     cost: 2,
     illust: 'quiz/증식형바이러스.webp',
     tooltip: '피해 120% × 1\n감응 : 타격 1회 추가 (최대 5 중첩)'
@@ -1429,6 +1468,7 @@ window.QUIZ_CARDS = [
     rarity: 'gray',
     attribute: 'common',
     type: 'skill',
+    job: [ 'striker', 'vanguard' ],
     cost: 1,
     illust: 'quiz/보호의외침.webp',
     tooltip: '실드 130%\n실드가 없다면 실드 100% 증가'
@@ -1438,6 +1478,7 @@ window.QUIZ_CARDS = [
     rarity: 'yellow',
     attribute: 'common',
     type: 'attack',
+    job: [ 'striker', 'vanguard' ],
     cost: 2,
     illust: 'quiz/짓이기기.webp',
     tooltip: '[ 약점 공격 ]\n피해 150% × 2\n드로우 1'
@@ -1447,6 +1488,7 @@ window.QUIZ_CARDS = [
     rarity: 'blue',
     attribute: 'common',
     type: 'attack',
+    job: [ 'ranger', 'hunter' ],
     cost: 0,
     illust: 'quiz/빠른연사.webp',
     tooltip: '피해 80%\n드로우 1'
@@ -1456,6 +1498,7 @@ window.QUIZ_CARDS = [
     rarity: 'gray',
     attribute: 'common',
     type: 'attack',
+    job: [ 'ranger', 'hunter' ],
     cost: 0,
     illust: 'quiz/퀵드로우.webp',
     tooltip: '[ 개전 / 소멸 ]\n피해 150%\n표식 1'
@@ -1465,6 +1508,7 @@ window.QUIZ_CARDS = [
     rarity: 'gray',
     attribute: 'common',
     type: 'attack',
+    job: [ 'striker', 'vanguard' ],
     cost: 2,
     illust: 'quiz/격분.webp',
     tooltip: '피해 300%\n핸드에 다른 전투원의 카드가 없다면;이 카드 비용 2 감소'
@@ -1474,6 +1518,7 @@ window.QUIZ_CARDS = [
     rarity: 'gray',
     attribute: 'common',
     type: 'skill',
+    job: [ 'psionic', 'controller' ],
     cost: 0,
     illust: 'quiz/집결.webp',
     tooltip: '[ 신속 / 소멸 2 ]\n드로우 1\n모든 적 행동 카운트 3 증가'
@@ -1483,6 +1528,7 @@ window.QUIZ_CARDS = [
     rarity: 'blue',
     attribute: 'common',
     type: 'skill',
+    job: [ 'psionic', 'controller' ],
     cost: 0,
     illust: 'quiz/재활용.webp',
     tooltip: '에고 포인트 2 이상일 시;행동 포인트 1 획득,;에고 포인트 2 감소'
@@ -1492,6 +1538,7 @@ window.QUIZ_CARDS = [
     rarity: 'gray',
     attribute: 'common',
     type: 'skill',
+    job: [ 'striker', 'vanguard' ],
     cost: 2,
     illust: 'quiz/집요한인내.webp',
     tooltip: '[ 보존 ]\n실드 350%'
@@ -1501,6 +1548,7 @@ window.QUIZ_CARDS = [
     rarity: 'yellow',
     attribute: 'common',
     type: 'skill',
+    job: [ 'psionic', 'controller' ],
     cost: 1,
     illust: 'quiz/재정비.webp',
     tooltip: '[ 소멸 ]\n드로우 3'
@@ -1510,6 +1558,7 @@ window.QUIZ_CARDS = [
     rarity: 'gray',
     attribute: 'common',
     type: 'skill',
+    job: [ 'psionic', 'controller' ],
     cost: 1,
     illust: 'quiz/참회.webp',
     tooltip: '[ 소멸 ]\n사기 1 감소\n결의 1 감소'
@@ -1537,6 +1586,7 @@ window.QUIZ_CARDS = [
     rarity: 'blue',
     attribute: 'common',
     type: 'upgrade',
+    job: [ 'psionic', 'controller' ],
     cost: 2,
     illust: 'quiz/자가발전실험.webp',
     tooltip: '[ 주도 ]\n핸드의 카드가 6장 이상일 시;핸드의 무작위 카드 1장;1턴간 비용 0으로 변경 (턴당 1회)'
@@ -1546,6 +1596,7 @@ window.QUIZ_CARDS = [
     rarity: 'blue',
     attribute: 'common',
     type: 'skill',
+    job: [ 'striker', 'vanguard' ],
     cost: 0,
     illust: 'quiz/껍질형성세포.webp',
     tooltip: '[ 보존 ]\n실드 70%\n핸드의 카드 수만큼 실드 +25%'
@@ -1555,6 +1606,7 @@ window.QUIZ_CARDS = [
     rarity: 'gray',
     attribute: 'common',
     type: 'attack',
+    job: [ 'ranger', 'hunter' ],
     cost: 2,
     illust: 'quiz/충격.webp',
     tooltip: '모든 적 피해 200%\n취약 2'
@@ -1564,6 +1616,7 @@ window.QUIZ_CARDS = [
     rarity: 'gray',
     attribute: 'common',
     type: 'attack',
+    job: [ 'ranger', 'hunter' ],
     cost: 1,
     illust: 'quiz/두개골강타.webp',
     tooltip: '피해 200%\n약점 공격 : 피해량 +50%'
@@ -1582,6 +1635,7 @@ window.QUIZ_CARDS = [
     rarity: 'gray',
     attribute: 'common',
     type: 'attack',
+    job: [ 'striker', 'vanguard' ],
     cost: 1,
     illust: 'quiz/가시방패.webp',
     tooltip: '모든 적 방어 기반 피해 100%\n파괴 : 타격 1회 추가'
@@ -1591,6 +1645,7 @@ window.QUIZ_CARDS = [
     rarity: 'blue',
     attribute: 'common',
     type: 'skill',
+    job: [ 'psionic', 'controller' ],
     cost: 1,
     illust: 'quiz/전략의시작점.webp',
     tooltip: '[ 소멸 ]\n에고 포인트 2 획득'
@@ -1600,6 +1655,7 @@ window.QUIZ_CARDS = [
     rarity: 'gray',
     attribute: 'common',
     type: 'attack',
+    job: [ 'striker', 'vanguard' ],
     cost: 3,
     illust: 'quiz/태클.webp',
     tooltip: '[ 분쇄 ]\n방어 기반 피해 400%\n체력이 가득 찬 상태라면;이 카드 비용 1 감소'
@@ -1609,6 +1665,7 @@ window.QUIZ_CARDS = [
     rarity: 'blue',
     attribute: 'common',
     type: 'upgrade',
+    job: [ 'ranger', 'hunter' ],
     cost: 1,
     illust: 'quiz/전술대응.webp',
     tooltip: '[ 개전 ]\n실드를 보유한 대상에게;피해량 25% 증가 (최대 1)'
@@ -1627,6 +1684,7 @@ window.QUIZ_CARDS = [
     rarity: 'blue',
     attribute: 'common',
     type: 'skill',
+    job: [ 'psionic', 'controller' ],
     cost: 0,
     illust: 'quiz/공허의방랑자.webp',
     tooltip: '[ 소멸 ]\n1턴간 대상의 행동 카운트 감소하지 않음'
@@ -1636,6 +1694,7 @@ window.QUIZ_CARDS = [
     rarity: 'gray',
     attribute: 'common',
     type: 'skill',
+    job: [ 'psionic', 'controller' ],
     cost: 1,
     illust: 'quiz/해소의바람.webp',
     tooltip: '모든 적 고통 2\n핸드의 상태이상, 저주 카드;2장까지 선택 소멸'
