@@ -401,6 +401,30 @@
     border-radius:8px;box-shadow:0 10px 34px rgba(0,0,0,.5);white-space:normal;}
   .chaos-zoom-preview.visible{display:block;}
 
+  /* ============ 파트너 정보 호버 팝업 (에고 스킬 + 파트너 패시브) ============ */
+  .partner-info-zoom-preview{position:fixed;z-index:9999;display:none;pointer-events:none;
+    background:#181820;border-radius:10px;box-shadow:0 10px 34px rgba(0,0,0,.55);
+    padding:14px;gap:16px;}
+  .partner-info-zoom-preview.visible{display:flex;}
+  .partner-info-col{min-width:0;}
+  .partner-info-col-title{color:#fff;font-weight:900;font-size:12px;letter-spacing:.5px;margin-bottom:8px;
+    text-shadow:0 1px 4px rgba(0,0,0,.8);}
+  .partner-info-skill-col{flex:none;width:230px;}
+  .partner-info-skill-row{display:flex;gap:10px;align-items:flex-start;}
+  .partner-info-skill-img-box{width:80px;aspect-ratio:420/632;border-radius:8px;overflow:hidden;flex:none;background:#000;}
+  .partner-info-skill-img-box img{width:100%;height:100%;object-fit:cover;display:block;}
+  .partner-info-skill-text{flex:1;min-width:0;}
+  .partner-info-skill-name{color:#fff;font-weight:800;font-size:12.5px;line-height:1.3;}
+  .partner-info-skill-point{color:#EAF4FF;font-size:11px;font-weight:700;margin-top:6px;}
+  .partner-info-skill-hr{height:1px;background:rgba(255,255,255,.25);margin:8px 0;}
+  .partner-info-skill-tooltip{color:#fff;font-size:10.5px;line-height:1.5;font-weight:600;white-space:normal;}
+  .partner-info-passive-col{flex:none;width:150px;}
+  .partner-info-passive-header{display:flex;align-items:center;gap:8px;}
+  .partner-info-passive-job-icon{width:28px;height:28px;object-fit:contain;flex:none;}
+  .partner-info-passive-name{color:#fff;font-weight:800;font-size:11.5px;line-height:1.3;}
+  .partner-info-passive-hr{height:1px;background:rgba(255,255,255,.25);margin:8px 0;}
+  .partner-info-passive-tooltip{color:#fff;font-size:10.5px;line-height:1.5;font-weight:600;white-space:normal;word-break:keep-all;}
+
   /* ============ 전투원 미리보기 박스 (파트너 아이콘 제외) ============ */
   .deck-agent{position:relative;aspect-ratio:220/360;border-radius:8px;overflow:hidden;background:#dcdcdc;}
   .deck-agent-img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;-webkit-user-drag:none;}
@@ -807,6 +831,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
 <div class="equip-source-tooltip" id="equipSourceTooltip"></div>
 <div class="pt-usage-zoom-preview" id="ptUsageZoomPreview"></div>
 <div class="chaos-zoom-preview" id="chaosZoomPreview"></div>
+<div class="partner-info-zoom-preview" id="partnerInfoZoomPreview"></div>
 
 <!-- 전투원 선택 팝업 -->
 <div class="wpop-overlay" id="agentPopOverlay">
@@ -1333,6 +1358,13 @@ document.getElementById('startBtn').addEventListener('click', function(){
       return placeholders[letter.charCodeAt(0) - 65];
     });
     return restored.replace(/\n/g, '<br>');
+  }
+
+  function parsePartnerPassiveTooltip(text){
+    return String(text || '').replace(/"([^"]*)"|\d+(?:\/\d+)*/g, function(match, q){
+      if (q !== undefined) return '<span style="color:#7EE4FF;text-decoration:underline">' + q + '</span>';
+      return '<span style="color:#EAAA00">' + match + '</span>';
+    }).replace(/\n/g, '<br>');
   }
 
   function fromAgentCard(card, agent){
@@ -2472,8 +2504,12 @@ document.getElementById('startBtn').addEventListener('click', function(){
       var jobMatchClass = (activeAgent && p.job === activeAgent.job) ? ' partner-job-match' : '';
       return '<div class="wpop-cell'+dimClass+jobMatchClass+'">' + renderPartnerPreviewHtml(p) + '</div>';
     }).join('');
-    Array.prototype.forEach.call(partnerPopGrid.querySelectorAll('.deck-agent'), function(el){
+    Array.prototype.forEach.call(partnerPopGrid.querySelectorAll('.deck-agent'), function(el, i){
+      var partner = sorted[i];
       el.addEventListener('click', function(){ selectPartner(partnerPopState.row, el.getAttribute('data-partner-id')); });
+      el.addEventListener('mouseenter', function(e){ showPartnerInfoZoom(partner, e.clientX, e.clientY); });
+      el.addEventListener('mousemove', function(e){ positionPartnerInfoZoom(e.clientX, e.clientY); });
+      el.addEventListener('mouseleave', hidePartnerInfoZoom);
     });
   }
 
@@ -2488,7 +2524,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
     renderPartnerPopGrid();
     partnerPopOverlay.classList.add('open');
   }
-  function closePartnerPopup(){ partnerPopOverlay.classList.remove('open'); }
+  function closePartnerPopup(){ partnerPopOverlay.classList.remove('open'); hidePartnerInfoZoom(); }
   document.getElementById('partnerPopClose').addEventListener('click', closePartnerPopup);
   partnerPopOverlay.addEventListener('click', function(e){ if (e.target === partnerPopOverlay) closePartnerPopup(); });
 
@@ -2496,6 +2532,54 @@ document.getElementById('startBtn').addEventListener('click', function(){
     deckState[row].partnerId = partnerId;
     closePartnerPopup();
     renderDeckBox();
+  }
+
+  // ============ 파트너 정보 호버 팝업 (에고 스킬 + 파트너 패시브) ============
+  var partnerInfoZoomEl = document.getElementById('partnerInfoZoomPreview');
+  function renderPartnerInfoZoomHtml(partner){
+    var jobIcon = JOB_ICON[partner.job];
+    var pointHtml = renderTooltip('에고 포인트 ' + (partner.ego_point != null ? partner.ego_point : ''));
+    return (
+      '<div class="partner-info-col partner-info-skill-col">' +
+        '<div class="partner-info-col-title">에고 스킬</div>' +
+        '<div class="partner-info-skill-row">' +
+          '<div class="partner-info-skill-img-box"><img src="'+(partner.ego_media ? '../../'+partner.ego_media : '')+'" alt="'+(partner.ego || '')+'"></div>' +
+          '<div class="partner-info-skill-text">' +
+            '<div class="partner-info-skill-name">'+(partner.ego || '')+'</div>' +
+            '<div class="partner-info-skill-point">'+pointHtml+'</div>' +
+            '<div class="partner-info-skill-hr"></div>' +
+            '<div class="partner-info-skill-tooltip">'+renderTooltip(partner.ego_tooltip || '')+'</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="partner-info-col partner-info-passive-col">' +
+        '<div class="partner-info-col-title">파트너 패시브</div>' +
+        '<div class="partner-info-passive-header">' +
+          (jobIcon ? '<img class="partner-info-passive-job-icon" src="'+jobIcon+'" alt="">' : '') +
+          '<div class="partner-info-passive-name">'+(partner.passive || '')+'</div>' +
+        '</div>' +
+        '<div class="partner-info-passive-hr"></div>' +
+        '<div class="partner-info-passive-tooltip">'+parsePartnerPassiveTooltip(partner.passive_tooltip || '')+'</div>' +
+      '</div>'
+    );
+  }
+  function showPartnerInfoZoom(partner, x, y){
+    partnerInfoZoomEl.innerHTML = renderPartnerInfoZoomHtml(partner);
+    partnerInfoZoomEl.classList.add('visible');
+    positionPartnerInfoZoom(x, y);
+  }
+  function positionPartnerInfoZoom(x, y){
+    var rect = partnerInfoZoomEl.getBoundingClientRect();
+    var left = x - rect.width - 16;
+    var top = y - rect.height - 16;
+    if (left < 8) left = x + 16;
+    if (top < 8) top = y + 16;
+    partnerInfoZoomEl.style.left = left + 'px';
+    partnerInfoZoomEl.style.top = top + 'px';
+  }
+  function hidePartnerInfoZoom(){
+    partnerInfoZoomEl.classList.remove('visible');
+    partnerInfoZoomEl.innerHTML = '';
   }
 
   // ============ 장비 확대 미리보기 ============
