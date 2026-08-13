@@ -1630,7 +1630,9 @@ document.getElementById('startBtn').addEventListener('click', function(){
     return (PT_CAP - totalPt(row)) >= nextDuplicateCost(row);
   }
   function isNonDuplicableCard(c){
-    return c.source === 'agent' && c.grade === 'gray';
+    if (c.source === 'agent' && c.grade === 'gray') return true;
+    if (hasTag(effectiveCardFields(c).tags, '유일')) return true;
+    return false;
   }
   function addDuplicateTag(tooltip){
     var t = tooltip || '';
@@ -2208,6 +2210,21 @@ document.getElementById('startBtn').addEventListener('click', function(){
     });
   }
 
+  function lockedRealSourcesForRow(row, excludeType){
+    var locked = {};
+    EQUIP_TYPES_ORDER.forEach(function(t){
+      if (t === excludeType) return;
+      var idx = row.equipment[t];
+      if (idx === null || idx === undefined) return;
+      var item = (window.EQUIPMENT_DATA || [])[idx];
+      if (!item) return;
+      equipSourceList(item).forEach(function(s){
+        if (s && !EQUIP_SOURCE_EXCLUDE.hasOwnProperty(s)) locked[s] = true;
+      });
+    });
+    return Object.keys(locked);
+  }
+
   function equipMatchesFilter(item){
     if (equipPopState.grade && item.grade !== equipPopState.grade) return false;
     if (equipPopState.source) {
@@ -2223,6 +2240,16 @@ document.getElementById('startBtn').addEventListener('click', function(){
       if (!matchesSource) return false;
     }
     if (equipPopState.search && item.name.indexOf(equipPopState.search) === -1) return false;
+
+    var row = deckState[equipPopState.row];
+    var locked = row ? lockedRealSourcesForRow(row, equipPopState.type) : [];
+    if (locked.length) {
+      var allSources = equipSourceList(item);
+      var passesLock = allSources.some(function(s){
+        return locked.indexOf(s) !== -1 || EQUIP_SOURCE_EXCLUDE.hasOwnProperty(s);
+      });
+      if (!passesLock) return false;
+    }
     return true;
   }
 
