@@ -403,6 +403,13 @@
     text-shadow:0 1px 3px #000,0 0 5px #000;}
   .tooltip-card-ref{cursor:pointer;}
 
+  .ego-passive-header{display:flex;align-items:center;gap:12px;margin-top:10px;}
+  .ego-passive-job-icon{width:56px;height:56px;object-fit:contain;flex:none;filter:drop-shadow(0 2px 6px rgba(0,0,0,.6));}
+  .ego-passive-name{color:#fff;font-weight:800;font-size:17px;line-height:1.3;text-shadow:0 1px 4px rgba(0,0,0,.8);}
+  .ego-passive-hr{height:1px;background:rgba(255,255,255,.3);margin:14px 0;}
+  .ego-passive-tooltip{color:#fff;font-size:12px;line-height:1.6;font-weight:600;text-align:left;
+    text-shadow:0 1px 3px #000,0 0 5px #000;}
+
   .card-zoom-preview{position:fixed;z-index:9999;width:260px;border-radius:10px;overflow:hidden;
     box-shadow:0 10px 34px rgba(0,0,0,.65);display:none;pointer-events:none;}
   .card-zoom-preview.card-zoom-plus{z-index:9998;width:auto;overflow:visible;box-shadow:none;gap:10px;}
@@ -2379,6 +2386,21 @@ document.getElementById('startBtn').addEventListener('click', function(){
     return !!(window.AGENTS_EGO && window.AGENTS_EGO[id]);
   }
 
+  function partnerHasEgo(id){
+    var p = (window.PARTNER_DATA || []).filter(function(x){ return x.id === id; })[0];
+    return !!(p && p.ego);
+  }
+
+  function hasEgoFor(id){
+    return state.roster === 'combatant' ? agentHasEgo(id) : partnerHasEgo(id);
+  }
+
+  function parsePassiveTooltip(str){
+    return String(str).replace(/\d+(?:\/\d+)*/g, function(m){
+      return '<span style="color:#EAAA00">' + m + '</span>';
+    }).replace(/\n/g, '<br>');
+  }
+
   function currentMode(){
     return state.egoMode ? 'ego' : (state.cardMode ? 'card' : 'agent');
   }
@@ -2392,12 +2414,16 @@ document.getElementById('startBtn').addEventListener('click', function(){
     return m === 'card' ? cardInfoEl : (m === 'ego' ? egoInfoEl : illustImg);
   }
 
-  var MODE_LABELS = { agent: '전투원 정보', card: '카드 정보', ego: '에고 정보' };
+  var MODE_LABELS = { card: '카드 정보', ego: '에고 정보' };
+
+  function agentModeLabel(){
+    return state.roster === 'combatant' ? '전투원 정보' : '파트너 정보';
+  }
 
   function renderModeButtons(){
     var id = state.selectedId;
     var hasCards = state.roster === 'combatant' && agentHasCards(id);
-    var hasEgo = state.roster === 'combatant' && agentHasEgo(id);
+    var hasEgo = hasEgoFor(id);
     var mode = currentMode();
     var order = ['agent', 'card', 'ego'].filter(function(m){
       if (m === mode) return false;
@@ -2406,7 +2432,8 @@ document.getElementById('startBtn').addEventListener('click', function(){
       return true;
     });
     modeToggleBtnsEl.innerHTML = order.map(function(m){
-      return '<button type="button" class="mode-toggle-btn" data-mode="'+m+'">'+MODE_LABELS[m]+'</button>';
+      var label = m === 'agent' ? agentModeLabel() : MODE_LABELS[m];
+      return '<button type="button" class="mode-toggle-btn" data-mode="'+m+'">'+label+'</button>';
     }).join('');
     modeToggleBtnsEl.style.display = order.length ? '' : 'none';
   }
@@ -2533,19 +2560,45 @@ document.getElementById('startBtn').addEventListener('click', function(){
   }
 
   function renderEgoInfo(){
-    var ego = window.AGENTS_EGO && window.AGENTS_EGO[state.selectedId];
-    if (!ego) { egoInfoEl.innerHTML = ''; return; }
+    var isPartner = state.roster === 'partner';
     var a = agents.filter(function(x){ return x.id === state.selectedId; })[0];
-    var skill = ego.skill || {};
+    var ego = !isPartner ? (window.AGENTS_EGO && window.AGENTS_EGO[state.selectedId]) : null;
+    if (!isPartner && !ego) { egoInfoEl.innerHTML = ''; return; }
+    if (isPartner && !(a && a.ego)) { egoInfoEl.innerHTML = ''; return; }
+    var skill = isPartner
+      ? { name: a.ego, point: a.ego_point, tooltip: a.ego_tooltip, media: a.ego_media }
+      : (ego.skill || {});
     var pointHtml = parseNormalInline('에고 포인트 ' + (skill.point != null ? skill.point : ''), '#EAAA00', '#7EE4FF', '#7EE4FF');
-    var awakenRows = (ego.awakenings || []).map(function(aw, i){
-      return '' +
-        '<div class="ego-awaken-row">' +
-          '<div class="ego-awaken-num">' + (i + 1) + '</div>' +
-          '<div class="ego-awaken-name">' + (aw.name || '') + '</div>' +
-          '<div class="ego-awaken-tooltip">' + parseTooltip(aw.tooltip || '', true, true) + '</div>' +
+
+    var rightColHtml;
+    if (isPartner) {
+      var job = jobById[a.job];
+      rightColHtml =
+        '<div class="ego-col ego-passive-col">' +
+          '<div class="ego-col-title">파트너 패시브</div>' +
+          '<div class="ego-passive-header">' +
+            (job ? '<img class="ego-passive-job-icon" src="'+job.icon+'" alt="'+job.label+'">' : '') +
+            '<div class="ego-passive-name">' + (a.passive || '') + '</div>' +
+          '</div>' +
+          '<div class="ego-passive-hr"></div>' +
+          '<div class="ego-passive-tooltip">' + parsePassiveTooltip(a.passive_tooltip || '') + '</div>' +
         '</div>';
-    }).join('');
+    } else {
+      var awakenRows = (ego.awakenings || []).map(function(aw, i){
+        return '' +
+          '<div class="ego-awaken-row">' +
+            '<div class="ego-awaken-num">' + (i + 1) + '</div>' +
+            '<div class="ego-awaken-name">' + (aw.name || '') + '</div>' +
+            '<div class="ego-awaken-tooltip">' + parseTooltip(aw.tooltip || '', true, true) + '</div>' +
+          '</div>';
+      }).join('');
+      rightColHtml =
+        '<div class="ego-col ego-awaken-col">' +
+          '<div class="ego-col-title">에고 발현</div>' +
+          '<div class="ego-awaken-list">' + awakenRows + '</div>' +
+        '</div>';
+    }
+
     egoInfoEl.innerHTML =
       '<div class="ego-col ego-skill-col">' +
         '<div class="ego-col-title">에고 스킬</div>' +
@@ -2559,12 +2612,9 @@ document.getElementById('startBtn').addEventListener('click', function(){
           '</div>' +
         '</div>' +
       '</div>' +
-      '<div class="ego-col ego-awaken-col">' +
-        '<div class="ego-col-title">에고 발현</div>' +
-        '<div class="ego-awaken-list">' + awakenRows + '</div>' +
-      '</div>';
+      rightColHtml;
 
-    if (a) {
+    if (a && !isPartner) {
       Array.prototype.forEach.call(egoInfoEl.querySelectorAll('.tooltip-card-ref'), function(refEl){
         var card = findCardByName(refEl.getAttribute('data-card-name'));
         if (!card) { refEl.classList.remove('tooltip-card-ref'); return; }
@@ -2652,7 +2702,6 @@ document.getElementById('startBtn').addEventListener('click', function(){
   var modeLocked = false;
 
   function switchMode(targetMode){
-    if (state.roster !== 'combatant') return;
     if (modeLocked) return;
     var from = currentMode();
     if (from === targetMode) return;
@@ -2810,7 +2859,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
             if (!agentHasCards(newId)) switchMode('agent');
             else playCardSwapEffect();
           } else if (mode === 'ego') {
-            if (!agentHasEgo(newId)) switchMode('agent');
+            if (!hasEgoFor(newId)) switchMode('agent');
             else playEgoSwapEffect();
           } else {
             playEntranceEffect();
@@ -2888,6 +2937,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
         urls.push(a.illust);
         urls.push(agentIcon(a));
         if (a.grade) urls.push('agents/grade_'+a.grade+'_tag.png');
+        if (a.ego_media) urls.push(a.ego_media);
       });
     });
     JOBS.forEach(function(j){ urls.push(j.icon); });
