@@ -1402,7 +1402,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
   }
 
   function renderCardCellHtml(c, gradeOverride, opts){
-    var grade = c.gradeColor || gradeOverride || c.grade;
+    var grade = c.gradeColor || c.grade || gradeOverride;
     var fields = effectiveCardFields(c);
     var isPersona = c.source === 'persona';
     var showAwakenHint = !!(opts && opts.showAwakenHint) && !isPersona && isAwakenEligible(c);

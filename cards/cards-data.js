@@ -1327,5 +1327,320 @@ window.AGENTS_CARDS = {
       media: 'cards/나르쟈/purple.webp',
       tooltip: '[ 보존 / 유일 ]\n탐식이 감소되면 사용 시까지 비용 1 감소, 치유량 +30% (최대 10)\n모든 적 방어 기반 피해 160%\n치유 100%\n포식 4'
     }
+  ],
+  sereniel: [
+    {
+      name: '펄스 타격',
+      cost: 1,
+      type: 'attack',
+      grade: 'gray',
+      media: 'cards/세레니엘/attack.webp',
+      tooltip: '피해 100%'
+    },
+    {
+      name: '펄스 타격',
+      cost: 1,
+      type: 'attack',
+      grade: 'gray',
+      media: 'cards/세레니엘/attack.webp',
+      tooltip: '피해 100%'
+    },
+    {
+      name: '마그네틱 필드',
+      cost: 1,
+      type: 'skill',
+      grade: 'gray',
+      media: 'cards/세레니엘/skill.webp',
+      tooltip: '실드 100%'
+    },
+    {
+      name: '호밍 레이저',
+      cost: 0,
+      type: 'attack',
+      grade: 'blue',
+      grade_color: 'blue',
+      media: 'cards/세레니엘/blue1.webp',
+      tooltip: '피해 100%\n잔광 2\n격파 시 무덤에서 핸드로 이동',
+      awakenings: [
+        { cost: 0, type: 'attack', tooltip: '피해 |150|%\n|격파 시 핸드로 이동|\n|파괴 : 타격 1회 추가|' },
+        { cost: 0, type: 'attack', tooltip: '피해 |150|%\n잔광 |3|\n|격파 시 핸드로 이동|' },
+        { cost: 1, type: 'attack', tooltip: '피해 |150|%\n잔광 2\n|버린 카드에 "호밍 레이저L" 2장 생성|', plus_card: '호밍 레이저L' },
+        { cost: 0, type: 'attack', tooltip: '피해 100%\n잔광 \\1\\\n|격파 혹은 턴 시작 시 핸드로 이동|' },
+        { cost: 0, type: 'attack', tooltip: '피해 |150|%\n잔광 2\n|무덤의 "호밍 레이저L" 핸드로 이동|', plus_card: '호밍 레이저L' }
+      ]
+    },
+    {
+      name: '호밍 레이저L',
+      cost: 0,
+      type: 'skill',
+      grade: '',
+      grade_color: 'blue',
+      media: 'cards/세레니엘/blue1.webp',
+      tooltip: '[ 소멸 2 ]\n피해 60%\n잔광 1\n격파 시 무덤에서 핸드로 이동'
+    },
+    {
+      name: '플라스마 미사일',
+      cost: 1,
+      type: 'attack',
+      grade: 'blue',
+      media: 'cards/세레니엘/blue2.webp',
+      tooltip: '피해 120%\n강인도 피해 0.5\n대상이 격파되지 않았다면 1번 더 발동',
+      awakenings: [
+        { cost: 1, type: 'attack', tooltip: '피해 |180|%\n강인도 피해 |1|\n대상이 격파되지 않았다면 1번 더 발동' },
+        { cost: 1, type: 'attack', tooltip: '피해 |180|%\n|대상의 감소한 강인도 수만큼 피해량 +60% (최대 10)|' },
+        { cost: 1, type: 'attack', tooltip: '피해 120%\n|본능 약점 2|\n|1턴 간 "호밍 레이저" 피해량 +60%|', plus_card: '호밍 레이저' },
+        { cost: 1, type: 'attack', tooltip: '피해 120%\n|뽑을 카드에 "호밍 레이저L" 3장 생성|', plus_card: '호밍 레이저L' },
+        { cost: 1, type: 'upgrade', tooltip: '|[ 유일 ]|\n|턴 종료 시 무작위 적에게 피해 50%|\n|1턴간 핸드로 이동된 "호밍 레이저" 수만큼 피해량 +30%|', plus_card: '호밍 레이저' }
+      ]
+    },
+    {
+      name: '샤이닝 코어',
+      cost: 1,
+      type: 'skill',
+      grade: 'blue',
+      plus_card: '호밍 레이저L',
+      media: 'cards/세레니엘/blue3.webp',
+      tooltip: '"호밍 레이저L" 2장 생성',
+      awakenings: [
+        { cost: 1, type: 'skill', tooltip: '"호밍 레이저L" |3|장 생성', plus_card: '호밍 레이저L' },
+        { cost: 1, type: 'skill', tooltip: '"호밍 레이저L" 2장 생성, |그 카드의 소멸 2 증가|', plus_card: '호밍 레이저L' },
+        { cost: 1, type: 'upgrade', tooltip: '|[ 유일 / 개전 ]|\n"호밍 레이저L" 2장 생성\n|격파 시 "호밍 레이저L" 2장 생성|', plus_card: '호밍 레이저L' },
+        { cost: 'X', type: 'skill', tooltip: '"호밍 레이저L" |X+1장 생성|\n|그 카드에 신속 부여|', plus_card: '호밍 레이저L' },
+        { cost: 1, type: 'upgrade', tooltip: '|고유 번뜩임이 발생한 "호밍 레이저" 1장 선택 생성|' }
+      ]
+    },
+    {
+      name: '코발트 라이트',
+      cost: 3,
+      type: 'attack',
+      grade: 'yellow',
+      media: 'cards/세레니엘/yellow.webp',
+      tooltip: '무작위 적들에게 피해 120% × 4\n타격당 강인도 피해 1',
+      awakenings: [
+        { cost: 3, type: 'attack', tooltip: '무작위 적들에게 피해 |180|% × 4\n타격당 강인도 피해 1\n|격파 : 비용 1 감소|' },
+        { cost: 3, type: 'attack', tooltip: '|[ 보존 ]|\n무작위 적들에게 피해 120% × 4\n타격당 강인도 피해 1\n|보존 : 사용 시까지 타격 1회 추가 (최대 5회)|' },
+        { cost: 2, type: 'attack', tooltip: '무작위 적들에게 피해 120% × 4\n|타격한 대상 수만큼 "호밍 레이저L" 1장 생성|', plus_card: '호밍 레이저L' },
+        { cost: 1, type: 'attack', tooltip: '무작위 적들에게 피해 120%\n|핸드의 "호밍 레이저" 수만큼 타격 1회 추가|' },
+        { cost: 3, type: 'attack', tooltip: '|[ 약점 공격 ]|\n|피해| 120% × 4\n|격파 : 1번 더 발동|' }
+      ]
+    },
+    {
+      name: '페일 슈팅 스타',
+      cost: 2,
+      type: 'attack',
+      grade: 'purple',
+      plus_card: '호밍 레이저',
+      media: 'cards/세레니엘/purple.webp',
+      tooltip: '피해 150%\n뽑을 카드와 무덤의 "호밍 레이저" 3장 발동'
+    }
+  ],
+  chizuru: [
+    {
+      name: '참월',
+      cost: 1,
+      type: 'attack',
+      grade: 'gray',
+      media: 'cards/치즈루/attack.webp',
+      tooltip: '피해 100%'
+    },
+    {
+      name: '참월',
+      cost: 1,
+      type: 'attack',
+      grade: 'gray',
+      grade_color: 'gray',
+      media: 'cards/치즈루/attack.webp',
+      tooltip: '피해 100%'
+    },
+    {
+      name: '혼불의 보호',
+      cost: 1,
+      type: 'skill',
+      grade: 'gray',
+      media: 'cards/치즈루/skill.webp',
+      tooltip: '실드 100%'
+    },
+    {
+      name: '업화',
+      cost: 1,
+      type: 'attack',
+      grade: 'blue',
+      media: 'cards/치즈루/blue1.webp',
+      tooltip: '[ 개전 ]\n피해 100%\n주박술 1\n주박술 : 타격 2회 추가',
+      awakenings: [
+        { cost: 1, type: 'attack', tooltip: '[ 개전 ]\n피해 |150|%\n주박술 1\n주박술 : 타격 2회 추가' },
+        { cost: 1, type: 'attack', tooltip: '[ 개전 ]\n피해 |150|%\n주박술 1\n주박술 : |다음 사용하는 자신의 카드 비용 2 감소|' },
+        { cost: 1, type: 'attack', tooltip: '[ 개전 ]\n피해 |180|%\n주박술 1\n주박술 : |피해량 150%| 증가' },
+        { cost: 1, type: 'skill', tooltip: '[ 개전 ]\n주박술 1\n|"달그림자" 1장 생성|', plus_card: '달그림자' },
+        { cost: 0, type: 'skill', tooltip: '|[ 개전 / 소멸 ]|\n주박술 1\n주박술 : |주박술 대상 처치 시 이 카드 생성|' }
+      ]
+    },
+    {
+      name: '츠쿠요미',
+      cost: 0,
+      type: 'skill',
+      grade: 'blue',
+      media: 'cards/치즈루/blue2.webp',
+      tooltip: '다음 자신의 공격 카드 사용 시 타격 수만큼 도깨비불 3',
+      awakenings: [
+        { cost: 0, type: 'skill', tooltip: '다음 자신의 공격 카드 사용 시 타격 수만큼 도깨비불 |4|' },
+        { cost: 0, type: 'skill', tooltip: '다음 자신의 공격 카드 사용 시 |타격 1회 추가|\n타격 수만큼 도깨비불 \\2\\' },
+        { cost: 0, type: 'skill', tooltip: '|다음 자신의 "달그림자" 혹은 "달그림자+" 타격 2회 추가|', plus_card: [ '달그림자', '달그림자+' ] },
+        { cost: 0, type: 'skill', tooltip: '|핸드에 있는 자신의 공격 카드 수만큼| 도깨비불 3' },
+        { cost: 1, type: 'upgrade', tooltip: '|[ 유일 / 주도 ]|\n|자신의 공격 카드 사용 시 도깨비불 2|' }
+      ]
+    },
+    {
+      name: '황혼의 결속',
+      cost: 1,
+      type: 'upgrade',
+      grade: 'blue',
+      media: 'cards/치즈루/blue3.webp',
+      tooltip: '[ 개전 / 유일 ]\n턴 시작 시 구속 획득\n무작위 다른 전투원 카드 2장 사용 시까지 비용 1 감소',
+      awakenings: [
+        { cost: 0, type: 'upgrade', tooltip: '[ 개전 / 유일 ]\n턴 시작 시 구속 획득\n무작위 다른 전투원 카드 2장 사용 시까지 비용 1 감소' },
+        { cost: 1, type: 'upgrade', tooltip: '[ 개전 / 유일 ]\n턴 시작 시 구속 획득\n|"달그림자+" 사용 시, 다음 사용하는 카드 1장 사용 시까지| 비용 1 감소', plus_card: '달그림자+' },
+        { cost: 1, type: 'upgrade', tooltip: '[ 개전 / 유일 ]\n턴 시작 시 구속 획득\n무작위 다른 전투원 카드 2장 |발동|' },
+        { cost: 1, type: 'upgrade', tooltip: '[ 개전 / 유일 ]\n턴 시작 시 구속 획득\n무작위 |주도 카드 2장 발동|' },
+        { cost: 1, type: 'upgrade', tooltip: '[ 개전 / 유일 ]\n턴 시작 시 구속 획득\n|비용이 가장 높은 카드 1장 사용 시까지 비용 2 감소|' }
+      ]
+    },
+    {
+      name: '도깨비 사냥',
+      cost: 1,
+      type: 'attack',
+      grade: 'yellow',
+      media: 'cards/치즈루/yellow.webp',
+      tooltip: '[ 신속 ]\n피해 60% × 3\n다음 사용하는 결속 카드 피해량 +80%',
+      awakenings: [
+        { cost: 1, type: 'attack', tooltip: '[ 신속 ]\n피해 \\50\\% × |4|\n다음 사용하는 결속 카드 피해량 +|100|%' },
+        { cost: 1, type: 'attack', tooltip: '[ 신속 ]\n피해 |150|% × \\2\\\n다음 사용하는 결속 카드 피해량 +|100|%' },
+        { cost: 1, type: 'attack', tooltip: '[ 신속 ]\n피해 |100|% × 3\n|"달그림자"를 제외한 핸드에 다른 공격 카드가 없다면 타격 2회 추가|', plus_card: '달그림자' },
+        { cost: 1, type: 'skill', tooltip: '[ 신속 ]\n|"참월" 2장 생성|\n|그 카드에 소멸 부여|\n|사용 시까지 비용 1 감소|', plus_card: '참월' },
+        { cost: 1, type: 'upgrade', tooltip: '|[ 유일 ]|\n|"달그림자+" 피해량 +80%|\n|턴 시작 시 도깨비불 3|', plus_card: '달그림자+' }
+      ]
+    },
+    {
+      name: '달그림자',
+      cost: 1,
+      type: 'attack',
+      grade: 'purple',
+      grade_color: 'purple',
+      media: 'cards/치즈루/purple.webp',
+      tooltip: '[ 결속 1 / 보존 ]\n피해 80%\n결속 중첩 수만큼 피해량 +80%'
+    },
+    {
+      name: '달그림자+',
+      cost: 1,
+      type: 'attack',
+      grade: '',
+      grade_color: 'purple',
+      media: 'cards/치즈루/purple.webp',
+      tooltip: '[ 유일 / 결속 3 / 보존 ]\n피해 180% × 2\n최대 체력의 5% 만큼 회복\n결속 중첩 수만큼 피해량 +80%'
+    }
+  ],
+  yuki: [
+    {
+      name: '장검 베기',
+      cost: 1,
+      type: 'attack',
+      grade: 'gray',
+      media: 'cards/유키/attack.webp',
+      tooltip: '피해 100%'
+    },
+    {
+      name: '고속 베기',
+      cost: 2,
+      type: 'attack',
+      grade: 'gray',
+      media: 'cards/유키/attack.webp',
+      tooltip: '피해 220%'
+    },
+    {
+      name: '흘려 보내기',
+      cost: 1,
+      type: 'skill',
+      grade: 'gray',
+      media: 'cards/유키/skill.webp',
+      tooltip: '실드 100%'
+    },
+    {
+      name: '제압 준비',
+      cost: 0,
+      type: 'skill',
+      grade: 'blue',
+      media: 'cards/유키/blue1.webp',
+      tooltip: '자신의 공격 카드 드로우 1\n1턴간 그 카드 피해량 40% 증가',
+      awakenings: [
+        { cost: 0, type: 'skill', tooltip: '|[ 보존 ]|\n자신의 공격 카드 드로우 1\n1턴간 그 카드 피해량 |80|% 증가' },
+        { cost: 0, type: 'skill', tooltip: '자신의 공격 카드 드로우 1\n1턴간 |자신의 공격| 카드 피해량 \\30\\% 증가' },
+        { cost: 0, type: 'skill', tooltip: '자신의 공격 카드 드로우 |2|\n1턴간 그 카드의 피해량 \\10\\% \\감소\\' },
+        { cost: 0, type: 'skill', tooltip: '자신의 공격 카드 드로우 1\n1턴간 그 카드 피해량 40% 증가\n|영감 : 자신의 공격 카드 드로우 1|' },
+        { cost: 0, type: 'skill', tooltip: '자신의 공격 카드 드로우 1\n|다음 턴 시작 시 자신의 공격 카드 드로우 2|' }
+      ]
+    },
+    {
+      name: '츠쿠요미',
+      cost: 0,
+      type: 'skill',
+      grade: 'blue',
+      media: 'cards/치즈루/blue2.webp',
+      tooltip: '다음 자신의 공격 카드 사용 시 타격 수만큼 도깨비불 3',
+      awakenings: [
+        { cost: 0, type: 'skill', tooltip: '다음 자신의 공격 카드 사용 시 타격 수만큼 도깨비불 |4|' },
+        { cost: 0, type: 'skill', tooltip: '다음 자신의 공격 카드 사용 시 |타격 1회 추가|\n타격 수만큼 도깨비불 \\2\\' },
+        { cost: 0, type: 'skill', tooltip: '|다음 자신의 "달그림자" 혹은 "달그림자+" 타격 2회 추가|', plus_card: [ '달그림자', '달그림자+' ] },
+        { cost: 0, type: 'skill', tooltip: '|핸드에 있는 자신의 공격 카드 수만큼| 도깨비불 3' },
+        { cost: 1, type: 'upgrade', tooltip: '|[ 유일 / 주도 ]|\n|자신의 공격 카드 사용 시 도깨비불 2|' }
+      ]
+    },
+    {
+      name: '황혼의 결속',
+      cost: 1,
+      type: 'upgrade',
+      grade: 'blue',
+      media: 'cards/치즈루/blue3.webp',
+      tooltip: '[ 개전 / 유일 ]\n턴 시작 시 구속 획득\n무작위 다른 전투원 카드 2장 사용 시까지 비용 1 감소',
+      awakenings: [
+        { cost: 0, type: 'upgrade', tooltip: '[ 개전 / 유일 ]\n턴 시작 시 구속 획득\n무작위 다른 전투원 카드 2장 사용 시까지 비용 1 감소' },
+        { cost: 1, type: 'upgrade', tooltip: '[ 개전 / 유일 ]\n턴 시작 시 구속 획득\n|"달그림자+" 사용 시, 다음 사용하는 카드 1장 사용 시까지| 비용 1 감소', plus_card: '달그림자+' },
+        { cost: 1, type: 'upgrade', tooltip: '[ 개전 / 유일 ]\n턴 시작 시 구속 획득\n무작위 다른 전투원 카드 2장 |발동|' },
+        { cost: 1, type: 'upgrade', tooltip: '[ 개전 / 유일 ]\n턴 시작 시 구속 획득\n무작위 |주도 카드 2장 발동|' },
+        { cost: 1, type: 'upgrade', tooltip: '[ 개전 / 유일 ]\n턴 시작 시 구속 획득\n|비용이 가장 높은 카드 1장 사용 시까지 비용 2 감소|' }
+      ]
+    },
+    {
+      name: '도깨비 사냥',
+      cost: 1,
+      type: 'attack',
+      grade: 'yellow',
+      media: 'cards/치즈루/yellow.webp',
+      tooltip: '[ 신속 ]\n피해 60% × 3\n다음 사용하는 결속 카드 피해량 +80%',
+      awakenings: [
+        { cost: 1, type: 'attack', tooltip: '[ 신속 ]\n피해 \\50\\% × |4|\n다음 사용하는 결속 카드 피해량 +|100|%' },
+        { cost: 1, type: 'attack', tooltip: '[ 신속 ]\n피해 |150|% × \\2\\\n다음 사용하는 결속 카드 피해량 +|100|%' },
+        { cost: 1, type: 'attack', tooltip: '[ 신속 ]\n피해 |100|% × 3\n|"달그림자"를 제외한 핸드에 다른 공격 카드가 없다면 타격 2회 추가|', plus_card: '달그림자' },
+        { cost: 1, type: 'skill', tooltip: '[ 신속 ]\n|"참월" 2장 생성|\n|그 카드에 소멸 부여|\n|사용 시까지 비용 1 감소|', plus_card: '참월' },
+        { cost: 1, type: 'upgrade', tooltip: '|[ 유일 ]|\n|"달그림자+" 피해량 +80%|\n|턴 시작 시 도깨비불 3|', plus_card: '달그림자+' }
+      ]
+    },
+    {
+      name: '달그림자',
+      cost: 1,
+      type: 'attack',
+      grade: 'purple',
+      grade_color: 'purple',
+      media: 'cards/치즈루/purple.webp',
+      tooltip: '[ 결속 1 / 보존 ]\n피해 80%\n결속 중첩 수만큼 피해량 +80%'
+    },
+    {
+      name: '달그림자+',
+      cost: 1,
+      type: 'attack',
+      grade: '',
+      grade_color: 'purple',
+      media: 'cards/치즈루/purple.webp',
+      tooltip: '[ 유일 / 결속 3 / 보존 ]\n피해 180% × 2\n최대 체력의 5% 만큼 회복\n결속 중첩 수만큼 피해량 +80%'
+    }
   ]
 };
