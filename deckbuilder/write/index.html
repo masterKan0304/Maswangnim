@@ -292,8 +292,7 @@
   .deckbuild-chaos-section{margin-top:12px;}
   .deckbuild-chaos-title{font-size:11.5px;font-weight:800;color:var(--ink);margin-bottom:8px;}
   .deckbuild-chaos-images{display:flex;align-items:center;cursor:help;}
-  .deckbuild-chaos-img{width:44px;height:44px;border-radius:8px;object-fit:cover;border:1.5px solid var(--line);
-    background:#fff;position:relative;}
+  .deckbuild-chaos-img{width:57px;height:57px;object-fit:contain;position:relative;}
   .deckbuild-chaos-empty{font-size:10.5px;font-weight:700;color:var(--sub);line-height:1.5;}
 
   .deckbuild-equip-section{margin-top:12px;}
@@ -311,13 +310,11 @@
     background:#e5303d;border:1.5px solid #fff;color:#fff;display:flex;align-items:center;justify-content:center;
     font-size:11px;line-height:1;padding:0;cursor:pointer;}
   .deckbuild-equip-remove-btn:hover{background:#c92531;}
-  .deckbuild-equip-enhance-icon{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-    width:60%;height:60%;object-fit:contain;pointer-events:none;z-index:4;filter:drop-shadow(0 1px 3px rgba(0,0,0,.6));}
-  .deckbuild-equip-enhance-icon.hammer{top:auto;bottom:2px;left:50%;transform:translateX(-50%);height:70%;width:auto;}
   .deckbuild-equip-enhance-btn{position:absolute;bottom:3px;left:3px;z-index:6;width:16px;height:16px;border-radius:5px;
     background:#fff;border:1.5px solid var(--line);color:var(--ink);display:flex;align-items:center;justify-content:center;
-    font-size:12px;font-weight:800;line-height:1;padding:0;cursor:pointer;}
+    font-size:12px;font-weight:800;line-height:1;padding:0;cursor:pointer;overflow:hidden;}
   .deckbuild-equip-enhance-btn:hover{background:var(--surface-2);}
+  .deckbuild-equip-enhance-btn img{width:100%;height:100%;object-fit:contain;}
 
   .grade-blue,.deckbuild-equip-slot.grade-blue{background:linear-gradient(135deg,#152a6e 0%,#2469d6 38%,#3fd6c8 72%,#8ee9ff 100%);border-color:#4fc3f7;}
   .grade-yellow,.deckbuild-equip-slot.grade-yellow{background:linear-gradient(135deg,#e0791e 0%,#6e4022 45%,#f5c518 100%);border-color:#f5c518;}
@@ -458,7 +455,7 @@
   .wpop-cat-row{display:flex;gap:8px;flex-wrap:wrap;}
   .wpop-cat-btn{padding:7px 16px;border-radius:20px;border:1px solid var(--line);background:var(--surface-2);color:var(--sub);font-size:12.5px;font-weight:700;}
   .wpop-cat-btn.active{background:var(--orange);border-color:var(--orange);color:#fff;}
-  .wpop-cat-btn.disabled{opacity:.4;cursor:default;pointer-events:none;}
+  .wpop-cat-btn.disabled{opacity:.4;cursor:default;}
 
   /* ============ 장비 강화 팝업 ============ */
   .enhance-pop-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
@@ -2163,12 +2160,12 @@ document.getElementById('startBtn').addEventListener('click', function(){
     });
   }
 
-  function equipEnhanceOverlayHtml(enh){
-    if (!enh) return '';
-    if (enh.hammer) return '<img class="deckbuild-equip-enhance-icon hammer" src="../../weapon/icon_hammer.png" alt="">';
-    if (enh.refine) return '<img class="deckbuild-equip-enhance-icon" src="../../weapon/icon_upgrade.png" alt="">';
-    if (enh.imprint) return '<img class="deckbuild-equip-enhance-icon" src="'+(enh.imprint.type === 'light' ? '../../cards/icon_light.webp' : '../../cards/icon_dark.webp')+'" alt="">';
-    return '';
+  function enhanceIconSrc(enh){
+    if (!enh) return null;
+    if (enh.hammer) return '../../weapon/icon_hammer.png';
+    if (enh.refine) return '../../weapon/icon_upgrade.png';
+    if (enh.imprint) return enh.imprint.type === 'light' ? '../../cards/icon_light.webp' : '../../cards/icon_dark.webp';
+    return null;
   }
 
   function renderEquipSection(row){
@@ -2180,13 +2177,15 @@ document.getElementById('startBtn').addEventListener('click', function(){
       var ic = equipIconSrcAndClass(item, t);
       var removeBtnHtml = item ? '<button type="button" class="deckbuild-equip-remove-btn" data-remove-type="'+t+'">&times;</button>' : '';
       var enh = row.equipEnhance[t];
+      var iconSrc = enhanceIconSrc(enh);
       var enhanceBtnHtml = (item && equipQualifiesForEnhance(item)) ?
-        '<button type="button" class="deckbuild-equip-enhance-btn" data-enhance-type="'+t+'">+</button>' : '';
+        '<button type="button" class="deckbuild-equip-enhance-btn" data-enhance-type="'+t+'">' +
+          (iconSrc ? '<img src="'+iconSrc+'" alt="">' : '+') +
+        '</button>' : '';
       return '<div class="deckbuild-equip-slot'+gradeClass+'" data-equip-type="'+t+'" data-equip-idx="'+(item ? idx : '')+'">' +
         '<div class="deckbuild-equip-type-badge"><img src="'+EQUIP_TYPE_ICON[t]+'" alt=""></div>' +
         removeBtnHtml +
         '<img class="deckbuild-equip-slot-icon'+ic.cls+'" src="'+ic.src+'" alt="">' +
-        equipEnhanceOverlayHtml(enh) +
         enhanceBtnHtml +
       '</div>';
     }).join('');
@@ -2673,7 +2672,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
   };
   function cardChaosLock(c){
     if (c.source === 'persona') return '허상의 극장';
-    if (String(c.tooltip || '').indexOf('금기 : ') !== -1) return '제 0 연구소';
+    if (String(c.name || '').indexOf('금기 : ') !== -1) return '제 0 연구소';
     if (CHAOS_LOCK_BY_NAME.hasOwnProperty(c.name)) return CHAOS_LOCK_BY_NAME[c.name];
     return null;
   }
@@ -2801,6 +2800,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
     deckState[row].equipment[type] = null;
     if (!deckState[row].equipEnhance) deckState[row].equipEnhance = { weapon: null, armor: null, accessory: null };
     deckState[row].equipEnhance[type] = null;
+    hideEquipZoom();
     renderDeckBox();
   }
 
@@ -2825,7 +2825,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
   var enhanceSubFilters = document.getElementById('enhanceSubFilters');
   var enhancePopGrid = document.getElementById('enhancePopGrid');
   var enhancePopConfirmBtn = document.getElementById('enhancePopConfirmBtn');
-  var enhancePopState = { rowIdx: -1, type: null, tab: 'refine', search: '', imprintType: null, selectedIdx: null };
+  var enhancePopState = { rowIdx: -1, type: null, tab: 'refine', search: '', imprintType: null, pendingRefineIdx: null, pendingHammerIdx: null, pendingImprintIdx: null };
 
   function currentEnhance(){
     var row = deckState[enhancePopState.rowIdx];
@@ -2834,11 +2834,32 @@ document.getElementById('startBtn').addEventListener('click', function(){
     return row.equipEnhance[enhancePopState.type];
   }
 
-  function enhanceTabAvailable(tab){
+  function pendingIdxForTab(tab){
+    if (tab === 'refine') return enhancePopState.pendingRefineIdx;
+    if (tab === 'hammer') return enhancePopState.pendingHammerIdx;
+    if (tab === 'imprint') return enhancePopState.pendingImprintIdx;
+    return null;
+  }
+  function setPendingIdxForTab(tab, idx){
+    if (tab === 'refine') enhancePopState.pendingRefineIdx = idx;
+    else if (tab === 'hammer') enhancePopState.pendingHammerIdx = idx;
+    else if (tab === 'imprint') enhancePopState.pendingImprintIdx = idx;
+  }
+  function hasPendingOrApplied(kind){
     var enh = currentEnhance();
-    if (tab === 'refine') return !enh.imprint;
-    if (tab === 'hammer') return !!enh.refine && !enh.imprint && !hammerAppliedElsewhere(enhancePopState.rowIdx, enhancePopState.type);
-    if (tab === 'imprint') return !enh.refine && !enh.hammer;
+    if (kind === 'refine') return !!enh.refine || enhancePopState.pendingRefineIdx !== null;
+    if (kind === 'hammer') return !!enh.hammer || enhancePopState.pendingHammerIdx !== null;
+    if (kind === 'imprint') return !!enh.imprint || enhancePopState.pendingImprintIdx !== null;
+    return false;
+  }
+
+  function enhanceTabAvailable(tab){
+    var refineActive = hasPendingOrApplied('refine');
+    var hammerActive = hasPendingOrApplied('hammer');
+    var imprintActive = hasPendingOrApplied('imprint');
+    if (tab === 'refine') return !imprintActive;
+    if (tab === 'hammer') return refineActive && !imprintActive && !hammerAppliedElsewhere(enhancePopState.rowIdx, enhancePopState.type);
+    if (tab === 'imprint') return !refineActive && !hammerActive;
     return true;
   }
   function enhanceTabLabel(tab){
@@ -2846,6 +2867,19 @@ document.getElementById('startBtn').addEventListener('click', function(){
       return '신의 망치 (이미 적용 중)';
     }
     return tab === 'refine' ? '재련' : (tab === 'hammer' ? '신의 망치' : '각인');
+  }
+  function enhanceTabDisabledReason(tab){
+    var refineActive = hasPendingOrApplied('refine');
+    var hammerActive = hasPendingOrApplied('hammer');
+    var imprintActive = hasPendingOrApplied('imprint');
+    if (tab === 'refine' && imprintActive) return '각인이 선택된 장비에는 재련을 적용할 수 없습니다.';
+    if (tab === 'hammer') {
+      if (imprintActive) return '각인이 선택된 장비에는 신의 망치를 적용할 수 없습니다.';
+      if (!refineActive) return '재련을 먼저 선택해야 신의 망치를 적용할 수 있습니다.';
+      if (hammerAppliedElsewhere(enhancePopState.rowIdx, enhancePopState.type)) return '신의 망치는 덱 전체에서 하나의 장비에만 적용할 수 있습니다.';
+    }
+    if (tab === 'imprint' && (refineActive || hammerActive)) return '재련 또는 신의 망치가 선택된 장비에는 각인을 적용할 수 없습니다.';
+    return '';
   }
 
   function findExistingSelectedIdx(tab){
@@ -2871,14 +2905,25 @@ document.getElementById('startBtn').addEventListener('click', function(){
       return '<button type="button" class="wpop-cat-btn'+activeClass+disabledClass+'" data-tab="'+tab+'">'+enhanceTabLabel(tab)+'</button>';
     }).join('');
     Array.prototype.forEach.call(enhanceTabRow.querySelectorAll('[data-tab]'), function(btn){
+      var tab = btn.getAttribute('data-tab');
       btn.addEventListener('click', function(){
-        var tab = btn.getAttribute('data-tab');
         if (tab !== enhancePopState.tab && !enhanceTabAvailable(tab)) return;
         enhancePopState.tab = tab;
         enhancePopState.search = '';
         enhancePopState.imprintType = null;
-        enhancePopState.selectedIdx = findExistingSelectedIdx(tab);
         renderEnhancePopup();
+      });
+      btn.addEventListener('mouseenter', function(e){
+        if (tab === enhancePopState.tab || enhanceTabAvailable(tab)) return;
+        var reason = enhanceTabDisabledReason(tab);
+        if (reason) showEquipSourceTooltip(reason, e.clientX, e.clientY);
+      });
+      btn.addEventListener('mousemove', function(e){
+        if (tab === enhancePopState.tab || enhanceTabAvailable(tab)) return;
+        if (enhanceTabDisabledReason(tab)) positionEquipSourceTooltip(e.clientX, e.clientY);
+      });
+      btn.addEventListener('mouseleave', function(){
+        hideEquipSourceTooltip();
       });
     });
   }
@@ -2922,12 +2967,13 @@ document.getElementById('startBtn').addEventListener('click', function(){
     }
     if (!indexed.length) {
       enhancePopGrid.innerHTML = '<div class="wpop-empty">해당하는 항목이 없습니다.</div>';
-      enhancePopConfirmBtn.disabled = true;
+      updateEnhanceConfirmState();
       return;
     }
     var isImprint = enhancePopState.tab === 'imprint';
+    var curPending = pendingIdxForTab(enhancePopState.tab);
     enhancePopGrid.innerHTML = indexed.map(function(x){
-      var selected = enhancePopState.selectedIdx === x.idx ? ' selected' : '';
+      var selected = curPending === x.idx ? ' selected' : '';
       if (isImprint) {
         return '<div class="persona-opt-box'+selected+'" data-idx="'+x.idx+'">' +
           '<img class="persona-opt-icon" src="'+(x.item.type === 'light' ? '../../cards/icon_light.webp' : '../../cards/icon_dark.webp')+'" alt="">' +
@@ -2938,12 +2984,17 @@ document.getElementById('startBtn').addEventListener('click', function(){
     }).join('');
     Array.prototype.forEach.call(enhancePopGrid.querySelectorAll('[data-idx]'), function(el){
       el.addEventListener('click', function(){
-        enhancePopState.selectedIdx = parseInt(el.getAttribute('data-idx'), 10);
+        setPendingIdxForTab(enhancePopState.tab, parseInt(el.getAttribute('data-idx'), 10));
+        renderEnhanceTabs();
         renderEnhancePopGrid();
-        enhancePopConfirmBtn.disabled = false;
       });
     });
-    enhancePopConfirmBtn.disabled = enhancePopState.selectedIdx === null;
+    updateEnhanceConfirmState();
+  }
+
+  function updateEnhanceConfirmState(){
+    var any = enhancePopState.pendingRefineIdx !== null || enhancePopState.pendingHammerIdx !== null || enhancePopState.pendingImprintIdx !== null;
+    enhancePopConfirmBtn.disabled = !any;
   }
 
   function renderEnhancePopup(){
@@ -2959,28 +3010,42 @@ document.getElementById('startBtn').addEventListener('click', function(){
     enhancePopState.tab = (enh && enh.hammer) ? 'hammer' : ((enh && enh.refine) ? 'refine' : ((enh && enh.imprint) ? 'imprint' : 'refine'));
     enhancePopState.search = '';
     enhancePopState.imprintType = null;
-    enhancePopState.selectedIdx = findExistingSelectedIdx(enhancePopState.tab);
+    enhancePopState.pendingRefineIdx = findExistingSelectedIdx('refine');
+    enhancePopState.pendingHammerIdx = findExistingSelectedIdx('hammer');
+    enhancePopState.pendingImprintIdx = findExistingSelectedIdx('imprint');
     renderEnhancePopup();
     enhancePopOverlay.classList.add('open');
   }
   function closeEnhancePopup(){
     enhancePopOverlay.classList.remove('open');
+    hideEquipSourceTooltip();
   }
   document.getElementById('enhancePopClose').addEventListener('click', closeEnhancePopup);
   enhancePopOverlay.addEventListener('click', function(e){ if (e.target === enhancePopOverlay) closeEnhancePopup(); });
 
   enhancePopConfirmBtn.addEventListener('click', function(){
-    if (enhancePopState.selectedIdx === null) return;
     var enh = currentEnhance();
-    if (enhancePopState.tab === 'refine') {
-      enh.refine = { tooltip: EQUIP_REFINE[enhancePopState.selectedIdx].tooltip };
-    } else if (enhancePopState.tab === 'hammer') {
-      var h = EQUIP_HAMMER[enhancePopState.selectedIdx];
-      enh.hammer = { grade: h.grade, tooltip: h.tooltip };
-    } else if (enhancePopState.tab === 'imprint') {
-      var im = EQUIP_IMPRINT[enhancePopState.selectedIdx];
+    var applied = false;
+    if (enhancePopState.pendingImprintIdx !== null) {
+      var im = EQUIP_IMPRINT[enhancePopState.pendingImprintIdx];
       enh.imprint = { type: im.type, tooltip: im.tooltip };
+      enh.refine = null;
+      enh.hammer = null;
+      applied = true;
+    } else {
+      if (enhancePopState.pendingRefineIdx !== null) {
+        enh.refine = { tooltip: EQUIP_REFINE[enhancePopState.pendingRefineIdx].tooltip };
+        enh.imprint = null;
+        applied = true;
+      }
+      if (enhancePopState.pendingHammerIdx !== null) {
+        var h = EQUIP_HAMMER[enhancePopState.pendingHammerIdx];
+        enh.hammer = { grade: h.grade, tooltip: h.tooltip };
+        enh.imprint = null;
+        applied = true;
+      }
     }
+    if (!applied) return;
     closeEnhancePopup();
     renderDeckBox();
   });
@@ -3036,10 +3101,12 @@ document.getElementById('startBtn').addEventListener('click', function(){
     if (cardPopState.cat === 'persona' && c.source !== 'persona') return false;
     if (cardPopState.search && c.name.indexOf(cardPopState.search) === -1) return false;
     var row = deckState[cardPopState.row];
-    var hardLock = row ? computeChaosLock(row) : null;
-    if (hardLock) {
-      var cardLock = cardChaosLock(c);
-      if (cardLock && cardLock !== hardLock) return false;
+    if (row) {
+      var chaosNames = computeChaosManifestation(row).names;
+      if (chaosNames.length) {
+        var cardLock = cardChaosLock(c);
+        if (cardLock && chaosNames.indexOf(cardLock) === -1) return false;
+      }
     }
     return true;
   }

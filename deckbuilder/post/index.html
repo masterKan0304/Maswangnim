@@ -304,8 +304,7 @@
   .deckbuild-chaos-section{margin-top:12px;}
   .deckbuild-chaos-title{font-size:11.5px;font-weight:800;color:var(--ink);margin-bottom:8px;}
   .deckbuild-chaos-images{display:flex;align-items:center;cursor:help;}
-  .deckbuild-chaos-img{width:44px;height:44px;border-radius:8px;object-fit:cover;border:1.5px solid var(--line);
-    background:#fff;position:relative;}
+  .deckbuild-chaos-img{width:57px;height:57px;object-fit:contain;position:relative;}
   .deckbuild-chaos-empty{font-size:10.5px;font-weight:700;color:var(--sub);line-height:1.5;}
 
   /* ============ 장비 슬롯 ============ */
@@ -320,9 +319,9 @@
   .deckbuild-equip-type-badge{position:absolute;top:3px;left:3px;z-index:5;width:16px;height:16px;border-radius:3px;
     background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;pointer-events:none;}
   .deckbuild-equip-type-badge img{width:82%;height:82%;object-fit:contain;filter:brightness(0) invert(100%);}
-  .deckbuild-equip-enhance-icon{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-    width:60%;height:60%;object-fit:contain;pointer-events:none;z-index:4;filter:drop-shadow(0 1px 3px rgba(0,0,0,.6));}
-  .deckbuild-equip-enhance-icon.hammer{top:auto;bottom:2px;left:50%;transform:translateX(-50%);height:70%;width:auto;}
+  .deckbuild-equip-enhance-badge{position:absolute;bottom:3px;left:3px;z-index:6;width:16px;height:16px;border-radius:5px;
+    background:#fff;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;overflow:hidden;pointer-events:none;}
+  .deckbuild-equip-enhance-badge img{width:100%;height:100%;object-fit:contain;}
 
   .grade-blue,.deckbuild-equip-slot.grade-blue{background:linear-gradient(135deg,#152a6e 0%,#2469d6 38%,#3fd6c8 72%,#8ee9ff 100%);border-color:#4fc3f7;}
   .grade-yellow,.deckbuild-equip-slot.grade-yellow{background:linear-gradient(135deg,#e0791e 0%,#6e4022 45%,#f5c518 100%);border-color:#f5c518;}
@@ -1450,7 +1449,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
   };
   function cardChaosLock(c){
     if (c.source === 'persona') return '허상의 극장';
-    if (String(c.tooltip || '').indexOf('금기 : ') !== -1) return '제 0 연구소';
+    if (String(c.name || '').indexOf('금기 : ') !== -1) return '제 0 연구소';
     if (CHAOS_LOCK_BY_NAME.hasOwnProperty(c.name)) return CHAOS_LOCK_BY_NAME[c.name];
     return null;
   }
@@ -1492,12 +1491,12 @@ document.getElementById('startBtn').addEventListener('click', function(){
     return { names: intersection, text: text };
   }
 
-  function equipEnhanceOverlayHtml(enh){
-    if (!enh) return '';
-    if (enh.hammer) return '<img class="deckbuild-equip-enhance-icon hammer" src="../../weapon/icon_hammer.png" alt="">';
-    if (enh.refine) return '<img class="deckbuild-equip-enhance-icon" src="../../weapon/icon_upgrade.png" alt="">';
-    if (enh.imprint) return '<img class="deckbuild-equip-enhance-icon" src="'+(enh.imprint.type === 'light' ? '../../cards/icon_light.webp' : '../../cards/icon_dark.webp')+'" alt="">';
-    return '';
+  function enhanceIconSrc(enh){
+    if (!enh) return null;
+    if (enh.hammer) return '../../weapon/icon_hammer.png';
+    if (enh.refine) return '../../weapon/icon_upgrade.png';
+    if (enh.imprint) return enh.imprint.type === 'light' ? '../../cards/icon_light.webp' : '../../cards/icon_dark.webp';
+    return null;
   }
 
   function renderEquipSection(row){
@@ -1506,10 +1505,12 @@ document.getElementById('startBtn').addEventListener('click', function(){
       var item = enh ? (window.EQUIPMENT_DATA || []).filter(function(e){ return e.name === enh.name; })[0] : null;
       var gradeClass = item ? ' grade-'+item.grade : '';
       var ic = equipIconSrcAndClass(item, t);
+      var iconSrc = enhanceIconSrc(enh);
+      var enhanceBadgeHtml = iconSrc ? '<div class="deckbuild-equip-enhance-badge"><img src="'+iconSrc+'" alt=""></div>' : '';
       return '<div class="deckbuild-equip-slot'+gradeClass+'" data-equip-type="'+t+'"'+(item ? ' data-equip-name="'+item.name.replace(/"/g,'&quot;')+'"' : '')+'>' +
         '<div class="deckbuild-equip-type-badge"><img src="'+EQUIP_TYPE_ICON[t]+'" alt=""></div>' +
         '<img class="deckbuild-equip-slot-icon'+ic.cls+'" src="'+ic.src+'" alt="">' +
-        equipEnhanceOverlayHtml(enh) +
+        enhanceBadgeHtml +
       '</div>';
     }).join('');
     return '<div class="deckbuild-equip-section">' +
