@@ -1448,7 +1448,8 @@ document.getElementById('startBtn').addEventListener('click', function(){
       wrongGuesses: [],
       solved: false,
       answerRevealed: false,
-      solvedIllust: false
+      solvedIllust: false,
+      dailyScore: 0
     };
     quizState.totalHints = 5 + quizState.tooltipSegments.filter(function(s){ return s.type === 'seg'; }).length;
     quizMainPopup.classList.remove('active');
@@ -1470,26 +1471,36 @@ document.getElementById('startBtn').addEventListener('click', function(){
   }
 
   function renderSetHeaderHtml(){
-    if (quizState.mode !== 'free' || !quizSet) return '';
-    var previewScore = (quizState.solved || quizState.answerRevealed) ? null :
-      computeQuestionScore(quizState.infoCount, quizState.totalHints);
-    return '<div class="quiz-set-header" id="quizSetHeader">' +
-      '<div class="quiz-set-progress"><b>' + (quizSet.index + 1) + '</b>/<b>' + quizSet.cards.length + '</b>' +
-        '<span class="quiz-set-correct">' + quizSet.correctCount + '개 정답</span></div>' +
-      '<div class="quiz-set-score">' + quizSet.totalScore + '점</div>' +
-      (previewScore !== null ? '<div class="quiz-score-preview" id="quizScorePreview">+' + previewScore + '</div>' : '') +
-    '</div>';
+    if (quizState.mode === 'free' && quizSet) {
+      var previewScore = (quizState.solved || quizState.answerRevealed) ? null :
+        computeQuestionScore(quizState.infoCount, quizState.totalHints);
+      return '<div class="quiz-set-header" id="quizSetHeader">' +
+        '<div class="quiz-set-progress"><b>' + (quizSet.index + 1) + '</b>/<b>' + quizSet.cards.length + '</b>' +
+          '<span class="quiz-set-correct">' + quizSet.correctCount + '개 정답</span></div>' +
+        '<div class="quiz-set-score">' + quizSet.totalScore + '점</div>' +
+        (previewScore !== null ? '<div class="quiz-score-preview" id="quizScorePreview">+' + previewScore + '</div>' : '') +
+      '</div>';
+    }
+    if (quizState.mode === 'daily') {
+      var dailyPreviewScore = (quizState.solved || quizState.answerRevealed) ? null :
+        computeQuestionScore(quizState.infoCount, quizState.totalHints);
+      return '<div class="quiz-set-header" id="quizSetHeader">' +
+        '<div class="quiz-set-score">' + (quizState.dailyScore || 0) + '점</div>' +
+        (dailyPreviewScore !== null ? '<div class="quiz-score-preview" id="quizScorePreview">+' + dailyPreviewScore + '</div>' : '') +
+      '</div>';
+    }
+    return '';
   }
 
   function updateSetHeader(){
     var el = document.getElementById('quizSetHeader');
-    if (!el || quizState.mode !== 'free' || !quizSet) return;
+    if (!el || !quizState || (quizState.mode !== 'daily' && (quizState.mode !== 'free' || !quizSet))) return;
     el.outerHTML = renderSetHeaderHtml();
   }
 
   function updateScorePreview(){
     var el = document.getElementById('quizScorePreview');
-    if (!el || quizState.mode !== 'free' || !quizSet) return;
+    if (!el || !quizState || (quizState.mode !== 'daily' && (quizState.mode !== 'free' || !quizSet))) return;
     el.textContent = '+' + computeQuestionScore(quizState.infoCount, quizState.totalHints);
   }
 
@@ -1801,6 +1812,8 @@ document.getElementById('startBtn').addEventListener('click', function(){
       var questionScore = won ? computeQuestionScore(infoCountAtWin, quizState.totalHints) : 0;
       if (won) quizSet.correctCount++;
       quizSet.totalScore += questionScore;
+    } else if (quizState.mode === 'daily') {
+      quizState.dailyScore = won ? computeQuestionScore(infoCountAtWin, quizState.totalHints) : 0;
     }
 
     quizState.solved = won;
