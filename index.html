@@ -2722,7 +2722,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
   }
 
   function renderCardZoomPlusRows(plusCards, attrId, baseGrade){
-    cardZoomPlusEl.classList.toggle('size-sm', plusCards.length === 3);
+    cardZoomPlusEl.classList.toggle('size-sm', plusCards.length >= 3);
     if (plusCards.length <= 3) {
       cardZoomPlusEl.innerHTML = '<div class="card-zoom-plus-row">' +
         plusCards.map(function(pc){ return renderCardHTML(pc, attrId, baseGrade); }).join('') +

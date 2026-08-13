@@ -1465,7 +1465,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
   var cardZoomPlusEl = document.getElementById('cardZoomPlusPreview');
 
   function renderCardZoomPlusRows(plusCards, baseGrade){
-    cardZoomPlusEl.classList.toggle('size-sm', plusCards.length === 3);
+    cardZoomPlusEl.classList.toggle('size-sm', plusCards.length >= 3);
     if (plusCards.length <= 3) {
       cardZoomPlusEl.innerHTML = '<div class="card-zoom-plus-row">' +
         plusCards.map(function(pc){ return renderCardCellHtml(pc, baseGrade); }).join('') +
