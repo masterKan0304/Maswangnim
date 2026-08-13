@@ -1172,6 +1172,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
       });
     });
     var addedTags = addOrder.map(function(t){
+      if (t !== '소멸') return t;
       return (occ[t] === 1 && sums[t] === 1) ? t : (t + ' ' + sums[t]);
     });
     var finalTags = baseTags.concat(addedTags);
