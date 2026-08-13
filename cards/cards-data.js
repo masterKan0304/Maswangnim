@@ -1553,7 +1553,7 @@ window.AGENTS_CARDS = {
       cost: 2,
       type: 'attack',
       grade: 'gray',
-      media: 'cards/유키/attack.webp',
+      media: 'cards/유키/attack2.webp',
       tooltip: '피해 220%'
     },
     {
@@ -1580,67 +1580,153 @@ window.AGENTS_CARDS = {
       ]
     },
     {
-      name: '츠쿠요미',
-      cost: 0,
-      type: 'skill',
+      name: '훔쳐베기',
+      cost: 2,
+      type: 'attack',
       grade: 'blue',
-      media: 'cards/치즈루/blue2.webp',
-      tooltip: '다음 자신의 공격 카드 사용 시 타격 수만큼 도깨비불 3',
+      media: 'cards/유키/blue2.webp',
+      tooltip: '모든 적 피해 220%\n단일 대상일 경우 피해량 50% 증가\n영감 : 비용 1 감소',
       awakenings: [
-        { cost: 0, type: 'skill', tooltip: '다음 자신의 공격 카드 사용 시 타격 수만큼 도깨비불 |4|' },
-        { cost: 0, type: 'skill', tooltip: '다음 자신의 공격 카드 사용 시 |타격 1회 추가|\n타격 수만큼 도깨비불 \\2\\' },
-        { cost: 0, type: 'skill', tooltip: '|다음 자신의 "달그림자" 혹은 "달그림자+" 타격 2회 추가|', plus_card: [ '달그림자', '달그림자+' ] },
-        { cost: 0, type: 'skill', tooltip: '|핸드에 있는 자신의 공격 카드 수만큼| 도깨비불 3' },
-        { cost: 1, type: 'upgrade', tooltip: '|[ 유일 / 주도 ]|\n|자신의 공격 카드 사용 시 도깨비불 2|' }
+        { cost: 2, type: 'attack', tooltip: '모든 적 피해 |330|%\n단일 대상일 경우 피해량 50% 증가\n영감 : 비용 1 감소' },
+        { cost: 2, type: 'attack', tooltip: '모든 적 피해 220%\n단일 대상일 경우 피해량 50% 증가\n영감 : 비용 |2| 감소' },
+        { cost: 2, type: 'attack', tooltip: '모든 적 피해 220%\n단일 대상일 경우 피해량 50% 증가\n영감 : |타격 1회 추가|' },
+        { cost: 2, type: 'attack', tooltip: '|[ 보존 ]|\n|피해 400%|\n|1턴간 드로우한 자신의 카드 수만큼 피해량 +150% (최대 5)|' },
+        { cost: 3, type: 'attack', tooltip: '모든 적 피해 |360|%\n|사용 시 비용 1 감소|\n단일 대상일 경우 피해량 50% 증가' }
       ]
     },
     {
-      name: '황혼의 결속',
-      cost: 1,
-      type: 'upgrade',
-      grade: 'blue',
-      media: 'cards/치즈루/blue3.webp',
-      tooltip: '[ 개전 / 유일 ]\n턴 시작 시 구속 획득\n무작위 다른 전투원 카드 2장 사용 시까지 비용 1 감소',
-      awakenings: [
-        { cost: 0, type: 'upgrade', tooltip: '[ 개전 / 유일 ]\n턴 시작 시 구속 획득\n무작위 다른 전투원 카드 2장 사용 시까지 비용 1 감소' },
-        { cost: 1, type: 'upgrade', tooltip: '[ 개전 / 유일 ]\n턴 시작 시 구속 획득\n|"달그림자+" 사용 시, 다음 사용하는 카드 1장 사용 시까지| 비용 1 감소', plus_card: '달그림자+' },
-        { cost: 1, type: 'upgrade', tooltip: '[ 개전 / 유일 ]\n턴 시작 시 구속 획득\n무작위 다른 전투원 카드 2장 |발동|' },
-        { cost: 1, type: 'upgrade', tooltip: '[ 개전 / 유일 ]\n턴 시작 시 구속 획득\n무작위 |주도 카드 2장 발동|' },
-        { cost: 1, type: 'upgrade', tooltip: '[ 개전 / 유일 ]\n턴 시작 시 구속 획득\n|비용이 가장 높은 카드 1장 사용 시까지 비용 2 감소|' }
-      ]
-    },
-    {
-      name: '도깨비 사냥',
+      name: '눈속임 일격',
       cost: 1,
       type: 'attack',
-      grade: 'yellow',
-      media: 'cards/치즈루/yellow.webp',
-      tooltip: '[ 신속 ]\n피해 60% × 3\n다음 사용하는 결속 카드 피해량 +80%',
+      grade: 'blue',
+      media: 'cards/유키/blue3.webp',
+      tooltip: '[ 보존 ]\n피해 180%\n핸드의 무작위 자신의 카드 1장 영감 효과 활성화',
       awakenings: [
-        { cost: 1, type: 'attack', tooltip: '[ 신속 ]\n피해 \\50\\% × |4|\n다음 사용하는 결속 카드 피해량 +|100|%' },
-        { cost: 1, type: 'attack', tooltip: '[ 신속 ]\n피해 |150|% × \\2\\\n다음 사용하는 결속 카드 피해량 +|100|%' },
-        { cost: 1, type: 'attack', tooltip: '[ 신속 ]\n피해 |100|% × 3\n|"달그림자"를 제외한 핸드에 다른 공격 카드가 없다면 타격 2회 추가|', plus_card: '달그림자' },
-        { cost: 1, type: 'skill', tooltip: '[ 신속 ]\n|"참월" 2장 생성|\n|그 카드에 소멸 부여|\n|사용 시까지 비용 1 감소|', plus_card: '참월' },
-        { cost: 1, type: 'upgrade', tooltip: '|[ 유일 ]|\n|"달그림자+" 피해량 +80%|\n|턴 시작 시 도깨비불 3|', plus_card: '달그림자+' }
+        { cost: 1, type: 'attack', tooltip: '[ 보존 ]\n피해 |240|%\n|핸드의 자신의 카드 1장 선택|, 영감 효과 활성화' },
+        { cost: 1, type: 'attack', tooltip: '|[ 보존 / 회수 ]|\n피해 |240|%\n핸드의 무작위 자신의 카드 1장 영감 효과 활성화' },
+        { cost: 1, type: 'skill', tooltip: '|핸드의 자신의 카드 모두 영감 효과 활성화|\n|1턴간 자신의 영감 효과가 활성화된 카드 사용 시 무작위 적 피해 100%|' },
+        { cost: 1, type: 'attack', tooltip: '피해 180%\n|영감을 효과를 보유한 카드 드로우 1|' },
+        { cost: 1, type: 'attack', tooltip: '피해 |200|%\n|영감 : 타격 1회 추가|' }
       ]
     },
     {
-      name: '달그림자',
+      name: '빙점 칼날',
+      cost: 1,
+      type: 'upgrade',
+      grade: 'yellow',
+      media: 'cards/유키/yellow.webp',
+      tooltip: '[ 유일 ]\n자신의 영감 효과가 활성화된 카드 사용 시 모든 적 피해 120%',
+      awakenings: [
+        { cost: 1, type: 'upgrade', tooltip: '[ 유일 ]\n자신의 영감 효과가 활성화된 카드 사용 시 모든 적 피해 |160|%' },
+        { cost: 0, type: 'upgrade', tooltip: '|[ 유일 / 개전 ]|\n자신의 영감 효과가 활성화된 카드 사용 시 모든 적 피해 120%' },
+        { cost: 1, type: 'upgrade', tooltip: '[ 유일 ]\n자신의 영감 효과가 활성화된 카드 사용 시 |무작위 적 피해 120% × 2|' },
+        { cost: 1, type: 'upgrade', tooltip: '[ 유일 ]\n|자신의 전체 공격 카드 피해량 50% 증가|' },
+        { cost: 1, type: 'upgrade', tooltip: '[ 유일 ]\n|턴 시작 시 핸드의 무작위 카드 2장 영감 효과 활성화|' }
+      ]
+    },
+    {
+      name: '빙산 가르기',
       cost: 1,
       type: 'attack',
       grade: 'purple',
-      grade_color: 'purple',
-      media: 'cards/치즈루/purple.webp',
-      tooltip: '[ 결속 1 / 보존 ]\n피해 80%\n결속 중첩 수만큼 피해량 +80%'
-    },
+      media: 'cards/유키/purple.webp',
+      tooltip: '모든 적 피해 180%\n영감 : 타격 1회 추가'
+    }
+  ],
+  haru: [
     {
-      name: '달그림자+',
+      name: '앵커',
       cost: 1,
       type: 'attack',
-      grade: '',
-      grade_color: 'purple',
-      media: 'cards/치즈루/purple.webp',
-      tooltip: '[ 유일 / 결속 3 / 보존 ]\n피해 180% × 2\n최대 체력의 5% 만큼 회복\n결속 중첩 수만큼 피해량 +80%'
+      grade: 'gray',
+      media: 'cards/하루/attack.webp',
+      tooltip: '피해 100%'
+    },
+    {
+      name: '파워 앵커',
+      cost: 2,
+      type: 'attack',
+      grade: 'gray',
+      media: 'cards/하루/attack2.webp',
+      tooltip: '피해 220%'
+    },
+    {
+      name: '앵커 드롭',
+      cost: 1,
+      type: 'skill',
+      grade: 'gray',
+      media: 'cards/하루/skill.webp',
+      tooltip: '실드 100%'
+    },
+    {
+      name: '앵커 슛',
+      cost: 2,
+      type: 'attack',
+      grade: 'blue',
+      media: 'cards/하루/blue1.webp',
+      tooltip: '[ 분쇄 ]\n피해 300%\n이 카드를 사용한 수만큼 피해량 +100% (최대 10)',
+      awakenings: [
+        { cost: 2, type: 'attack', tooltip: '[ 분쇄 ]\n피해 |400|%\n이 카드를 사용한 수만큼 피해량 +|150|% (최대 10)' },
+        { cost: 2, type: 'attack', tooltip: '[ 분쇄 ]\n피해 |350|%\n|연속 : 타격 1회 추가|' },
+        { cost: 2, type: 'attack', tooltip: '[ 분쇄 ]\n피해 |350|%\n|다른 전투원 카드 모두 버리기, 그 수만큼 피해량 +150%|' },
+        { cost: 2, type: 'attack', tooltip: '[ 분쇄 ]\n피해 |380|%\n이 카드를 사용한 수만큼 피해량 +|100|%\n|뽑을 카드에 이 카드 생성 (전투당 2회)|' },
+        { cost: 2, type: 'attack', tooltip: '[ 분쇄 ]\n피해 |350|%\n이 카드를 사용한 수만큼 피해량 +|100|% (최대 10)\n|치명타 시 핸드로 이동 (턴당 1회)|' }
+      ]
+    },
+    {
+      name: '앵커포인터',
+      cost: 0,
+      type: 'skill',
+      grade: 'blue',
+      plus_card: '앵커 슛',
+      media: 'cards/하루/blue2.webp',
+      tooltip: '뽑을 카드 혹은 버린 카드에서 "앵커 슛"을 핸드로 이동',
+      awakenings: [
+        { cost: 0, type: 'skill', tooltip: '|모든 앵커 슛에 회수 부여|', plus_card: '앵커 슛' },
+        { cost: 0, type: 'skill', tooltip: '뽑을 카드 혹은 버린 카드에서 "앵커 슛"을 핸드로 이동, |그 카드에 보존 부여|', plus_card: '앵커 슛' },
+        { cost: 0, type: 'skill', tooltip: '|[ 회수 ]|\n뽑을 카드 혹은 버린 카드에서 "앵커 슛"을 핸드로 이동', plus_card: '앵커 슛' },
+        { cost: 0, type: 'skill', tooltip: '뽑을 카드 혹은 버린 카드에서 "앵커 슛"을 핸드로 이동, |1턴간 사용 시까지 그 카드의 피해량 +20%|', plus_card: '앵커 슛' },
+        { cost: 0, type: 'skill', tooltip: '뽑을 카드 혹은 버린 카드에서 "앵커 슛"을 핸드로 이동, |1턴간 사용 시까지 그 카드의 치명확률 +25%|', plus_card: '앵커 슛' }
+      ]
+    },
+    {
+      name: '파워 차지',
+      cost: 2,
+      type: 'attack',
+      grade: 'blue',
+      media: 'cards/하루/blue3.webp',
+      tooltip: '모든 적 피해 180%\n단일 대상일 경우 피해량 +80%',
+      awakenings: [
+        { cost: 2, type: 'attack', tooltip: '모든 적 피해 |270|%\n단일 대상일 경우 피해량 +|120|%' },
+        { cost: 2, type: 'attack', tooltip: '|[ 약점 공격 ]|\n모든 적 피해 |270|%' },
+        { cost: 2, type: 'attack', tooltip: '모든 적 피해 |270|%\n|처치 : 이 카드 1번 더 발동 (최대 1회)|' },
+        { cost: 2, type: 'attack', tooltip: '모든 적 피해 |240|%\n|타격한 대상 수만큼 다음 사용하는 자신의 공격 카드 피해량 +30%|' },
+        { cost: 2, type: 'attack', tooltip: '모든 적 피해 |300|%\n|연속 : 이 카드 비용 1로 변경|' }
+      ]
+    },
+    {
+      name: '에너지 충전',
+      cost: 1,
+      type: 'skill',
+      grade: 'yellow',
+      media: 'cards/하루/yellow.webp',
+      tooltip: '[ 보존 ]\n1턴간 자신의 공격 카드 피해량 30% 증가',
+      awakenings: [
+        { cost: 1, type: 'skill', tooltip: '[ 보존 ]\n1턴간 자신의 공격 카드 피해량 |40|% 증가' },
+        { cost: 1, type: 'skill', tooltip: '[ 보존 ]\n|다음 사용하는 공격 카드의 피해량 50% 증가, 강인도 피해 1|' },
+        { cost: 1, type: 'skill', tooltip: '[ 보존 ]\n1턴간 |핸드의 자신의 카드 수만큼| 자신의 공격 카드 피해량 +|70|%' },
+        { cost: 1, type: 'skill', tooltip: '[ 보존 ]\n1턴간 자신의 공격 카드 피해량 30% 증가\n|자신의 카드 드로우 1|' },
+        { cost: 0, type: 'upgrade', tooltip: '|[ 유일 ]|\n자신의 공격 카드 피해량 \\20\\% 증가' }
+      ]
+    },
+    {
+      name: '끌어올리기',
+      cost: 0,
+      type: 'skill',
+      grade: 'purple',
+      plus_card: '앵커 슛',
+      media: 'cards/하루/purple.webp',
+      tooltip: '[ 보존 ]\n핸드의 "앵커 슛" 1턴간 사용 시까지 피해량 80% 증가'
     }
   ]
 };

@@ -2474,7 +2474,6 @@ document.getElementById('startBtn').addEventListener('click', function(){
   var iconRow = document.getElementById('agentIconRow');
   var infoEl = document.getElementById('agentInfo');
   var illustImg = document.getElementById('agentIllustImg');
-  var showcaseEl = document.querySelector('.agent-showcase');
   var jobTagsEl = document.getElementById('jobFilterTags');
   var attrTagsEl = document.getElementById('attrFilterTags');
   var attrFilterGroupEl = document.getElementById('attrFilterGroup');
@@ -2520,13 +2519,12 @@ document.getElementById('startBtn').addEventListener('click', function(){
   function agentIcon(a){ return a.icon || a.illust; }
 
   var illustEntering = false;
-  var isHovering = false;
   var entranceToken = 0;
 
   function applyHoverScale(){
     if (illustEntering || state.cardMode || state.egoMode) return;
     illustImg.style.transition = 'transform .2s';
-    illustImg.style.transform = 'scale(' + (isHovering ? 1.1 : 1) + ')';
+    illustImg.style.transform = 'scale(1)';
   }
 
   function playEntranceEffect(){
@@ -2554,10 +2552,6 @@ document.getElementById('startBtn').addEventListener('click', function(){
     }, 400);
   }
 
-  if (showcaseEl) {
-    showcaseEl.addEventListener('mouseenter', function(){ isHovering = true; applyHoverScale(); });
-    showcaseEl.addEventListener('mouseleave', function(){ isHovering = false; applyHoverScale(); });
-  }
 
   function parseNormalInline(str, bracketColor, quoteColor, digitColor, tagCardRefs){
     return String(str).replace(/\[([^\]]*)\]|"([^"]*)"|-([^-]*)-|(\d+)/g, function(match, bracketInner, quoteInner, dashInner, digits){
