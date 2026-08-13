@@ -315,6 +315,9 @@
     font-size:12px;font-weight:800;line-height:1;padding:0;cursor:pointer;overflow:hidden;}
   .deckbuild-equip-enhance-btn:hover{background:var(--surface-2);}
   .deckbuild-equip-enhance-btn img{width:100%;height:100%;object-fit:contain;}
+  .deckbuild-equip-enhance-btn.has-icon{background:transparent;border:none;overflow:visible;}
+  .deckbuild-equip-enhance-btn.has-icon:hover{background:transparent;}
+  .deckbuild-equip-enhance-btn.has-icon img{width:110%;height:110%;}
 
   .grade-blue,.deckbuild-equip-slot.grade-blue{background:linear-gradient(135deg,#152a6e 0%,#2469d6 38%,#3fd6c8 72%,#8ee9ff 100%);border-color:#4fc3f7;}
   .grade-yellow,.deckbuild-equip-slot.grade-yellow{background:linear-gradient(135deg,#e0791e 0%,#6e4022 45%,#f5c518 100%);border-color:#f5c518;}
@@ -506,6 +509,7 @@
     cursor:pointer;transition:border-color .15s,box-shadow .15s,background .15s;}
   .awaken-opt-box:hover{border-color:#c7c7c7;}
   .awaken-opt-box.selected{border-color:var(--orange);box-shadow:0 0 0 2px var(--orange-soft);background:var(--orange-soft);}
+  .awaken-opt-box.dim{opacity:.35;cursor:help;}
   .wpop-foot{flex:none;padding:14px 22px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;}
   .awaken-confirm-btn{padding:10px 28px;border-radius:8px;border:none;background:var(--orange);color:#fff;font-size:13px;font-weight:800;cursor:pointer;transition:opacity .15s;}
   .awaken-confirm-btn:disabled{opacity:.4;cursor:default;}
@@ -525,6 +529,8 @@
   .persona-type-tag-btn{width:38px;height:38px;border-radius:50%;border:2px solid var(--line);background:var(--surface-2);padding:6px;cursor:pointer;transition:box-shadow .15s,border-color .15s;}
   .persona-type-tag-btn img{width:100%;height:100%;object-fit:contain;display:block;}
   .persona-type-tag-btn.active{border-color:#4ade80;box-shadow:0 0 0 2px rgba(74,222,128,.25),0 0 10px 3px rgba(74,222,128,.8);}
+  #enhanceImprintTypeTags.persona-type-tags{gap:8px;}
+  #enhanceImprintTypeTags .persona-type-tag-btn{width:30px;height:30px;padding:5px;}
   .persona-pop-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
   .persona-opt-box{border:1.5px solid var(--line);border-radius:9px;background:#fff;padding:10px;min-height:64px;
     display:flex;flex-direction:column;align-items:center;text-align:center;gap:5px;cursor:pointer;transition:border-color .15s,box-shadow .15s,background .15s;}
@@ -1361,9 +1367,10 @@ document.getElementById('startBtn').addEventListener('click', function(){
   }
 
   function parsePartnerPassiveTooltip(text){
-    return String(text || '').replace(/"([^"]*)"|\d+(?:\/\d+)*/g, function(match, q){
+    return String(text || '').replace(/\[([^\]]*)\]|"([^"]*)"|\d+(?:\/\d+)*/g, function(match, br, q){
+      if (br !== undefined) return '<span style="color:#EAAA00">[' + br + ']</span>';
       if (q !== undefined) return '<span style="color:#7EE4FF;text-decoration:underline">' + q + '</span>';
-      return '<span style="color:#EAAA00">' + match + '</span>';
+      return '<span style="color:#7EE4FF">' + match + '</span>';
     }).replace(/\n/g, '<br>');
   }
 
@@ -1612,12 +1619,14 @@ document.getElementById('startBtn').addEventListener('click', function(){
     awakenPopOverlay.classList.remove('open');
     awakenPopBody.innerHTML = '';
     hideCardZoom();
+    hideEquipSourceTooltip();
   }
 
   function renderAwakenPopup(){
     var card = currentAwakenCard();
     if (!card) return;
     hideCardZoom();
+    hideEquipSourceTooltip();
     var html = '';
 
     if (awakenPopState.mode === 'fixed') {
@@ -1639,12 +1648,18 @@ document.getElementById('startBtn').addEventListener('click', function(){
 
     if (awakenPopState.primaryIdx !== null) {
       awakenPopState.newOptions = computeNewOptionsForCurrentState();
+      var row = deckState[awakenPopState.rowIdx];
+      var addingNewAwakenPt = card.newAwaken ? 0 : NEW_AWAKEN_PT;
+      var newAwakenPtOk = (PT_CAP - totalPt(row)) >= addingNewAwakenPt;
       html += '<div class="awaken-pop-section"><div class="awaken-pop-section-title">신 번뜩임 선택</div>';
       if (!awakenPopState.newOptions.length) {
         html += '<div class="wpop-empty">선택 가능한 신 번뜩임이 없습니다.</div>';
       } else {
         html += '<div class="awaken-opt-grid" id="awakenNewGrid">' +
-          awakenPopState.newOptions.map(function(o){ return '<div class="awaken-opt-box">'+plainTooltipHtml(o.item.tooltip)+'</div>'; }).join('') +
+          awakenPopState.newOptions.map(function(o){
+            var dimClass = newAwakenPtOk ? '' : ' dim';
+            return '<div class="awaken-opt-box'+dimClass+'" data-pt-blocked="'+(newAwakenPtOk ? '0' : '1')+'">'+plainTooltipHtml(o.item.tooltip)+'</div>';
+          }).join('') +
         '</div>';
       }
       html += '</div>';
@@ -1681,10 +1696,16 @@ document.getElementById('startBtn').addEventListener('click', function(){
       var newEls = awakenPopBody.querySelectorAll('#awakenNewGrid .awaken-opt-box');
       Array.prototype.forEach.call(newEls, function(el, i){
         if (i === awakenPopState.newAwakenIdx) el.classList.add('selected');
-        el.addEventListener('click', function(){
-          awakenPopState.newAwakenIdx = (awakenPopState.newAwakenIdx === i) ? null : i;
-          renderAwakenPopup();
-        });
+        if (el.getAttribute('data-pt-blocked') === '1') {
+          el.addEventListener('mouseenter', function(e){ showEquipSourceTooltip('포인트가 부족하여 신 번뜩임을 부여할 수 없습니다.', e.clientX, e.clientY); });
+          el.addEventListener('mousemove', function(e){ positionEquipSourceTooltip(e.clientX, e.clientY); });
+          el.addEventListener('mouseleave', hideEquipSourceTooltip);
+        } else {
+          el.addEventListener('click', function(){
+            awakenPopState.newAwakenIdx = (awakenPopState.newAwakenIdx === i) ? null : i;
+            renderAwakenPopup();
+          });
+        }
       });
     }
 
@@ -1964,9 +1985,10 @@ document.getElementById('startBtn').addEventListener('click', function(){
   function nextDuplicateCost(row){
     return DUPLICATE_COST_TABLE[row.duplicateCount + 1] || 0;
   }
-  function canDuplicate(row){
+  function canDuplicate(row, card){
     if (row.duplicateCount >= DUPLICATE_MAX_COUNT) return false;
-    return (PT_CAP - totalPt(row)) >= nextDuplicateCost(row);
+    var extra = nextDuplicateCost(row) + (card && card.newAwaken ? NEW_AWAKEN_PT : 0);
+    return (PT_CAP - totalPt(row)) >= extra;
   }
   function isNonDuplicableCard(c){
     if (c.source === 'agent' && c.grade === 'gray') return true;
@@ -1994,7 +2016,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
   }
   function duplicateCardInRow(rowIdx, cardIdx){
     var row = deckState[rowIdx];
-    if (!row || !canDuplicate(row) || isNonDuplicableCard(row.cards[cardIdx])) return;
+    if (!row || !canDuplicate(row, row.cards[cardIdx]) || isNonDuplicableCard(row.cards[cardIdx])) return;
     var cost = nextDuplicateCost(row);
     pushHistory(row);
     var orig = row.cards[cardIdx];
@@ -2117,7 +2139,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
       var cellsHtml = activeRow.cards.map(function(c, idx){
         var controlsHtml = '<div class="deckbuild-card-controls">' +
           (canRemove(activeRow) ? '<button type="button" class="deckbuild-card-btn deckbuild-card-remove-btn" data-card-idx="'+idx+'">&times;</button>' : '') +
-          (canDuplicate(activeRow) && !isNonDuplicableCard(c) ? '<button type="button" class="deckbuild-card-btn deckbuild-card-dup-btn" data-dup-idx="'+idx+'">'+dupIcon+'</button>' : '') +
+          (canDuplicate(activeRow, c) && !isNonDuplicableCard(c) ? '<button type="button" class="deckbuild-card-btn deckbuild-card-dup-btn" data-dup-idx="'+idx+'">'+dupIcon+'</button>' : '') +
         '</div>';
         return '<div class="deckbuild-card-wrap">' + renderCardCellHtml(c, null, {showAwakenHint:true}) + controlsHtml + '</div>';
       }).join('');
@@ -2217,7 +2239,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
       var enh = row.equipEnhance[t];
       var iconSrc = enhanceIconSrc(enh);
       var enhanceBtnHtml = (item && equipQualifiesForEnhance(item)) ?
-        '<button type="button" class="deckbuild-equip-enhance-btn" data-enhance-type="'+t+'">' +
+        '<button type="button" class="deckbuild-equip-enhance-btn'+(iconSrc ? ' has-icon' : '')+'" data-enhance-type="'+t+'">' +
           (iconSrc ? '<img src="'+iconSrc+'" alt="">' : '+') +
         '</button>' : '';
       return '<div class="deckbuild-equip-slot'+gradeClass+'" data-equip-type="'+t+'" data-equip-idx="'+(item ? idx : '')+'">' +
