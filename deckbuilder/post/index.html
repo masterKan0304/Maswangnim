@@ -1697,6 +1697,51 @@ document.getElementById('startBtn').addEventListener('click', function(){
   var contentEl = document.getElementById('postDetailContent');
   var boxEl = document.getElementById('deckbuildBox');
 
+  function preloadImages(){
+    var urls = [];
+    var videoUrls = [];
+    deckState.forEach(function(row){
+      var agent = row.agentId ? agentsById[row.agentId] : null;
+      if (agent) {
+        urls.push('../../agents/' + agent.name + '_C.png');
+        if (agent.grade) urls.push('../../agents/grade_' + agent.grade + '_tag.png');
+      }
+      (window.AGENTS_CARDS && row.agentId && window.AGENTS_CARDS[row.agentId] || []).forEach(function(card){
+        if (!card.media) return;
+        var src = '../../' + card.media;
+        if (isVideoSrc(card.media)) videoUrls.push(src);
+        else urls.push(src);
+      });
+      var partner = row.partnerId ? partnersById[row.partnerId] : null;
+      if (partner) {
+        urls.push('../../partner/' + partner.name + '_C.png');
+        if (partner.icon) urls.push('../../' + partner.icon);
+      }
+      ['weapon', 'armor', 'accessory'].forEach(function(t){
+        var enh = row.equipment && row.equipment[t];
+        if (enh && enh.name) {
+          var item = (window.EQUIPMENT_DATA || []).filter(function(e){ return e.name === enh.name; })[0];
+          if (item && item.media) urls.push('../../' + item.media);
+        }
+      });
+    });
+    Object.keys(JOB_ICON).forEach(function(k){ urls.push(JOB_ICON[k]); });
+    Object.keys(ATTR_ICON).forEach(function(k){ urls.push(ATTR_ICON[k]); });
+    Object.keys(EQUIP_TYPE_ICON).forEach(function(k){ urls.push(EQUIP_TYPE_ICON[k]); });
+    urls.push('../../weapon/icon_upgrade.png', '../../weapon/icon_hammer.png', '../../cards/icon_light.webp', '../../cards/icon_dark.webp');
+    urls.forEach(function(src){
+      var img = new Image();
+      img.src = src;
+    });
+    videoUrls.forEach(function(src){
+      var video = document.createElement('video');
+      video.preload = 'auto';
+      video.muted = true;
+      video.src = src;
+      video.load();
+    });
+  }
+
   if (!post) {
     titleEl.textContent = '게시물을 찾을 수 없습니다.';
     metaEl.style.display = 'none';
@@ -1709,6 +1754,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
       '<span>'+post.date+'</span>';
     contentEl.textContent = post.content || '';
     renderDeckBox();
+    preloadImages();
   }
 })();
 </script>

@@ -3400,5 +3400,48 @@ document.getElementById('startBtn').addEventListener('click', function(){
   });
 
   renderDeckBox();
+
+  function preloadImages(){
+    var urls = [];
+    var videoUrls = [];
+    (window.AGENTS_DATA || []).forEach(function(a){
+      urls.push('../../agents/' + a.name + '_C.png');
+      if (a.grade) urls.push('../../agents/grade_' + a.grade + '_tag.png');
+    });
+    (window.PARTNER_DATA || []).forEach(function(p){
+      urls.push('../../partner/' + p.name + '_C.png');
+      if (p.grade) urls.push('../../agents/grade_' + p.grade + '_tag.png');
+    });
+    Object.keys(JOB_ICON).forEach(function(k){ urls.push(JOB_ICON[k]); });
+    Object.keys(ATTR_ICON).forEach(function(k){ urls.push(ATTR_ICON[k]); });
+    Object.keys(TYPE_ICON).forEach(function(k){ urls.push(TYPE_ICON[k]); });
+    Object.keys(EQUIP_TYPE_ICON).forEach(function(k){ urls.push(EQUIP_TYPE_ICON[k]); });
+    urls.push('../../weapon/icon_upgrade.png', '../../weapon/icon_hammer.png', '../../cards/icon_light.webp', '../../cards/icon_dark.webp');
+    if (window.AGENTS_CARDS) {
+      Object.keys(window.AGENTS_CARDS).forEach(function(id){
+        window.AGENTS_CARDS[id].forEach(function(card){
+          if (!card.media) return;
+          var src = '../../' + card.media;
+          if (isVideoSrc(card.media)) videoUrls.push(src);
+          else urls.push(src);
+        });
+      });
+    }
+    (window.EQUIPMENT_DATA || []).forEach(function(item){
+      if (item.media) urls.push('../../' + item.media);
+    });
+    urls.forEach(function(src){
+      var img = new Image();
+      img.src = src;
+    });
+    videoUrls.forEach(function(src){
+      var video = document.createElement('video');
+      video.preload = 'auto';
+      video.muted = true;
+      video.src = src;
+      video.load();
+    });
+  }
+  preloadImages();
 })();
 </script>

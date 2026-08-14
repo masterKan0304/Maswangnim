@@ -3197,6 +3197,13 @@ document.getElementById('startBtn').addEventListener('click', function(){
     ATTRS.forEach(function(a){ urls.push(a.icon); urls.push('cards/card_ego_'+a.id+'.webp'); });
     GRADES_ALL.forEach(function(g){ urls.push('agents/grade_'+g.id+'.png'); });
     CARD_GRADES.forEach(function(g){ urls.push('cards/card_'+g+'.webp'); });
+    Object.keys(TYPE_ICONS).forEach(function(k){ urls.push(TYPE_ICONS[k]); });
+    urls.push('cards/card_ego_normal.webp', 'cards/card_ego_monster.webp');
+    (window.QUIZ_CARDS || []).forEach(function(card){
+      if (!card.illust) return;
+      if (isVideoSrc(card.illust)) videoUrls.push(card.illust);
+      else urls.push(card.illust);
+    });
     if (window.AGENTS_CARDS) {
       Object.keys(window.AGENTS_CARDS).forEach(function(id){
         window.AGENTS_CARDS[id].forEach(function(card){

@@ -673,5 +673,24 @@ document.getElementById('startBtn').addEventListener('click', function(){
     if (!id) return;
     location.href = 'post/?id=' + encodeURIComponent(id);
   });
+
+  function preloadImages(){
+    var urls = [];
+    (window.AGENTS_DATA || []).forEach(function(a){
+      urls.push('../agents/' + a.name + '_C.png');
+      if (a.grade) urls.push('../agents/grade_' + a.grade + '_tag.png');
+    });
+    (window.PARTNER_DATA || []).forEach(function(p){
+      if (p.icon) urls.push('../' + p.icon);
+      if (p.illust) urls.push('../' + p.illust);
+    });
+    Object.keys(JOB_ICON).forEach(function(k){ urls.push(JOB_ICON[k]); });
+    Object.keys(ATTR_ICON).forEach(function(k){ urls.push(ATTR_ICON[k]); });
+    urls.forEach(function(src){
+      var img = new Image();
+      img.src = src;
+    });
+  }
+  preloadImages();
 })();
 </script>
