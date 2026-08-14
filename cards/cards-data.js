@@ -1728,5 +1728,262 @@ window.AGENTS_CARDS = {
       media: 'cards/하루/purple.webp',
       tooltip: '[ 보존 ]\n핸드의 "앵커 슛" 1턴간 사용 시까지 피해량 80% 증가'
     }
+  ],
+  renoa: [
+    {
+      name: '섬멸 사격',
+      cost: 1,
+      type: 'attack',
+      grade: 'gray',
+      media: 'cards/레노아/attack.webp',
+      tooltip: '피해 100%'
+    },
+    {
+      name: '섬멸 사격',
+      cost: 1,
+      type: 'attack',
+      grade: 'gray',
+      media: 'cards/레노아/attack.webp',
+      tooltip: '피해 100%'
+    },
+    {
+      name: '검은 장막',
+      cost: 1,
+      type: 'skill',
+      grade: 'gray',
+      media: 'cards/레노아/skill.webp',
+      tooltip: '실드 100%'
+    },
+    {
+      name: '비탄의 메아리',
+      cost: 1,
+      type: 'attack',
+      grade: 'blue',
+      plus_card: '진혼의 탄환',
+      media: 'cards/레노아/blue1.webp',
+      tooltip: '피해 140%\n"진혼의 탄환" 1장 생성',
+      awakenings: [
+        { cost: 1, type: 'attack', tooltip: '피해 140%\n"진혼의 탄환" |2|장 생성', plus_card: '진혼의 탄환' },
+        { cost: 1, type: 'attack', tooltip: '피해 140%\n"진혼의 탄환" 1장 생성, |2장 버린 카드에 생성|', plus_card: '진혼의 탄환' },
+        { cost: 1, type: 'attack', tooltip: '피해 140%\n"진혼의 탄환" 1장 생성, |뽑을 카드의 "진혼의 탄환" 2장 버리기|', plus_card: '진혼의 탄환' },
+        { cost: 1, type: 'skill', tooltip: '"진혼의 탄환" |3|장 생성', plus_card: '진혼의 탄환' },
+        { cost: 1, type: 'upgrade', tooltip: '|[ 개전 ]|\n"진혼의 탄환" 1장 생성\n|턴 시작 시 "진혼의 탄환" 1장 생성|', plus_card: '진혼의 탄환' }
+      ]
+    },
+    {
+      name: '진혼의 탄환',
+      cost: 1,
+      type: 'attack',
+      grade: '',
+      grade_color: 'blue',
+      media: 'cards/레노아/blue1_1.webp',
+      tooltip: '[ 탄환 / 소멸 ]\n피해 160%\n버린 카드로 이동 시 무작위 적 추가 공격 120%'
+    },
+    {
+      name: '즉결 심판',
+      cost: 1,
+      type: 'attack',
+      grade: 'blue',
+      plus_card: '진혼의 탄환',
+      media: 'cards/레노아/blue2.webp',
+      tooltip: '피해 180%\n핸드에 "진혼의 탄환"이 있다면 1장 버리고 피해량 +100%',
+      awakenings: [
+        { cost: 1, type: 'attack', tooltip: '피해 |270|%\n핸드에 "진혼의 탄환"이 있다면 1장 버리고 피해량 +|150|%', plus_card: '진혼의 탄환' },
+        { cost: 1, type: 'attack', tooltip: '피해 |220|%\n|뽑을 카드|에 "진혼의 탄환"이 있다면 1장 버리고 피해량 +|120|%', plus_card: '진혼의 탄환' },
+        { cost: 1, type: 'attack', tooltip: '피해 |220|%\n|버린 카드에 "진혼의 탄환"이 있다면 1장 소멸하고 타격 1회 추가|', plus_card: '진혼의 탄환' },
+        { cost: 2, type: 'attack', tooltip: '피해 180%\n|버린 카드로 이동 시 무작위 적 추가 공격 250%|' },
+        { cost: 1, type: 'upgrade', tooltip: '|턴 종료 시 체력이 가장 낮은 적에게 추가 공격 200%|' }
+      ]
+    },
+    {
+      name: '칠흑의 송시',
+      cost: 1,
+      type: 'attack',
+      grade: 'blue',
+      plus_card: '진혼의 탄환',
+      media: 'cards/레노아/blue3.webp',
+      tooltip: '피해 50% × 3\n핸드의 "진혼의 탄환" 수만큼 피해량 +20%',
+      awakenings: [
+        { cost: 1, type: 'attack', tooltip: '피해 |75|% × 3\n핸드의 "진혼의 탄환" 수만큼 피해량 +30%', plus_card: '진혼의 탄환' },
+        { cost: 1, type: 'skill', tooltip: '|뽑을 카드와 버린 카드에서 "진혼의 탄환" 3장까지 핸드로 이동|', plus_card: '진혼의 탄환' },
+        { cost: 1, type: 'attack', tooltip: '피해 50% × 3\n|대상에게 핸드의 "진혼의 탄환" 수만큼 표식 1|', plus_card: '진혼의 탄환' },
+        { cost: 1, type: 'attack', tooltip: '피해 50% × 3\n|1턴간 "진혼의 탄환"의 추가 공격 피해량 100% 증가|', plus_card: '진혼의 탄환' },
+        { cost: 1, type: 'attack', tooltip: '피해 50% × 3\n|버린 카드의 "진혼의 탄환" 모두 소멸, 그 수만큼 피해량 50% 증가|', plus_card: '진혼의 탄환' }
+      ]
+    },
+    {
+      name: '운명을 삼킨 꽃',
+      cost: 0,
+      type: 'skill',
+      grade: 'yellow',
+      plus_card: '진혼의 탄환',
+      media: 'cards/레노아/yellow.webp',
+      tooltip: '핸드의 카드 2장까지 버리기\n그 수만큼 "진혼의 탄환" 생성',
+      awakenings: [
+        { cost: 0, type: 'skill', tooltip: '핸드의 카드 |3|장까지 버리기\n그 수만큼 "진혼의 탄환" 생성', plus_card: '진혼의 탄환' },
+        { cost: 1, type: 'skill', tooltip: '|[ 소멸 ]|\n핸드의 |다른 전투원의 카드 모두 버리기|\n그 수만큼 "진혼의 탄환" |2|장 생성', plus_card: '진혼의 탄환' },
+        { cost: 0, type: 'skill', tooltip: '핸드의 카드 2장까지 버리기\n|버린 카드의 비용 1당 다음 사용하는 카드 피해량 +40%|', plus_card: '진혼의 탄환' },
+        { cost: 1, type: 'skill', tooltip: '|드로우 2|\n|핸드에 진혼의 탄환이 있다면 드로우 1 추가|', plus_card: '진혼의 탄환' },
+        { cost: 0, type: 'skill', tooltip: '|핸드의 모든 "진혼의 탄환"에 회수 부여|', plus_card: '진혼의 탄환' }
+      ]
+    },
+    {
+      name: '결사의 일격',
+      cost: 1,
+      type: 'attack',
+      grade: 'purple',
+      plus_card: '진혼의 탄환',
+      media: 'cards/레노아/purple.webp',
+      tooltip: '[ 보존 ]\n피해 150%\n"진혼의 탄환" 모두 버리기, 그 수만큼 피해량 +50%'
+    }
+  ],
+  veronica: [
+    {
+      name: '속사탄',
+      cost: 1,
+      type: 'attack',
+      grade: 'gray',
+      media: 'cards/베로니카/attack.webp',
+      tooltip: '피해 100%'
+    },
+    {
+      name: '속사탄',
+      cost: 1,
+      type: 'attack',
+      grade: 'gray',
+      media: 'cards/베로니카/attack.webp',
+      tooltip: '피해 100%'
+    },
+    {
+      name: '금선화의 환상',
+      cost: 1,
+      type: 'skill',
+      grade: 'gray',
+      media: 'cards/베로니카/skill.webp',
+      tooltip: '실드 100%'
+    },
+    {
+      name: '발사 준비',
+      cost: 1,
+      type: 'upgrade',
+      grade: 'blue',
+      plus_card: '발리스타',
+      media: 'cards/베로니카/blue1.webp',
+      tooltip: '[ 유일 / 개전 ]\n"발리스타" 1장 생성\n턴 시작 시 "발리스타" 1장 생성',
+      awakenings: [
+        { cost: 1, type: 'upgrade', tooltip: '[ 유일 / 개전 ]\n"발리스타" 1장 생성\n턴 시작 시 "발리스타" 1장 생성, |50% 확률로 1장 추가 생성|', plus_card: '발리스타' },
+        { cost: 1, type: 'upgrade', tooltip: '[ 유일 / 개전 ]\n|"관통 발리스타"| 1장 생성\n턴 시작 시 |"관통 발리스타"| 1장 생성', plus_card: '관통 발리스타' },
+        { cost: 1, type: 'upgrade', tooltip: '[ 유일 / 개전 ]\n|"강화 발리스타"| 1장 생성\n턴 시작 시 |"강화 발리스타"| 1장 생성', plus_card: '강화 발리스타' },
+        { cost: 1, type: 'upgrade', tooltip: '[ 유일 / 개전 ]\n|"대형 발리스타"| 1장 생성\n턴 시작 시 |"대형 발리스타"| 1장 생성', plus_card: '대형 발리스타' },
+        { cost: 1, type: 'upgrade', tooltip: '[ 유일 / 개전 ]\n|"연사 발리스타"| 1장 생성\n턴 시작 시 |"연사 발리스타"| 1장 생성', plus_card: '연사 발리스타' }
+      ]
+    },
+    {
+      name: '발리스타',
+      cost: '-',
+      type: 'attack',
+      grade: '',
+      grade_color: 'blue',
+      media: 'cards/베로니카/blue1_1.webp',
+      tooltip: '[ 증발 ]\n턴 종료 시 무작위 적 추가 공격 150%'
+    },
+    {
+      name: '관통 발리스타',
+      cost: '-',
+      type: 'attack',
+      grade: '',
+      grade_color: 'blue',
+      media: 'cards/베로니카/blue1_2.webp',
+      tooltip: '[ 증발 ]\n턴 종료 시 무작위 적 관통 피해 200%\n대상이 실드를 보유하면 피해량 +50%'
+    },
+    {
+      name: '강화 발리스타',
+      cost: '-',
+      type: 'attack',
+      grade: '',
+      grade_color: 'blue',
+      media: 'cards/베로니카/blue1_1.webp',
+      tooltip: '[ 증발 ]\n턴 종료 시 무작위 적 추가 공격 200%\n치명확률 +30%'
+    },
+    {
+      name: '대형 발리스타',
+      cost: '-',
+      type: 'attack',
+      grade: '',
+      grade_color: 'blue',
+      media: 'cards/베로니카/blue1_3.webp',
+      tooltip: '[ 증발 ]\n턴 종료 시 모든 적 추가 공격 150%'
+    },
+    {
+      name: '연사 발리스타',
+      cost: '-',
+      type: 'attack',
+      grade: '',
+      grade_color: 'blue',
+      media: 'cards/베로니카/blue1_4.webp',
+      tooltip: '[ 증발 ]\n턴 종료 시 무작위 적들에게 추가 공격 100% × 2'
+    },
+    {
+      name: '초소형 발리스타',
+      cost: '-',
+      type: 'attack',
+      grade: '',
+      grade_color: 'blue',
+      media: 'cards/베로니카/blue1_5.webp',
+      tooltip: '[ 증발 ]\n턴 종료 시 무작위 적 추가 공격 40%'
+    },
+    {
+      name: '숨돌리기',
+      cost: 1,
+      type: 'skill',
+      grade: 'blue',
+      media: 'cards/베로니카/blue2.webp',
+      tooltip: '실드 100%\n다른 전투원의 카드 드로우 2',
+      awakenings: [
+        { cost: 0, type: 'skill', tooltip: '다른 전투원의 카드 드로우 2' },
+        { cost: 1, type: 'skill', tooltip: '실드 |150|%\n다른 전투원의 카드 드로우 2\n|그 카드가 스킬 카드일 시 장전 1|' },
+        { cost: 1, type: 'skill', tooltip: '실드 |150|%\n다른 전투원의 카드 드로우 2\n|그 카드 중 1장 1턴간 사용 시까지 비용 1 감소|' },
+        { cost: 1, type: 'skill', tooltip: '실드 |150|%\n|핸드의 다른 전투원의 스킬 카드 수만큼 장전 1|' },
+        { cost: 1, type: 'skill', tooltip: '실드 |150|%\n|핸드의 다른 전투원의 카드 모두 버리기|\n|그 수만큼 장전 1|' }
+      ]
+    },
+    {
+      name: '결심의 펜던트',
+      cost: 1,
+      type: 'upgrade',
+      grade: 'blue',
+      media: 'cards/베로니카/blue3.webp',
+      tooltip: '다른 전투원의 스킬 카드 사용 시 장전 1',
+      awakenings: [
+        { cost: 1, type: 'upgrade', tooltip: '스킬 카드 사용 시 장전 1' },
+        { cost: 1, type: 'upgrade', tooltip: '|[ 유일 ]|\n다른 전투원의 스킬 카드 사용 시 장전 1\n|3장 사용 시 다음 턴 시작 시 "초소형 발리스타" 1장 생성|', plus_card: '초소형 발리스타' },
+        { cost: 1, type: 'skill', tooltip: '|[ 소멸 2 ]|\n|1턴간 카드 사용 시| 장전 1' },
+        { cost: 1, type: 'upgrade', tooltip: '다른 전투원의 스킬 카드 사용 시 장전 1\n|50% 확률로 장전 1 추가|' },
+        { cost: 1, type: 'skill', tooltip: '|[ 보존 / 회수 4 ]|\n장전 |2|' }
+      ]
+    },
+    {
+      name: '코왈스키 경',
+      cost: 1,
+      type: 'skill',
+      grade: 'yellow',
+      media: 'cards/베로니카/yellow.webp',
+      tooltip: '핸드의 발리스타 1장 선택, 발동 시까지 피해량 +100%\n드로우 1',
+      awakenings: [
+        { cost: 1, type: 'skill', tooltip: '핸드의 발리스타 1장 선택, 발동 시까지 피해량 +|150|%\n드로우 |2|' },
+        { cost: 1, type: 'skill', tooltip: '드로우 1\n|1턴간 발리스타 피해량 30% 증가|' },
+        { cost: 1, type: 'skill', tooltip: '드로우 |2|\n|스킬 카드 드로우 시 "발리스타" 1장 생성|', plus_card: '발리스타' },
+        { cost: 1, type: 'skill', tooltip: '핸드의 |무작위 발리스타 1장 피해량 +250%, 발동 후 소멸|' },
+        { cost: 1, type: 'skill', tooltip: '핸드의 발리스타 1장 선택 |소멸|\n|발리스타 2장 생성|\n|그 카드 피해량 발동 시까지 25% 감소|' }
+      ]
+    },
+    {
+      name: '폭격 준비',
+      cost: 1,
+      type: 'upgrade',
+      grade: 'purple',
+      media: 'cards/베로니카/purple.webp',
+      tooltip: '[ 유일 ]\n장전 최대 중첩 1 증가\n장전 2'
+    }
   ]
 };
