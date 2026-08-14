@@ -1985,5 +1985,138 @@ window.AGENTS_CARDS = {
       media: 'cards/베로니카/purple.webp',
       tooltip: '[ 유일 ]\n장전 최대 중첩 1 증가\n장전 2'
     }
+  ],
+  ruke: [
+    {
+      name: '단발 사격',
+      cost: 1,
+      type: 'attack',
+      grade: 'gray',
+      media: 'cards/루크/attack.webp',
+      tooltip: '피해 100%'
+    },
+    {
+      name: '단발 사격',
+      cost: 1,
+      type: 'attack',
+      grade: 'gray',
+      media: 'cards/루크/attack.webp',
+      tooltip: '피해 100%'
+    },
+    {
+      name: '그림자 은신',
+      cost: 1,
+      type: 'skill',
+      grade: 'gray',
+      media: 'cards/루크/skill.webp',
+      tooltip: '실드 100%'
+    },
+    {
+      name: '연속 격발',
+      cost: 1,
+      type: 'attack',
+      grade: 'blue',
+      plus_card: [ '매그넘탄', '은탄', '우라늄탄', '예광탄' ],
+      media: 'cards/루크/blue1.webp',
+      tooltip: '피해 50% × 2\n치명타 수만큼 "핸드건 탄환" 생성\n치명확률 +50%',
+      awakenings: [
+        { cost: 1, type: 'attack', tooltip: '|[ 회수 ]|\n피해 |75|% × 2\n치명타 수만큼 "핸드건 탄환" 생성\n치명확률 +50%', plus_card: [ '매그넘탄', '은탄', '우라늄탄', '예광탄' ] },
+        { cost: 1, type: 'attack', tooltip: '피해 \\30\\% × |3|\n치명타 수만큼 "핸드건 탄환" 생성\n치명확률 +50%', plus_card: [ '매그넘탄', '은탄', '우라늄탄', '예광탄' ] },
+        { cost: 1, type: 'attack', tooltip: '피해 |300|%\n치명타 수만큼 "핸드건 탄환" 생성\n|확정 치명|', plus_card: [ '매그넘탄', '은탄', '우라늄탄', '예광탄' ] },
+        { cost: 0, type: 'attack', tooltip: '|[ 탄환 ]|\n피해 |100|% × |3|\n치명확률 +50%', plus_card: [ '매그넘탄', '은탄', '우라늄탄', '예광탄' ] },
+        { cost: 1, type: 'attack', tooltip: '피해 |100|% × 2\n치명타 수만큼 |드로우|\n치명확률 +|70|%' }
+      ]
+    },
+    {
+      name: '매그넘탄',
+      cost: 0,
+      type: 'attack',
+      grade: '',
+      grade_color: 'gray',
+      media: 'cards/루크/blue1_1.webp',
+      tooltip: '[ 증발 / 소멸 / 탄환 ]\n피해 70%'
+    },
+    {
+      name: '은탄',
+      cost: 0,
+      type: 'attack',
+      grade: '',
+      grade_color: 'gray',
+      media: 'cards/루크/blue1_2.webp',
+      tooltip: '[ 증발 / 소멸 / 탄환 ]\n피해 50%\n약점 공격 : 피해량 100% 증가'
+    },
+    {
+      name: '우라늄탄',
+      cost: 0,
+      type: 'attack',
+      grade: '',
+      grade_color: 'gray',
+      media: 'cards/루크/blue1_3.webp',
+      tooltip: '[ 증발 / 소멸 / 탄환 ]\n피해 50%\n대상이 실드를 보유하면 피해량 100% 증가'
+    },
+    {
+      name: '예광탄',
+      cost: 0,
+      type: 'attack',
+      grade: '',
+      grade_color: 'gray',
+      media: 'cards/루크/blue1_4.webp',
+      tooltip: '[ 증발 / 소멸 / 탄환 ]\n피해 30%\n표식 1'
+    },
+    {
+      name: '은밀한 장전',
+      cost: 1,
+      type: 'skill',
+      grade: 'blue',
+      plus_card: [ '매그넘탄', '은탄', '우라늄탄', '예광탄' ],
+      media: 'cards/루크/blue2.webp',
+      tooltip: '"핸드건 탄환" 2장 생성',
+      awakenings: [
+        { cost: 1, type: 'skill', tooltip: '"핸드건 탄환" 2장 생성\n|그 카드의 치명확률 +30%|', plus_card: [ '매그넘탄', '은탄', '우라늄탄', '예광탄' ] },
+        { cost: 1, type: 'skill', tooltip: '"핸드건 탄환" |3|장 생성', plus_card: [ '매그넘탄', '은탄', '우라늄탄', '예광탄' ] },
+        { cost: 1, type: 'skill', tooltip: '"핸드건 탄환" 2장 생성\n|다음 턴 시작 시 "핸드건 탄환" 2장 생성|', plus_card: [ '매그넘탄', '은탄', '우라늄탄', '예광탄' ] },
+        { cost: 0, type: 'upgrade', tooltip: '|턴 시작 시| "핸드건 탄환" \\1\\장 생성', plus_card: [ '매그넘탄', '은탄', '우라늄탄', '예광탄' ] },
+        { cost: 2, type: 'skill', tooltip: '|[ 소멸 ]|\n"핸드건 탄환" |5|장 생성', plus_card: [ '매그넘탄', '은탄', '우라늄탄', '예광탄' ] }
+      ]
+    },
+    {
+      name: '기회 포착',
+      cost: 1,
+      type: 'skill',
+      grade: 'blue',
+      media: 'cards/루크/blue3.webp',
+      tooltip: '[ 주도 ]\n실드 100%\n다음 사용하는 탄환 카드의 피해량 +120%',
+      awakenings: [
+        { cost: 1, type: 'skill', tooltip: '[ 주도 ]\n실드 |150|%\n다음 사용하는 탄환 카드의 피해량 +|170|%' },
+        { cost: 1, type: 'skill', tooltip: '[ 주도 ]\n실드 100%\n다음 사용하는 탄환 카드 |2장|의 피해량 +120%' },
+        { cost: 1, type: 'skill', tooltip: '[ 주도 ]\n실드 100%\n|1턴간| 탄환 카드의 피해량 +\\70\\%' },
+        { cost: 1, type: 'skill', tooltip: '[ 주도 ]\n실드 100%\n다음 사용하는 |공격 카드|의 피해량 +\\100\\%' },
+        { cost: 1, type: 'upgrade', tooltip: '[ 주도 ]\n|"핸드건 탄환" 카드|의 피해량 +\\30\\%', plus_card: [ '매그넘탄', '은탄', '우라늄탄', '예광탄' ] }
+      ]
+    },
+    {
+      name: '마안의 난무',
+      cost: 1,
+      type: 'attack',
+      grade: 'yellow',
+      media: 'cards/루크/yellow.webp',
+      tooltip: '피해 50%\n이번 턴 사용한 탄환 카드 수만큼 타격 1회 추가',
+      awakenings: [
+        { cost: 1, type: 'attack', tooltip: '피해 |75|%\n이번 턴 사용한 탄환 카드 수만큼 타격 1회 추가' },
+        { cost: 1, type: 'attack', tooltip: '피해 50%\n이번 턴 사용한 |공격 카드| 수만큼 타격 1회 추가' },
+        { cost: 1, type: 'attack', tooltip: '피해 50%\n이번 턴 사용한 탄환 카드 수만큼 타격 1회 추가\n|약점 공격 : 피해량 +50%|' },
+        { cost: 1, type: 'attack', tooltip: '피해 50%\n|실드 50%|\n이번 턴 사용한 탄환 카드 수만큼 타격 1회 추가, |실드 획득량 +50%|' },
+        { cost: 3, type: 'attack', tooltip: '피해 50% × |6|\n|탄환 카드 사용 시 1턴간 사용 시까지 비용 1 감소|' }
+      ]
+    },
+    {
+      name: '필살탄',
+      cost: 0,
+      type: 'attack',
+      grade: 'purple',
+      plus_card: [ '매그넘탄', '은탄', '우라늄탄', '예광탄' ],
+      media: 'cards/루크/purple.webp',
+      tooltip: '[ 사용 불가 / 유일 / 탄환 ]\n피해 300%\n"핸드건 탄환" 카드 5장 사용 시 사용 불가 제거'
+    }
   ]
 };

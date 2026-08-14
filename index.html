@@ -2739,8 +2739,8 @@ document.getElementById('startBtn').addEventListener('click', function(){
     var headCards = plusCards.slice(0, 3);
     var tailCards = plusCards.slice(3);
     cardZoomPlusEl.innerHTML =
-      '<div class="card-zoom-plus-row">' + headCards.map(function(pc){ return renderCardHTML(pc, attrId, baseGrade); }).join('') + '</div>' +
-      '<div class="card-zoom-plus-row">' + tailCards.map(function(pc){ return renderCardHTML(pc, attrId, baseGrade); }).join('') + '</div>';
+      '<div class="card-zoom-plus-row">' + tailCards.map(function(pc){ return renderCardHTML(pc, attrId, baseGrade); }).join('') + '</div>' +
+      '<div class="card-zoom-plus-row">' + headCards.map(function(pc){ return renderCardHTML(pc, attrId, baseGrade); }).join('') + '</div>';
   }
   function showCardZoom(card, attrId, x, y){
     cardZoomEl.innerHTML = renderCardHTML(card, attrId, null, {awaken: !!card._isAwakenVariant});
