@@ -317,9 +317,9 @@ window.AGENTS_CARDS = {
       awakenings: [
         { cost: 0, type: 'skill', tooltip: '드로우 |3|\n드로우한 카드 중 비용이 1 이상인 카드 모두 버리기' },
         { cost: 0, type: 'skill', tooltip: '|비용이 0인 자신의 카드 드로우| 2' },
-        { cost: 1, type: 'attack', tooltip: '|대상에게 뽑을 카드의 "염무곡" 3장 발동|\n|발동한 수만큼 강림 2|', plus_card: '염무곡' },
+        { cost: 1, type: 'skill', tooltip: '|대상에게 뽑을 카드의 "염무곡" 3장 발동|\n|발동한 수만큼 강림 2|', plus_card: '염무곡' },
         { cost: 0, type: 'skill', tooltip: '드로우 \\1\\\n|비용이 2 이하인 자신의 카드 드로우 시 그 카드 발동하고 드로우 2|' },
-        { cost: 0, type: 'attack', tooltip: '|비용이 X인 카드| 드로우 \\1\\\n|그 카드의 X를 사용 시까지 X+1로 적용|' }
+        { cost: 0, type: 'skill', tooltip: '|비용이 X인 카드| 드로우 \\1\\\n|그 카드의 X를 사용 시까지 X+1로 적용|' }
       ]
     },
     {

@@ -293,13 +293,37 @@
   .deckbuild-pt-usage-item.span2{grid-column:span 2;}
 
   /* ============ 포인트 사용 여부 / 카오스 구현 호버 팝업 ============ */
-  .pt-usage-zoom-preview{position:fixed;z-index:9999;display:none;pointer-events:none;width:200px;
+  .pt-usage-zoom-preview{position:fixed;z-index:9999;display:none;pointer-events:none;width:280px;
     background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px;box-shadow:0 10px 34px rgba(0,0,0,.35);}
   .pt-usage-zoom-preview.visible{display:block;}
   .chaos-zoom-preview{position:fixed;z-index:9999;display:none;pointer-events:none;max-width:260px;
     background:#181820;color:#fff;font-size:11.5px;font-weight:600;line-height:1.5;padding:10px 12px;
     border-radius:8px;box-shadow:0 10px 34px rgba(0,0,0,.5);white-space:normal;}
   .chaos-zoom-preview.visible{display:block;}
+
+  /* ============ 파트너 정보 호버 팝업 (에고 스킬 + 파트너 패시브) ============ */
+  .partner-info-zoom-preview{position:fixed;z-index:9999;display:none;pointer-events:none;
+    background:#181820;border-radius:10px;box-shadow:0 10px 34px rgba(0,0,0,.55);
+    padding:14px;gap:16px;}
+  .partner-info-zoom-preview.visible{display:flex;}
+  .partner-info-col{min-width:0;}
+  .partner-info-col-title{color:#fff;font-weight:900;font-size:12px;letter-spacing:.5px;margin-bottom:8px;
+    text-shadow:0 1px 4px rgba(0,0,0,.8);}
+  .partner-info-skill-col{flex:none;width:230px;}
+  .partner-info-skill-row{display:flex;gap:10px;align-items:flex-start;}
+  .partner-info-skill-img-box{width:80px;aspect-ratio:420/632;border-radius:8px;overflow:hidden;flex:none;background:#000;}
+  .partner-info-skill-img-box img{width:100%;height:100%;object-fit:cover;display:block;}
+  .partner-info-skill-text{flex:1;min-width:0;}
+  .partner-info-skill-name{color:#fff;font-weight:800;font-size:12.5px;line-height:1.3;}
+  .partner-info-skill-point{color:#EAF4FF;font-size:11px;font-weight:700;margin-top:6px;}
+  .partner-info-skill-hr{height:1px;background:rgba(255,255,255,.25);margin:8px 0;}
+  .partner-info-skill-tooltip{color:#fff;font-size:10.5px;line-height:1.5;font-weight:600;white-space:normal;}
+  .partner-info-passive-col{flex:none;width:225px;}
+  .partner-info-passive-header{display:flex;align-items:center;gap:8px;}
+  .partner-info-passive-job-icon{width:28px;height:28px;object-fit:contain;flex:none;}
+  .partner-info-passive-name{color:#fff;font-weight:800;font-size:11.5px;line-height:1.3;}
+  .partner-info-passive-hr{height:1px;background:rgba(255,255,255,.25);margin:8px 0;}
+  .partner-info-passive-tooltip{color:#fff;font-size:10.5px;line-height:1.5;font-weight:600;white-space:normal;word-break:keep-all;}
 
   .deckbuild-chaos-section{margin-top:12px;}
   .deckbuild-chaos-title{font-size:11.5px;font-weight:800;color:var(--ink);margin-bottom:8px;}
@@ -746,6 +770,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
 <div class="equip-source-tooltip" id="equipSourceTooltip"></div>
 <div class="pt-usage-zoom-preview" id="ptUsageZoomPreview"></div>
 <div class="chaos-zoom-preview" id="chaosZoomPreview"></div>
+<div class="partner-info-zoom-preview" id="partnerInfoZoomPreview"></div>
 
 <!-- 전투원 정보 데이터 -->
 <script src="../../agents/agents-data.js"></script>
@@ -888,6 +913,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
     { tooltip:'공용 카드로 취급, 공용 카드 드로우 1', types:null }
   ];
   var NEW_AWAKEN_PT = 20;
+  var COST_REDUCE_TEXT = '이 카드의 비용 1 감소';
 
   var COMMON_AWAKENINGS = [
     { types: ["attack", "skill"], tooltip: "모든 적 표식 1 ~ 2", jobs: ["ranger", "hunter"], include: null, exclude: ["사용 불가", "소멸"] },
@@ -1057,6 +1083,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
         hasAwaken: false, hasNewAwaken: false, media: personaMediaFor(slot1, slot2) };
     }
     var cost = c.fixedAwaken ? c.fixedAwaken.cost : c.cost;
+    if (c.newAwaken && c.newAwaken.tooltip === COST_REDUCE_TEXT && typeof cost === 'number') cost = Math.max(0, cost - 1);
     var type = c.fixedAwaken ? c.fixedAwaken.type : c.type;
     var plusCard = c.fixedAwaken ? c.fixedAwaken.plusCard : c.plusCard;
     var baseTooltip = c.fixedAwaken ? c.fixedAwaken.tooltip : c.tooltip;
@@ -1124,6 +1151,14 @@ document.getElementById('startBtn').addEventListener('click', function(){
       return placeholders[letter.charCodeAt(0) - 65];
     });
     return restored.replace(/\n/g, '<br>');
+  }
+
+  function parsePartnerPassiveTooltip(text){
+    return String(text || '').replace(/\[([^\]]*)\]|"([^"]*)"|\d+(?:\/\d+)*/g, function(match, br, q){
+      if (br !== undefined) return '<span style="color:#EAAA00">[' + br + ']</span>';
+      if (q !== undefined) return '<span style="color:#7EE4FF;text-decoration:underline">' + q + '</span>';
+      return '<span style="color:#7EE4FF">' + match + '</span>';
+    }).replace(/\n/g, '<br>');
   }
 
   function fromAgentCard(card, agent){
@@ -1312,7 +1347,8 @@ document.getElementById('startBtn').addEventListener('click', function(){
     deckState = (post.rows || []).map(function(r){
       return {
         agentId: r.agentId, cards: r.cards || [],
-        removePt: 0, duplicatePt: 0, removeCount: 0, duplicateCount: 0, history: [],
+        removePt: Number(r.removePt) || 0, duplicatePt: Number(r.duplicatePt) || 0,
+        removeCount: Number(r.removeCount) || 0, duplicateCount: Number(r.duplicateCount) || 0, history: [],
         partnerId: r.partnerId || null,
         equipment: r.equipment || { weapon: null, armor: null, accessory: null }
       };
@@ -1451,6 +1487,14 @@ document.getElementById('startBtn').addEventListener('click', function(){
         activeSlot = parseInt(el.getAttribute('data-row'), 10);
         renderDeckBox();
       });
+    });
+    Array.prototype.forEach.call(agentsCol.querySelectorAll('.deckbuild-partner-btn'), function(el){
+      var row = parseInt(el.closest('.deckbuild-select').getAttribute('data-row'), 10);
+      var partner = deckState[row] && deckState[row].partnerId ? partnersById[deckState[row].partnerId] : null;
+      if (!partner) return;
+      el.addEventListener('mouseenter', function(e){ e.stopPropagation(); showPartnerInfoZoom(partner, e.clientX, e.clientY); });
+      el.addEventListener('mousemove', function(e){ e.stopPropagation(); positionPartnerInfoZoom(e.clientX, e.clientY); });
+      el.addEventListener('mouseleave', function(e){ e.stopPropagation(); hidePartnerInfoZoom(); });
     });
   }
 
@@ -1646,6 +1690,54 @@ document.getElementById('startBtn').addEventListener('click', function(){
   function hideChaosZoom(){
     chaosZoomEl.classList.remove('visible');
     chaosZoomEl.innerHTML = '';
+  }
+
+  // ============ 파트너 정보 호버 팝업 (에고 스킬 + 파트너 패시브) ============
+  var partnerInfoZoomEl = document.getElementById('partnerInfoZoomPreview');
+  function renderPartnerInfoZoomHtml(partner){
+    var jobIcon = JOB_ICON[partner.job];
+    var pointHtml = renderTooltip('에고 포인트 ' + (partner.ego_point != null ? partner.ego_point : ''));
+    return (
+      '<div class="partner-info-col partner-info-skill-col">' +
+        '<div class="partner-info-col-title">에고 스킬</div>' +
+        '<div class="partner-info-skill-row">' +
+          '<div class="partner-info-skill-img-box"><img src="'+(partner.ego_media ? '../../'+partner.ego_media : '')+'" alt="'+(partner.ego || '')+'"></div>' +
+          '<div class="partner-info-skill-text">' +
+            '<div class="partner-info-skill-name">'+(partner.ego || '')+'</div>' +
+            '<div class="partner-info-skill-point">'+pointHtml+'</div>' +
+            '<div class="partner-info-skill-hr"></div>' +
+            '<div class="partner-info-skill-tooltip">'+renderTooltip(partner.ego_tooltip || '')+'</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="partner-info-col partner-info-passive-col">' +
+        '<div class="partner-info-col-title">파트너 패시브</div>' +
+        '<div class="partner-info-passive-header">' +
+          (jobIcon ? '<img class="partner-info-passive-job-icon" src="'+jobIcon+'" alt="">' : '') +
+          '<div class="partner-info-passive-name">'+(partner.passive || '')+'</div>' +
+        '</div>' +
+        '<div class="partner-info-passive-hr"></div>' +
+        '<div class="partner-info-passive-tooltip">'+parsePartnerPassiveTooltip(partner.passive_tooltip || '')+'</div>' +
+      '</div>'
+    );
+  }
+  function showPartnerInfoZoom(partner, x, y){
+    partnerInfoZoomEl.innerHTML = renderPartnerInfoZoomHtml(partner);
+    partnerInfoZoomEl.classList.add('visible');
+    positionPartnerInfoZoom(x, y);
+  }
+  function positionPartnerInfoZoom(x, y){
+    var rect = partnerInfoZoomEl.getBoundingClientRect();
+    var left = x - rect.width - 16;
+    var top = y - rect.height - 16;
+    if (left < 8) left = x + 16;
+    if (top < 8) top = y + 16;
+    partnerInfoZoomEl.style.left = left + 'px';
+    partnerInfoZoomEl.style.top = top + 'px';
+  }
+  function hidePartnerInfoZoom(){
+    partnerInfoZoomEl.classList.remove('visible');
+    partnerInfoZoomEl.innerHTML = '';
   }
 
   // ============ 장비 확대 미리보기 ============

@@ -398,7 +398,7 @@
   .equip-source-tooltip.visible{display:block;}
 
   /* ============ 포인트 사용 여부 / 카오스 구현 호버 팝업 ============ */
-  .pt-usage-zoom-preview{position:fixed;z-index:9999;display:none;pointer-events:none;width:200px;
+  .pt-usage-zoom-preview{position:fixed;z-index:9999;display:none;pointer-events:none;width:280px;
     background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px;box-shadow:0 10px 34px rgba(0,0,0,.35);}
   .pt-usage-zoom-preview.visible{display:block;}
   .chaos-zoom-preview{position:fixed;z-index:9999;display:none;pointer-events:none;max-width:260px;
@@ -1130,6 +1130,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
     { tooltip:'공용 카드로 취급, 공용 카드 드로우 1', types:null }
   ];
   var NEW_AWAKEN_PT = 20;
+  var COST_REDUCE_TEXT = '이 카드의 비용 1 감소';
 
   var COMMON_AWAKENINGS = [
     { types: ["attack", "skill"], tooltip: "모든 적 표식 1 ~ 2", jobs: ["ranger", "hunter"], include: null, exclude: ["사용 불가", "소멸"] },
@@ -1299,6 +1300,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
         hasAwaken: false, hasNewAwaken: false, media: personaMediaFor(slot1, slot2) };
     }
     var cost = c.fixedAwaken ? c.fixedAwaken.cost : c.cost;
+    if (c.newAwaken && c.newAwaken.tooltip === COST_REDUCE_TEXT && typeof cost === 'number') cost = Math.max(0, cost - 1);
     var type = c.fixedAwaken ? c.fixedAwaken.type : c.type;
     var plusCard = c.fixedAwaken ? c.fixedAwaken.plusCard : c.plusCard;
     var baseTooltip = c.fixedAwaken ? c.fixedAwaken.tooltip : c.tooltip;
@@ -1576,10 +1578,13 @@ document.getElementById('startBtn').addEventListener('click', function(){
       return { type: type, cost: cost, tags: tooltipTags(text) };
     }
     var entryText = card.tooltip;
+    var cost = card.cost;
     if (awakenPopState.primaryIdx !== null) {
-      entryText += '\n' + awakenPopState.commonOptions[awakenPopState.primaryIdx].resolvedText;
+      var resolvedText = awakenPopState.commonOptions[awakenPopState.primaryIdx].resolvedText;
+      entryText += '\n' + resolvedText;
+      if (resolvedText === COST_REDUCE_TEXT && typeof cost === 'number') cost = Math.max(0, cost - 1);
     }
-    return { type: card.type, cost: card.cost, tags: tooltipTags(entryText) };
+    return { type: card.type, cost: cost, tags: tooltipTags(entryText) };
   }
 
   function computeNewOptionsForCurrentState(){
@@ -1931,9 +1936,9 @@ document.getElementById('startBtn').addEventListener('click', function(){
   var deckState = [ emptyRow(), emptyRow(), emptyRow() ];
   var activeSlot = null;
 
-  function firstFourCards(agentId){
+  function allAgentCards(agentId){
     var list = (window.AGENTS_CARDS && window.AGENTS_CARDS[agentId]) || [];
-    return list.filter(function(c){ return !!c.grade; }).slice(0, 4);
+    return list.filter(function(c){ return !!c.grade; });
   }
 
   // ============ 실행 취소 / 초기화 / 제거 / 복제 ============
@@ -1987,7 +1992,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
   function resetRow(i){
     var row = deckState[i];
     if (!row || !row.agentId) return;
-    row.cards = firstFourCards(row.agentId).map(function(c){ return fromAgentCard(c, agentsById[row.agentId]); });
+    row.cards = allAgentCards(row.agentId).map(function(c){ return fromAgentCard(c, agentsById[row.agentId]); });
     row.removePt = 0;
     row.duplicatePt = 0;
     row.removeCount = 0;
@@ -2257,7 +2262,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
       var removeBtnHtml = item ? '<button type="button" class="deckbuild-equip-remove-btn" data-remove-type="'+t+'">&times;</button>' : '';
       var enh = row.equipEnhance[t];
       var iconSrc = enhanceIconSrc(enh);
-      var enhanceBtnHtml = (item && equipQualifiesForEnhance(item)) ?
+      var enhanceBtnHtml = (item && equipQualifiesForEnhance(item, row)) ?
         '<button type="button" class="deckbuild-equip-enhance-btn'+(iconSrc ? ' has-icon' : '')+'" data-enhance-type="'+t+'">' +
           (iconSrc ? '<img src="'+iconSrc+'" alt="">' : '+') +
         '</button>' : '';
@@ -2483,7 +2488,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
   function selectAgent(row, agentId){
     deckState[row] = emptyRow();
     deckState[row].agentId = agentId;
-    deckState[row].cards = firstFourCards(agentId).map(function(c){ return fromAgentCard(c, agentsById[agentId]); });
+    deckState[row].cards = allAgentCards(agentId).map(function(c){ return fromAgentCard(c, agentsById[agentId]); });
     activeSlot = row;
     closeAgentPopup();
     renderDeckBox();
@@ -2942,8 +2947,14 @@ document.getElementById('startBtn').addEventListener('click', function(){
 
   // ============ 장비 강화 팝업 (재련 / 신의 망치 / 각인) ============
   var EQUIP_ENHANCE_SOURCES = ['타오르는 생명', '허상의 극장', '상점', '세넥투스 처치'];
-  function equipQualifiesForEnhance(item){
+  var CHAOS_WITH_ENHANCE = ['타오르는 생명', '허상의 극장'];
+  function chaosAllowsEnhance(row){
+    var manifest = computeChaosManifestation(row);
+    return !manifest.names.length || manifest.names.some(function(n){ return CHAOS_WITH_ENHANCE.indexOf(n) !== -1; });
+  }
+  function equipQualifiesForEnhance(item, row){
     if (!item) return false;
+    if (row && !chaosAllowsEnhance(row)) return false;
     return equipSourceList(item).some(function(s){ return EQUIP_ENHANCE_SOURCES.indexOf(s) !== -1; });
   }
   function hammerAppliedElsewhere(excludeRowIdx, excludeType){
@@ -3370,7 +3381,11 @@ document.getElementById('startBtn').addEventListener('click', function(){
           agentId: r.agentId,
           cards: r.cards.map(stripCardForSave),
           partnerId: r.partnerId || null,
-          equipment: equipmentForSave(r.equipment, r.equipEnhance)
+          equipment: equipmentForSave(r.equipment, r.equipEnhance),
+          removePt: r.removePt,
+          duplicatePt: r.duplicatePt,
+          removeCount: r.removeCount,
+          duplicateCount: r.duplicateCount
         };
       }),
       author: randomAuthor(),

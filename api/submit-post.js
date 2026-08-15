@@ -13,7 +13,11 @@ function buildPostFileContent(post) {
       '      agentId: ' + jsStringLiteral(r.agentId) + ',\n' +
       '      cards: ' + JSON.stringify(r.cards) + ',\n' +
       '      partnerId: ' + (r.partnerId ? jsStringLiteral(r.partnerId) : 'null') + ',\n' +
-      '      equipment: ' + JSON.stringify(r.equipment) + '\n' +
+      '      equipment: ' + JSON.stringify(r.equipment) + ',\n' +
+      '      removePt: ' + (Number(r.removePt) || 0) + ',\n' +
+      '      duplicatePt: ' + (Number(r.duplicatePt) || 0) + ',\n' +
+      '      removeCount: ' + (Number(r.removeCount) || 0) + ',\n' +
+      '      duplicateCount: ' + (Number(r.duplicateCount) || 0) + '\n' +
       '    }';
   }).join(',\n');
   return '// ============================================================\n' +
