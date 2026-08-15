@@ -2212,5 +2212,276 @@ window.AGENTS_CARDS = {
       media: 'cards/휴고/purple.webp',
       tooltip: '[ 유일 ]\n사냥 개시의 추가 공격 피해량 40% 증가'
     }
+  ],
+  orlea: [
+    {
+      name: '공격해, 얘들아',
+      cost: 1,
+      type: 'attack',
+      grade: 'gray',
+      media: 'cards/오를레아/attack.webp',
+      tooltip: '피해 100%'
+    },
+    {
+      name: '빛의 치유',
+      cost: 1,
+      type: 'skill',
+      grade: 'gray',
+      media: 'cards/오를레아/skill.webp',
+      tooltip: '치유 100%'
+    },
+    {
+      name: '빛의 치유',
+      cost: 1,
+      type: 'skill',
+      grade: 'gray',
+      media: 'cards/오를레아/skill.webp',
+      tooltip: '치유 100%'
+    },
+    {
+      name: '성스러운 향로',
+      cost: 1,
+      type: 'skill',
+      grade: 'blue',
+      plus_card: [ '말랑이★', '튼튼이★', '날렵이★' ],
+      media: 'cards/오를레아/blue1.webp',
+      tooltip: '[ 개전 ]\n"피조물★" 2장 생성',
+      awakenings: [
+        { cost: 1, type: 'skill', tooltip: '[ 개전 ]\n"피조물★" |3|장 생성', plus_card: [ '말랑이★', '튼튼이★', '날렵이★' ] },
+        { cost: 2, type: 'upgrade', tooltip: '|[ 개전 / 주도 ]|\n"피조물★" 2장 생성\n|턴 시작 시 "피조물★" 1장 생성|', plus_card: [ '말랑이★', '튼튼이★', '날렵이★' ] },
+        { cost: 1, type: 'skill', tooltip: '[ 개전 ]\n|"말랑이★"|, "피조물★" |1장씩 생성|\n|다음 "말랑이" 사용 시 "말랑이★" 생성|', plus_card: [ '말랑이★', '말랑이★★', '말랑이★★★', '튼튼이★', '날렵이★' ] },
+        { cost: 1, type: 'skill', tooltip: '[ 개전 ]\n|"날렵이★"|, "피조물★" |1장씩 생성|\n|다음 사용하는 "날렵이" 피해량 40% 증가|', plus_card: [ '날렵이★', '날렵이★★', '날렵이★★★', '말랑이★', '튼튼이★' ] },
+        { cost: 1, type: 'skill', tooltip: '[ 개전 ]\n|"튼튼이★"|, "피조물★" |1장씩 생성|\n|다음 "튼튼이" 사용 시 실드 150%|', plus_card: [ '튼튼이★', '튼튼이★★', '튼튼이★★★', '말랑이★', '날렵이★' ] }
+      ]
+    },
+    {
+      name: '성장 촉진',
+      cost: 1,
+      type: 'skill',
+      grade: 'blue',
+      media: 'cards/오를레아/blue2.webp',
+      tooltip: '치유 100%\n핸드의 자신의 카드 1장 선택, 보존 효과 2회 발동',
+      awakenings: [
+        { cost: 0, type: 'skill', tooltip: '치유 100%\n|핸드의 카드| 1장 선택, 보존 효과 2회 발동' },
+        { cost: 1, type: 'skill', tooltip: '|[ 소멸 ]|\n치유 |200|%\n핸드의 자신의 |"피조물"| 1장 선택, |핸드에 복제|', plus_card: [ '말랑이★', '튼튼이★', '날렵이★' ] },
+        { cost: 1, type: 'skill', tooltip: '치유 |150|%\n핸드의 자신의 카드 1장 선택, 보존 효과 2회 발동\n|그 카드가 "말랑이"일 시 모든 적 취약 2|', plus_card: [ '말랑이★', '말랑이★★', '말랑이★★★' ] },
+        { cost: 1, type: 'skill', tooltip: '치유 |150|%\n핸드의 자신의 카드 1장 선택, 보존 효과 2회 발동\n|그 카드가 "날렵이"일 시 보존 효과 3회로 발동|', plus_card: [ '날렵이★', '날렵이★★', '날렵이★★★' ] },
+        { cost: 1, type: 'skill', tooltip: '치유 |150|%\n핸드의 자신의 카드 1장 선택, 보존 효과 2회 발동\n|그 카드가 "튼튼이"일 시 아군 스트레스 5 감소|', plus_card: [ '튼튼이★', '튼튼이★★', '튼튼이★★★' ] }
+      ]
+    },
+    {
+      name: '귀찮아',
+      cost: 0,
+      type: 'attack',
+      grade: 'blue',
+      media: 'cards/오를레아/blue3.webp',
+      tooltip: '핸드의 카드 수만큼 고정 피해 40%, 치유 20%',
+      awakenings: [
+        { cost: 0, type: 'attack', tooltip: '핸드의 카드 수만큼 고정 피해 40%\n|6장 이상일 시 치유 200%|' },
+        { cost: 1, type: 'attack', tooltip: '|방어 기반 피해 100%|\n|핸드의 "피조물" 수만큼 피해량 +100%, 치유 60%|', plus_card: [ '말랑이★', '튼튼이★', '날렵이★' ] },
+        { cost: 3, type: 'attack', tooltip: '|[ 보존 ]|\n|방어 기반 피해 450%|\n|치유 200%|\n|보존 : 비용 1 감소|' },
+        { cost: 0, type: 'attack', tooltip: '|무작위 적들에게 방어 기반 피해 60% × 3|\n|타격한 대상 수만큼 "피조물★" 1장 생성|', plus_card: [ '말랑이★', '튼튼이★', '날렵이★' ] },
+        { cost: 1, type: 'attack', tooltip: '|[ 보존 ]|\n|방어 기반 피해 120%|\n|이 카드 핸드에 있을 때 "피조물" 생성한 수만큼 사용 시까지 피해량 +120%|', plus_card: [ '말랑이★', '튼튼이★', '날렵이★' ] }
+      ]
+    },
+    {
+      name: '성장하는 피조물',
+      cost: 1,
+      type: 'skill',
+      grade: 'yellow',
+      plus_card: [ '말랑이★', '튼튼이★', '날렵이★', '말랑이★★★', '튼튼이★★★', '날렵이★★★' ],
+      media: 'cards/오를레아/yellow.webp',
+      tooltip: '[ 보존 ]\n"피조물★" 1장 생성\n보존 : 이 카드 "피조물★★★"로 변경',
+      awakenings: [
+        { cost: 1, type: 'skill', tooltip: '[ 보존 ]\n"피조물★" 1장 생성\n보존 : |"피조물★" 1장 생성|', plus_card: [ '말랑이★', '튼튼이★', '날렵이★' ] },
+        { cost: 1, type: 'skill', tooltip: '[ 보존 ]\n"피조물★" 1장 생성\n보존 : 이 카드| "피조물★★"|로 변경, |모든 "피조물★" 1장씩 생성|', plus_card: [ '말랑이★', '튼튼이★', '날렵이★', '말랑이★★', '튼튼이★★', '날렵이★★' ] },
+        { cost: 1, type: 'skill', tooltip: '[ 보존 ]\n"피조물★" 1장 생성\n보존 : 이 카드 |"말랑이★★★"|로 변경, |모든 적 취약 2|', plus_card: [ '말랑이★', '튼튼이★', '날렵이★', '말랑이★★★' ] },
+        { cost: 1, type: 'skill', tooltip: '[ 보존 ]\n"피조물★" 1장 생성\n보존 : 이 카드 |"날렵이★★★"|로 변경, |보존 효과 2회 발동|', plus_card: [ '말랑이★', '튼튼이★', '날렵이★', '날렵이★★★' ] },
+        { cost: 1, type: 'skill', tooltip: '[ 보존 ]\n"피조물★" 1장 생성\n보존 : 이 카드 |"튼튼이★★★"|로 변경, |모든 적 약화 3|', plus_card: [ '말랑이★', '튼튼이★', '날렵이★', '튼튼이★★★' ] }
+      ]
+    },
+    {
+      name: '빛의 의지',
+      cost: 1,
+      type: 'skill',
+      grade: 'purple',
+      media: 'cards/오를레아/purple.webp',
+      tooltip: '치유 200%\n핸드의 모든 카드의 보존 효과 발동'
+    },
+    {
+      name: '말랑이★',
+      cost: 0,
+      type: 'skill',
+      grade: '',
+      grade_color: 'blue',
+      media: 'cards/오를레아/blue1_1_1.webp',
+      tooltip: '[ 소멸 / 보존 / 피조물 ]\n1턴간 피해량 10% 증가\n보존 : 다음 사용하는 공격 카드의 피해량 10% 증가'
+    },
+    {
+      name: '말랑이★★',
+      cost: 0,
+      type: 'skill',
+      grade: '',
+      grade_color: 'yellow',
+      media: 'cards/오를레아/blue1_1_2.webp',
+      tooltip: '[ 소멸 / 보존 / 피조물 ]\n1턴간 피해량 20% 증가\n보존 : 다음 사용하는 공격 카드의 피해량 20% 증가'
+    },
+    {
+      name: '말랑이★★★',
+      cost: 0,
+      type: 'skill',
+      grade: '',
+      grade_color: 'purple',
+      media: 'cards/오를레아/blue1_1_3.webp',
+      tooltip: '[ 소멸 / 보존 / 피조물 ]\n1턴간 피해량 35% 증가\n보존 : 다음 사용하는 공격 카드의 피해량 35% 증가'
+    },
+    {
+      name: '날렵이★',
+      cost: 0,
+      type: 'attack',
+      grade: '',
+      grade_color: 'blue',
+      media: 'cards/오를레아/blue1_2_1.webp',
+      tooltip: '[ 소멸 / 보존 / 피조물 ]\n피해 100%\n보존 : 피해량 +40%'
+    },
+    {
+      name: '날렵이★★',
+      cost: 0,
+      type: 'attack',
+      grade: '',
+      grade_color: 'yellow',
+      media: 'cards/오를레아/blue1_2_2.webp',
+      tooltip: '[ 소멸 / 보존 / 피조물 ]\n피해 200%\n보존 : 피해량 +80%'
+    },
+    {
+      name: '날렵이★★★',
+      cost: 0,
+      type: 'attack',
+      grade: '',
+      grade_color: 'purple',
+      media: 'cards/오를레아/blue1_2_3.webp',
+      tooltip: '[ 소멸 / 보존 / 피조물 ]\n피해 350%\n보존 : 피해량 +150%'
+    },
+    {
+      name: '튼튼이★',
+      cost: 0,
+      type: 'skill',
+      grade: '',
+      grade_color: 'blue',
+      media: 'cards/오를레아/blue1_3_1.webp',
+      tooltip: '[ 소멸 / 보존 / 피조물 ]\n실드 100%\n보존 : 치유 60%'
+    },
+    {
+      name: '튼튼이★★',
+      cost: 0,
+      type: 'skill',
+      grade: '',
+      grade_color: 'yellow',
+      media: 'cards/오를레아/blue1_3_2.webp',
+      tooltip: '[ 소멸 / 보존 / 피조물 ]\n실드 200%\n보존 : 치유 120%'
+    },
+    {
+      name: '튼튼이★★★',
+      cost: 0,
+      type: 'skill',
+      grade: '',
+      grade_color: 'purple',
+      media: 'cards/오를레아/blue1_3_3.webp',
+      tooltip: '[ 소멸 / 보존 / 피조물 ]\n실드 350%\n보존 : 치유 200%'
+    }
+  ],
+  rin: [
+    {
+      name: '흑운검 일식',
+      cost: 1,
+      type: 'attack',
+      grade: 'gray',
+      media: 'cards/린/attack.webp',
+      tooltip: '피해 100%'
+    },
+    {
+      name: '흑운검 삼식',
+      cost: 2,
+      type: 'attack',
+      grade: 'gray',
+      media: 'cards/린/attack2.webp',
+      tooltip: '피해 220%'
+    },
+    {
+      name: '수호',
+      cost: 1,
+      type: 'skill',
+      grade: 'gray',
+      media: 'cards/린/skill.webp',
+      tooltip: '실드 100%'
+    },
+    {
+      name: '발도',
+      cost: 0,
+      type: 'attack',
+      grade: 'blue',
+      media: 'cards/린/blue1.webp',
+      tooltip: '[ 신속 ]\n피해 120%\n흑운태세 획득\n흑운태세 : 피해량 100% 증가',
+      awakenings: [
+        { cost: 0, type: 'attack', tooltip: '[ 신속 ]\n피해 |180|%\n흑운태세 획득\n흑운태세 : 피해량 100% 증가' },
+        { cost: 0, type: 'attack', tooltip: '[ 신속 ]\n피해 |180|%\n흑운태세 획득\n흑운태세 : |타격 1회 추가|' },
+        { cost: 0, type: 'attack', tooltip: '|[ 신속 ]|\n피해 |450|%\n흑운태세 : |이 카드 사용 가능|' },
+        { cost: 0, type: 'attack', tooltip: '[ 신속 ]\n피해 |150|%\n흑운태세 획득\n흑운태세 : |핸드의 카드 수만큼 피해량 30% 증가|' },
+        { cost: 2, type: 'attack', tooltip: '[ 신속 ]\n피해 |360|%\n흑운태세 획득\n흑운태세 : 피해량 100% 증가' }
+      ]
+    },
+    {
+      name: '흑운 오의 : 잔',
+      cost: 0,
+      type: 'skill',
+      grade: 'blue',
+      media: 'cards/린/blue2.webp',
+      tooltip: '자신의 카드 드로우 1\n흑운태세 획득',
+      awakenings: [
+        { cost: 0, type: 'skill', tooltip: '|실드 100%|\n자신의 카드 드로우 |2|\n흑운태세 획득' },
+        { cost: 0, type: 'skill', tooltip: '자신의 카드 드로우 1, |1턴간 사용 시까지 그 카드 비용 1 감소|\n흑운태세 획득' },
+        { cost: 0, type: 'skill', tooltip: '자신의 |공격 카드| 드로우 1, |1턴간 사용 시까지 그 카드 피해량 50% 증가|\n흑운태세 획득' },
+        { cost: 0, type: 'skill', tooltip: '|뽑을 카드 혹은 버린 카드에서 "흑운 오의 : 멸", "흑운 오의 : 흑무"를 핸드로 이동|', plus_card: [ '흑운 오의 : 멸', '흑운 오의 : 흑무' ] },
+        { cost: 1, type: 'upgrade', tooltip: '|턴 시작 시 흑운태세 상태라면 자신의 카드 드로우 1|' }
+      ]
+    },
+    {
+      name: '흑운 오의 : 멸',
+      cost: 1,
+      type: 'attack',
+      grade: 'blue',
+      media: 'cards/린/blue3.webp',
+      tooltip: '[ 신속 ]\n피해 200%\n흑운태세 : 타격 1회 추가',
+      awakenings: [
+        { cost: 1, type: 'attack', tooltip: '[ 신속 ]\n피해 |300|%\n흑운태세 : 타격 1회 추가|' },
+        { cost: 1, type: 'attack', tooltip: '[ 신속 ]\n피해 \\100\\% × |2|\n흑운태세 : 타격 |2|회 추가' },
+        { cost: 1, type: 'attack', tooltip: '[ 신속 ]\n피해 \\150\\% × |2|\n흑운태세 : |치명피해 +100%|' },
+        { cost: 1, type: 'attack', tooltip: '[ 신속 ]\n피해 |300|%\n흑운태세 : |피해량 100% 증가|' },
+        { cost: 1, type: 'attack', tooltip: '[ 신속 ]\n피해 200%\n흑운태세 : |핸드의 모든 자신의 카드 1턴간 사용 시까지 비용 1 감소|' }
+      ]
+    },
+    {
+      name: '흑운 심법',
+      cost: 1,
+      type: 'skill',
+      grade: 'yellow',
+      media: 'cards/린/yellow.webp',
+      tooltip: '[ 주도 ]\n1턴간 흑운태세 보존\n흑운태세 : 1턴간 자신의 공격 카드 피해량 +40%',
+      awakenings: [
+        { cost: 1, type: 'skill', tooltip: '[ 주도 ]\n1턴간 흑운태세 보존\n흑운태세 : 1턴간 자신의 공격 카드 피해량 +|80|%' },
+        { cost: 1, type: 'skill', tooltip: '1턴간 흑운태세 보존\n흑운태세 : |자신의 카드 드로우 2|' },
+        { cost: 1, type: 'skill', tooltip: '[ 주도 ]\n1턴간 흑운태세 보존\n|"흑운 오의 : 멸" 1장 생성, 그 카드에 증발 부여|', plus_card: '흑운 오의 : 멸' },
+        { cost: 1, type: 'upgrade', tooltip: '[ 주도 ]\n|턴 시작 시 흑운태세 획득|' },
+        { cost: 1, type: 'upgrade', tooltip: '[ 주도 ]\n|흑운태세 상태라면 자신의 공격 카드 피해량 50% 증가|' }
+      ]
+    },
+    {
+      name: '흑운 오의 : 흑무',
+      cost: 1,
+      type: 'attack',
+      grade: 'purple',
+      media: 'cards/린/purple.webp',
+      tooltip: '피해 120%\n흑운태세 : 핸드의 스킬 카드 수만큼 타격 1회 추가'
+    }
   ]
 };
