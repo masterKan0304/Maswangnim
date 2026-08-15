@@ -2118,5 +2118,99 @@ window.AGENTS_CARDS = {
       media: 'cards/루크/purple.webp',
       tooltip: '[ 사용 불가 / 유일 / 탄환 ]\n피해 300%\n"핸드건 탄환" 카드 5장 사용 시 사용 불가 제거'
     }
+  ],
+  hugo: [
+    {
+      name: '단검 던지기',
+      cost: 1,
+      type: 'attack',
+      grade: 'gray',
+      media: 'cards/휴고/attack.webp',
+      tooltip: '피해 100%'
+    },
+    {
+      name: '단검 던지기',
+      cost: 1,
+      type: 'attack',
+      grade: 'gray',
+      media: 'cards/휴고/attack.webp',
+      tooltip: '피해 100%'
+    },
+    {
+      name: '방어 시스템',
+      cost: 1,
+      type: 'skill',
+      grade: 'gray',
+      media: 'cards/휴고/skill.webp',
+      tooltip: '실드 100%'
+    },
+    {
+      name: '사냥 본능',
+      cost: 1,
+      type: 'upgrade',
+      grade: 'blue',
+      media: 'cards/휴고/blue1.webp',
+      tooltip: '[ 개전 ]\n다른 전투원의 강화 혹은 스킬 카드 사용 시 사냥 개시 1',
+      awakenings: [
+        { cost: 0, type: 'upgrade', tooltip: '[ 개전 ]\n다른 전투원의 강화 혹은 스킬 카드 사용 시 사냥 개시 1' },
+        { cost: 1, type: 'upgrade', tooltip: '[ 개전 ]\n다른 전투원의 강화 혹은 스킬 카드 사용 시 사냥 개시 1\n|50% 확률로 사냥 개시 1 추가|' },
+        { cost: 1, type: 'upgrade', tooltip: '[ 개전 ]\n다른 전투원의 강화 혹은 스킬 카드 사용 시 사냥 개시 1\n|사냥 개시가 발동되면 대상에게 협공 50%|' },
+        { cost: 0, type: 'skill', tooltip: '|핸드의 스킬 수만큼 사냥 개시|' },
+        { cost: 1, type: 'upgrade', tooltip: '[ 개전 ]\n|강화 혹은 스킬 카드| 사용 시 사냥 개시 1' }
+      ]
+    },
+    {
+      name: '단검 방사',
+      cost: 1,
+      type: 'attack',
+      grade: 'blue',
+      media: 'cards/휴고/blue2.webp',
+      tooltip: '[ 신속 ]\n무작위 적들에게 피해 60% × 3\n타격한 대상 수만큼 사냥 개시',
+      awakenings: [
+        { cost: 1, type: 'attack', tooltip: '[ 신속 ]\n무작위 적들에게 피해 |90|% × 3\n타격한 대상 수만큼 사냥 개시' },
+        { cost: 1, type: 'attack', tooltip: '[ 신속 ]\n피해 |90|% × 3\n사냥 개시 |2|' },
+        { cost: 1, type: 'attack', tooltip: '[ 신속 ]\n피해 |250|%\n|피해를 줬을 시 무작위 아군이 대상에게 협공 100%|' },
+        { cost: 1, type: 'attack', tooltip: '[ 신속 ]\n무작위 적들에게 피해 |90|% × 3\n|사냥 개시 상태라면 피해량 100% 증가|' },
+        { cost: 2, type: 'upgrade', tooltip: '|[ 유일 ]|\n|턴 시작 시| 무작위 적들에게 피해 60% × \\2\\\n타격한 대상 수만큼 사냥 개시' }
+      ]
+    },
+    {
+      name: '빠른 해결법',
+      cost: 1,
+      type: 'attack',
+      grade: 'blue',
+      media: 'cards/휴고/blue3.webp',
+      tooltip: '[ 신속 ]\n피해 80% × 2\n사냥 개시 상태라면 공격 카드 1장 드로우',
+      awakenings: [
+        { cost: 1, type: 'attack', tooltip: '[ 신속 ]\n피해 |120|% × 2\n사냥 개시 상태라면 공격 카드 1장 드로우' },
+        { cost: 1, type: 'attack', tooltip: '[ 신속 ]\n피해 80% × 2\n사냥 개시 상태라면 |타격 1회 추가|' },
+        { cost: 1, type: 'attack', tooltip: '[ 신속 ]\n피해 |100|% × 2\n사냥 개시 상태라면 드로우 |2|' },
+        { cost: 1, type: 'attack', tooltip: '[ 신속 ]\n피해 |100|% × |3|\n사냥 개시 상태라면 |모든 적 행동 카운트 2 증가|' },
+        { cost: 1, type: 'attack', tooltip: '[ 신속 ]\n피해 |120|%\n사냥 개시 수만큼 |타격 1회 추가|' }
+      ]
+    },
+    {
+      name: '딩고 하울링',
+      cost: 1,
+      type: 'skill',
+      grade: 'yellow',
+      media: 'cards/휴고/yellow.webp',
+      tooltip: '실드 100%\n사냥 개시 2',
+      awakenings: [
+        { cost: 1, type: 'skill', tooltip: '실드 |150|%\n사냥 개시 |3|' },
+        { cost: 1, type: 'skill', tooltip: '실드 |150|%\n|사냥 개시 상태라면 실드 획득량 +50%|\n사냥 개시 2' },
+        { cost: 1, type: 'upgrade', tooltip: '|사냥 개시 획득 시 공격 카드 드로우 1 (턴당 1회)|' },
+        { cost: 1, type: 'skill', tooltip: '사냥 개시 2\n|연속 : 사냥 개시 2 추가|' },
+        { cost: 1, type: 'skill', tooltip: '사냥 개시 2\n|공격 카드 드로우 2|' }
+      ]
+    },
+    {
+      name: '해결사의 방식',
+      cost: 1,
+      type: 'upgrade',
+      grade: 'purple',
+      media: 'cards/휴고/purple.webp',
+      tooltip: '[ 유일 ]\n사냥 개시의 추가 공격 피해량 40% 증가'
+    }
   ]
 };
