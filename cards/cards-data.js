@@ -2483,5 +2483,288 @@ window.AGENTS_CARDS = {
       media: 'cards/린/purple.webp',
       tooltip: '피해 120%\n흑운태세 : 핸드의 스킬 카드 수만큼 타격 1회 추가'
     }
+  ],
+  meilin: [
+    {
+      name: '일격',
+      cost: 1,
+      type: 'attack',
+      grade: 'gray',
+      media: 'cards/메이린/attack.webp',
+      tooltip: '피해 100%'
+    },
+    {
+      name: '일격',
+      cost: 1,
+      type: 'attack',
+      grade: 'gray',
+      media: 'cards/메이린/attack.webp',
+      tooltip: '피해 100%'
+    },
+    {
+      name: '화룡호신',
+      cost: 1,
+      type: 'skill',
+      grade: 'gray',
+      media: 'cards/메이린/skill.webp',
+      tooltip: '실드 100%'
+    },
+    {
+      name: '화룡의 보석',
+      cost: 1,
+      type: 'upgrade',
+      grade: 'blue',
+      media: 'cards/메이린/blue1.webp',
+      tooltip: '[ 유일 / 개전 ]\n자신의 공격 카드 피해량 20% 증가\n공격 카드 사용 시 대상에게 열정 약점 1',
+      awakenings: [
+        { cost: 1, type: 'upgrade', tooltip: '[ 유일 / 개전 ]\n자신의 공격 카드 피해량 |30|% 증가\n공격 카드 사용 시 대상에게 열정 약점 1' },
+        { cost: 1, type: 'upgrade', tooltip: '[ 유일 / 개전 ]\n자신의 공격 카드 피해량 20% 증가\n공격 카드 사용 시 대상에게 |강인도 피해 1|' },
+        { cost: 1, type: 'upgrade', tooltip: '[ 유일 / 개전 ]\n자신의 공격 카드 피해량 20% 증가\n공격 카드 사용 시 대상에게 |잔불 1|, 열정 약점 1' },
+        { cost: 1, type: 'upgrade', tooltip: '[ 유일 / 개전 ]\n자신의 |치명확률 30% 증가|\n|치명타 시 대상에게 강인도 피해 1, 잔불 1|' },
+        { cost: 2, type: 'upgrade', tooltip: '[ 개전 ]\n|격파 시 대상에게 피해 300%|' }
+      ]
+    },
+    {
+      name: '승룡각',
+      cost: 1,
+      type: 'attack',
+      grade: 'blue',
+      media: 'cards/메이린/blue2.webp',
+      tooltip: '피해 100%\n잔불 2\n연속 : 타격 1회 추가',
+      awakenings: [
+        { cost: 1, type: 'attack', tooltip: '피해 100%\n잔불 2\n연속 : 타격 |2|회 추가' },
+        { cost: 1, type: 'attack', tooltip: '피해 |150|%\n잔불 |3|\n연속 : 타격 1회 추가' },
+        { cost: 2, type: 'attack', tooltip: '피해 |200|%\n|다음 사용하는 열정 카드 타격 1회 추가|' },
+        { cost: 1, type: 'attack', tooltip: '피해 100%\n|다음 사용하는 자신의 기본 공격 카드 타격 2회 추가|' },
+        { cost: 2, type: 'attack', tooltip: '피해 |150|%\n|1턴간 사용한 열정 카드 수만큼 타격 1회 추가|' }
+      ]
+    },
+    {
+      name: '공방일체',
+      cost: 1,
+      type: 'skill',
+      grade: 'blue',
+      media: 'cards/메이린/blue3.webp',
+      tooltip: '자신의 기본 카드 드로우 2\n1턴간 사용 시까지 그 카드의 비용 1 감소',
+      awakenings: [
+        { cost: 0, type: 'skill', tooltip: '자신의 기본 카드 드로우 2\n1턴간 사용 시까지 그 카드의 비용 1 감소, |피해량, 실드 획득량 50% 증가|' },
+        { cost: 0, type: 'skill', tooltip: '자신의 기본 카드 |2장 핸드로 이동|, 1턴간 사용 시까지 그 카드의 비용 1 감소' },
+        { cost: 2, type: 'skill', tooltip: '자신의 기본 카드 드로우 2\n|핸드의 카드 2장까지 선택 소멸\n그 수만큼 1턴간 사기 2, 결의 2|' },
+        { cost: 0, type: 'upgrade', tooltip: '|일격 2장 생성|\n|그 카드의 비용 1 감소|' },
+        { cost: 2, type: 'upgrade', tooltip: '|[ 유일 ]|\n|자신의 기본 카드 피해량 100% 증가|' }
+      ]
+    },
+    {
+      name: '향족의 정신',
+      cost: 1,
+      type: 'skill',
+      grade: 'yellow',
+      media: 'cards/메이린/yellow.webp',
+      tooltip: '[ 보존 ]\n1턴간 자신의 카드 사용 시 자신의 피해량 +20%',
+      awakenings: [
+        { cost: 1, type: 'skill', tooltip: '[ 보존 ]\n1턴간 |열정 카드| 사용 시 자신의 피해량 +20%' },
+        { cost: 1, type: 'skill', tooltip: '[ 보존 ]\n1턴간 자신의 카드 사용 시 자신의 피해량 +|30|%' },
+        { cost: 0, type: 'skill', tooltip: '|[ 개전 ]|\n1턴간 자신의 카드 사용 시 자신의 피해량 +20%' },
+        { cost: 1, type: 'skill', tooltip: '[ 보존 ]\n1턴간 자신의 카드 사용 시 |무작위 적 잔불 1|' },
+        { cost: 1, type: 'skill', tooltip: '[ 보존 ]\n1턴간 자신의 카드 사용 시 자신의 |기본 카드|의 피해량 +|50|%' }
+      ]
+    },
+    {
+      name: '화룡경천',
+      cost: 2,
+      type: 'attack',
+      grade: 'purple',
+      media: 'cards/메이린/purple.webp',
+      tooltip: '[ 약점 공격 ]\n피해 300%\n파괴 : 잔불 보존'
+    }
+  ],
+  khaliphe: [
+    {
+      name: '채찍질',
+      cost: 1,
+      type: 'attack',
+      grade: 'gray',
+      media: 'cards/칼리페/attack.webp',
+      tooltip: '방어 기반 피해 100%'
+    },
+    {
+      name: '베어올리기',
+      cost: 2,
+      type: 'attack',
+      grade: 'gray',
+      media: 'cards/칼리페/attack.webp',
+      tooltip: '방어 기반 피해 220%'
+    },
+    {
+      name: '티르의 맹세',
+      cost: 1,
+      type: 'skill',
+      grade: 'gray',
+      media: 'cards/칼리페/skill.webp',
+      tooltip: '실드 100%'
+    },
+    {
+      name: '벌쳐 사출',
+      cost: 3,
+      type: 'attack',
+      grade: 'blue',
+      media: 'cards/칼리페/blue1.webp',
+      tooltip: '[ 천상 / 보존 ]\n모든 적 방어 기반 피해 120%\n실드 100%\n은빛 장막 1',
+      awakenings: [
+        { cost: 3, type: 'attack', tooltip: '[ 천상 / 보존 ]\n모든 적 방어 기반 피해 |280|%\n은빛 장막 1' },
+        { cost: 3, type: 'attack', tooltip: '[ 천상 / 보존 ]\n실드 |280|%\n은빛 장막 1' },
+        { cost: 3, type: 'attack', tooltip: '[ 천상 / 보존 ]\n모든 적 방어 기반 피해 |180|%\n실드 |150|%\n은빛 장막 1' },
+        { cost: 3, type: 'attack', tooltip: '[ 천상 / 보존 ]\n모든 적 방어 기반 피해 |180|%\n은빛 장막 1\n|보존 : 실드 100%|' },
+        { cost: 3, type: 'attack', tooltip: '[ 천상 / 보존 ]\n모든 적 방어 기반 피해 |180|%\n은빛 장막 1\n|핸드의 카드 수만큼 실드 40%|' }
+      ]
+    },
+    {
+      name: '대검 아퀼라',
+      cost: 1,
+      type: 'attack',
+      grade: 'blue',
+      plus_card: '벌쳐 사출',
+      media: 'cards/칼리페/blue2.webp',
+      tooltip: '모든 적 방어 기반 피해 150%\n핸드에 "벌쳐 사출"이 있다면 비용 1 증가, 피해량 +100%',
+      awakenings: [
+        { cost: 1, type: 'attack', tooltip: '모든 적 방어 기반 피해 |210|%\n핸드에 "벌쳐 사출"이 있다면 비용 1 증가, 피해량 +|120|%', plus_card: '벌쳐 사출' },
+        { cost: 2, type: 'attack', tooltip: '모든 적 방어 기반 피해 |220|%\n|사용 시 피해량 +40%|' },
+        { cost: 2, type: 'attack', tooltip: '모든 적 방어 기반 피해 |220|%\n핸드에 "벌쳐 사출"이 있다면 |은빛 장막 1|', plus_card: '벌쳐 사출' },
+        { cost: 2, type: 'attack', tooltip: '|[ 보존 ]|\n모든 적 방어 기반 피해 |220|%\n|보존 : 다음 사용하는 "벌쳐 사출"의 피해량 60%|', plus_card: '벌쳐 사출' },
+        { cost: 1, type: 'attack', tooltip: '|[ 회수 3 ]|\n모든 적 방어 기반 피해 150%\n핸드에 "벌쳐 사출"이 있다면 비용 1 증가, 피해량 +100%', plus_card: '벌쳐 사출' }
+      ]
+    },
+    {
+      name: '위압',
+      cost: 2,
+      type: 'skill',
+      grade: 'blue',
+      media: 'cards/칼리페/blue3.webp',
+      tooltip: '실드 250%\n모든 적 강인도 피해 1',
+      awakenings: [
+        { cost: 2, type: 'skill', tooltip: '실드 |300|%\n모든 적 강인도 피해 1\n|적 수만큼 피해감소 1' },
+        { cost: 2, type: 'skill', tooltip: '실드 |300|%\n모든 적 강인도 피해 1\n|격파 상태인 적 취약 2|\n|아닐 시 약화 2|' },
+        { cost: 2, type: 'skill', tooltip: '실드 |300|%\n모든 적 강인도 피해 |2|' },
+        { cost: 2, type: 'skill', tooltip: '실드 250%\n모든 적 강인도 피해 1\n|핸드의 카드 수만큼 실드 획득량 +40%|' },
+        { cost: 2, type: 'skill', tooltip: '실드 |300|%\n모든 적 강인도 피해 1\n|모든 적 행동 카운트 5 증가|' }
+      ]
+    },
+    {
+      name: '재집결',
+      cost: 1,
+      type: 'skill',
+      grade: 'yellow',
+      media: 'cards/칼리페/yellow.webp',
+      tooltip: '실드 120%\n비용이 가장 높은 카드 드로우 1',
+      awakenings: [
+        { cost: 1, type: 'skill', tooltip: '실드 |150|%\n비용이 가장 높은 카드 드로우 1\n|은빛 장막 1|' },
+        { cost: 1, type: 'skill', tooltip: '실드 |150|%\n|천상 카드 드로우 1|\n|은빛 장막 1|' },
+        { cost: 2, type: 'skill', tooltip: '|[ 천상 ]|\n실드 |150|%\n비용이 가장 높은 카드 드로우 1\n|은빛 장막 1|' },
+        { cost: 1, type: 'skill', tooltip: '실드 120%\n|드로우 1|\n|그 카드의 비용만큼 실드 60%|\n|은빛 장막 1|' },
+        { cost: 1, type: 'skill', tooltip: '실드 |150|%\n|뽑을 카드에서 비용 2 이상인 카드 1장 선택 드로우|' }
+      ]
+    },
+    {
+      name: '절대 수호',
+      cost: 'X',
+      type: 'skill',
+      grade: 'purple',
+      media: 'cards/칼리페/purple.webp',
+      tooltip: '[ 종극 ]\nX만큼 실드 100%\n1턴간 핸드의 모든 카드 보존'
+    }
+  ],
+  magna: [
+    {
+      name: '빙결의 주먹',
+      cost: 1,
+      type: 'attack',
+      grade: 'gray',
+      media: 'cards/마그나/attack.webp',
+      tooltip: '방어 기반 피해 100%'
+    },
+    {
+      name: '서리 방패',
+      cost: 1,
+      type: 'skill',
+      grade: 'gray',
+      media: 'cards/마그나/skill.webp',
+      tooltip: '실드 100%'
+    },
+    {
+      name: '서리 방패',
+      cost: 1,
+      type: 'skill',
+      grade: 'gray',
+      media: 'cards/마그나/skill.webp',
+      tooltip: '실드 100%'
+    },
+    {
+      name: '얼음 파편',
+      cost: 1,
+      type: 'upgrade',
+      grade: 'blue',
+      media: 'cards/마그나/blue1.webp',
+      tooltip: '[ 주도 ]\n결정화 2\n턴 시작 시 반격 1',
+      awakenings: [
+        { cost: 1, type: 'upgrade', tooltip: '[ 주도 ]\n결정화 |4|\n턴 시작 시 반격 1' },
+        { cost: 1, type: 'upgrade', tooltip: '[ 주도 ]\n결정화 2\n턴 시작 시 반격 |2|' },
+        { cost: 0, type: 'upgrade', tooltip: '|[ 개전 ]|\n결정화 2\n턴 시작 시 반격 1' },
+        { cost: 2, type: 'upgrade', tooltip: '|[ 유일 / 주도 ]|\n결정화 2\n|턴 종료 시 모든 적 방어 기반 피해 200%|' },
+        { cost: 2, type: 'skill', tooltip: '[ 주도 ]\n반격 |4|\n|다음 반격 피해량 30% 증가|' }
+      ]
+    },
+    {
+      name: '빙하의 철권',
+      cost: 2,
+      type: 'attack',
+      grade: 'blue',
+      media: 'cards/마그나/blue2.webp',
+      tooltip: '방어 기반 피해 300%\n피해 기반 실드 50%',
+      awakenings: [
+        { cost: 2, type: 'attack', tooltip: '방어 기반 피해 |450|%\n피해 기반 실드 50%' },
+        { cost: 2, type: 'attack', tooltip: '방어 기반 피해 300%\n|취약 3|' },
+        { cost: 2, type: 'attack', tooltip: '방어 기반 피해 |450|%\n|실드 보유 시 피해량 50% 증가|' },
+        { cost: 2, type: 'attack', tooltip: '|모든 적| 방어 기반 피해 300%\n피해 기반 실드 50%' },
+        { cost: 2, type: 'attack', tooltip: '|[ 소멸 2 ]|\n방어 기반 피해 |400|%\n피해 기반 실드 50%\n|1턴간 실드 보존 1|' }
+      ]
+    },
+    {
+      name: '빙벽',
+      cost: 2,
+      type: 'skill',
+      grade: 'blue',
+      media: 'cards/마그나/blue3.webp',
+      tooltip: '실드 180%\n반격 2\n1턴간 반격의 대상이 모든 적으로 적용',
+      awakenings: [
+        { cost: 2, type: 'skill', tooltip: '실드 |270|%\n반격 |3|\n1턴간 반격의 대상이 모든 적으로 적용' },
+        { cost: 2, type: 'skill', tooltip: '실드 |270|%\n|자신의 보유 반격 수만큼 실드 획득량 +30%|\n반격 2' },
+        { cost: 2, type: 'upgrade', tooltip: '|[ 주도 ]|\n|반격의 대상이 모든 적으로 적용|' },
+        { cost: 2, type: 'attack', tooltip: '실드 180%\n|보유한 실드만큼 모든 적 피해|' },
+        { cost: 2, type: 'skill', tooltip: '실드 180%\n반격 2\n|2|턴간 반격의 대상이 모든 적으로 적용' }
+      ]
+    },
+    {
+      name: '냉기 충전',
+      cost: 1,
+      type: 'skill',
+      grade: 'yellow',
+      media: 'cards/마그나/yellow.webp',
+      tooltip: '실드 100%\n모든 적 취약 2',
+      awakenings: [
+        { cost: 1, type: 'skill', tooltip: '실드 |150|%\n모든 적 취약 2\n|적 수만큼 실드 획득량 +50%|' },
+        { cost: 1, type: 'skill', tooltip: '실드 |150|%\n모든 적 취약 |3|' },
+        { cost: 1, type: 'upgrade', tooltip: '|반격한 대상에게 취약 2|' },
+        { cost: 1, type: 'attack', tooltip: '|무작위 적들에게 방어 기반 피해 100% × 3|\n|타격한 대상에게 취약 1|' },
+        { cost: 1, type: 'skill', tooltip: '모든 적 취약 2\n|반격 2|' }
+      ]
+    },
+    {
+      name: '혹한의 폭풍',
+      cost: 1,
+      type: 'upgrade',
+      grade: 'purple',
+      media: 'cards/마그나/purple.webp',
+      tooltip: '[ 주도 ]\n능력으로 실드 획득 시 반격 1'
+    }
   ]
 };
