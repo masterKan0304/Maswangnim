@@ -17,9 +17,9 @@ window.DECKBUILDER_POSTS.push({
       partnerId: "ruixiang",
       equipment: {"weapon":{"name":"레플리카 코어","refine":null,"hammer":null,"imprint":null},"armor":{"name":"뇌파 차단 헬멧","refine":null,"hammer":null,"imprint":null},"accessory":{"name":"보석의 심장","refine":null,"hammer":null,"imprint":null}},
       removePt: 80,
-      duplicatePt: 40,
+      duplicatePt: 0,
       removeCount: 4,
-      duplicateCount: 3
+      duplicateCount: 2
     },
     {
       agentId: "renoa",

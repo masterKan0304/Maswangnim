@@ -1071,6 +1071,24 @@ document.getElementById('startBtn').addEventListener('click', function(){
     return '../../quiz/페르소나' + suffix + '.webp';
   }
 
+  var COST_GLOW_RGB = {
+    '#C2FFAA': '120,255,140',
+    '#FFBA91': '255,120,90'
+  };
+  function costNumStyle(costColor){
+    if (!costColor) return '';
+    var glow = COST_GLOW_RGB[costColor];
+    if (!glow) return ' style="color:'+costColor+'"';
+    return ' style="color:'+costColor+';text-shadow:0 0 4px rgba('+glow+',.9),0 0 9px rgba('+glow+',.9),0 0 16px rgba('+glow+',.8)"';
+  }
+
+  function awakenCostColor(awCost, baseCost){
+    if (typeof awCost !== 'number' || typeof baseCost !== 'number') return null;
+    if (awCost < baseCost) return '#C2FFAA';
+    if (awCost > baseCost) return '#FFBA91';
+    return null;
+  }
+
   function effectiveCardFields(c){
     if (c.source === 'persona') {
       var slot1 = c.personaSlot1, slot2 = c.personaSlot2;
@@ -1079,10 +1097,11 @@ document.getElementById('startBtn').addEventListener('click', function(){
       if (slot1) pLines.push({ text: slot1.tooltip, mode: 'flat', color: '#ffd23d', icon: slot1.type === 'light' ? '../../cards/icon_light.webp' : '../../cards/icon_dark.webp' });
       if (slot2) pLines.push({ text: slot2.tooltip, mode: 'flat', color: '#ffd23d', icon: slot2.type === 'light' ? '../../cards/icon_light.webp' : '../../cards/icon_dark.webp' });
       var pCombinedPlain = pLines.map(function(l){ return l.text; }).join('\n');
-      return { cost: pCost, type: c.type, plusCard: c.plusCard, lines: pLines, tags: tooltipTags(pCombinedPlain),
+      return { cost: pCost, costColor: awakenCostColor(pCost, c.cost), type: c.type, plusCard: c.plusCard, lines: pLines, tags: tooltipTags(pCombinedPlain),
         hasAwaken: false, hasNewAwaken: false, media: personaMediaFor(slot1, slot2) };
     }
-    var cost = c.fixedAwaken ? c.fixedAwaken.cost : c.cost;
+    var baseCost = c.fixedAwaken ? c.fixedAwaken.cost : c.cost;
+    var cost = baseCost;
     if (c.newAwaken && c.newAwaken.tooltip === COST_REDUCE_TEXT && typeof cost === 'number') cost = Math.max(0, cost - 1);
     var type = c.fixedAwaken ? c.fixedAwaken.type : c.type;
     var plusCard = c.fixedAwaken ? c.fixedAwaken.plusCard : c.plusCard;
@@ -1091,7 +1110,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
     if (c.commonAwaken) lines.push({ text: c.commonAwaken.tooltip, mode: 'flat', color: '#60c8ff' });
     if (c.newAwaken) lines.push({ text: c.newAwaken.tooltip, mode: 'flat', color: '#ffd23d', icon: '../../cards/diallos.png' });
     var combinedPlain = lines.map(function(l){ return l.text; }).join('\n');
-    return { cost: cost, type: type, plusCard: plusCard, lines: lines, tags: tooltipTags(combinedPlain),
+    return { cost: cost, costColor: awakenCostColor(cost, baseCost), type: type, plusCard: plusCard, lines: lines, tags: tooltipTags(combinedPlain),
       hasAwaken: !!(c.fixedAwaken || c.commonAwaken), hasNewAwaken: !!c.newAwaken, media: c.media };
   }
 
@@ -1229,7 +1248,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
         '<div class="card-bottom-grad"></div>' +
         '<div class="card-content">' +
           '<div class="card-header">' +
-            '<div class="card-cost"><div class="card-cost-num">'+fields.cost+'</div><div class="card-cost-line"></div>' +
+            '<div class="card-cost"><div class="card-cost-num"'+costNumStyle(fields.costColor)+'>'+fields.cost+'</div><div class="card-cost-line"></div>' +
               (badgeSrc ? '<img class="'+badgeClass+'" src="'+badgeSrc+'" alt="">' : '') +
               personaSlotsHtml +
             '</div>' +
