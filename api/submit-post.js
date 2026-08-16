@@ -144,6 +144,7 @@ module.exports = function handler(req, res) {
   var postPath = 'deckbuilder/게시물/' + post.id + '.js';
   var boardPath = 'deckbuilder/index.html';
   var detailPath = 'deckbuilder/post/index.html';
+  var homePath = 'index.html';
 
   putFile(postPath, fileContent, '게시물 추가: ' + post.title)
     .then(function () {
@@ -167,6 +168,17 @@ module.exports = function handler(req, res) {
       var detailUpdated = insertScriptLineAfterMarker(detailText, '<script src="../게시물/', detailScriptLine);
       if (detailUpdated === detailText) return null;
       return putFile(detailPath, detailUpdated, '게시물 상세 페이지 등록: ' + post.title, detailFile.sha);
+    })
+    .then(function () {
+      return getFile(homePath);
+    })
+    .then(function (homeFile) {
+      if (!homeFile) return null;
+      var homeText = Buffer.from(homeFile.content, 'base64').toString('utf8');
+      var homeScriptLine = '<script src="deckbuilder/게시물/' + post.id + '.js"></script>';
+      var homeUpdated = insertScriptLineAfterMarker(homeText, '<script src="deckbuilder/게시물/', homeScriptLine);
+      if (homeUpdated === homeText) return null;
+      return putFile(homePath, homeUpdated, '메인 페이지에 게시물 등록: ' + post.title, homeFile.sha);
     })
     .then(function () {
       res.status(200).json({ ok: true, id: post.id });
