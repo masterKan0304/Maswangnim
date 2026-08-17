@@ -505,6 +505,9 @@
   .awaken-pop-cards .card{width:118px;flex:none;cursor:pointer;transition:transform .15s,box-shadow .15s;border:2px solid transparent;}
   .awaken-pop-cards .card:hover{transform:translateY(-3px);}
   .awaken-pop-cards .card.selected{border-color:var(--orange);box-shadow:0 0 0 3px var(--orange-soft);}
+  .awaken-primary-cell.dim{opacity:.35;}
+  .awaken-primary-cell.dim .card{cursor:help;}
+  .awaken-primary-cell.dim .card:hover{transform:none;}
   .awaken-opt-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
   .awaken-opt-box{border:1.5px solid var(--line);border-radius:9px;background:#fff;padding:9px 10px;min-height:51px;
     display:flex;align-items:center;justify-content:center;text-align:center;font-size:11.5px;line-height:1.5;font-weight:700;color:var(--ink);
@@ -1582,6 +1585,14 @@ document.getElementById('startBtn').addEventListener('click', function(){
     return row ? row.cards[awakenPopState.cardIdx] : null;
   }
 
+  function rowHasUniqueAwakenElsewhere(row, cardName, excludeCardIdx){
+    return row.cards.some(function(c, idx){
+      if (idx === excludeCardIdx) return false;
+      if (c.name !== cardName) return false;
+      return !!(c.fixedAwaken && hasTag(tooltipTags(c.fixedAwaken.tooltip), '유일'));
+    });
+  }
+
   function buildFixedOptions(card){
     return card.awakenings.map(function(aw){
       var merged = {};
@@ -1688,9 +1699,14 @@ document.getElementById('startBtn').addEventListener('click', function(){
     var html = '';
 
     if (awakenPopState.mode === 'fixed') {
+      var row0 = deckState[awakenPopState.rowIdx];
+      var uniqueBlocked = rowHasUniqueAwakenElsewhere(row0, card.name, awakenPopState.cardIdx);
       html += '<div class="awaken-pop-section"><div class="awaken-pop-section-title">번뜩임 선택</div>' +
         '<div class="awaken-pop-cards" id="awakenPrimaryCards">' +
-        awakenPopState.fixedOptions.map(function(opt){ return renderCardCellHtml(opt); }).join('') +
+        awakenPopState.fixedOptions.map(function(opt){
+          var blocked = uniqueBlocked && hasTag(tooltipTags(opt.tooltip), '유일');
+          return '<div class="awaken-primary-cell'+(blocked ? ' dim' : '')+'" data-unique-blocked="'+(blocked ? '1' : '0')+'">' + renderCardCellHtml(opt) + '</div>';
+        }).join('') +
         '</div></div>';
     } else {
       html += '<div class="awaken-pop-section"><div class="awaken-pop-section-title">일반 번뜩임 선택</div>';
@@ -1728,14 +1744,21 @@ document.getElementById('startBtn').addEventListener('click', function(){
     awakenPopBody.innerHTML = html;
 
     if (awakenPopState.mode === 'fixed') {
-      var cardEls = awakenPopBody.querySelectorAll('#awakenPrimaryCards .card');
-      Array.prototype.forEach.call(cardEls, function(el, i){
+      var cellEls = awakenPopBody.querySelectorAll('#awakenPrimaryCards .awaken-primary-cell');
+      Array.prototype.forEach.call(cellEls, function(cellEl, i){
+        var el = cellEl.querySelector('.card');
         if (i === awakenPopState.primaryIdx) el.classList.add('selected');
-        el.addEventListener('click', function(){
-          awakenPopState.primaryIdx = i;
-          awakenPopState.newAwakenIdx = null;
-          renderAwakenPopup();
-        });
+        if (cellEl.getAttribute('data-unique-blocked') === '1') {
+          cellEl.addEventListener('mouseenter', function(e){ showEquipSourceTooltip('이미 동일한 이름의 카드에 [ 유일 ] 번뜩임이 적용되어 있어 선택할 수 없습니다.', e.clientX, e.clientY); });
+          cellEl.addEventListener('mousemove', function(e){ positionEquipSourceTooltip(e.clientX, e.clientY); });
+          cellEl.addEventListener('mouseleave', hideEquipSourceTooltip);
+        } else {
+          el.addEventListener('click', function(){
+            awakenPopState.primaryIdx = i;
+            awakenPopState.newAwakenIdx = null;
+            renderAwakenPopup();
+          });
+        }
         bindCardZoomHover(el, awakenPopState.fixedOptions[i]);
       });
     } else if (awakenPopState.commonOptions.length) {

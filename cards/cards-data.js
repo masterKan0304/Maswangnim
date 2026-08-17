@@ -2875,5 +2875,100 @@ window.AGENTS_CARDS = {
       media: 'cards/카일론/purple.webp',
       tooltip: '피해 240%\n"허무" 3장 생성\n그 수만큼 피해량 +40%'
     }
+  ],
+  owen: [
+    {
+      name: '내려베기',
+      cost: 1,
+      type: 'attack',
+      grade: 'gray',
+      media: 'cards/오웬/attack.webp',
+      tooltip: '피해 100%'
+    },
+    {
+      name: '내려베기',
+      cost: 1,
+      type: 'attack',
+      grade: 'gray',
+      media: 'cards/오웬/attack.webp',
+      tooltip: '피해 100%'
+    },
+    {
+      name: '무기 막기',
+      cost: 1,
+      type: 'skill',
+      grade: 'gray',
+      media: 'cards/오웬/skill.webp',
+      tooltip: '실드 100%'
+    },
+    {
+      name: '바람 충전',
+      cost: 1,
+      type: 'skill',
+      grade: 'blue',
+      media: 'cards/오웬/blue1.webp',
+      tooltip: '다음 사용하는 자신의 공격 카드 타격 1회 추가',
+      awakenings: [
+        { cost: 1, type: 'skill', tooltip: '|[ 회수 ]|\n다음 사용하는 자신의 공격 카드 타격 1회 추가' },
+        { cost: 1, type: 'skill', tooltip: '다음 사용하는 |공격 카드| 타격 1회 추가\n|피해량 25% 감소|' },
+        { cost: 1, type: 'upgrade', tooltip: '|[ 유일 ]|\n자신의 공격 카드 |사용 시 30% 확률로 타격 1회 추가|' },
+        { cost: 1, type: 'skill', tooltip: '|[ 유일 / 소멸 ]|\n다음 사용하는 |스킬 카드 1번 더 발동|' },
+        { cost: 1, type: 'skill', tooltip: '다음 사용하는 자신의 공격 카드 타격 |3|회 추가\n|피해량 50% 감소|' }
+      ]
+    },
+    {
+      name: '바람 베기',
+      cost: 2,
+      type: 'attack',
+      grade: 'blue',
+      media: 'cards/오웬/blue2.webp',
+      tooltip: '모든 적 피해 280%',
+      awakenings: [
+        { cost: 1, type: 'attack', tooltip: '모든 적 피해 280%' },
+        { cost: 2, type: 'attack', tooltip: '피해 \\150\\% × |3|' },
+        { cost: 2, type: 'attack', tooltip: '모든 적 피해 280%\n|처치 : 이 카드 1번 더 발동|' },
+        { cost: 2, type: 'upgrade', tooltip: '|턴 시작 시 행동 포인트 1 감소\n턴 종료 시 모든 적 피해 280%|' },
+        { cost: 2, type: 'attack', tooltip: '모든 적 피해 280%\n|강인도 피해 100% 증가|' }
+      ]
+    },
+    {
+      name: '방어구 부수기',
+      cost: 1,
+      type: 'attack',
+      grade: 'blue',
+      media: 'cards/오웬/blue3.webp',
+      tooltip: '피해 140%\n취약 2',
+      awakenings: [
+        { cost: 1, type: 'attack', tooltip: '피해 |210|%\n|1턴간 불굴 4 감소|' },
+        { cost: 0, type: 'attack', tooltip: '피해 140%\n취약 2' },
+        { cost: 1, type: 'attack', tooltip: '피해 |210|%\n취약 2\n|대상이 취약 상태라면 피해량 30% 증가|' },
+        { cost: 1, type: 'attack', tooltip: '피해 |210|%\n취약 2\n|대상이 실드를 보유하면 피해량 30% 증가|' },
+        { cost: 1, type: 'attack', tooltip: '피해 140%\n취약 3\n|"바람 충전" 사용 시 이 카드 버린 카드에서 핸드로 이동|', plus_card: '바람 충전' }
+      ]
+    },
+    {
+      name: '바람타기',
+      cost: 1,
+      type: 'skill',
+      grade: 'yellow',
+      plus_card: '바람 충전',
+      media: 'cards/오웬/yellow.webp',
+      tooltip: '실드 150%\n버린 카드에서 "바람 충전"을 핸드로 이동',
+      awakenings: [
+        { cost: 1, type: 'skill', tooltip: '실드 |220|%\n버린 카드에서 |자신의 카드 2장을| 핸드로 이동' },
+        { cost: 1, type: 'upgrade', tooltip: '|"바람 충전" 사용 시 실드 120%, 모든 적 피해 120%|', plus_card: '바람 충전' },
+        { cost: 1, type: 'skill', tooltip: '실드 150%\n|다음 사용하는 자신의 공격 카드 타격 1회 추가|' },
+        { cost: 1, type: 'skill', tooltip: '실드 |220|%\n|피해 감소 3|' },
+        { cost: 1, type: 'skill', tooltip: '실드 |220|%\n|이번 턴에 "바람 충전"을 사용했다면 이 카드 1번 더 발동|', plus_card: '바람 충전' }
+      ]
+    },
+    {
+      name: '질풍의 일격',
+      cost: 2,
+      type: 'attack',
+      grade: 'purple',
+      media: 'cards/오웬/purple.webp',
+      tooltip: '피해 300%\n실드 130%'
+    }
   ]
 };
