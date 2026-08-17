@@ -2970,5 +2970,99 @@ window.AGENTS_CARDS = {
       media: 'cards/오웬/purple.webp',
       tooltip: '피해 300%\n실드 130%'
     }
+  ],
+  selena: [
+    {
+      name: '교전 사격',
+      cost: 1,
+      type: 'attack',
+      grade: 'gray',
+      media: 'cards/셀레나/attack.webp',
+      tooltip: '피해 100%'
+    },
+    {
+      name: '교전 사격',
+      cost: 1,
+      type: 'attack',
+      grade: 'gray',
+      media: 'cards/셀레나/attack.webp',
+      tooltip: '피해 100%'
+    },
+    {
+      name: '긴급 차폐',
+      cost: 1,
+      type: 'skill',
+      grade: 'gray',
+      media: 'cards/셀레나/skill.webp',
+      tooltip: '실드 100%'
+    },
+    {
+      name: '고배율 조준경',
+      cost: 1,
+      type: 'skill',
+      grade: 'blue',
+      media: 'cards/셀레나/blue1.webp',
+      tooltip: '표식 2',
+      awakenings: [
+        { cost: 1, type: 'skill', tooltip: '표식 2\n|대상이 공격 행동 예고 상태라면 표식 2 추가|' },
+        { cost: 1, type: 'upgrade', tooltip: '|자신의 공격 카드 사용 시 대상에게| 표식 \\1\\' },
+        { cost: 1, type: 'skill', tooltip: '표식 2\n|1턴간 표식 피해량 +50%|' },
+        { cost: 0, type: 'skill', tooltip: '|1턴간 다른 전투원의 공격 카드 사용 시 대상에게 협공 100%|' },
+        { cost: 1, type: 'upgrade', tooltip: '|턴 시작 시 모든 적| 표식 \\1\\' }
+      ]
+    },
+    {
+      name: '목표 포착',
+      cost: 1,
+      type: 'attack',
+      grade: 'blue',
+      media: 'cards/셀레나/blue2.webp',
+      tooltip: '피해 150%\n감응 : 무작위 적 표식 1',
+      awakenings: [
+        { cost: 1, type: 'attack', tooltip: '피해 \\100\\%\n감응 : 무작위 적 |피해 300%|' },
+        { cost: 1, type: 'attack', tooltip: '피해 150%\n표식 |2|\n|대상이 표식 상태라면 표식 2|' },
+        { cost: 1, type: 'skill', tooltip: '|실드 150%|\n|모든 적| 표식 |2|' },
+        { cost: 1, type: 'skill', tooltip: '|실드 150%|\n감응 : |드로우 1|' },
+        { cost: 1, type: 'upgrade', tooltip: '|격파 시 대상에게 협공 200%|' }
+      ]
+    },
+    {
+      name: '드론 폭격',
+      cost: 1,
+      type: 'attack',
+      grade: 'blue',
+      media: 'cards/셀레나/blue3.webp',
+      tooltip: '모든 적 피해 120%, 열정 약점 1',
+      awakenings: [
+        { cost: 1, type: 'attack', tooltip: '모든 적 피해 120%, 열정 약점 |2|' },
+        { cost: 1, type: 'attack', tooltip: '모든 적 피해 120%\n|연속 : 모든 적 표식 2|' },
+        { cost: 0, type: 'attack', tooltip: '모든 적 피해 120%\n|이번 턴 사용한 열정 공격 카드 수만큼 피해량 +40%|' },
+        { cost: 1, type: 'skill', tooltip: '|1턴간 약점 공격 시 대상에게 협공 100%|' },
+        { cost: 1, type: 'upgrade', tooltip: '|열정 공격 카드 사용 시 대상에게 협공 50%|' }
+      ]
+    },
+    {
+      name: '전술 기동',
+      cost: 1,
+      type: 'skill',
+      grade: 'yellow',
+      media: 'cards/셀레나/yellow.webp',
+      tooltip: '실드 150%\n강인도 피해 2',
+      awakenings: [
+        { cost: 1, type: 'skill', tooltip: '실드 |225|%\n강인도 피해 |3|' },
+        { cost: 1, type: 'attack', tooltip: '|피해 150%|\n|이 카드의 강인도 피해 150% 증가|' },
+        { cost: 1, type: 'skill', tooltip: '실드 |225|%\n강인도 피해 2\n|격파 상태인 적 표식 2|' },
+        { cost: 0, type: 'skill', tooltip: '|[ 보존 ]|\n|격파 상태라면 강인도 재충전|' },
+        { cost: 1, type: 'skill', tooltip: '|모든 적| 강인도 피해 \\1\\, |표식 1|' }
+      ]
+    },
+    {
+      name: '저격수의 영역',
+      cost: 0,
+      type: 'upgrade',
+      grade: 'purple',
+      media: 'cards/셀레나/purple.webp',
+      tooltip: '[ 유일 ]\n표식 피해량 +80%'
+    }
   ]
 };
