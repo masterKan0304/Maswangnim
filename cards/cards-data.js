@@ -2766,5 +2766,114 @@ window.AGENTS_CARDS = {
       media: 'cards/마그나/purple.webp',
       tooltip: '[ 주도 ]\n능력으로 실드 획득 시 반격 1'
     }
+  ],
+  kayron: [
+    {
+      name: '멸',
+      cost: 1,
+      type: 'attack',
+      grade: 'gray',
+      media: 'cards/카일론/attack.webp',
+      tooltip: '피해 100%'
+    },
+    {
+      name: '멸',
+      cost: 1,
+      type: 'attack',
+      grade: 'gray',
+      media: 'cards/카일론/attack.webp',
+      tooltip: '피해 100%'
+    },
+    {
+      name: '구',
+      cost: 1,
+      type: 'skill',
+      grade: 'gray',
+      media: 'cards/카일론/skill.webp',
+      tooltip: '치유 100%'
+    },
+    {
+      name: '허무의 잔상',
+      cost: 1,
+      type: 'attack',
+      grade: 'blue',
+      plus_card: '허무',
+      media: 'cards/카일론/blue1.webp',
+      tooltip: '피해 320%\n"허무" 2장 생성',
+      awakenings: [
+        { cost: 1, type: 'attack', tooltip: '피해 |480|%\n"허무" |3|장 생성', plus_card: '허무' },
+        { cost: 1, type: 'attack', tooltip: '피해 \\240\\%\n"허무" 2장 생성\n|소멸된 "허무" 수만큼 피해량 +20%|', plus_card: '허무' },
+        { cost: 1, type: 'attack', tooltip: '피해 320%\n"허무" 2장 생성\n|그 카드에 증발 부여|' },
+        { cost: 'X', type: 'attack', tooltip: '피해 \\150\\%\n|X만큼 피해량 +150%|\n|"허무" X+1장 생성|', plus_card: '허무' },
+        { cost: 0, type: 'attack', tooltip: '피해 \\150\\%\n"허무" 2장 생성\n|이번 전투 동안 생성한 "허무" 수만큼 피해량 +30%|', plus_card: '허무' }
+      ]
+    },
+    {
+      name: '허무',
+      cost: 1,
+      type: 'debuff',
+      grade: '',
+      grade_color: 'gray',
+      media: 'cards/카일론/blue1_1.webp',
+      tooltip: '[ 소멸 ]'
+    },
+    {
+      name: '소멸의 낙인',
+      cost: 3,
+      type: 'attack',
+      grade: 'blue',
+      media: 'cards/카일론/blue2.webp',
+      tooltip: '모든 적 피해 400%\n카드 소멸 시 이 카드 1턴간 사용 시까지 비용 1 감소',
+      awakenings: [
+        { cost: 3, type: 'attack', tooltip: '모든 적 피해 |600|%\n카드 소멸 시 이 카드 1턴간 사용 시까지 비용 1 감소' },
+        { cost: 3, type: 'attack', tooltip: '|무작위 적| 피해 400% × |2|\n카드 소멸 시 이 카드 1턴간 사용 시까지 비용 1 감소' },
+        { cost: 7, type: 'attack', tooltip: '모든 적 피해 |600|%\n|소멸된 "허무" 수만큼 비용 감소|', plus_card: '허무' },
+        { cost: 1, type: 'attack', tooltip: '모든 적 피해 \\300\\%\n|이번 턴 소멸한 카드 수만큼 피해량 +40%|' },
+        { cost: 2, type: 'attack', tooltip: '모든 적 피해 400%\n|이번 턴에 소멸한 카드가 있다면 모든 적 고통 3|' }
+      ]
+    },
+    {
+      name: '블랙홀',
+      cost: 2,
+      type: 'attack',
+      grade: 'blue',
+      plus_card: '허무',
+      media: 'cards/카일론/blue3.webp',
+      tooltip: '피해 240%\n소멸된 "허무" 수만큼 피해량 +40%',
+      awakenings: [
+        { cost: 2, type: 'attack', tooltip: '피해 |360|%\n|핸드의 "허무" 2장 발동|', plus_card: '허무' },
+        { cost: 2, type: 'attack', tooltip: '피해 |360|%\n소멸된 "허무" 수만큼 피해량 +|60|%', plus_card: '허무' },
+        { cost: 2, type: 'attack', tooltip: '|무작위 적| 피해 \\60\\%\n소멸된 "허무" 수만큼 |타격 1회 추가 (최대 5회)|', plus_card: '허무' },
+        { cost: 2, type: 'attack', tooltip: '피해 |300|%\n소멸된 "허무" |5장당 타격 1회 추가 (최대 2회)|', plus_card: '허무' },
+        { cost: 1, type: 'upgrade', tooltip: '|"허무" 소멸 시 무작위 적 고정 피해 100%|', plus_card: '허무' }
+      ]
+    },
+    {
+      name: '희망의 서약',
+      cost: 1,
+      type: 'upgrade',
+      grade: 'yellow',
+      plus_card: '허무',
+      plus_type: 'attack',
+      plus_tooltip: '[ 소멸 ]\n피해 80%\n치유 80%',
+      media: 'cards/카일론/yellow.webp',
+      tooltip: '[ 유일 ]\n"허무" 생성 시 피해, 치유 80% 효과를 가진 비용 1의 공격 카드로 변경',
+      awakenings: [
+        { cost: 1, type: 'upgrade', tooltip: '[ 유일 ]\n"허무" 생성 시 피해, 치유 |150|% 효과를 가진 비용 1의 공격 카드로 변경', plus_card: '허무', plus_type: 'attack', plus_tooltip: '[ 소멸 ]\n피해 150%\n치유 150%' },
+        { cost: 0, type: 'upgrade', tooltip: '|[ 유일 / 개전 ]|\n"허무" 생성 시 피해, 치유 80% 효과를 가진 비용 1의 공격 카드로 변경', plus_card: '허무', plus_type: 'attack', plus_tooltip: '[ 소멸 ]\n피해 80%\n치유 80%' },
+        { cost: 1, type: 'upgrade', tooltip: '[ 유일 ]\n"허무" 생성 시 피해 |200|% 효과를 가진 비용 1의 공격 카드로 변경', plus_card: '허무', plus_type: 'attack', plus_tooltip: '[ 소멸 ]\n피해 200%' },
+        { cost: 0, type: 'skill', tooltip: '|[ 소멸 / 보존 ]|\n|핸드의 "허무", 상태이상, 저주 카드 모두 소멸|\n|그 수만큼 드로우|', plus_card: '허무' },
+        { cost: 0, type: 'upgrade', tooltip: '|"허무" 카드 2장 소멸 시 모든 적 고통 2|', plus_card: '허무' }
+      ]
+    },
+    {
+      name: '무환의 울림',
+      cost: 2,
+      type: 'attack',
+      grade: 'purple',
+      plus_card: '허무',
+      media: 'cards/카일론/purple.webp',
+      tooltip: '피해 240%\n"허무" 3장 생성\n그 수만큼 피해량 +40%'
+    }
   ]
 };

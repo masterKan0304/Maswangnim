@@ -2462,9 +2462,10 @@ document.getElementById('startBtn').addEventListener('click', function(){
   var TYPE_ICONS = {
     attack: 'cards/attack.png',
     skill: 'cards/skill.png',
-    upgrade: 'cards/upgrade.png'
+    upgrade: 'cards/upgrade.png',
+    debuff: 'cards/debuff.png'
   };
-  var TYPE_LABELS = { attack: '공격', skill: '스킬', upgrade: '강화' };
+  var TYPE_LABELS = { attack: '공격', skill: '스킬', upgrade: '강화', debuff: '상태이상' };
 
   var iconRow = document.getElementById('agentIconRow');
   var infoEl = document.getElementById('agentInfo');
@@ -2737,12 +2738,21 @@ document.getElementById('startBtn').addEventListener('click', function(){
       '<div class="card-zoom-plus-row">' + tailCards.map(function(pc){ return renderCardHTML(pc, attrId, baseGrade); }).join('') + '</div>' +
       '<div class="card-zoom-plus-row">' + headCards.map(function(pc){ return renderCardHTML(pc, attrId, baseGrade); }).join('') + '</div>';
   }
+  function applyPlusOverride(pc, plusType, plusTooltip){
+    if (!plusType && !plusTooltip) return pc;
+    var overridden = {};
+    for (var k in pc) overridden[k] = pc[k];
+    if (plusType) overridden.type = plusType;
+    if (plusTooltip) overridden.tooltip = plusTooltip;
+    return overridden;
+  }
   function showCardZoom(card, attrId, x, y){
     cardZoomEl.innerHTML = renderCardHTML(card, attrId, null, {awaken: !!card._isAwakenVariant});
     cardZoomEl.classList.add('visible');
     positionCardZoom(x, y);
     var plusNames = Array.isArray(card.plus_card) ? card.plus_card : (card.plus_card ? [card.plus_card] : []);
-    var plusCards = plusNames.map(findCardByName).filter(Boolean);
+    var plusCards = plusNames.map(findCardByName).filter(Boolean)
+      .map(function(pc){ return applyPlusOverride(pc, card.plus_type, card.plus_tooltip); });
     if (plusCards.length) {
       renderCardZoomPlusRows(plusCards, attrId, card.grade);
       cardZoomPlusEl.classList.add('visible');
@@ -2896,6 +2906,8 @@ document.getElementById('startBtn').addEventListener('click', function(){
       for (var k in card) { if (k !== 'awakenings') merged[k] = card[k]; }
       for (var k2 in aw) { merged[k2] = aw[k2]; }
       if (!('plus_card' in aw)) delete merged.plus_card;
+      if (!('plus_type' in aw)) delete merged.plus_type;
+      if (!('plus_tooltip' in aw)) delete merged.plus_tooltip;
       merged._isAwakenVariant = true;
       merged._costColor = awakenCostColor(merged.cost, card.cost);
       return merged;

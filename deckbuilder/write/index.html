@@ -1042,8 +1042,8 @@ document.getElementById('startBtn').addEventListener('click', function(){
     void: '../../agents/void.webp'
   };
   var ATTR_LABEL = { passion:'열정', justice:'정의', order:'질서', instinct:'본능', void:'공허' };
-  var TYPE_ICON = { attack:'../../cards/attack.png', skill:'../../cards/skill.png', upgrade:'../../cards/upgrade.png' };
-  var TYPE_LABEL = { attack:'공격', skill:'스킬', upgrade:'강화' };
+  var TYPE_ICON = { attack:'../../cards/attack.png', skill:'../../cards/skill.png', upgrade:'../../cards/upgrade.png', debuff:'../../cards/debuff.png' };
+  var TYPE_LABEL = { attack:'공격', skill:'스킬', upgrade:'강화', debuff:'상태이상' };
   var EQUIP_TYPES_ORDER = ['weapon', 'armor', 'accessory'];
   var EQUIP_TYPE_LABEL = { weapon:'무기', armor:'갑옷', accessory:'장신구' };
   var EQUIP_STAT_LABEL = { weapon:'공격력', armor:'방어력', accessory:'체력' };
@@ -1314,7 +1314,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
       if (slot1) pLines.push({ text: slot1.tooltip, mode: 'flat', color: '#ffd23d', icon: slot1.type === 'light' ? '../../cards/icon_light.webp' : '../../cards/icon_dark.webp' });
       if (slot2) pLines.push({ text: slot2.tooltip, mode: 'flat', color: '#ffd23d', icon: slot2.type === 'light' ? '../../cards/icon_light.webp' : '../../cards/icon_dark.webp' });
       var pCombinedPlain = pLines.map(function(l){ return l.text; }).join('\n');
-      return { cost: pCost, costColor: awakenCostColor(pCost, c.cost), type: c.type, plusCard: c.plusCard, lines: pLines, tags: tooltipTags(pCombinedPlain),
+      return { cost: pCost, costColor: awakenCostColor(pCost, c.cost), type: c.type, plusCard: c.plusCard, plusType: c.plusType, plusTooltip: c.plusTooltip, lines: pLines, tags: tooltipTags(pCombinedPlain),
         hasAwaken: false, hasNewAwaken: false, media: personaMediaFor(slot1, slot2) };
     }
     var baseCost = c.fixedAwaken ? c.fixedAwaken.cost : c.cost;
@@ -1322,12 +1322,14 @@ document.getElementById('startBtn').addEventListener('click', function(){
     if (c.newAwaken && c.newAwaken.tooltip === COST_REDUCE_TEXT && typeof cost === 'number') cost = Math.max(0, cost - 1);
     var type = c.fixedAwaken ? c.fixedAwaken.type : c.type;
     var plusCard = c.fixedAwaken ? c.fixedAwaken.plusCard : c.plusCard;
+    var plusType = c.fixedAwaken ? c.fixedAwaken.plusType : c.plusType;
+    var plusTooltip = c.fixedAwaken ? c.fixedAwaken.plusTooltip : c.plusTooltip;
     var baseTooltip = c.fixedAwaken ? c.fixedAwaken.tooltip : c.tooltip;
     var lines = [{ text: baseTooltip, mode: (c.fixedAwaken || c._alwaysAwakenMode) ? 'awaken' : 'normal' }];
     if (c.commonAwaken) lines.push({ text: c.commonAwaken.tooltip, mode: 'flat', color: '#60c8ff' });
     if (c.newAwaken) lines.push({ text: c.newAwaken.tooltip, mode: 'flat', color: '#ffd23d', icon: '../../cards/diallos.png' });
     var combinedPlain = lines.map(function(l){ return l.text; }).join('\n');
-    return { cost: cost, costColor: awakenCostColor(cost, baseCost), type: type, plusCard: plusCard, lines: lines, tags: tooltipTags(combinedPlain),
+    return { cost: cost, costColor: awakenCostColor(cost, baseCost), type: type, plusCard: plusCard, plusType: plusType, plusTooltip: plusTooltip, lines: lines, tags: tooltipTags(combinedPlain),
       hasAwaken: !!(c.fixedAwaken || c.commonAwaken), hasNewAwaken: !!c.newAwaken, media: c.media };
   }
 
@@ -1400,7 +1402,8 @@ document.getElementById('startBtn').addEventListener('click', function(){
   function fromAgentCard(card, agent){
     return { key:'a:'+card.name, name:card.name, cost:card.cost, type:card.type, grade:card.grade,
       gradeColor:card.grade_color, media:'../../'+card.media, tooltip:card.tooltip, egoAttr:agent.attribute, source:'agent',
-      plusCard:card.plus_card, agentId:agent.id, awakenings:card.awakenings || null, job:null,
+      plusCard:card.plus_card, plusType:card.plus_type || null, plusTooltip:card.plus_tooltip || null,
+      agentId:agent.id, awakenings:card.awakenings || null, job:null,
       fixedAwaken:null, commonAwaken:null, newAwaken:null,
       personaSlot1:null, personaSlot2:null };
   }
@@ -1499,13 +1502,23 @@ document.getElementById('startBtn').addEventListener('click', function(){
       '<div class="card-zoom-plus-row">' + tailCards.map(function(pc){ return renderCardCellHtml(pc, baseGrade); }).join('') + '</div>' +
       '<div class="card-zoom-plus-row">' + headCards.map(function(pc){ return renderCardCellHtml(pc, baseGrade); }).join('') + '</div>';
   }
+  function applyPlusOverride(pc, plusType, plusTooltip){
+    if (!plusType && !plusTooltip) return pc;
+    var overridden = {};
+    for (var k in pc) overridden[k] = pc[k];
+    if (plusType) overridden.type = plusType;
+    if (plusTooltip) overridden.tooltip = plusTooltip;
+    return overridden;
+  }
   function showCardZoom(c, x, y){
     cardZoomEl.innerHTML = renderCardCellHtml(c);
     cardZoomEl.classList.add('visible');
     positionCardZoom(x, y);
-    var effPlusCard = effectiveCardFields(c).plusCard;
+    var eff = effectiveCardFields(c);
+    var effPlusCard = eff.plusCard;
     var plusNames = Array.isArray(effPlusCard) ? effPlusCard : (effPlusCard ? [effPlusCard] : []);
-    var plusCards = plusNames.map(function(n){ return findPlusCard(n, c.agentId); }).filter(Boolean);
+    var plusCards = plusNames.map(function(n){ return findPlusCard(n, c.agentId); }).filter(Boolean)
+      .map(function(pc){ return applyPlusOverride(pc, eff.plusType, eff.plusTooltip); });
     if (plusCards.length) {
       renderCardZoomPlusRows(plusCards, c.grade);
       cardZoomPlusEl.classList.add('visible');
@@ -1578,6 +1591,8 @@ document.getElementById('startBtn').addEventListener('click', function(){
       merged.type = aw.type;
       merged.tooltip = aw.tooltip;
       merged.plusCard = ('plus_card' in aw) ? aw.plus_card : null;
+      merged.plusType = ('plus_type' in aw) ? aw.plus_type : null;
+      merged.plusTooltip = ('plus_tooltip' in aw) ? aw.plus_tooltip : null;
       merged.fixedAwaken = null;
       merged.commonAwaken = null;
       merged.newAwaken = null;
@@ -1762,7 +1777,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
     pushHistory(row);
     if (awakenPopState.mode === 'fixed') {
       var opt = awakenPopState.fixedOptions[awakenPopState.primaryIdx];
-      card.fixedAwaken = { cost: opt.cost, type: opt.type, tooltip: opt.tooltip, plusCard: opt.plusCard };
+      card.fixedAwaken = { cost: opt.cost, type: opt.type, tooltip: opt.tooltip, plusCard: opt.plusCard, plusType: opt.plusType, plusTooltip: opt.plusTooltip };
     } else {
       var co = awakenPopState.commonOptions[awakenPopState.primaryIdx];
       card.commonAwaken = { tooltip: co.resolvedText };
