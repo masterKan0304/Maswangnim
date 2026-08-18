@@ -324,6 +324,7 @@
   .partner-info-passive-name{color:#fff;font-weight:800;font-size:11.5px;line-height:1.3;}
   .partner-info-passive-hr{height:1px;background:rgba(255,255,255,.25);margin:8px 0;}
   .partner-info-passive-tooltip{color:#fff;font-size:10.5px;line-height:1.5;font-weight:600;white-space:normal;word-break:keep-all;}
+  .partner-info-empty{color:#fff;font-size:11px;font-weight:600;line-height:1.6;width:230px;padding:20px 4px;text-align:center;}
 
   .deckbuild-chaos-section{margin-top:12px;}
   .deckbuild-chaos-title{font-size:11.5px;font-weight:800;color:var(--ink);margin-bottom:8px;}
@@ -774,6 +775,8 @@ document.getElementById('startBtn').addEventListener('click', function(){
 
 <!-- 전투원 정보 데이터 -->
 <script src="../../agents/agents-data.js"></script>
+<!-- 전투원 에고 스킬 정보 데이터 -->
+<script src="../../ego/ego-data.js"></script>
 <!-- 전투원 카드 정보 데이터 -->
 <script src="../../cards/cards-data.js"></script>
 <!-- 퀴즈용 카드 데이터 (중립/몬스터 카드 출처) -->
@@ -1519,14 +1522,32 @@ document.getElementById('startBtn').addEventListener('click', function(){
         activeSlot = parseInt(el.getAttribute('data-row'), 10);
         renderDeckBox();
       });
+      var row2 = parseInt(el.getAttribute('data-row'), 10);
+      var agentForEgo = deckState[row2] && deckState[row2].agentId ? agentsById[deckState[row2].agentId] : null;
+      if (agentForEgo) {
+        el.addEventListener('mouseenter', function(e){
+          if (e.target.closest('.deckbuild-partner-btn')) { hidePartnerInfoZoom(); return; }
+          showAgentEgoZoom(agentForEgo, e.clientX, e.clientY);
+        });
+        el.addEventListener('mousemove', function(e){
+          if (e.target.closest('.deckbuild-partner-btn')) { hidePartnerInfoZoom(); return; }
+          if (!partnerInfoZoomEl.classList.contains('visible')) showAgentEgoZoom(agentForEgo, e.clientX, e.clientY);
+          else positionPartnerInfoZoom(e.clientX, e.clientY);
+        });
+        el.addEventListener('mouseleave', hidePartnerInfoZoom);
+      }
     });
     Array.prototype.forEach.call(agentsCol.querySelectorAll('.deckbuild-partner-btn'), function(el){
       var row = parseInt(el.closest('.deckbuild-select').getAttribute('data-row'), 10);
       var partner = deckState[row] && deckState[row].partnerId ? partnersById[deckState[row].partnerId] : null;
+      var agentForPartnerBtn = deckState[row] && deckState[row].agentId ? agentsById[deckState[row].agentId] : null;
       if (!partner) return;
-      el.addEventListener('mouseenter', function(e){ e.stopPropagation(); showPartnerInfoZoom(partner, e.clientX, e.clientY); });
-      el.addEventListener('mousemove', function(e){ e.stopPropagation(); positionPartnerInfoZoom(e.clientX, e.clientY); });
-      el.addEventListener('mouseleave', function(e){ e.stopPropagation(); hidePartnerInfoZoom(); });
+      el.addEventListener('mouseenter', function(e){ showPartnerInfoZoom(partner, e.clientX, e.clientY); });
+      el.addEventListener('mousemove', function(e){ positionPartnerInfoZoom(e.clientX, e.clientY); });
+      el.addEventListener('mouseleave', function(e){
+        if (agentForPartnerBtn) showAgentEgoZoom(agentForPartnerBtn, e.clientX, e.clientY);
+        else hidePartnerInfoZoom();
+      });
     });
   }
 
@@ -1755,6 +1776,36 @@ document.getElementById('startBtn').addEventListener('click', function(){
   }
   function showPartnerInfoZoom(partner, x, y){
     partnerInfoZoomEl.innerHTML = renderPartnerInfoZoomHtml(partner);
+    partnerInfoZoomEl.classList.add('visible');
+    positionPartnerInfoZoom(x, y);
+  }
+  function renderAgentEgoZoomHtml(agent){
+    var ego = window.AGENTS_EGO && window.AGENTS_EGO[agent.id];
+    if (!ego || !ego.skill) {
+      return '<div class="partner-info-col partner-info-skill-col">' +
+        '<div class="partner-info-col-title">에고 스킬</div>' +
+        '<div class="partner-info-empty">아직 등록된 에고 스킬 정보가 없습니다.</div>' +
+      '</div>';
+    }
+    var skill = ego.skill;
+    var pointHtml = renderTooltip('에고 포인트 ' + (skill.point != null ? skill.point : ''));
+    return (
+      '<div class="partner-info-col partner-info-skill-col">' +
+        '<div class="partner-info-col-title">에고 스킬</div>' +
+        '<div class="partner-info-skill-row">' +
+          '<div class="partner-info-skill-img-box"><img src="'+(skill.media ? '../../'+skill.media : '')+'" alt="'+(skill.name || '')+'"></div>' +
+          '<div class="partner-info-skill-text">' +
+            '<div class="partner-info-skill-name">'+(skill.name || '')+'</div>' +
+            '<div class="partner-info-skill-point">'+pointHtml+'</div>' +
+            '<div class="partner-info-skill-hr"></div>' +
+            '<div class="partner-info-skill-tooltip">'+renderTooltip(skill.tooltip || '')+'</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>'
+    );
+  }
+  function showAgentEgoZoom(agent, x, y){
+    partnerInfoZoomEl.innerHTML = renderAgentEgoZoomHtml(agent);
     partnerInfoZoomEl.classList.add('visible');
     positionPartnerInfoZoom(x, y);
   }

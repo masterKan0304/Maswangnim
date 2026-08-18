@@ -3064,5 +3064,288 @@ window.AGENTS_CARDS = {
       media: 'cards/셀레나/purple.webp',
       tooltip: '[ 유일 ]\n표식 피해량 +80%'
     }
+  ],
+  beril: [
+    {
+      name: '런처',
+      cost: 1,
+      type: 'attack',
+      grade: 'gray',
+      media: 'cards/베릴/attack.webp',
+      tooltip: '피해 100%'
+    },
+    {
+      name: '차지 런처',
+      cost: 1,
+      type: 'attack',
+      grade: 'gray',
+      media: 'cards/베릴/attack2.webp',
+      tooltip: '피해 220%'
+    },
+    {
+      name: '보호막',
+      cost: 1,
+      type: 'skill',
+      grade: 'gray',
+      media: 'cards/베릴/skill.webp',
+      tooltip: '실드 100%'
+    },
+    {
+      name: '빈틈 발견',
+      cost: 1,
+      type: 'attack',
+      grade: 'blue',
+      media: 'cards/베릴/blue1.webp',
+      tooltip: '[ 보존 ]\n피해 140%\n보존 : 1턴간 타격 1회 추가',
+      awakenings: [
+        { cost: 1, type: 'attack', tooltip: '[ 보존 ]\n피해 |210|%\n보존 : |피해량 +180%|' },
+        { cost: 1, type: 'attack', tooltip: '[ 보존 ]\n피해 |260|%\n보존 : |비용 0으로 변경|' },
+        { cost: 1, type: 'attack', tooltip: '[ 보존 ]\n피해 \\110\\%\n보존 : 1턴간 타격 |2|회 추가' },
+        { cost: 1, type: 'attack', tooltip: '[ 보존 ]\n피해 |180|%\n보존 : |피해량 +80%|' },
+        { cost: 1, type: 'upgrade', tooltip: '|자신의 카드 보존 시 무작위 적들에게 추가 공격 150%|' }
+      ]
+    },
+    {
+      name: '충전탄',
+      cost: 2,
+      type: 'attack',
+      grade: 'blue',
+      media: 'cards/베릴/blue2.webp',
+      tooltip: '[ 보존 ]\n피해 240%\n보존 : 피해량 +120%',
+      awakenings: [
+        { cost: 2, type: 'attack', tooltip: '[ 보존 ]\n피해 |360|%\n보존 : 피해량 +|180|%' },
+        { cost: 1, type: 'attack', tooltip: '[ 보존 ]\n피해 240%\n|연속 : 피해량 +120%|' },
+        { cost: 3, type: 'attack', tooltip: '[ 보존 ]\n피해 |500|%\n보존 : |사용 시까지 비용 1 감소|' },
+        { cost: 2, type: 'attack', tooltip: '[ 보존 ]\n피해 |360|%\n보존 : 피해량 +|240|% |(최대 1회)|' },
+        { cost: 2, type: 'attack', tooltip: '[ 보존 ]\n피해 \\140\\% × |2|\n보존 : 피해량 +\\80\\%' }
+      ]
+    },
+    {
+      name: '숨겨온 초코바',
+      cost: 0,
+      type: 'skill',
+      grade: 'blue',
+      media: 'cards/베릴/blue3.webp',
+      tooltip: '[ 소멸 ]\n드로우 3',
+      awakenings: [
+        { cost: 0, type: 'skill', tooltip: '[ 소멸 ]\n드로우 3\n|사기 1|' },
+        { cost: 0, type: 'skill', tooltip: '[ 소멸 ]\n드로우 3\n|핸드의 무작위 자신의 카드 1장 비용 1 감소|' },
+        { cost: 0, type: 'skill', tooltip: '[ 소멸 ]\n드로우 3\n|다음 턴 시작 시 드로우 2|' },
+        { cost: 0, type: 'skill', tooltip: '드로우 \\1\\\n|핸드의 모든 자신의 카드 보존 효과 발동|' },
+        { cost: 0, type: 'skill', tooltip: '|[ 유일 / 소멸 2 ]|\n드로우 3' }
+      ]
+    },
+    {
+      name: '무제한 화력',
+      cost: 1,
+      type: 'skill',
+      grade: 'yellow',
+      media: 'cards/베릴/yellow.webp',
+      tooltip: '실드 100%\n다음 사용하는 자신의 공격 카드 피해량 +80%',
+      awakenings: [
+        { cost: 1, type: 'skill', tooltip: '실드 |150|%\n다음 사용하는 자신의 공격 카드 피해량 +|120|%' },
+        { cost: 1, type: 'skill', tooltip: '|1턴간| 자신의 공격 카드 피해량 +80%' },
+        { cost: 1, type: 'skill', tooltip: '다음 사용하는 자신의 공격 카드 피해량 +|160|%' },
+        { cost: 1, type: 'skill', tooltip: '실드 |150|%\n다음 사용하는 |공격 카드| 피해량 +80%' },
+        { cost: 1, type: 'upgrade', tooltip: '|자신의 공격 카드 피해량 30% 증가|' }
+      ]
+    },
+    {
+      name: '중화기 전문가',
+      cost: 1,
+      type: 'skill',
+      grade: 'purple',
+      plus_card: [ '빈틈 발견', '충전탄' ],
+      media: 'cards/베릴/purple.webp',
+      tooltip: '"빈틈 발견" 혹은 "충전탄" 1장 생성, 그 카드에 소멸 부여, 사용 시까지 비용 1 감소'
+    }
+  ],
+  amir: [
+    {
+      name: '레이피어',
+      cost: 1,
+      type: 'attack',
+      grade: 'gray',
+      media: 'cards/아미르/attack.webp',
+      tooltip: '방어 기반 피해 100%'
+    },
+    {
+      name: '레이피어',
+      cost: 1,
+      type: 'attack',
+      grade: 'gray',
+      media: 'cards/아미르/attack.webp',
+      tooltip: '방어 기반 피해 100%'
+    },
+    {
+      name: '강철 보호막',
+      cost: 1,
+      type: 'skill',
+      grade: 'gray',
+      media: 'cards/아미르/skill.webp',
+      tooltip: '실드 100%'
+    },
+    {
+      name: '호버링 메탈',
+      cost: 1,
+      type: 'skill',
+      grade: 'blue',
+      media: 'cards/아미르/blue1.webp',
+      tooltip: '피해 감소 3\n금속화 2',
+      awakenings: [
+        { cost: 1, type: 'skill', tooltip: '피해 감소 3\n금속화 |4|' },
+        { cost: 1, type: 'skill', tooltip: '피해 감소 \\2\\\n금속화 2\n|반격 2|' },
+        { cost: 2, type: 'skill', tooltip: '|[ 천상 ]|\n피해 감소 3\n금속화 |3|' },
+        { cost: 1, type: 'skill', tooltip: '|[ 소멸 ]|\n피해 감소 3\n금속화 |5|' },
+        { cost: 1, type: 'upgrade', tooltip: '금속화 2\n|턴 시작 시 금속화 1|' }
+      ]
+    },
+    {
+      name: '메탈 피어스',
+      cost: 1,
+      type: 'attack',
+      grade: 'blue',
+      media: 'cards/아미르/blue2.webp',
+      tooltip: '방어 기반 피해 90% × 2\n금속화 상태라면 금속화 1 감소, 취약 2',
+      awakenings: [
+        { cost: 1, type: 'attack', tooltip: '방어 기반 피해 |110|% × 2\n금속화 상태라면 금속화 1 감소, |타격 1회 추가|, 취약 2' },
+        { cost: 1, type: 'attack', tooltip: '방어 기반 피해 |200|%\n|금속화 최대 2 감소|\n|그 수만큼 피해량 +150%|' },
+        { cost: 1, type: 'attack', tooltip: '방어 기반 피해 90% × 2\n취약 \\1\\\n|금속화 2|' },
+        { cost: 2, type: 'attack', tooltip: '방어 기반 피해 |110|% × 2\n취약 \\1\\\n|회복 시 1턴간 사용 시까지 비용 1 감소|' },
+        { cost: 1, type: 'attack', tooltip: '방어 기반 피해 |110|% × 2\n금속화 상태라면 금속화 1 감소, 취약 2, |약화 2|' }
+      ]
+    },
+    {
+      name: '금속 추출',
+      cost: 1,
+      type: 'skill',
+      grade: 'blue',
+      media: 'cards/아미르/blue3.webp',
+      tooltip: '금속화 2\n1턴간 결의 2',
+      awakenings: [
+        { cost: 1, type: 'skill', tooltip: '금속화 2\n|1턴간 스킬 카드의 실드 획득량 30% 증가|' },
+        { cost: 1, type: 'skill', tooltip: '금속화 |3|\n1턴간 결의 |3|' },
+        { cost: 1, type: 'skill', tooltip: '금속화 2\n|1턴간 스킬 카드 사용 시 금속화 1 (최대 2회)|' },
+        { cost: 2, type: 'skill', tooltip: '|[ 천상 ]|\n금속화 2\n1턴간 결의 |3|' },
+        { cost: 1, type: 'skill', tooltip: '금속화 |3|\n|1턴간 금속화의 피해량 +30%|' }
+      ]
+    },
+    {
+      name: '풀 메탈 허리케인',
+      cost: 2,
+      type: 'attack',
+      grade: 'yellow',
+      media: 'cards/아미르/yellow.webp',
+      tooltip: '모든 적 방어 기반 피해 200%\n1턴간 금속화의 대상이 모든 적으로 적용, 피해량 +20%',
+      awakenings: [
+        { cost: 2, type: 'attack', tooltip: '모든 적 방어 기반 피해 200%\n1턴간 금속화의 대상이 모든 적으로 적용, 피해량 +|60|%' },
+        { cost: 2, type: 'attack', tooltip: '모든 적 방어 기반 피해 200%\n|1턴간 금속화 효과의 타격 1회 추가|, 피해량 +|50|%' },
+        { cost: 2, type: 'upgrade', tooltip: '모든 적 방어 기반 피해 200%\n|턴 종료 시 금속화 최대 2 감소|\n|그 수만큼 모든 적 방어 기반 피해 120%|' },
+        { cost: 2, type: 'attack', tooltip: '모든 적 방어 기반 피해 \\80\\% × |4|\n1턴간 금속화의 대상이 모든 적으로 적용, 피해량 +20%' },
+        { cost: 2, type: 'attack', tooltip: '모든 적 방어 기반 피해 \\100\\% × |3|\n|금속화 최대 2 감소|\n|그 수만큼 타격 1회 추가|' }
+      ]
+    },
+    {
+      name: '아이언 스킨',
+      cost: 1,
+      type: 'skill',
+      grade: 'purple',
+      media: 'cards/아미르/purple.webp',
+      tooltip: '[ 소멸 / 종극 ]\n1턴간 받는 피해량 20% 감소\n금속화 최대 4 감소\n그 수만큼 받는 피해량 20% 추가 감소'
+    }
+  ],
+  maribel: [
+    {
+      name: '셸터 킥',
+      cost: 1,
+      type: 'attack',
+      grade: 'gray',
+      media: 'cards/마리벨/attack.webp',
+      tooltip: '방어 기반 피해 100%'
+    },
+    {
+      name: '셸터 디펜스',
+      cost: 1,
+      type: 'skill',
+      grade: 'gray',
+      media: 'cards/마리벨/skill2.webp',
+      tooltip: '실드 100%'
+    },
+    {
+      name: '셸터 홀드',
+      cost: 2,
+      type: 'skill',
+      grade: 'gray',
+      media: 'cards/마리벨/skill.webp',
+      tooltip: '실드 220%'
+    },
+    {
+      name: '의지의 돌진',
+      cost: 1,
+      type: 'attack',
+      grade: 'blue',
+      media: 'cards/마리벨/blue1.webp',
+      tooltip: '[ 분쇄 ]\n방어 기반 피해 140%\n피해 기반 실드 20%\n반격 1',
+      awakenings: [
+        { cost: 1, type: 'attack', tooltip: '[ 분쇄 ]\n방어 기반 피해 |210|%\n피해 기반 실드 20%\n반격 1\n|피해를 줬을 시 반격 1 추가|' },
+        { cost: 1, type: 'attack', tooltip: '[ 분쇄 ]\n방어 기반 피해 140%\n피해 기반 실드 20%\n반격 |2|' },
+        { cost: 2, type: 'attack', tooltip: '[ 분쇄 ]\n|모든 적| 방어 기반 피해 |210|%\n피해 기반 실드 20%\n|피해를 준 대상만큼 반격 획득|' },
+        { cost: 1, type: 'attack', tooltip: '[ 분쇄 ]\n방어 기반 피해 |210|%\n피해 기반 실드 20%\n|보유한 실드의 30%만큼 피해량 증가|' },
+        { cost: 2, type: 'upgrade', tooltip: '|턴 종료 시 반격 1|\n|무작위 적들에게 방어 기반 피해 210%|' }
+      ]
+    },
+    {
+      name: '마리벨 셸터 MK. II',
+      cost: 1,
+      type: 'attack',
+      grade: 'blue',
+      media: 'cards/마리벨/blue2.webp',
+      tooltip: '[ 분쇄 ]\n방어 기반 피해 120%\n피해 기반 실드 100%',
+      awakenings: [
+        { cost: 1, type: 'attack', tooltip: '[ 분쇄 ]\n|모든 적| 방어 기반 피해 120%\n피해 기반 실드 100%' },
+        { cost: 1, type: 'attack', tooltip: '[ 분쇄 ]\n방어 기반 피해 |160|%\n피해 기반 실드 100%' },
+        { cost: 2, type: 'attack', tooltip: '[ 분쇄 ]\n방어 기반 피해 |280|%\n피해 기반 실드 100%' },
+        { cost: 2, type: 'attack', tooltip: '[ 분쇄 ]\n방어 기반 피해 |160|%\n|자신의 반격 수만큼 피해량 +50%|' },
+        { cost: 0, type: 'upgrade', tooltip: '|공격 카드 사용 시 준 피해량의 30%만큼 고정 실드 획득|' }
+      ]
+    },
+    {
+      name: '울브즈 돔',
+      cost: 1,
+      type: 'upgrade',
+      grade: 'blue',
+      media: 'cards/마리벨/blue3.webp',
+      tooltip: '반격 2\n턴 시작 시 반격 1\n결정화 2',
+      awakenings: [
+        { cost: 0, type: 'upgrade', tooltip: '|[ 개전 ]|\n반격 2\n턴 시작 시 반격 1\n결정화 2' },
+        { cost: 1, type: 'upgrade', tooltip: '반격 2\n턴 시작 시 반격 1, |고정 실드 80%|' },
+        { cost: 1, type: 'upgrade', tooltip: '반격 2\n턴 시작 시 반격 |2|\n결정화 2' },
+        { cost: 0, type: 'skill', tooltip: '반격 2, |1턴간 결의 2|' },
+        { cost: 2, type: 'upgrade', tooltip: '|[ 주도 ]|\n턴  시작 시 반격 |2|\n|자신의 반격 피해량 +20%|' }
+      ]
+    },
+    {
+      name: '아~ 그렇구나',
+      cost: 1,
+      type: 'skill',
+      grade: 'yellow',
+      media: 'cards/마리벨/yellow.webp',
+      tooltip: '실드 100%\n반격 1\n모든 적 약화 1',
+      awakenings: [
+        { cost: 1, type: 'skill', tooltip: '실드 |150|%\n반격 1\n모든 적 약화 |2|' },
+        { cost: 1, type: 'skill', tooltip: '실드 |150|%\n반격 |2|' },
+        { cost: 1, type: 'skill', tooltip: '반격 |2|\n모든 적 약화 |2|' },
+        { cost: 1, type: 'upgrade', tooltip: '|턴 종료 시 체력이 가장 낮은 적에게 보유한 실드의 50%만큼 고정 피해|' },
+        { cost: 1, type: 'upgrade', tooltip: '|[ 유일 ]|\n|턴 시작 시 자신의 반격 수만큼 고정 실드 25%|' }
+      ]
+    },
+    {
+      name: '셸터 스트라이크',
+      cost: 1,
+      type: 'attack',
+      grade: 'purple',
+      media: 'cards/마리벨/purple.webp',
+      tooltip: '[ 분쇄 ]\n보유한 실드만큼 고정 피해'
+    }
   ]
 };
