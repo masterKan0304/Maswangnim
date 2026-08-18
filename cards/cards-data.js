@@ -1367,6 +1367,15 @@ window.AGENTS_CARDS = {
       grade: 'purple',
       media: 'cards/나인/purple.webp',
       tooltip: '비용이 가장 높은 자신의 공격 카드 1장 발동, 그 카드 소멸'
+    },
+    {
+      name: '허점 파고들기',
+      cost: 0,
+      type: 'skill',
+      grade: '',
+      grade_color: 'purple',
+      media: 'cards/나인/purple_1.webp',
+      tooltip: '[ 신속 / 소멸 / 회수 / 보존 ]\n취약 1\n강인도 피해 1'
     }
   ],
   narja: [
@@ -1916,6 +1925,15 @@ window.AGENTS_CARDS = {
       tooltip: '[ 탄환 / 소멸 ]\n피해 160%\n버린 카드로 이동 시 무작위 적 추가 공격 120%'
     },
     {
+      name: '진혼의 탄환 : 종언',
+      cost: 1,
+      type: 'attack',
+      grade: '',
+      grade_color: 'yellow',
+      media: 'cards/레노아/blue1_1.webp',
+      tooltip: '[ 탄환 / 소멸 ]\n피해 200%\n버린 카드로 이동 시 무작위 적 추가 공격 160% × 2'
+    },
+    {
       name: '즉결 심판',
       cost: 1,
       type: 'attack',
@@ -2198,6 +2216,15 @@ window.AGENTS_CARDS = {
       grade_color: 'gray',
       media: 'cards/루크/blue1_4.webp',
       tooltip: '[ 증발 / 소멸 / 탄환 ]\n피해 30%\n표식 1'
+    },
+    {
+      name: '고속철갑탄',
+      cost: 0,
+      type: 'attack',
+      grade: '',
+      grade_color: 'yellow',
+      media: 'cards/루크/blue1_5.webp',
+      tooltip: '[ 증발 / 소멸 / 탄환 ]\n피해 200%\n확정 치명'
     },
     {
       name: '은밀한 장전',
@@ -2618,6 +2645,15 @@ window.AGENTS_CARDS = {
       grade: 'purple',
       media: 'cards/린/purple.webp',
       tooltip: '피해 120%\n흑운태세 : 핸드의 스킬 카드 수만큼 타격 1회 추가'
+    },
+    {
+      name: '납도',
+      cost: 1,
+      type: 'attack',
+      grade: '',
+      grade_color: 'purple',
+      media: 'cards/린/yellow_1.webp',
+      tooltip: '[ 소멸 / 증발 ]\n피해 60%\n이번 턴 사용한 자신의 공격 카드 수만큼 피해량 +20%\n핸드에 자신의 다른 공격 카드가 없다면 비용 1 감소'
     }
   ],
   meilin: [
