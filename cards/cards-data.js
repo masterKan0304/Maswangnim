@@ -3347,5 +3347,745 @@ window.AGENTS_CARDS = {
       media: 'cards/마리벨/purple.webp',
       tooltip: '[ 분쇄 ]\n보유한 실드만큼 고정 피해'
     }
+  ],
+  rukas: [
+    {
+      name: '머신건',
+      cost: 1,
+      type: 'attack',
+      grade: 'gray',
+      media: 'cards/루카스/attack.webp',
+      tooltip: '피해 100%'
+    },
+    {
+      name: '머신건',
+      cost: 1,
+      type: 'attack',
+      grade: 'gray',
+      media: 'cards/루카스/attack.webp',
+      tooltip: '피해 100%'
+    },
+    {
+      name: '방호 소이탄',
+      cost: 1,
+      type: 'skill',
+      grade: 'gray',
+      media: 'cards/루카스/skill.webp',
+      tooltip: '실드 100%'
+    },
+    {
+      name: '대용량 탄창',
+      cost: 1,
+      type: 'upgrade',
+      grade: 'blue',
+      plus_card: [ '철갑탄', '폭발탄', '확산탄', '냉각탄', '화염탄' ],
+      media: 'cards/루카스/blue1.webp',
+      tooltip: '[ 주도 ]\n턴 시작 시 "런처 탄환" 1장 생성',
+      awakenings: [
+        { cost: 0, type: 'upgrade', tooltip: '|[ 개전 ]|\n턴 시작 시 "런처 탄환" 1장 생성', plus_card: [ '철갑탄', '폭발탄', '확산탄', '냉각탄', '화염탄' ] },
+        { cost: 1, type: 'upgrade', tooltip: '[ 주도 ]\n턴 시작 시 "런처 탄환" |2|장 생성', plus_card: [ '철갑탄', '폭발탄', '확산탄', '냉각탄', '화염탄' ] },
+        { cost: 1, type: 'upgrade', tooltip: '[ 주도 ]\n턴 시작 시 "런처 탄환" 1장 생성, |50% 확률로 1턴간 사용 시까지 그 카드의 비용 1 감소|', plus_card: [ '철갑탄', '폭발탄', '확산탄', '냉각탄', '화염탄' ] },
+        { cost: 1, type: 'upgrade', tooltip: '[ 주도 ]\n턴 시작 시 "런처 탄환" 1장 생성, |50% 확률로 드로우 1|', plus_card: [ '철갑탄', '폭발탄', '확산탄', '냉각탄', '화염탄' ] },
+        { cost: 1, type: 'skill', tooltip: '|[ 소멸 ]|\n"런처 탄환" |5|장 생성', plus_card: [ '철갑탄', '폭발탄', '확산탄', '냉각탄', '화염탄' ] }
+      ]
+    },
+    {
+      name: '철갑탄',
+      cost: 1,
+      type: 'attack',
+      grade: '',
+      grade_color: 'blue',
+      media: 'cards/루카스/blue1_1.webp',
+      tooltip: '[ 소멸 / 증발 / 탄환 ]\n피해 120%\n다른 적 피해 60%\n대상이 실드를 보유하면 피해량 +30%'
+    },
+    {
+      name: '폭발탄',
+      cost: 1,
+      type: 'attack',
+      grade: '',
+      grade_color: 'blue',
+      media: 'cards/루카스/blue1_2.webp',
+      tooltip: '[ 소멸 / 증발 / 탄환 ]\n피해 120%\n다른 적 피해 60%\n모든 적 약화 1'
+    },
+    {
+      name: '확산탄',
+      cost: 1,
+      type: 'attack',
+      grade: '',
+      grade_color: 'blue',
+      media: 'cards/루카스/blue1_3.webp',
+      tooltip: '[ 소멸 / 증발 / 탄환 ]\n피해 120%\n다른 적 피해 60%\n모든 적 손상 1'
+    },
+    {
+      name: '냉각탄',
+      cost: 1,
+      type: 'attack',
+      grade: '',
+      grade_color: 'blue',
+      media: 'cards/루카스/blue1_4.webp',
+      tooltip: '[ 소멸 / 증발 / 탄환 ]\n피해 120%\n다른 적 피해 60%\n모든 적 행동 카운트 1 증가'
+    },
+    {
+      name: '화염탄',
+      cost: 1,
+      type: 'attack',
+      grade: '',
+      grade_color: 'blue',
+      media: 'cards/루카스/blue1_5.webp',
+      tooltip: '[ 소멸 / 증발 / 탄환 ]\n피해 120%\n다른 적 피해 60%\n모든 적 고통 1'
+    },
+    {
+      name: 'S.S.S',
+      cost: 1,
+      type: 'attack',
+      grade: 'blue',
+      media: 'cards/루카스/blue2.webp',
+      tooltip: '피해 100%\n1턴간 탄환 카드의 피해량 +40%',
+      awakenings: [
+        { cost: 1, type: 'attack', tooltip: '피해 |200|%\n1턴간 탄환 카드의 피해량 +40%' },
+        { cost: 1, type: 'skill', tooltip: '|2|턴간 탄환 카드의 피해량 +40%' },
+        { cost: 1, type: 'attack', tooltip: '피해 |150|%\n|핸드의 탄환 카드 수만큼 피해량 +60%|' },
+        { cost: 1, type: 'attack', tooltip: '피해 |150|%\n|다음 사용하는| 탄환 카드의 피해량 +|120|%' },
+        { cost: 1, type: 'attack', tooltip: '피해 100%\n|1턴간 탄환 카드 사용 시 무작위 적 고정 피해 50%|' }
+      ]
+    },
+    {
+      name: '플라멘베르퍼',
+      cost: 2,
+      type: 'attack',
+      grade: 'blue',
+      media: 'cards/루카스/blue3.webp',
+      tooltip: '모든 적 피해 180%\n드로우 1\n버리기 1',
+      awakenings: [
+        { cost: 2, type: 'attack', tooltip: '모든 적 피해 180%\n드로우 1\n버리기 |2|\n|버린 수만큼 "런처 탄환" 생성|', plus_card: [ '철갑탄', '폭발탄', '확산탄', '냉각탄', '화염탄' ] },
+        { cost: 2, type: 'attack', tooltip: '모든 적 피해 |315|%\n드로우 1\n버리기 1' },
+        { cost: 2, type: 'attack', tooltip: '모든 적 피해 |270|%\n|치명타 시 모든 적 피해 150%|' },
+        { cost: 2, type: 'attack', tooltip: '|핸드의 탄환 카드 2장까지 소멸|\n|모든 적 피해 270%|\n|소멸한 카드 수만큼 피해량 50% 증가|' },
+        { cost: 2, type: 'attack', tooltip: '모든 적 피해 |270|%\n|타격한 대상 수만큼 "런처 탄환" 생성|', plus_card: [ '철갑탄', '폭발탄', '확산탄', '냉각탄', '화염탄' ] }
+      ]
+    },
+    {
+      name: '섬광탄',
+      cost: 1,
+      type: 'attack',
+      grade: 'yellow',
+      media: 'cards/루카스/yellow.webp',
+      tooltip: '모든 적 피해 120%\n약화 2\n대상이 실드를 보유하면 피해량 +50%',
+      awakenings: [
+        { cost: 1, type: 'attack', tooltip: '모든 적 피해 |180|%\n약화 2\n대상이 실드를 보유하면 피해량 +|75|%' },
+        { cost: 1, type: 'skill', tooltip: '|1턴간 실드를 보유한 대상 타격 시 피해량 +50%|' },
+        { cost: 1, type: 'attack', tooltip: '|[ 보존 ]|\n모든 적 피해 |180|%\n|열정 약점 2|' },
+        { cost: 1, type: 'attack', tooltip: '모든 적 피해 |180|%\n|표식 2|\n대상이 실드를 보유하면 피해량 +50%' },
+        { cost: 1, type: 'upgrade', tooltip: '|실드를 보유한 대상 타격 시 피해량 30% 증가|' }
+      ]
+    },
+    {
+      name: 'R.P.G-7',
+      cost: 1,
+      type: 'upgrade',
+      grade: 'purple',
+      media: 'cards/루카스/purple.webp',
+      tooltip: '탄환 카드 소멸 시 모든 적 고정 피해 40%'
+    }
+  ],
+  nia: [
+    {
+      name: '스트로크',
+      cost: 1,
+      type: 'attack',
+      grade: 'gray',
+      media: 'cards/니아/attack.webp',
+      tooltip: '피해 100%'
+    },
+    {
+      name: '앰프 테라피',
+      cost: 1,
+      type: 'skill',
+      grade: 'gray',
+      media: 'cards/니아/skill.webp',
+      tooltip: '치유 100%'
+    },
+    {
+      name: '앰프 테라피',
+      cost: 1,
+      type: 'skill',
+      grade: 'gray',
+      media: 'cards/니아/skill.webp',
+      tooltip: '치유 100%'
+    },
+    {
+      name: 'G코드',
+      cost: 1,
+      type: 'skill',
+      grade: 'blue',
+      media: 'cards/니아/blue1.webp',
+      tooltip: '데시벨 2\n뽑을 카드 맨 위의 카드 1장 발동',
+      awakenings: [
+        { cost: 1, type: 'skill', tooltip: '데시벨 2\n뽑을 카드 맨 위의 카드 |3장 확인|\n|하나를 선택하여 발동|' },
+        { cost: 1, type: 'skill', tooltip: '데시벨 2\n뽑을 카드 맨 위의 카드 1장 발동\n|그 카드 비용만큼 데시벨|' },
+        { cost: 1, type: 'skill', tooltip: '데시벨 2\n|뽑을 카드 맨 위의 카드를 소유한 전투원 무작위 적 추가 공격 120%|\n|그 카드 발동|' },
+        { cost: 1, type: 'skill', tooltip: '데시벨 |3|\n뽑을 카드 맨 위의 카드 |3장 버리기|' },
+        { cost: 2, type: 'skill', tooltip: '뽑을 카드 맨 위의 카드 1장 발동\n|데시벨 상태라면 데시벨 1 감소, 1장 추가 발동|' }
+      ]
+    },
+    {
+      name: '악센트 뮤트',
+      cost: 1,
+      type: 'skill',
+      grade: 'blue',
+      media: 'cards/니아/blue2.webp',
+      tooltip: '비용이 가장 높은 카드 1장 버리기\n그 카드를 소유한 전투원 무작위 적 추가 공격 150%',
+      awakenings: [
+        { cost: 1, type: 'skill', tooltip: '|무작위 카드| 1장 버리기\n그 카드를 소유한 전투원 무작위 적 추가 공격 |250|%' },
+        { cost: 1, type: 'skill', tooltip: '|버리기 1|\n그 카드를 소유한 전투원 무작위 적 추가 공격 |200|%' },
+        { cost: 1, type: 'skill', tooltip: '|치유 150%|\n|비용이 가장 낮은 카드 1장 발동|' },
+        { cost: 2, type: 'upgrade', tooltip: '|턴 시작 시 버리기 1|\n그 카드를 소유한 전투원 무작위 적 추가 공격 150%' },
+        { cost: 1, type: 'skill', tooltip: '|비용이 가장 높은 카드 모두 버리기|\n그 카드를 소유한 전투원 무작위 적 추가 공격 \\100\\%' }
+      ]
+    },
+    {
+      name: '소울리프',
+      cost: 1,
+      type: 'skill',
+      grade: 'blue',
+      media: 'cards/니아/blue3.webp',
+      tooltip: '[ 보존 ]\n치유 150%\n1턴간 카드를 버릴 시 데시벨 1, 탄력 2',
+      awakenings: [
+        { cost: 2, type: 'skill', tooltip: '치유 |200|%\n데시벨 |2|\n탄력 |4|\n|버려졌을 때에도 발동|' },
+        { cost: 1, type: 'skill', tooltip: '[ 보존 ]\n치유 150%\n1턴간 |핸드의| 카드 버릴 시 |치유 100%|, 데시벨 1' },
+        { cost: 1, type: 'skill', tooltip: '[ 보존 ]\n1턴간 |핸드의| 카드 버릴 시 |그 카드를 소유한 전투원 무작위 적 추가 공격 100%|' },
+        { cost: 2, type: 'skill', tooltip: '치유 |200|%\n데시벨 |2|\n|다음 데시벨의 효과가 1번 더 발동|' },
+        { cost: 2, type: 'upgrade', tooltip: '카드를 버릴 시 데시벨 1, 탄력 2' }
+      ]
+    },
+    {
+      name: '아다지오',
+      cost: 0,
+      type: 'skill',
+      grade: 'yellow',
+      media: 'cards/니아/yellow.webp',
+      tooltip: '드로우 1\n버리기 1\n이 효과로 버려진 카드를 뽑을 카드 위로 이동',
+      awakenings: [
+        { cost: 0, type: 'skill', tooltip: '드로우 |2|\n버리기 |2|\n이 효과로 버려진 카드를 뽑을 카드 위로 이동' },
+        { cost: 0, type: 'skill', tooltip: '드로우 1\n|1장까지 버리기|\n|버렸다면 소멸이 부여된 "아다지오" 1장 생성|', plus_card: '아다지오', plus_tooltip: '[ 소멸 ]\n드로우 1\n버리기 1\n이 효과로 버려진 카드를 뽑을 카드 위로 이동' },
+        { cost: 0, type: 'skill', tooltip: '드로우 1\n|그 카드의 비용만큼 데시벨 1|\n버리기 1\n|그 카드의 비용만큼 치유 100%|' },
+        { cost: 3, type: 'skill', tooltip: '|뽑을 카드 맨 위 카드 2장 버리기|\n드로우 |2|\n|보유한 데시벨 수만큼 비용 1 감소|' },
+        { cost: 0, type: 'skill', tooltip: '버리기 1\n|그 카드를 소유한 전투원 카드 2장 드로우|' }
+      ]
+    },
+    {
+      name: '니아의 호기심',
+      cost: 1,
+      type: 'skill',
+      grade: 'purple',
+      media: 'cards/니아/purple.webp',
+      tooltip: '뽑을 카드의 무작위 카드 3장을 확인\n하나를 선택하여 드로우\n나머지는 버리기'
+    }
+  ],
+  mika: [
+    {
+      name: '물의 화살',
+      cost: 1,
+      type: 'attack',
+      grade: 'gray',
+      media: 'cards/미카/attack.webp',
+      tooltip: '피해 100%'
+    },
+    {
+      name: '물의 보호막',
+      cost: 1,
+      type: 'skill',
+      grade: 'gray',
+      media: 'cards/미카/skill.webp',
+      tooltip: '치유 100%'
+    },
+    {
+      name: '물의 보호막',
+      cost: 1,
+      type: 'skill',
+      grade: 'gray',
+      media: 'cards/미카/skill.webp',
+      tooltip: '치유 100%'
+    },
+    {
+      name: '물의 근원',
+      cost: 0,
+      type: 'skill',
+      grade: 'blue',
+      media: 'cards/미카/blue1.webp',
+      tooltip: '치유 100%\n행동 포인트 1 획득',
+      awakenings: [
+        { cost: 0, type: 'skill', tooltip: '치유 |150|%\n행동 포인트 1 획득\n|물결 1|' },
+        { cost: 1, type: 'skill', tooltip: '치유 |150|%\n행동 포인트 |2| 획득\n|회복 시 1턴간 사용 시까지 비용 1 감소|' },
+        { cost: 0, type: 'skill', tooltip: '|[ 보존 ]|\n치유 |150|%\n행동 포인트 1 획득\n|다음 사용하는 카드의 치유량 50% 증가|' },
+        { cost: 0, type: 'skill', tooltip: '치유 |150|%\n행동 포인트 1 획득\n|아군 스트레스 2 감소|' },
+        { cost: 0, type: 'skill', tooltip: '|[ 소멸 ]|\n치유 100%\n행동 포인트 |3| 획득' }
+      ]
+    },
+    {
+      name: '파도의 가호',
+      cost: 1,
+      type: 'skill',
+      grade: 'blue',
+      media: 'cards/미카/blue2.webp',
+      tooltip: '[ 보존 ]\n치유 100%\n행동 포인트 수만큼 치유량 30% 증가',
+      awakenings: [
+        { cost: 1, type: 'skill', tooltip: '[ 보존 ]\n치유 |150|%\n행동 포인트 수만큼 치유량 30% 증가\n|초과한 치유량만큼 실드 획득|' },
+        { cost: 1, type: 'skill', tooltip: '[ 보존 ]\n치유 |150|%\n행동 포인트 수만큼 치유량 30% 증가\n|물결 1|' },
+        { cost: 1, type: 'skill', tooltip: '[ 보존 ]\n치유 |150|%\n행동 포인트 수만큼 |다음 사용하는 카드의 치유량 20% 증가|' },
+        { cost: 1, type: 'skill', tooltip: '[ 보존 ]\n치유 |150|%\n|치유량 만큼 무작위 적 피해|' },
+        { cost: 0, type: 'skill', tooltip: '|[ 종극 ]|\n치유 \\50\\%\n|이번 턴 사용한 행동 포인트 수만큼 치유량 +50%|' }
+      ]
+    },
+    {
+      name: '작전 분석',
+      cost: 0,
+      type: 'skill',
+      grade: 'blue',
+      media: 'cards/미카/blue3.webp',
+      tooltip: '물결 1\n1턴간 치유량 +50%',
+      awakenings: [
+        { cost: 0, type: 'skill', tooltip: '|치유 50%|\n물결 1\n|2|턴간 치유량 +50%' },
+        { cost: 0, type: 'skill', tooltip: '물결 |2|\n1턴간 치유량 +50%' },
+        { cost: 0, type: 'skill', tooltip: '물결 |2|\n1턴간 |자신의| 치유량 +|100|%' },
+        { cost: 0, type: 'skill', tooltip: '|1턴간 자신의 카드 사용 시| 물결 1' },
+        { cost: 0, type: 'upgrade', tooltip: '물결 |2|\n|치유량 +50%|' }
+      ]
+    },
+    {
+      name: '소용돌이',
+      cost: 2,
+      type: 'attack',
+      grade: 'yellow',
+      media: 'cards/미카/yellow.webp',
+      tooltip: '모든 적 피해 200%\n타격한 대상 수만큼 치유 50%',
+      awakenings: [
+        { cost: 2, type: 'attack', tooltip: '모든 적 피해 200%\n타격한 대상 수만큼 치유 |100|%' },
+        { cost: 1, type: 'attack', tooltip: '모든 적 피해 200%\n타격한 대상 수만큼 |물결 1|' },
+        { cost: 2, type: 'attack', tooltip: '모든 적 피해 200%\n타격한 대상 수만큼 |다음 사용하는 카드의 치유량 20% 증가|' },
+        { cost: 4, type: 'attack', tooltip: '모든 적 피해 |300|%\n|회복하면 사용 시까지 비용 1 감소|' },
+        { cost: 2, type: 'attack', tooltip: '|치유 100%|\n모든 적 피해 \\100\\%\n|이 카드의 치유량 만큼 피해량 증가|' }
+      ]
+    },
+    {
+      name: '범람',
+      cost: 1,
+      type: 'upgrade',
+      grade: 'purple',
+      media: 'cards/미카/purple.webp',
+      tooltip: '[ 유일 ]\n물결 1\n턴 시작 시 물결 1'
+    }
+  ],
+  cassius: [
+    {
+      name: '카드',
+      cost: 1,
+      type: 'attack',
+      grade: 'gray',
+      media: 'cards/카시우스/attack.webp',
+      tooltip: '피해 100%'
+    },
+    {
+      name: '와일드 카드',
+      cost: 2,
+      type: 'attack',
+      grade: 'gray',
+      media: 'cards/카시우스/attack2.webp',
+      tooltip: '피해 220%'
+    },
+    {
+      name: '마력장',
+      cost: 1,
+      type: 'skill',
+      grade: 'gray',
+      media: 'cards/카시우스/skill.webp',
+      tooltip: '치유 100%'
+    },
+    {
+      name: '팝 아이드 파퍼',
+      cost: 1,
+      type: 'upgrade',
+      grade: 'blue',
+      plus_card: [ '퀘스트: \'0\' 트리플', '퀘스트: \'1\' 트리플', '퀘스트: 스트레이트', '퀘스트: 풀 하우스' ],
+      media: 'cards/카시우스/blue1.webp',
+      tooltip: '4개의 "퀘스트" 중 무작위 1개 시작',
+      awakenings: [
+        { cost: 0, type: 'upgrade', tooltip: '|[ 개전 ]|\n4개의 "퀘스트" 중 무작위 1개 시작', plus_card: [ '퀘스트: \'0\' 트리플', '퀘스트: \'1\' 트리플', '퀘스트: 스트레이트', '퀘스트: 풀 하우스' ] },
+        { cost: 0, type: 'upgrade', tooltip: '4개의 "퀘스트" 중 무작위 1개 시작\n|"퀘스트" 카드 생성 시 증발 제거, 보존 부여|', plus_card: [ '퀘스트: \'0\' 트리플', '퀘스트: \'1\' 트리플', '퀘스트: 스트레이트', '퀘스트: 풀 하우스' ] },
+        { cost: 0, type: 'upgrade', tooltip: '4개의 "퀘스트" 중 무작위 1개 시작\n|퀘스트 완료 시 한층 더 강한 "퀘스트" 카드 생성|', plus_card: [ '퀘스트: \'0\' 트리플', '퀘스트: \'1\' 트리플', '퀘스트: 스트레이트', '퀘스트: 풀 하우스' ] },
+        { cost: 0, type: 'upgrade', tooltip: '4개의 "퀘스트" 중 |1개를 선택하여 시작|', plus_card: [ '퀘스트: \'0\' 트리플', '퀘스트: \'1\' 트리플', '퀘스트: 스트레이트', '퀘스트: 풀 하우스' ] },
+        { cost: 0, type: 'upgrade', tooltip: '4개의 "퀘스트" 중 무작위 1개 시작\n|퀘스트 완료 시 다른 무작위 "퀘스트"로 교체|', plus_card: [ '퀘스트: \'0\' 트리플', '퀘스트: \'1\' 트리플', '퀘스트: 스트레이트', '퀘스트: 풀 하우스' ] }
+      ]
+    },
+    {
+      name: '퀘스트: \'0\' 트리플',
+      cost: '-',
+      type: 'upgrade',
+      grade: '',
+      grade_color: 'blue',
+      media: 'cards/카시우스/blue1_1.webp',
+      tooltip: '비용이 0인 카드 3장 사용 시 "\'0\' 트리플" 생성'
+    },
+    {
+      name: '퀘스트: \'1\' 트리플',
+      cost: '-',
+      type: 'upgrade',
+      grade: '',
+      grade_color: 'blue',
+      media: 'cards/카시우스/blue1_2.webp',
+      tooltip: '비용이 1인 카드 3장 사용 시 "\'1\' 트리플" 생성'
+    },
+    {
+      name: '퀘스트: 스트레이트',
+      cost: '-',
+      type: 'upgrade',
+      grade: '',
+      grade_color: 'blue',
+      media: 'cards/카시우스/blue1_3.webp',
+      tooltip: '비용이 0, 1, 2인 카드를 각각 사용 시 "스트레이트" 생성'
+    },
+    {
+      name: '퀘스트: 풀 하우스',
+      cost: '-',
+      type: 'upgrade',
+      grade: '',
+      grade_color: 'blue',
+      media: 'cards/카시우스/blue1_4.webp',
+      tooltip: '각 전투원 카드 사용 시 "풀 하우스" 생성'
+    },
+    {
+      name: '\'0\' 트리플',
+      cost: 0,
+      type: 'attack',
+      grade: '',
+      grade_color: 'blue',
+      media: 'cards/카시우스/blue1_1.webp',
+      tooltip: '[ 소멸 / 증발 ]\n피해 200%\n이번 턴 사용한 공격 카드 수만큼 피해 40% (최대 4회)'
+    },
+    {
+      name: '\'1\' 트리플',
+      cost: 0,
+      type: 'attack',
+      grade: '',
+      grade_color: 'blue',
+      media: 'cards/카시우스/blue1_2.webp',
+      tooltip: '[ 소멸 / 증발 ]\n피해 150%\n치유 150%'
+    },
+    {
+      name: '스트레이트',
+      cost: 0,
+      type: 'skill',
+      grade: '',
+      grade_color: 'blue',
+      media: 'cards/카시우스/blue1_3.webp',
+      tooltip: '[ 소멸 / 증발 ]\n1턴간 사기, 결의, 불굴 2'
+    },
+    {
+      name: '풀 하우스',
+      cost: 0,
+      type: 'skill',
+      grade: '',
+      grade_color: 'blue',
+      media: 'cards/카시우스/blue1_4.webp',
+      tooltip: '[ 소멸 / 증발 ]\n드로우 1\n무작위 아군 스트레스 2 감소'
+    },
+    {
+      name: '강해진 \'0\' 트리플',
+      cost: 0,
+      type: 'attack',
+      grade: '',
+      grade_color: 'yellow',
+      media: 'cards/카시우스/blue1_1.webp',
+      tooltip: '[ 소멸 / 증발 ]\n피해 250%\n이번 턴 사용한 공격 카드 수만큼 피해 50% (최대 4회)'
+    },
+    {
+      name: '강해진 \'1\' 트리플',
+      cost: 0,
+      type: 'attack',
+      grade: '',
+      grade_color: 'yellow',
+      media: 'cards/카시우스/blue1_2.webp',
+      tooltip: '[ 소멸 / 증발 ]\n피해 200%\n치유 200%'
+    },
+    {
+      name: '강해진 스트레이트',
+      cost: 0,
+      type: 'skill',
+      grade: '',
+      grade_color: 'yellow',
+      media: 'cards/카시우스/blue1_3.webp',
+      tooltip: '[ 소멸 / 증발 ]\n1턴간 사기, 결의, 불굴 3'
+    },
+    {
+      name: '강해진 풀 하우스',
+      cost: 0,
+      type: 'skill',
+      grade: '',
+      grade_color: 'yellow',
+      media: 'cards/카시우스/blue1_4.webp',
+      tooltip: '[ 소멸 / 증발 ]\n드로우 1\n무작위 아군 스트레스 3 감소'
+    },
+    {
+      name: '데블 다이스',
+      cost: 1,
+      type: 'attack',
+      grade: 'blue',
+      media: 'cards/카시우스/blue2.webp',
+      tooltip: '피해 160%\n드로우 1',
+      awakenings: [
+        { cost: 1, type: 'attack', tooltip: '피해 |200|%\n|"퀘스트 카드" 1장 생성|', plus_card: [ '\'0\' 트리플', '\'1\' 트리플', '스트레이트', '풀 하우스' ] },
+        { cost: 1, type: 'attack', tooltip: '|[ 회수 3 ]|\n피해 160%\n드로우 1' },
+        { cost: 1, type: 'attack', tooltip: '|모든 적| 피해 160%\n|타격한 대상 수만큼 드로우|' },
+        { cost: 1, type: 'attack', tooltip: '피해 |240|%\n드로우 |2|\n|버리기 2|' },
+        { cost: 0, type: 'attack', tooltip: '드로우 1\n|그 카드의 비용만큼 모든 적 피해 80%|' }
+      ]
+    },
+    {
+      name: '카드 섞기',
+      cost: 1,
+      type: 'skill',
+      grade: 'blue',
+      media: 'cards/카시우스/blue3.webp',
+      tooltip: '[ 소멸 ]\n핸드의 모든 카드 버리기\n그 수만큼 드로우',
+      awakenings: [
+        { cost: 1, type: 'skill', tooltip: '|[ 소멸 2 ]|\n핸드의 모든 카드 버리기\n그 수만큼 드로우' },
+        { cost: 1, type: 'skill', tooltip: '[ 소멸 ]\n|핸드의 카드 원하는 만큼 버리기|\n그 수만큼 드로우' },
+        { cost: 1, type: 'skill', tooltip: '[ 소멸 ]\n|핸드와 버린 카드의 모든 카드를 뽑을 카드로 이동|\n|드로우 5|' },
+        { cost: 0, type: 'skill', tooltip: '[ 소멸 ]\n|버린 카드에서 카드를 5장까지 선택, 뽑을 카드 맨 위로 이동|' },
+        { cost: 0, type: 'skill', tooltip: '|드로우 3|\n|그 카드들의 비용 합이 4 이하라면 모두 버리기|' }
+      ]
+    },
+    {
+      name: '다이스 트릭',
+      cost: 2,
+      type: 'attack',
+      grade: 'yellow',
+      plus_card: [ '퀘스트: \'0\' 트리플', '퀘스트: \'1\' 트리플', '퀘스트: 스트레이트', '퀘스트: 풀 하우스' ],
+      media: 'cards/카시우스/yellow.webp',
+      tooltip: '피해 240%\n1턴간 사기 1 감소\n완료한 "퀘스트" 수만큼 비용 감소',
+      awakenings: [
+        { cost: 2, type: 'attack', tooltip: '피해 |360|%\n1턴간 사기 1 감소\n완료한 "퀘스트" 수만큼 비용 감소', plus_card: [ '퀘스트: \'0\' 트리플', '퀘스트: \'1\' 트리플', '퀘스트: 스트레이트', '퀘스트: 풀 하우스' ] },
+        { cost: 2, type: 'attack', tooltip: '|모든 적| 피해 |300|%\n1턴간 사기 1 감소\n완료한 "퀘스트" 수만큼 비용 감소', plus_card: [ '퀘스트: \'0\' 트리플', '퀘스트: \'1\' 트리플', '퀘스트: 스트레이트', '퀘스트: 풀 하우스' ] },
+        { cost: 0, type: 'attack', tooltip: '피해 \\80\\%\n완료한 "퀘스트" 수만큼 |피해량 +80% (최대 5회)|', plus_card: [ '퀘스트: \'0\' 트리플', '퀘스트: \'1\' 트리플', '퀘스트: 스트레이트', '퀘스트: 풀 하우스' ] },
+        { cost: 2, type: 'upgrade', tooltip: '|[ 유일 ]|\n|"퀘스트 카드" 사용 시 치유 100%, 무작위 적 고정 피해 100%|', plus_card: [ '\'0\' 트리플', '\'1\' 트리플', '스트레이트', '풀 하우스' ] },
+        { cost: 2, type: 'upgrade', tooltip: '|[ 유일 ]|\n|턴 시작 시 "강해진 퀘스트 카드" 1장 생성|', plus_card: [ '강해진 \'0\' 트리플', '강해진 \'1\' 트리플', '강해진 스트레이트', '강해진 풀 하우스' ] }
+      ]
+    },
+    {
+      name: '조커',
+      cost: 1,
+      type: 'skill',
+      grade: 'purple',
+      media: 'cards/카시우스/purple.webp',
+      tooltip: '뽑을 카드에서 1장 선택 드로우'
+    }
+  ],
+  rei: [
+    {
+      name: '암흑 칼날',
+      cost: 1,
+      type: 'attack',
+      grade: 'gray',
+      media: 'cards/레이/attack.webp',
+      tooltip: '피해 100%'
+    },
+    {
+      name: '암흑 칼날',
+      cost: 1,
+      type: 'attack',
+      grade: 'gray',
+      media: 'cards/레이/attack.webp',
+      tooltip: '피해 100%'
+    },
+    {
+      name: '물질 재생',
+      cost: 1,
+      type: 'skill',
+      grade: 'gray',
+      media: 'cards/레이/skill.webp',
+      tooltip: '치유 100%'
+    },
+    {
+      name: '어둠의 참격',
+      cost: 1,
+      type: 'attack',
+      grade: 'blue',
+      media: 'cards/레이/blue1.webp',
+      tooltip: '[ 주도 ]\n피해 100%\n1턴간 기본 공격 카드의 피해량 100% 증가',
+      awakenings: [
+        { cost: 1, type: 'attack', tooltip: '[ 주도 ]\n피해 |150|%\n1턴간 기본 공격 카드의 피해량 |150|% 증가' },
+        { cost: 1, type: 'attack', tooltip: '피해 |350|%\n|1턴간 피해량 20% 감소|' },
+        { cost: 1, type: 'attack', tooltip: '[ 주도 ]\n피해 |150|%\n|기본 카드 모두 버리기, 그 수만큼 타격 1회 추가|' },
+        { cost: 1, type: 'upgrade', tooltip: '|[ 유일 ]|\n|기본 공격 카드의 피해량 80% 증가|' },
+        { cost: 0, type: 'skill', tooltip: '|[ 보존 ]|\n|핸드의 기본 카드 모두 발동|' }
+      ]
+    },
+    {
+      name: '공명하는 어둠',
+      cost: 1,
+      type: 'upgrade',
+      grade: 'blue',
+      media: 'cards/레이/blue2.webp',
+      tooltip: '[ 유일 ]\n비용 1인 카드의 피해량 +40%\n턴 종료 시 치유 60%',
+      awakenings: [
+        { cost: 1, type: 'upgrade', tooltip: '[ 유일 ]\n비용 1인 카드의 피해량 +|60|%\n턴 종료 시 치유 |90|%' },
+        { cost: 1, type: 'upgrade', tooltip: '[ 유일 ]\n|공허 카드의 피해량 +40%|\n턴 종료 시 치유 |90|%' },
+        { cost: 1, type: 'upgrade', tooltip: '[ 유일 ]\n비용 1인 카드의 피해량, |실드 획득량, 치유량| +40%\n턴 종료 시 치유 |90|%' },
+        { cost: 1, type: 'upgrade', tooltip: '[ 유일 ]\n비용 1 |이하인 카드|의 피해량 +40%\n턴 종료 시 치유 |90|%' },
+        { cost: 0, type: 'skill', tooltip: '|치유 100%|\n|1턴간 비용 1인 카드의 피해량 +80%|' }
+      ]
+    },
+    {
+      name: '간식 시간',
+      cost: 0,
+      type: 'skill',
+      grade: 'blue',
+      media: 'cards/레이/blue3.webp',
+      tooltip: '[ 소멸 ]\n핸드의 카드 1장 선택 소멸\n치유 200%\n드로우 1',
+      awakenings: [
+        { cost: 0, type: 'skill', tooltip: '|[ 소멸 2 ]|\n핸드의 카드 1장 선택 소멸\n치유 200%\n드로우 1' },
+        { cost: 0, type: 'skill', tooltip: '|[ 보존 / 소멸 ]|\n치유 200%\n드로우 |2|' },
+        { cost: 0, type: 'skill', tooltip: '[ 소멸 ]\n치유 \\150\\%\n핸드의 카드 |2장까지| 선택 소멸, |그 수만큼 드로우|' },
+        { cost: 0, type: 'skill', tooltip: '[ 소멸 ]\n치유 \\150\\%\n|뽑을 카드에서 1장까지| 선택 소멸, |그 수만큼 드로우|' },
+        { cost: 0, type: 'skill', tooltip: '[ 소멸 ]\n치유 \\150\\%\n핸드의 카드 |2|장 선택 소멸\n|공허 카드 1장 선택 드로우|' }
+      ]
+    },
+    {
+      name: '암흑 응집',
+      cost: 1,
+      type: 'skill',
+      grade: 'yellow',
+      media: 'cards/레이/yellow.webp',
+      tooltip: '핸드의 공격 카드 1장 선택, 1턴간 사용 시까지 피해량 +100%',
+      awakenings: [
+        { cost: 1, type: 'skill', tooltip: '핸드의 공격 카드 1장 선택, 1턴간 사용 시까지 피해량 +|150|%' },
+        { cost: 1, type: 'skill', tooltip: '핸드의 |카드| 1장 선택, 1턴간 사용 시까지 피해량, |실드 획득량, 치유량| +100%' },
+        { cost: 1, type: 'skill', tooltip: '|1턴간 공허 공격 카드의 피해량 +50%|' },
+        { cost: 1, type: 'skill', tooltip: '|공격 카드| 1장 선택, 사용 시까지 피해량 +100%' },
+        { cost: 1, type: 'upgrade', tooltip: '핸드의 공격 카드 1장 선택, |피해량 +50%|' }
+      ]
+    },
+    {
+      name: '포식자의 칼날',
+      cost: 1,
+      type: 'attack',
+      grade: 'purple',
+      media: 'cards/레이/purple.webp',
+      tooltip: '피해 250%\n1턴간 사기 2'
+    }
+  ],
+  trisa: [
+    {
+      name: '단검 투척',
+      cost: 1,
+      type: 'attack',
+      grade: 'gray',
+      media: 'cards/트리사/attack.webp',
+      tooltip: '피해 100%'
+    },
+    {
+      name: '단검 투척',
+      cost: 1,
+      type: 'attack',
+      grade: 'gray',
+      media: 'cards/트리사/attack.webp',
+      tooltip: '피해 100%'
+    },
+    {
+      name: '어둠의 손길',
+      cost: 1,
+      type: 'skill',
+      grade: 'gray',
+      media: 'cards/트리사/skill.webp',
+      tooltip: '치유 100%'
+    },
+    {
+      name: '단검 꺼내기',
+      cost: 1,
+      type: 'trisa',
+      grade: 'blue',
+      plus_card: '그림자 단검',
+      media: 'cards/트리사/blue1.webp',
+      tooltip: '"그림자 단검" 2장 생성',
+      awakenings: [
+        { cost: 0, type: 'skill', tooltip: '"그림자 단검" 2장 생성', plus_card: '그림자 단검' },
+        { cost: 1, type: 'skill', tooltip: '"그림자 단검" |3|장 생성', plus_card: '그림자 단검' },
+        { cost: 1, type: 'upgrade', tooltip: '"그림자 단검" \\1\\장 생성\n|턴 시작 시 "그림자 단검" 1장 생성|', plus_card: '그림자 단검' },
+        { cost: 1, type: 'skill', tooltip: '"그림자 단검" 2장 생성\n|생성된 "그림자 단검"의 고통 부여 효과가 2 증가|', plus_card: '그림자 단검' },
+        { cost: 1, type: 'skill', tooltip: '|[ 소멸 ]|\n"그림자 단검" |4|장 생성', plus_card: '그림자 단검' }
+      ]
+    },
+    {
+      name: '그림자 단검',
+      cost: 0,
+      type: 'attack',
+      grade: '',
+      grade_color: 'blue',
+      media: 'cards/트리사/blue1_1.webp',
+      tooltip: '[ 소멸 ]\n피해 80%\n고통 1'
+    },
+    {
+      name: '상급 그림자 단검',
+      cost: 0,
+      type: 'attack',
+      grade: '',
+      grade_color: 'blue',
+      media: 'cards/트리사/blue1_1.webp',
+      tooltip: '[ 소멸 ]\n고통 2\n피해 50%\n대상의 고통 수만큼 피해량 +10%'
+    },
+    {
+      name: '저주 부여',
+      cost: 0,
+      type: 'skill',
+      grade: 'blue',
+      media: 'cards/트리사/blue2.webp',
+      tooltip: '1턴간 공격 카드 사용 시 대상에게 고통 1',
+      awakenings: [
+        { cost: 0, type: 'skill', tooltip: '1턴간 |카드| 사용 시 |무작위 적| 고통 1' },
+        { cost: 0, type: 'skill', tooltip: '|2|턴간 공격 카드 사용 시 대상에게 고통 1' },
+        { cost: 1, type: 'skill', tooltip: '|[ 주도 ]|\n|무작위 적들에게 고통 4 × 2|' },
+        { cost: 1, type: 'upgrade', tooltip: '|[ 개전 ]|\n|모든 적 고통 2|\n|턴 시작 시 모든 적 고통 2|' },
+        { cost: 2, type: 'upgrade', tooltip: '|카드로 고통 부여 시 대상에게 고통 1 추가|' }
+      ]
+    },
+    {
+      name: '그림자 장전',
+      cost: 1,
+      type: 'skill',
+      grade: 'blue',
+      plus_card: '상급 그림자 단검',
+      media: 'cards/트리사/blue3.webp',
+      tooltip: '치유 100%\n"상급 그림자 단검" 1장 생성',
+      awakenings: [
+        { cost: 1, type: 'attack', tooltip: '|[ 보존 ]|\n|모든 적 피해 80%|\n|고통 2|\n|핸드의 "그림자 단검" 모두 소멸, 그 수만큼 반복|', plus_card: '그림자 단검' },
+        { cost: 0, type: 'skill', tooltip: '치유 |150|%\n"상급 그림자 단검" 1장 생성', plus_card: '상급 그림자 단검' },
+        { cost: 'X', type: 'skill', tooltip: '치유 100% × |X|\n|"그림자 단검", "상급 그림자 단검" 중 무작위 X장 생성|', plus_card: [ '그림자 단검', '상급 그림자 단검' ] },
+        { cost: 1, type: 'skill', tooltip: '|모든 "그림자 단검" 소멸, 그 수만큼 "상급 그림자 단검" 생성', plus_card: [ '그림자 단검', '상급 그림자 단검' ] },
+        { cost: 1, type: 'skill', tooltip: '|[ 소멸 2 ]|\n|카드 모두 버리기|\n|그 수만큼 "그림자 단검" 생성|', plus_card: '그림자 단검' }
+      ]
+    },
+    {
+      name: '급소 공격',
+      cost: 2,
+      type: 'attack',
+      grade: 'yellow',
+      media: 'cards/트리사/yellow.webp',
+      tooltip: '피해 80% × 3\n대상이 고통 상태라면 피해량 +50%',
+      awakenings: [
+        { cost: 2, type: 'attack', tooltip: '|[ 주도 ]|\n피해 |150|% × 3' },
+        { cost: 2, type: 'attack', tooltip: '피해 |120|% × 3\n대상이 고통 상태라면 피해량 +|70|%' },
+        { cost: 1, type: 'attack', tooltip: '피해 80% × 3\n|고통 2 ~ 6|' },
+        { cost: 2, type: 'attack', tooltip: '피해 |200|% × \\2\\\n|대상의 고통 3 이상일 시 1번 더 발동|' },
+        { cost: 2, type: 'attack', tooltip: '피해 |150|% × 3\n|대상의 고통 수만큼 피해량 +10%|' }
+      ]
+    },
+    {
+      name: '저주 도려내기',
+      cost: 1,
+      type: 'skill',
+      grade: 'purple',
+      media: 'cards/트리사/purple.webp',
+      tooltip: '대상이 보유한 자신의 고통 발동'
+    }
   ]
 };

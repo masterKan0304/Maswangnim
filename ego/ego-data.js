@@ -25,7 +25,7 @@ window.AGENTS_EGO = {
     skill: {
       name: '매트릭스 오버레이',
       point: 4,
-      media: 'cards/힐데/ego.webp',
+      media: 'ego/힐데_D.webp',
       tooltip: '모든 적 1턴간 받는 약점 피해량 +15%\n자신의 공격 카드 드로우 3\n1턴간 그 카드 약점 공격 적용'
     },
     awakenings: [
