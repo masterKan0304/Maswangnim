@@ -1542,8 +1542,8 @@ document.getElementById('startBtn').addEventListener('click', function(){
       var partner = deckState[row] && deckState[row].partnerId ? partnersById[deckState[row].partnerId] : null;
       var agentForPartnerBtn = deckState[row] && deckState[row].agentId ? agentsById[deckState[row].agentId] : null;
       if (!partner) return;
-      el.addEventListener('mouseenter', function(e){ showPartnerInfoZoom(partner, e.clientX, e.clientY); });
-      el.addEventListener('mousemove', function(e){ positionPartnerInfoZoom(e.clientX, e.clientY); });
+      el.addEventListener('mouseenter', function(e){ e.stopPropagation(); showPartnerInfoZoom(partner, e.clientX, e.clientY); });
+      el.addEventListener('mousemove', function(e){ e.stopPropagation(); positionPartnerInfoZoom(e.clientX, e.clientY); });
       el.addEventListener('mouseleave', function(e){
         if (agentForPartnerBtn) showAgentEgoZoom(agentForPartnerBtn, e.clientX, e.clientY);
         else hidePartnerInfoZoom();
