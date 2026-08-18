@@ -184,15 +184,115 @@ window.AGENTS_CARDS = {
       cost: 0,
       type: 'upgrade',
       grade: 'blue',
+      plus_card: '리듬',
       media: 'cards/테네브리아/blue1.webp',
       tooltip: '[ 유일 / 개막 ]\n모든 기본 공격 카드 소멸\n뽑을 카드에 아군의 "리듬" 2장씩 생성\n자신의 리듬 카드에 신속 부여',
       awakenings: [
-        { cost: 0, type: 'upgrade', tooltip: '[ 유일 / 개막 ]\n모든 기본 공격 카드 소멸\n뽑을 카드에 아군의 |"리듬 : 크레센도"| 2장씩 생성\n자신의 리듬 카드에 신속 부여' },
-        { cost: 0, type: 'upgrade', tooltip: '[ 유일 / 개막 ]\n모든 기본 공격 카드 소멸\n뽑을 카드에 아군의 |"리듬 : 스타카토"| 2장씩 생성\n자신의 리듬 카드에 신속 부여' },
-        { cost: 0, type: 'upgrade', tooltip: '[ 유일 / 개막 ]\n모든 기본 공격 카드 소멸\n뽑을 카드에 아군의 |"리듬 : 포르티시모"| 2장씩 생성\n자신의 리듬 카드에 신속 부여' },
-        { cost: 0, type: 'upgrade', tooltip: '[ 유일 / 개막 ]\n모든 기본 공격 카드 소멸\n뽑을 카드에 아군의 |"리듬 : 페르마타"| 2장씩 생성' },
-        { cost: 0, type: 'upgrade', tooltip: '[ 유일 / 개막 ]\n모든 기본 공격 카드 소멸\n뽑을 카드에 아군의 |"리듬 : 아르페지오"| \\1\\장씩 생성' }
+        { cost: 0, type: 'upgrade', tooltip: '[ 유일 / 개막 ]\n모든 기본 공격 카드 소멸\n뽑을 카드에 아군의 |"리듬 : 크레센도"| 2장씩 생성\n자신의 리듬 카드에 신속 부여', plus_card: '리듬 : 크레센도' },
+        { cost: 0, type: 'upgrade', tooltip: '[ 유일 / 개막 ]\n모든 기본 공격 카드 소멸\n뽑을 카드에 아군의 |"리듬 : 스타카토"| 2장씩 생성\n자신의 리듬 카드에 신속 부여', plus_card: '리듬 : 스타카토' },
+        { cost: 0, type: 'upgrade', tooltip: '[ 유일 / 개막 ]\n모든 기본 공격 카드 소멸\n뽑을 카드에 아군의 |"리듬 : 포르티시모"| 2장씩 생성\n자신의 리듬 카드에 신속 부여', plus_card: '리듬 : 포르티시모' },
+        { cost: 0, type: 'upgrade', tooltip: '[ 유일 / 개막 ]\n모든 기본 공격 카드 소멸\n뽑을 카드에 아군의 |"리듬 : 페르마타"| 2장씩 생성', plus_card: '리듬 : 페르마타' },
+        { cost: 0, type: 'upgrade', tooltip: '[ 유일 / 개막 ]\n모든 기본 공격 카드 소멸\n뽑을 카드에 아군의 |"리듬 : 아르페지오"| \\1\\장씩 생성', plus_card: '리듬 : 아르페지오' }
       ]
+    },
+    {
+      name: '리듬',
+      cost: 2,
+      type: 'attack',
+      grade: '',
+      grade_color: 'blue',
+      media: 'cards/테네브리아/blue1_1.webp',
+      tooltip: '피해 60%\n리듬 수만큼 피해량 +30%\n핸드의 리듬 1장 발동'
+    },
+    {
+      name: '리듬 : 크레센도',
+      cost: 2,
+      type: 'attack',
+      grade: '',
+      grade_color: 'blue',
+      media: 'cards/테네브리아/blue1_2.webp',
+      tooltip: '피해 180%\n무덤의 리듬 수만큼 피해량 +40%\n1턴간 다음 발동하는 리듬 카드 비용 1 감소'
+    },
+    {
+      name: '리듬 : 스타카토',
+      cost: 1,
+      type: 'attack',
+      grade: '',
+      grade_color: 'blue',
+      media: 'cards/테네브리아/blue1_3.webp',
+      tooltip: '피해 80%\n리듬 수만큼 피해량 +50%\n직전 발동한 카드가 리듬 카드라면 비용 1 증가'
+    },
+    {
+      name: '리듬 : 포르티시모',
+      cost: 2,
+      type: 'attack',
+      grade: '',
+      grade_color: 'blue',
+      media: 'cards/테네브리아/blue1_4.webp',
+      tooltip: '[ 연결 / 보존 ]\n피해 90%\n발동 전 연결된 리듬 수만큼 피해량 +55%\n3장 이상 연결 시 타격 1회 추가'
+    },
+    {
+      name: '리듬 : 페르마타',
+      cost: 1,
+      type: 'skill',
+      grade: '',
+      grade_color: 'blue',
+      media: 'cards/테네브리아/blue1_5.webp',
+      tooltip: '[ 신속 ]\n리듬 카드 4장 중 1장 선택\n1턴간 모든 리듬 카드 선택한 카드로 변경, 그 중 2장 드로우'
+    },
+    {
+      name: '리듬 : 아르페지오',
+      cost: 0,
+      type: 'attack',
+      grade: '',
+      grade_color: 'blue',
+      media: 'cards/테네브리아/blue1_6.webp',
+      tooltip: '리듬 수만큼 피해 15%\n비용이 가장 낮은 리듬 카드 1장 드로우, 발동 시까지 비용 1 감소'
+    },
+    {
+      name: '리듬 : 아르페지오',
+      cost: 1,
+      type: 'attack',
+      grade: '',
+      grade_color: 'blue',
+      media: 'cards/테네브리아/blue1_6.webp',
+      tooltip: '리듬 수만큼 피해 20%\n비용이 가장 낮은 리듬 카드 2장 드로우, 발동 시까지 비용 1 감소'
+    },
+    {
+      name: '리듬 : 아르페지오',
+      cost: 2,
+      type: 'attack',
+      grade: '',
+      grade_color: 'blue',
+      media: 'cards/테네브리아/blue1_6.webp',
+      tooltip: '리듬 수만큼 피해 40%\n핸드의 비용이 가장 높은 리듬 카드 1장 발동'
+    },
+    {
+      name: '리듬 : 아르페지오',
+      cost: 3,
+      type: 'attack',
+      grade: '',
+      grade_color: 'blue',
+      media: 'cards/테네브리아/blue1_6.webp',
+      tooltip: '[ 신속 ]\n리듬 수만큼 피해 50%\n뽑을 카드와 버린 카드의 비용이 가장 높은 리듬 카드 1장 발동'
+    },
+    {
+      name: '리듬 : 아르페지오',
+      cost: 4,
+      type: 'attack',
+      grade: '',
+      grade_color: 'blue',
+      media: 'cards/테네브리아/blue1_6.webp',
+      tooltip: '[ 신속 ]\n리듬 수만큼 피해 80%\n무덤의 리듬 카드 수만큼 이 카드의 비용 1 감소'
+    },
+    {
+      name: '리듬 : 아르페지오',
+      cost: 5,
+      type: 'attack',
+      grade: '',
+      grade_color: 'blue',
+      media: 'cards/테네브리아/blue1_6.webp',
+      tooltip: '[ 신속 ]\n리듬 수만큼 피해 90%\n이번 턴 발동한 리듬 카드 수만큼 이 카드의 비용 1 감소'
     },
     {
       name: '스포트라이트',
@@ -203,7 +303,7 @@ window.AGENTS_CARDS = {
       tooltip: '피해 140%\n리듬 카드 1장 핸드로 이동\n발동 시까지 비용 2 감소',
       awakenings: [
         { cost: 1, type: 'attack', tooltip: '피해 |210%|\n리듬 카드 |2|장 핸드로 이동\n|그 카드 중 1|장 발동 시까지 비용 2 감소' },
-        { cost: 1, type: 'upgrade', tooltip: '|한 턴에 리듬 카드 3장 발동 시 핸드에 소멸이 부여된 "스포트라이트" 1장 생성, 그 카드 비용 1 감소 (턴당 1회)|' },
+        { cost: 1, type: 'upgrade', tooltip: '|한 턴에 리듬 카드 3장 발동 시 핸드에 소멸이 부여된 "스포트라이트" 1장 생성, 그 카드 비용 1 감소 (턴당 1회)|', plus_card: '스포트라이트', plus_cost: 0, plus_tooltip: '[ 소멸 ]\n피해 140%\n리듬 카드 1장 핸드로 이동\n발동 시까지 비용 2 감소' },
         { cost: 2, type: 'attack', tooltip: '피해 |350|%\n리듬 카드 |2장까지 선택하여| 핸드로 이동, |그 카드 발동|' },
         { cost: 0, type: 'skill', tooltip: '|뽑을 카드와 무덤의 리듬 카드 3장까지 선택하여 뽑을 카드 위로 이동\n그 카드 중 1장 드로우|' },
         { cost: 0, type: 'attack', tooltip: '피해 140%\n|드로우 2\n그 중 리듬 카드가 아닌 카드 모두 버리기|' }
@@ -246,6 +346,15 @@ window.AGENTS_CARDS = {
       grade: 'purple',
       media: 'cards/테네브리아/purple.webp',
       tooltip: '[ 유일 / 보존 ]\n무대의 열기 1\n리듬 카드가 발동하거나 핸드로 이동하면 이 카드 발동 시까지 무대의 열기 1 증가 (최대 9회)'
+    },
+    {
+      name: '포토 카드',
+      cost: 0,
+      type: 'skill',
+      grade: '',
+      grade_color: 'purple',
+      media: 'cards/테네브리아/purple.webp',
+      tooltip: '[ 신속 / 소멸 / 보존 ]\n에고 포인트 2 획득'
     }
   ],
   pei: [
@@ -730,6 +839,15 @@ window.AGENTS_CARDS = {
       grade: 'purple',
       media: 'cards/디아나/purple.webp',
       tooltip: '소멸 탄환 카드 2장 드로우\n피해 300%\n핸드의 서로 다른 탄환 카드 수만큼 피해량 30% 증가'
+    },
+    {
+      name: '큐피드 샷',
+      cost: 1,
+      type: 'attack',
+      grade: '',
+      grade_color: 'purple',
+      media: 'cards/디아나/purple_1.webp',
+      tooltip: '[ 탄환 / 안식 ]\n피해 120%\n핸드의 탄환 카드 수만큼 무작위 적 추가 공격 60%'
     }
   ],
   rita: [
@@ -828,6 +946,15 @@ window.AGENTS_CARDS = {
       tooltip: '[ 보존 / 소멸 ]\n이 카드 비용만큼 피해 120%\n핸드의 모든 "운명 각인" 비용 1 증가\n이 카드가 핸드를 벗어날 시 비용 2로 변경'
     },
     {
+      name: '운명 왜곡',
+      cost: 0,
+      type: 'skill',
+      grade: '',
+      grade_color: 'purple',
+      media: 'cards/리타/purple_1.webp',
+      tooltip: '[ 신속 / 증발 / 소멸 ]\n다음 사용하는 자신의 공격 카드 피해량 30% 증가\n그 카드의 비용만큼 피해량 추가로 10% 증가'
+    },
+    {
       name: '타임 패러독스',
       cost: 0,
       type: 'skill',
@@ -903,6 +1030,15 @@ window.AGENTS_CARDS = {
       grade_color: 'blue',
       media: 'cards/티페라/blue1_3.webp',
       tooltip: '[ 소멸 ]\n치유 50%\n창조 카드 1장 드로우'
+    },
+    {
+      name: '○△□',
+      cost: 0,
+      type: 'skill',
+      grade: '',
+      grade_color: 'purple',
+      media: 'cards/티페라/blue1.webp',
+      tooltip: '[ 신속 / 소멸 / 증발 ]\n치유 150%\n다음 공격 카드의 첫 타격 피해량 30% 증가 (최대 300%)\n창조 카드 1장 드로우'
     },
     {
       name: '형상 결집',

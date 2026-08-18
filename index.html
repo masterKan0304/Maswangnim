@@ -463,6 +463,21 @@
     text-shadow:0 1px 3px #000,0 0 5px #000;}
   .tooltip-card-ref{cursor:pointer;}
 
+  /* ============ 에고 스킬 호버 팝업 (에고 발현 텍스트 내 자기 스킬 참조용) ============ */
+  .ego-skill-zoom-preview{position:fixed;z-index:9999;display:none;pointer-events:none;width:230px;
+    background:#181820;border-radius:10px;box-shadow:0 10px 34px rgba(0,0,0,.55);padding:14px;}
+  .ego-skill-zoom-preview.visible{display:block;}
+  .ego-skill-zoom-title{color:#fff;font-weight:900;font-size:12px;letter-spacing:.5px;margin-bottom:8px;
+    text-shadow:0 1px 4px rgba(0,0,0,.8);}
+  .ego-skill-zoom-row{display:flex;gap:10px;align-items:flex-start;}
+  .ego-skill-zoom-img-box{width:80px;aspect-ratio:420/632;border-radius:8px;overflow:hidden;flex:none;background:#000;}
+  .ego-skill-zoom-img-box img{width:100%;height:100%;object-fit:cover;display:block;}
+  .ego-skill-zoom-text{flex:1;min-width:0;}
+  .ego-skill-zoom-name{color:#fff;font-weight:800;font-size:12.5px;line-height:1.3;}
+  .ego-skill-zoom-point{color:#EAF4FF;font-size:11px;font-weight:700;margin-top:6px;}
+  .ego-skill-zoom-hr{height:1px;background:rgba(255,255,255,.25);margin:8px 0;}
+  .ego-skill-zoom-tooltip{color:#fff;font-size:10.5px;line-height:1.5;font-weight:600;white-space:normal;}
+
   .ego-passive-header{display:flex;align-items:center;gap:12px;margin-top:10px;}
   .ego-passive-job-icon{width:56px;height:56px;object-fit:contain;flex:none;filter:drop-shadow(0 2px 6px rgba(0,0,0,.6));}
   .ego-passive-name{color:#fff;font-weight:800;font-size:17px;line-height:1.3;text-shadow:0 1px 4px rgba(0,0,0,.8);}
@@ -979,6 +994,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
         </div>
         <div class="card-zoom-preview" id="cardZoomPreview"></div>
         <div class="card-zoom-preview card-zoom-plus" id="cardZoomPlusPreview"></div>
+        <div class="ego-skill-zoom-preview" id="egoSkillZoomPreview"></div>
 
         <div class="agent-icon-pager">
           <div class="agent-icon-viewport">
@@ -2723,6 +2739,9 @@ document.getElementById('startBtn').addEventListener('click', function(){
   function findCardByName(name){
     return getAllCards().filter(function(c){ return c.name === name; })[0];
   }
+  function findAllCardsByName(name){
+    return getAllCards().filter(function(c){ return c.name === name; });
+  }
 
   function renderCardZoomPlusRows(plusCards, attrId, baseGrade){
     cardZoomPlusEl.classList.toggle('size-sm', plusCards.length >= 3);
@@ -2738,12 +2757,16 @@ document.getElementById('startBtn').addEventListener('click', function(){
       '<div class="card-zoom-plus-row">' + tailCards.map(function(pc){ return renderCardHTML(pc, attrId, baseGrade); }).join('') + '</div>' +
       '<div class="card-zoom-plus-row">' + headCards.map(function(pc){ return renderCardHTML(pc, attrId, baseGrade); }).join('') + '</div>';
   }
-  function applyPlusOverride(pc, plusType, plusTooltip){
-    if (!plusType && !plusTooltip) return pc;
+  function applyPlusOverride(pc, plusType, plusTooltip, plusCost){
+    if (!plusType && !plusTooltip && plusCost == null) return pc;
     var overridden = {};
     for (var k in pc) overridden[k] = pc[k];
     if (plusType) overridden.type = plusType;
     if (plusTooltip) overridden.tooltip = plusTooltip;
+    if (plusCost != null) {
+      overridden._costColor = awakenCostColor(plusCost, pc.cost);
+      overridden.cost = plusCost;
+    }
     return overridden;
   }
   function showCardZoom(card, attrId, x, y){
@@ -2751,8 +2774,12 @@ document.getElementById('startBtn').addEventListener('click', function(){
     cardZoomEl.classList.add('visible');
     positionCardZoom(x, y);
     var plusNames = Array.isArray(card.plus_card) ? card.plus_card : (card.plus_card ? [card.plus_card] : []);
-    var plusCards = plusNames.map(findCardByName).filter(Boolean)
-      .map(function(pc){ return applyPlusOverride(pc, card.plus_type, card.plus_tooltip); });
+    var plusCards = [];
+    plusNames.forEach(function(name){
+      findAllCardsByName(name).forEach(function(pc){
+        plusCards.push(applyPlusOverride(pc, card.plus_type, card.plus_tooltip, card.plus_cost));
+      });
+    });
     if (plusCards.length) {
       renderCardZoomPlusRows(plusCards, attrId, card.grade);
       cardZoomPlusEl.classList.add('visible');
@@ -2817,6 +2844,41 @@ document.getElementById('startBtn').addEventListener('click', function(){
     });
   }
 
+  var egoSkillZoomEl = document.getElementById('egoSkillZoomPreview');
+  function renderEgoSkillZoomHtml(skill){
+    var pointHtml = parseNormalInline('에고 포인트 ' + (skill.point != null ? skill.point : ''), '#EAAA00', '#7EE4FF', '#7EE4FF');
+    return (
+      '<div class="ego-skill-zoom-title">에고 스킬</div>' +
+      '<div class="ego-skill-zoom-row">' +
+        '<div class="ego-skill-zoom-img-box"><img src="'+(skill.media || '')+'" alt="'+(skill.name || '')+'"></div>' +
+        '<div class="ego-skill-zoom-text">' +
+          '<div class="ego-skill-zoom-name">'+(skill.name || '')+'</div>' +
+          '<div class="ego-skill-zoom-point">'+pointHtml+'</div>' +
+          '<div class="ego-skill-zoom-hr"></div>' +
+          '<div class="ego-skill-zoom-tooltip">'+parseTooltip(skill.tooltip || '', false)+'</div>' +
+        '</div>' +
+      '</div>'
+    );
+  }
+  function showAgentEgoSkillZoom(skill, x, y){
+    egoSkillZoomEl.innerHTML = renderEgoSkillZoomHtml(skill);
+    egoSkillZoomEl.classList.add('visible');
+    positionAgentEgoSkillZoom(x, y);
+  }
+  function positionAgentEgoSkillZoom(x, y){
+    var rect = egoSkillZoomEl.getBoundingClientRect();
+    var left = x - rect.width - 16;
+    var top = y - rect.height - 16;
+    if (left < 8) left = x + 16;
+    if (top < 8) top = y + 16;
+    egoSkillZoomEl.style.left = left + 'px';
+    egoSkillZoomEl.style.top = top + 'px';
+  }
+  function hideAgentEgoSkillZoom(){
+    egoSkillZoomEl.classList.remove('visible');
+    egoSkillZoomEl.innerHTML = '';
+  }
+
   function renderEgoInfo(){
     var isPartner = state.roster === 'partner';
     var a = agents.filter(function(x){ return x.id === state.selectedId; })[0];
@@ -2873,8 +2935,20 @@ document.getElementById('startBtn').addEventListener('click', function(){
       rightColHtml;
 
     if (a && !isPartner) {
+      var egoSkillName = ego && ego.skill && ego.skill.name;
       Array.prototype.forEach.call(egoInfoEl.querySelectorAll('.tooltip-card-ref'), function(refEl){
-        var card = findCardByName(refEl.getAttribute('data-card-name'));
+        var refName = refEl.getAttribute('data-card-name');
+        if (egoSkillName && refName === egoSkillName) {
+          refEl.addEventListener('mouseenter', function(e){
+            showAgentEgoSkillZoom(ego.skill, e.clientX, e.clientY);
+          });
+          refEl.addEventListener('mousemove', function(e){
+            positionAgentEgoSkillZoom(e.clientX, e.clientY);
+          });
+          refEl.addEventListener('mouseleave', hideAgentEgoSkillZoom);
+          return;
+        }
+        var card = findCardByName(refName);
         if (!card) { refEl.classList.remove('tooltip-card-ref'); return; }
         var displayCard = card;
         if (!displayCard.grade) {
@@ -2908,6 +2982,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
       if (!('plus_card' in aw)) delete merged.plus_card;
       if (!('plus_type' in aw)) delete merged.plus_type;
       if (!('plus_tooltip' in aw)) delete merged.plus_tooltip;
+      if (!('plus_cost' in aw)) delete merged.plus_cost;
       merged._isAwakenVariant = true;
       merged._costColor = awakenCostColor(merged.cost, card.cost);
       return merged;
