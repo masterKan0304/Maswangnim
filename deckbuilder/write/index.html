@@ -2304,6 +2304,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
     Array.prototype.forEach.call(agentsCol.querySelectorAll('.deckbuild-remove-btn'), function(el){
       el.addEventListener('click', function(e){
         e.stopPropagation();
+        hidePartnerInfoZoom();
         var row = parseInt(el.getAttribute('data-remove-row'), 10);
         deckState[row] = emptyRow();
         if (activeSlot === row) {

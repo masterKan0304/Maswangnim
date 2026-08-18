@@ -1045,7 +1045,7 @@ window.AGENTS_CARDS = {
       cost: 1,
       type: 'skill',
       grade: 'blue',
-      media: 'cards/리타/blue2.webp',
+      media: 'cards/티페라/blue2.webp',
       tooltip: '[ 보존 ]\n창조 카드 2장 드로우\n그 카드들의 무작위 효과 1턴간 2배',
       awakenings: [
         { cost: 1, type: 'skill', tooltip: '[ 보존 ]\n창조 카드 |3|장 드로우\n그 카드들의 무작위 효과 1턴간 2배' },
