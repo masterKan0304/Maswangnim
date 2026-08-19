@@ -229,6 +229,8 @@
   .fanart-row > section.block{flex:1;min-width:0;}
   .fanart-col{flex:1;min-width:0;display:flex;flex-direction:column;gap:16px;}
   .fanart-col > section.block{flex:1;min-width:0;}
+  section.fanart-box{padding-bottom:12px;}
+  #webtoonGrid .post-title,#calendarGrid .post-title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 
   /* 새 소식 / 자유게시판 인기글 / 이 덱 어때 제목 밑 구분선 */
   .block-divider{border:none;border-top:1px solid var(--line);margin:-8px 0 16px;}
@@ -950,17 +952,17 @@ document.getElementById('startBtn').addEventListener('click', function(){
 
     <!-- 팬아트 / 웹툰 / 캘린더 -->
     <div class="fanart-row">
-      <section class="block">
+      <section class="block fanart-box">
         <div class="block-head"><h2>팬아트</h2><a class="block-more" href="#">전체보기 ›</a></div>
         <div class="post-grid cols-2" id="fanartGrid"></div>
       </section>
 
       <div class="fanart-col">
-        <section class="block">
+        <section class="block fanart-box">
           <div class="block-head"><h2>웹툰</h2><a class="block-more" href="#">전체보기 ›</a></div>
           <div class="post-grid cols-2" id="webtoonGrid"></div>
         </section>
-        <section class="block">
+        <section class="block fanart-box">
           <div class="block-head"><h2>캘린더</h2><a class="block-more" href="#">전체보기 ›</a></div>
           <div class="post-grid cols-2" id="calendarGrid"></div>
         </section>
@@ -2256,12 +2258,12 @@ document.getElementById('startBtn').addEventListener('click', function(){
   ];
   document.getElementById('freeboardHotList').innerHTML = freeboardData.map(freeboardCompact).join('');
 
-  function postCard(o){
+  function postCard(o, noAuthor){
     return '<div class="post-card">'
       + '<div class="post-thumb"><img src="'+o.img+'" alt="" loading="lazy"></div>'
       + '<div class="post-body">'
         + '<div class="post-title">'+o.title+'</div>'
-        + '<div class="post-author">' + (o.official ? '<span class="official">OFFICIAL</span>' : '') + '<span class="writer">'+o.writer+'</span></div>'
+        + (noAuthor ? '' : '<div class="post-author">' + (o.official ? '<span class="official">OFFICIAL</span>' : '') + '<span class="writer">'+o.writer+'</span></div>')
         + '<div class="post-stats"><span>'+viewIcon+o.view+'</span><span>'+replyIcon+(o.comment||0)+'</span></div>'
       + '</div>'
     + '</div>';
@@ -2273,19 +2275,19 @@ document.getElementById('startBtn').addEventListener('click', function(){
     {writer:'검성드로잉',title:'하이데마리 극광검 러프',img:'main/fan3.png',view:'389',comment:9},
     {writer:'핑크문',title:'디아나 큐피드 컨셉아트',img:'main/fan4.png',view:'701',comment:24}
   ];
-  document.getElementById('fanartGrid').innerHTML = fanartData.map(postCard).join('');
+  document.getElementById('fanartGrid').innerHTML = fanartData.map(function(o){ return postCard(o); }).join('');
 
   var webtoonData = [
     {official:true,writer:'카오스 제로 나이트메어',title:'◤카오스 제로 나이트메어 4컷 만화 “레노아”편◢',img:'main/web1.png',view:'612',comment:8},
     {official:true,writer:'카오스 제로 나이트메어',title:'◤카오스 제로 나이트메어 4컷 만화 “치즈루”편◢',img:'main/web2.png',view:'548',comment:6}
   ];
-  document.getElementById('webtoonGrid').innerHTML = webtoonData.map(postCard).join('');
+  document.getElementById('webtoonGrid').innerHTML = webtoonData.map(function(o){ return postCard(o, true); }).join('');
 
   var calendarData = [
     {official:true,writer:'카오스 제로 나이트메어',title:'◤8월 캘린더 배경화면◢',img:'main/cal1.png',view:'420',comment:3},
     {official:true,writer:'카오스 제로 나이트메어',title:'◤7월 캘린더 배경화면◢',img:'main/cal2.png',view:'365',comment:2}
   ];
-  document.getElementById('calendarGrid').innerHTML = calendarData.map(postCard).join('');
+  document.getElementById('calendarGrid').innerHTML = calendarData.map(function(o){ return postCard(o, true); }).join('');
 
   var slides = [
     {t:'힐데의 작전 회의 이벤트', img:'https://d2x8kymwjom7h7.cloudfront.net/live/application_no/10009/partners-sns-api/CP커뮤니티멀티배너형_L_1360x280_힐데-이벤트_kr.jpg'},
