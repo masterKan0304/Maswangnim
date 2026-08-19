@@ -2908,18 +2908,20 @@ document.getElementById('startBtn').addEventListener('click', function(){
   }
 
   function lockedRealSourcesForRow(row, excludeType){
-    var locked = {};
+    var perItemSources = [];
     EQUIP_TYPES_ORDER.forEach(function(t){
       if (t === excludeType) return;
       var idx = row.equipment[t];
       if (idx === null || idx === undefined) return;
       var item = (window.EQUIPMENT_DATA || [])[idx];
       if (!item) return;
-      equipSourceList(item).forEach(function(s){
-        if (s && !EQUIP_SOURCE_EXCLUDE.hasOwnProperty(s)) locked[s] = true;
-      });
+      var real = equipSourceList(item).filter(function(s){ return s && !EQUIP_SOURCE_EXCLUDE.hasOwnProperty(s); });
+      if (real.length) perItemSources.push(real);
     });
-    return Object.keys(locked);
+    if (!perItemSources.length) return [];
+    return perItemSources.reduce(function(acc, list){
+      return acc.filter(function(s){ return list.indexOf(s) !== -1; });
+    });
   }
 
   // ============ 카오스 록 (장비 강화 / 특정 카드의 고정 획득처) ============

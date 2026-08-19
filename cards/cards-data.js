@@ -2888,7 +2888,7 @@ window.AGENTS_CARDS = {
       media: 'cards/칼리페/blue3.webp',
       tooltip: '실드 250%\n모든 적 강인도 피해 1',
       awakenings: [
-        { cost: 2, type: 'skill', tooltip: '실드 |300|%\n모든 적 강인도 피해 1\n|적 수만큼 피해감소 1' },
+        { cost: 2, type: 'skill', tooltip: '실드 |300|%\n모든 적 강인도 피해 1\n|적 수만큼 피해감소 1|' },
         { cost: 2, type: 'skill', tooltip: '실드 |300|%\n모든 적 강인도 피해 1\n|격파 상태인 적 취약 2|\n|아닐 시 약화 2|' },
         { cost: 2, type: 'skill', tooltip: '실드 |300|%\n모든 적 강인도 피해 |2|' },
         { cost: 2, type: 'skill', tooltip: '실드 250%\n모든 적 강인도 피해 1\n|핸드의 카드 수만큼 실드 획득량 +40%|' },
