@@ -237,7 +237,7 @@
 
   /* News: 좌측 대표 기사 1개 + 우측 컴팩트 리스트 최대 3개 */
   .news-layout{display:grid;grid-template-columns:1.1fr 1fr;gap:18px;}
-  .news-compact-list{display:flex;flex-direction:column;justify-content:space-between;height:100%;}
+  .news-compact-list{display:flex;flex-direction:column;}
   .news-compact{display:flex;justify-content:space-between;gap:12px;padding:4px 0 14px;border-bottom:1px solid var(--line);}
   .news-compact:last-child{padding-bottom:4px;border-bottom:none;}
   .news-compact .body{display:flex;flex-direction:column;gap:5px;min-width:0;flex:1;}
@@ -247,7 +247,7 @@
   .news-compact .meta .official{color:var(--blue-tag);font-weight:800;font-size:10.5px;}
   .news-compact .meta span{display:inline-flex;align-items:center;gap:3px;}
   .news-compact .meta svg{width:12px;height:12px;flex:none;}
-  .news-compact .thumb{width:86px;height:86px;border-radius:8px;object-fit:cover;flex:none;background:var(--page);}
+  .news-compact .thumb{width:96px;aspect-ratio:4/3;border-radius:8px;object-fit:cover;flex:none;background:var(--page);}
 
   .news-featured{display:flex;flex-direction:column;height:100%;}
   .news-featured-thumb{margin:0;border-radius:8px;}
@@ -919,7 +919,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
     <!-- 동영상 배너 -->
     <section class="block" style="padding:0;overflow:hidden;border:none;box-shadow:none;">
       <div class="media-row">
-        <div class="media-main"><iframe src="https://www.youtube.com/embed/tU9Y2xr9pRo?autoplay=1&mute=1&loop=1&playlist=tU9Y2xr9pRo&playsinline=1" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div>
+        <div class="media-main"><iframe src="https://www.youtube.com/embed/1P8l2DQp5vg?autoplay=1&mute=1&loop=1&playlist=1P8l2DQp5vg&playsinline=1" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div>
         <div class="media-minis">
           <div class="media-mini" style="background-image:url('main/banner_1.png');"></div>
           <div class="media-mini" style="background-image:url('main/banner_2.png');"></div>
@@ -2231,10 +2231,10 @@ document.getElementById('startBtn').addEventListener('click', function(){
   }
 
   var newsData = [
-    {official:true,writer:'카오스 제로 나이트메어',date:'07.29',img:'https://image.onstove.com/850x0/d2x8kymwjom7h7.cloudfront.net/live/application_no/10009/partners-sns-api/컴퍼넌트-0729_1785240677237.jpg',title:'07/29 (수) 업데이트 안내',excerpt:'모든 절망을 제로(0)로! 은하계 재해 시즌 4: 부서진 빛과 발톱 업데이트가 진행됩니다.',view:'2.7K',comment:0},
-    {official:true,writer:'카오스 제로 나이트메어',date:'07.30',img:'https://image.onstove.com/850x0/d2x8kymwjom7h7.cloudfront.net/live/application_no/96001/commnunity/bossImage_1785375234801540.png',title:'[공지] 7월 30일(목) 무점검 패치 진행 안내 (완료)',excerpt:'게임 내 확인된 현상을 수정하기 위한 패치가 진행됩니다.',view:'255',comment:0},
-    {official:true,writer:'카오스 제로 나이트메어',date:'07.29',img:'https://image.onstove.com/850x0/d2x8kymwjom7h7.cloudfront.net/live/application_no/96001/commnunity/bossImage_1785217948183506.png',title:'힐데 / 유니 확률업 구출 진행',excerpt:'신규 요원 전투원 힐데와 파트너 유니가 찾아옵니다.',view:'172',comment:0},
-    {official:true,writer:'카오스 제로 나이트메어',date:'07.29',img:'https://image.onstove.com/850x0/d2x8kymwjom7h7.cloudfront.net/live/application_no/96001/commnunity/bossImage_1785312069555808.png',badge:'공지',title:'[이슈] 07/29(수) 이후 확인된 현상 안내',excerpt:'현재까지 확인된 현상에 대해 안내드립니다.',view:'486',comment:0}
+    {official:true,writer:'카오스 제로 나이트메어',date:'08.19',img:'https://image.onstove.com/850x0/d2x8kymwjom7h7.cloudfront.net/live/application_no/10009/partners-sns-api/컴퍼넌트-0819.jpg',badge:'공지',title:'08/19(수) 업데이트 안내 (08/19 12:53 수정)',excerpt:'은하계 재해 시즌 4 2장 오픈과 대균열 개선 사항이 반영된 정기 업데이트가 진행됩니다.',view:'4K',comment:0},
+    {official:true,writer:'카오스 제로 나이트메어',date:'08.18',img:'https://image.onstove.com/850x0/d2x8kymwjom7h7.cloudfront.net/live/application_no/96001/commnunity/bossImage_1786682480723612.png',title:'[점검] 08월 19일 (수) 업데이트 점검 안내 (연장)',excerpt:'점검 시간이 3시간 연장되어 17시에 종료될 예정입니다.',view:'4.1K',comment:0},
+    {official:true,writer:'카오스 제로 나이트메어',date:'07.29',img:'https://image.onstove.com/850x0/d2x8kymwjom7h7.cloudfront.net/live/application_no/96001/commnunity/bossImage_1785312069555808.png',title:'[이슈] 07/29(수) 이후 확인된 현상 안내 (해결)',excerpt:'7/29 업데이트 이후 확인된 현상들이 순차 패치로 모두 수정되었습니다.',view:'956',comment:0},
+    {official:true,writer:'카오스 제로 나이트메어',date:'08.19',img:'https://image.onstove.com/850x0/d2x8kymwjom7h7.cloudfront.net/live/application_no/96001/commnunity/bossImage_1787028311027894.png',title:'아라벨라 / 리시니아 확률업 구출 진행',excerpt:'신규 요원 전투원 아라벨라와 파트너 리시니아가 찾아옵니다.',view:'130',comment:0}
   ];
   document.getElementById('newsGrid').innerHTML =
     newsFeatured(newsData[0])
@@ -2270,10 +2270,10 @@ document.getElementById('startBtn').addEventListener('click', function(){
   }
 
   var fanartData = [
-    {writer:'달빛채색',title:'아라벨라 그려봤어요',img:'main/fan1.png',view:'524',comment:12},
-    {writer:'네온스케치',title:'세레니엘 팬아트 완성!',img:'main/fan2.png',view:'913',comment:33},
-    {writer:'검성드로잉',title:'하이데마리 극광검 러프',img:'main/fan3.png',view:'389',comment:9},
-    {writer:'핑크문',title:'디아나 큐피드 컨셉아트',img:'main/fan4.png',view:'701',comment:24}
+    {writer:'하루원턴킬맨',title:'수영복 하루 그려봄',img:'main/fan1.png',view:'524',comment:12},
+    {writer:'그그림쟁이이',title:'윾키',img:'main/fan2.png',view:'913',comment:33},
+    {writer:'카제나나한판해요',title:'수영장에 간 미카',img:'main/fan3.png',view:'389',comment:9},
+    {writer:'슴니즌쏘구다',title:'리타 예뻐서 그려봤다',img:'main/fan4.png',view:'701',comment:24}
   ];
   document.getElementById('fanartGrid').innerHTML = fanartData.map(function(o){ return postCard(o); }).join('');
 
