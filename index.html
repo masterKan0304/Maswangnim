@@ -206,6 +206,7 @@
   /* post cards (News / 팬아트 / 요원정보 / 웹툰 / 캘린더) */
   .post-grid{display:grid;gap:14px;}
   .post-grid.cols-2{grid-template-columns:repeat(2,1fr);}
+  .post-grid .post-thumb{aspect-ratio:1/1;}
   .post-card{border:1px solid var(--line);border-radius:8px;overflow:hidden;display:flex;flex-direction:column;}
   .post-author{display:flex;align-items:center;gap:8px;padding:12px 14px 0;}
   .post-author .av{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#ffcaa8,#ff5714);flex:none;object-fit:cover;}
@@ -222,6 +223,15 @@
   .post-stats{display:flex;gap:12px;font-size:11.5px;color:var(--sub-dim);margin-top:auto;padding-top:6px;}
   .post-stats span{display:flex;align-items:center;gap:4px;}
   .post-stats svg{width:12px;height:12px;}
+
+  /* 팬아트(좌, 세로 2배) + 웹툰/캘린더(우, 세로 1배씩) */
+  .fanart-row{display:flex;gap:16px;align-items:stretch;}
+  .fanart-row > section.block{flex:1;min-width:0;}
+  .fanart-col{flex:1;min-width:0;display:flex;flex-direction:column;gap:16px;}
+  .fanart-col > section.block{flex:1;min-width:0;}
+
+  /* 새 소식 / 자유게시판 인기글 / 이 덱 어때 제목 밑 구분선 */
+  .block-divider{border:none;border-top:1px solid var(--line);margin:-8px 0 16px;}
 
   /* News: 좌측 대표 기사 1개 + 우측 컴팩트 리스트 최대 3개 */
   .news-layout{display:grid;grid-template-columns:1.1fr 1fr;gap:18px;}
@@ -512,6 +522,7 @@
     .post-grid.cols-2{grid-template-columns:1fr;}
     .news-layout{grid-template-columns:1fr;}
     .split-row{grid-template-columns:1fr;}
+    .fanart-row{flex-direction:column;}
     .media-row{grid-template-columns:1fr;}
     .content-row-wrap{margin-top:0;}
     .cover-inner{min-height:auto;padding-right:20px;padding-left:20px;}
@@ -918,6 +929,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
     <!-- News -->
     <section class="block">
       <div class="block-head"><h2>새 소식</h2><a class="block-more" href="#">전체보기 ›</a></div>
+      <hr class="block-divider">
       <div class="news-layout" id="newsGrid"></div>
     </section>
 
@@ -925,13 +937,34 @@ document.getElementById('startBtn').addEventListener('click', function(){
     <div class="split-row">
       <section class="block">
         <div class="block-head"><h2>자유게시판 인기글</h2><a class="block-more" href="#">전체보기 ›</a></div>
+        <hr class="block-divider">
         <div class="freeboard-list" id="freeboardHotList"></div>
       </section>
 
       <section class="block deckhot-block" id="deckHotSection">
         <div class="block-head"><h2>이 덱 어때</h2><a class="block-more" id="deckHotBoardLink" href="deckbuilder/">덱 빌딩 게시판 바로가기 ›</a></div>
+        <hr class="block-divider">
         <div class="deckhot-list" id="deckHotList"></div>
       </section>
+    </div>
+
+    <!-- 팬아트 / 웹툰 / 캘린더 -->
+    <div class="fanart-row">
+      <section class="block">
+        <div class="block-head"><h2>팬아트</h2><a class="block-more" href="#">전체보기 ›</a></div>
+        <div class="post-grid cols-2" id="fanartGrid"></div>
+      </section>
+
+      <div class="fanart-col">
+        <section class="block">
+          <div class="block-head"><h2>웹툰</h2><a class="block-more" href="#">전체보기 ›</a></div>
+          <div class="post-grid cols-2" id="webtoonGrid"></div>
+        </section>
+        <section class="block">
+          <div class="block-head"><h2>캘린더</h2><a class="block-more" href="#">전체보기 ›</a></div>
+          <div class="post-grid cols-2" id="calendarGrid"></div>
+        </section>
+      </div>
     </div>
 
     <!-- 전투원 정보 / 파트너 정보 -->
@@ -2222,6 +2255,37 @@ document.getElementById('startBtn').addEventListener('click', function(){
     {writer:'스샷수집가',title:'이번 업데이트 후기 정리해봤어요',img:'partner/가야_B.png',view:'967',comment:41}
   ];
   document.getElementById('freeboardHotList').innerHTML = freeboardData.map(freeboardCompact).join('');
+
+  function postCard(o){
+    return '<div class="post-card">'
+      + '<div class="post-author">' + (o.official ? '<span class="official">OFFICIAL</span>' : '') + '<span class="writer">'+o.writer+'</span></div>'
+      + '<div class="post-thumb"><img src="'+o.img+'" alt="" loading="lazy"></div>'
+      + '<div class="post-body">'
+        + '<div class="post-title">'+o.title+'</div>'
+        + '<div class="post-stats"><span>'+viewIcon+o.view+'</span><span>'+replyIcon+(o.comment||0)+'</span></div>'
+      + '</div>'
+    + '</div>';
+  }
+
+  var fanartData = [
+    {writer:'달빛채색',title:'아라벨라 그려봤어요',img:'main/fan1.png',view:'524',comment:12},
+    {writer:'네온스케치',title:'세레니엘 팬아트 완성!',img:'main/fan2.png',view:'913',comment:33},
+    {writer:'검성드로잉',title:'하이데마리 극광검 러프',img:'main/fan3.png',view:'389',comment:9},
+    {writer:'핑크문',title:'디아나 큐피드 컨셉아트',img:'main/fan4.png',view:'701',comment:24}
+  ];
+  document.getElementById('fanartGrid').innerHTML = fanartData.map(postCard).join('');
+
+  var webtoonData = [
+    {official:true,writer:'카오스 제로 나이트메어',title:'◤카오스 제로 나이트메어 4컷 만화 “레노아”편◢',img:'main/web1.png',view:'612',comment:8},
+    {official:true,writer:'카오스 제로 나이트메어',title:'◤카오스 제로 나이트메어 4컷 만화 “치즈루”편◢',img:'main/web2.png',view:'548',comment:6}
+  ];
+  document.getElementById('webtoonGrid').innerHTML = webtoonData.map(postCard).join('');
+
+  var calendarData = [
+    {official:true,writer:'카오스 제로 나이트메어',title:'◤8월 캘린더 배경화면◢',img:'main/cal1.png',view:'420',comment:3},
+    {official:true,writer:'카오스 제로 나이트메어',title:'◤7월 캘린더 배경화면◢',img:'main/cal2.png',view:'365',comment:2}
+  ];
+  document.getElementById('calendarGrid').innerHTML = calendarData.map(postCard).join('');
 
   var slides = [
     {t:'힐데의 작전 회의 이벤트', img:'https://d2x8kymwjom7h7.cloudfront.net/live/application_no/10009/partners-sns-api/CP커뮤니티멀티배너형_L_1360x280_힐데-이벤트_kr.jpg'},
