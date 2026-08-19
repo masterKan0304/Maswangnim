@@ -63,7 +63,7 @@ window.AGENTS_CARDS = {
     {
       name: '비명을 질러 봐',
       cost: 1,
-      type: 'skill',
+      type: 'attack',
       grade: 'blue',
       media: 'cards/아라벨라/blue1.webp',
       tooltip: '[ 주도 ]\n모든 적 피해 40%, 균열 2\n체력이 가장 높은 적 균열 4',
@@ -83,7 +83,7 @@ window.AGENTS_CARDS = {
     {
       name: '공허한 선고',
       cost: 1,
-      type: 'skill',
+      type: 'attack',
       grade: 'blue',
       media: 'cards/아라벨라/blue3.webp',
       tooltip: '모든 적 피해 40%, 균열 2\n대상에게 부여된 균열 발동',
@@ -93,7 +93,7 @@ window.AGENTS_CARDS = {
     {
       name: '가학적 속박',
       cost: 1,
-      type: 'skill',
+      type: 'attack',
       grade: 'yellow',
       media: 'cards/아라벨라/yellow.webp',
       tooltip: '피해 60%, 대상에게 부여된 균열 2회 발동\n대상에게 부여된 디버프의 종류 당 타격 1회 추가 (최대 3회)',

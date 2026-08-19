@@ -258,64 +258,23 @@
   .split-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;}
 
   /* 이 덱 어때 (덱 빌딩 게시판 HOT 게시물 미리보기) */
-  .deckhot-carousel{display:flex;align-items:center;gap:12px;}
-  .deckhot-nav{flex:none;width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:var(--surface-2);
-    color:var(--sub);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s;}
-  .deckhot-nav:hover{background:var(--line);}
-  .deckhot-nav:disabled{opacity:.3;cursor:default;pointer-events:none;}
-  .deckhot-nav svg{width:15px;height:15px;}
-  .deckhot-card{flex:1;min-width:0;display:grid;grid-template-columns:1.15fr 1fr;gap:22px;
-    border:1px solid var(--line);border-radius:10px;padding:20px;cursor:pointer;
-    transition:border-color .15s, opacity .3s ease, transform .3s ease;}
-  .deckhot-card:hover{border-color:#d6d6d6;}
-  .deckhot-card.anim-out-next{opacity:0;transform:translateX(-18px);}
-  .deckhot-card.anim-out-prev{opacity:0;transform:translateX(18px);}
-  .deckhot-card.anim-in-next{opacity:0;transform:translateX(18px);}
-  .deckhot-card.anim-in-prev{opacity:0;transform:translateX(-18px);}
-  .deckhot-left{display:flex;flex-direction:column;min-width:0;}
-  .deckhot-title{font-size:16px;font-weight:900;color:var(--ink);line-height:1.35;margin-bottom:8px;
+  .deckhot-list{display:flex;flex-direction:column;gap:10px;}
+  .deckhot-post{border:1px solid var(--line);border-radius:10px;padding:14px 16px;cursor:pointer;transition:border-color .15s;}
+  .deckhot-post:hover{border-color:#d6d6d6;}
+  .deckhot-title{font-size:13.5px;font-weight:800;color:var(--ink);line-height:1.4;margin-bottom:10px;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .deckhot-content{font-size:12.5px;color:var(--sub);line-height:1.6;white-space:pre-line;
-    display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:14px;}
-  .deckhot-author{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--sub-dim);margin-bottom:16px;}
-  .deckhot-author-avatar{width:18px;height:18px;border-radius:50%;flex:none;background:linear-gradient(135deg,#ffcaa8,#ff5714);}
-  .deckhot-goto-btn{margin-top:auto;align-self:flex-start;background:var(--orange);color:#fff;font-size:12.5px;font-weight:800;
-    padding:9px 18px;border-radius:8px;border:none;display:inline-flex;align-items:center;gap:5px;}
-  .deckhot-goto-btn:hover{background:var(--orange-dim);}
-  .deckhot-empty{color:var(--sub);font-size:13px;padding:30px 0;text-align:center;grid-column:1/-1;}
+  .deckhot-empty{color:var(--sub);font-size:13px;padding:30px 0;text-align:center;}
 
-  .deckhot-agents{display:flex;gap:10px;}
-  .deckhot-agent{flex:1;min-width:0;position:relative;aspect-ratio:220/360;border-radius:8px;overflow:hidden;background:#dcdcdc;}
-  .deckhot-agent-empty{background:var(--surface-2);}
+  .deckhot-agents{display:flex;gap:8px;margin-bottom:10px;}
+  .deckhot-agent{flex:1;min-width:0;aspect-ratio:1/1;border-radius:8px;overflow:hidden;background:var(--surface-2);}
   .deckhot-agent-img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;-webkit-user-drag:none;}
-  .deckhot-agent-badges{position:absolute;top:6px;left:6px;z-index:6;display:flex;flex-direction:column;gap:4px;}
-  .deckhot-agent-badge{width:18px;height:18px;border-radius:5px;background:rgba(15,12,12,.6);display:flex;align-items:center;justify-content:center;}
-  .deckhot-agent-badge img{width:77.8%;height:77.8%;object-fit:contain;display:block;}
-  .deckhot-agent-badge.attr{overflow:hidden;}
-  .deckhot-agent-badge.attr img{width:100%;height:100%;object-fit:cover;}
-  .deckhot-agent-black-band{position:absolute;left:0;right:0;bottom:5px;height:26px;background:rgba(0,0,0,.5);z-index:1;}
-  .deckhot-agent-gradient{position:absolute;left:0;right:0;bottom:5px;height:18px;z-index:2;}
-  .deckhot-agent-gradient[data-grade="4"]{background:linear-gradient(to top, rgba(255,181,10,.55) 0%, rgba(255,181,10,0) 100%);}
-  .deckhot-agent-gradient[data-grade="5"]{
-    background:linear-gradient(to right, #202a6e 0%, #2b5fd6 33%, #9c2e8c 66%, #6f3fa0 100%);
-    -webkit-mask-image:linear-gradient(to top, #000 0%, transparent 100%);
-    mask-image:linear-gradient(to top, #000 0%, transparent 100%);
-    opacity:.65;
-  }
-  .deckhot-agent-grade-band{position:absolute;left:0;right:0;bottom:0;height:5px;background-repeat:no-repeat;background-size:100% 100%;z-index:3;}
-  .deckhot-agent-name{position:absolute;right:6px;bottom:10px;z-index:6;color:#fff;font-size:12px;font-weight:800;
-    text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000,0 0 4px rgba(0,0,0,.6);}
-  .deckhot-agent-partner{position:absolute;left:5px;bottom:13px;z-index:6;width:24px;height:24px;border-radius:50%;
-    overflow:hidden;border:1.5px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.55);background:#333;}
-  .deckhot-agent-partner img{width:100%;height:100%;object-fit:cover;display:block;}
 
-  .deckhot-dots{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:14px;}
-  .deckhot-dot{width:6px;height:6px;border-radius:50%;background:var(--line);border:none;padding:0;cursor:pointer;transition:background .15s,width .15s;}
-  .deckhot-dot.active{background:var(--orange);width:16px;border-radius:3px;}
-
-  @media (max-width:640px){
-    .deckhot-card{grid-template-columns:1fr;}
-  }
+  .deckhot-footer{display:flex;align-items:center;gap:12px;}
+  .deckhot-author{display:flex;align-items:center;gap:6px;min-width:0;flex:none;}
+  .deckhot-author-avatar{width:18px;height:18px;border-radius:50%;flex:none;background:linear-gradient(135deg,#ffcaa8,#ff5714);}
+  .deckhot-author-name{font-size:11.5px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:90px;}
+  .deckhot-stat{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--sub-dim);flex:none;}
+  .deckhot-stat svg{width:12px;height:12px;flex:none;}
 
   /* 전투원/파트너 정보 showcase */
   section.agent-block{background:var(--cover-bg);border-color:rgba(255,255,255,.1);}
@@ -947,20 +906,18 @@ document.getElementById('startBtn').addEventListener('click', function(){
       <div class="news-layout" id="newsGrid"></div>
     </section>
 
-    <!-- 이 덱 어때 (덱 빌딩 게시판 HOT 게시물 미리보기) -->
-    <section class="block deckhot-block" id="deckHotSection">
-      <div class="block-head"><h2>이 덱 어때</h2><a class="block-more" id="deckHotBoardLink" href="deckbuilder/">덱 빌딩 게시판 바로가기 ›</a></div>
-      <div class="deckhot-carousel">
-        <button type="button" class="deckhot-nav prev" id="deckHotPrevBtn" aria-label="이전 게시물">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 6l-6 6 6 6"/></svg>
-        </button>
-        <div class="deckhot-card" id="deckHotCard"></div>
-        <button type="button" class="deckhot-nav next" id="deckHotNextBtn" aria-label="다음 게시물">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg>
-        </button>
-      </div>
-      <div class="deckhot-dots" id="deckHotDots"></div>
-    </section>
+    <!-- 자유게시판 인기글 / 이 덱 어때 -->
+    <div class="split-row">
+      <section class="block">
+        <div class="block-head"><h2>자유게시판 인기글</h2><a class="block-more" href="#">전체보기 ›</a></div>
+        <div class="news-compact-list" id="freeboardHotList"></div>
+      </section>
+
+      <section class="block deckhot-block" id="deckHotSection">
+        <div class="block-head"><h2>이 덱 어때</h2><a class="block-more" id="deckHotBoardLink" href="deckbuilder/">덱 빌딩 게시판 바로가기 ›</a></div>
+        <div class="deckhot-list" id="deckHotList"></div>
+      </section>
+    </div>
 
     <!-- 전투원 정보 / 파트너 정보 -->
     <section class="block agent-block">
@@ -2231,6 +2188,21 @@ document.getElementById('startBtn').addEventListener('click', function(){
     newsFeatured(newsData[0])
     + '<div class="news-compact-list">' + newsData.slice(1,4).map(newsCompact).join('') + '</div>';
 
+  function freeboardCompact(o){
+    return '<div class="news-compact"><div class="body">'
+      + '<div class="title">'+o.title+'</div>'
+      + (o.excerpt ? '<div class="excerpt">'+o.excerpt+'</div>' : '')
+      + '<div class="meta"><span>'+o.writer+'</span><span>'+viewIcon+o.view+'</span><span>'+replyIcon+(o.comment||0)+'</span></div>'
+      + '</div>' + (o.img ? '<img class="thumb" src="'+o.img+'" alt="" loading="lazy">' : '') + '</div>';
+  }
+
+  var freeboardData = [
+    {writer:'제로화신',title:'이번 신캐 아라벨라 조합 좀 짜봤는데 다들 어떻게 생각하세요?',excerpt:'균열 스택 쌓는 맛이 있는데 생각보다 초반 화력이 아쉽네요. 다들 어떤 조합으로 쓰시나요?',view:'842',comment:27},
+    {writer:'그림쟁이토끼',title:'팬아트 그려봤어요 (테네브리아)',excerpt:'무대 위 테네브리아 그려봤습니다. 다들 마음에 드셨으면 좋겠어요!',img:'agents/테네브리아_B.png',view:'1.5K',comment:63},
+    {writer:'뉴비각성',title:'초보 질문) 파트너 강화 우선순위가 어떻게 되나요?',excerpt:'입문한 지 얼마 안 됐는데 재련이랑 각인 중에 뭐부터 해야 할지 감이 안 잡히네요.',view:'530',comment:19}
+  ];
+  document.getElementById('freeboardHotList').innerHTML = freeboardData.map(freeboardCompact).join('');
+
   var slides = [
     {t:'힐데의 작전 회의 이벤트', img:'https://d2x8kymwjom7h7.cloudfront.net/live/application_no/10009/partners-sns-api/CP커뮤니티멀티배너형_L_1360x280_힐데-이벤트_kr.jpg'},
     {t:'빌드 프리셋 공유 이벤트', img:'https://d2x8kymwjom7h7.cloudfront.net/live/application_no/10009/partners-sns-api/CP커뮤니티멀티배너형_L_1360x280_덱빌딩-프리셋-이벤트_kr.jpg'},
@@ -2284,143 +2256,64 @@ document.getElementById('startBtn').addEventListener('click', function(){
 
 <script>
 (function(){
-  var JOB_ICON = {
-    striker: 'agents/striker.webp',
-    ranger: 'agents/ranger.webp',
-    vanguard: 'agents/vanguard.webp',
-    hunter: 'agents/hunter.png',
-    controller: 'agents/controller.webp',
-    psionic: 'agents/psionic.webp'
-  };
-  var ATTR_ICON = {
-    passion: 'agents/passion.webp',
-    justice: 'agents/justice.webp',
-    order: 'agents/order.webp',
-    instinct: 'agents/instinct.webp',
-    void: 'agents/void.webp'
-  };
   var MAX_AGENT_SLOTS = 3;
-  var ROTATE_MS = 8000;
-  var ANIM_MS = 280;
 
   var agentsById = {};
   (window.AGENTS_DATA || []).forEach(function(a){ agentsById[a.id] = a; });
-  var partnersById = {};
-  (window.PARTNER_DATA || []).forEach(function(p){ partnersById[p.id] = p; });
 
-  var section = document.getElementById('deckHotSection');
-  var cardEl = document.getElementById('deckHotCard');
-  var dotsEl = document.getElementById('deckHotDots');
-  var prevBtn = document.getElementById('deckHotPrevBtn');
-  var nextBtn = document.getElementById('deckHotNextBtn');
-  if (!section) return;
+  var viewIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>';
+  var likeIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.35-9.5-8.5C.8 8.8 2.6 5 6.3 5c2 0 3.3 1 3.7 2 0.4-1 1.7-2 3.7-2 3.7 0 5.5 3.8 3.8 7.5C19 16.65 12 21 12 21z"/></svg>';
+  var commentIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.5 8.5 0 0 1-12.5 7.5L3 20l1-4.5A8.5 8.5 0 1 1 21 11.5z"/></svg>';
+
+  var listEl = document.getElementById('deckHotList');
+  if (!listEl) return;
+
+  var HOT_COUNT = 3;
+
+  function formatCount(n){
+    n = n || 0;
+    if (n < 1000) return String(n);
+    var k = Math.round(n / 100) / 10;
+    return (k % 1 === 0 ? k.toFixed(0) : k.toFixed(1)) + 'K';
+  }
 
   var POSTS = (window.DECKBUILDER_POSTS || []).slice().reverse();
-  var HOT_COUNT = 4;
   var hotPosts = POSTS.slice().sort(function(a, b){ return ((b.view||0) + (b.like||0)) - ((a.view||0) + (a.like||0)); }).slice(0, HOT_COUNT);
 
   if (!hotPosts.length) {
-    cardEl.innerHTML = '<div class="deckhot-empty">아직 게시된 덱이 없습니다.</div>';
-    prevBtn.disabled = true;
-    nextBtn.disabled = true;
+    listEl.innerHTML = '<div class="deckhot-empty">아직 게시된 덱이 없습니다.</div>';
     return;
   }
 
   function renderAgentSlot(row){
     var a = row ? agentsById[row.agentId] : null;
-    if (!a) return '<div class="deckhot-agent deckhot-agent-empty"></div>';
-    var illust = 'agents/' + a.name + '_C.png';
-    var gradeBand = 'agents/grade_' + a.grade + '_tag.png';
-    var partner = row.partnerId ? partnersById[row.partnerId] : null;
-    var partnerIcon = partner ? (partner.icon || partner.illust) : '';
-    var partnerHtml = partnerIcon ? '<div class="deckhot-agent-partner"><img src="' + partnerIcon + '" alt=""></div>' : '';
+    if (!a) return '<div class="deckhot-agent"></div>';
+    return '<div class="deckhot-agent"><img class="deckhot-agent-img" src="' + a.icon + '" alt="' + a.name + '" draggable="false" oncontextmenu="return false"></div>';
+  }
+
+  function renderPost(post){
+    var slotRows = (post.rows || []).slice(0, MAX_AGENT_SLOTS);
+    while (slotRows.length < MAX_AGENT_SLOTS) slotRows.push(null);
     return (
-      '<div class="deckhot-agent">' +
-        '<img class="deckhot-agent-img" src="' + illust + '" alt="' + a.name + '" draggable="false" oncontextmenu="return false">' +
-        '<div class="deckhot-agent-badges">' +
-          '<div class="deckhot-agent-badge"><img src="' + JOB_ICON[a.job] + '" alt=""></div>' +
-          '<div class="deckhot-agent-badge attr"><img src="' + ATTR_ICON[a.attribute] + '" alt=""></div>' +
+      '<div class="deckhot-post" data-post-id="' + (post.id ? String(post.id).replace(/"/g,'&quot;') : '') + '">' +
+        '<div class="deckhot-title">' + post.title + '</div>' +
+        '<div class="deckhot-agents">' + slotRows.map(renderAgentSlot).join('') + '</div>' +
+        '<div class="deckhot-footer">' +
+          '<div class="deckhot-author"><div class="deckhot-author-avatar"></div><span class="deckhot-author-name">' + post.author + '</span></div>' +
+          '<span class="deckhot-stat">' + viewIcon + formatCount(post.view) + '</span>' +
+          '<span class="deckhot-stat">' + likeIcon + formatCount(post.like) + '</span>' +
+          '<span class="deckhot-stat">' + commentIcon + formatCount(post.comment) + '</span>' +
         '</div>' +
-        '<div class="deckhot-agent-black-band"></div>' +
-        '<div class="deckhot-agent-gradient" data-grade="' + a.grade + '"></div>' +
-        '<div class="deckhot-agent-grade-band" style="background-image:url(\'' + gradeBand + '\')"></div>' +
-        partnerHtml +
-        '<div class="deckhot-agent-name">' + a.name + '</div>' +
       '</div>'
     );
   }
 
-  function renderCard(post){
-    var slotRows = (post.rows || []).slice(0, MAX_AGENT_SLOTS);
-    while (slotRows.length < MAX_AGENT_SLOTS) slotRows.push(null);
-    var content = String(post.content || '').replace(/\n/g, ' ');
-    return (
-      '<div class="deckhot-left">' +
-        '<div class="deckhot-title">' + post.title + '</div>' +
-        '<div class="deckhot-content">' + content + '</div>' +
-        '<div class="deckhot-author"><div class="deckhot-author-avatar"></div>' + post.author + '</div>' +
-        '<button type="button" class="deckhot-goto-btn">덱 보러가기</button>' +
-      '</div>' +
-      '<div class="deckhot-agents">' + slotRows.map(renderAgentSlot).join('') + '</div>'
-    );
-  }
-
-  function renderDots(){
-    dotsEl.innerHTML = hotPosts.map(function(p, i){
-      return '<button type="button" class="deckhot-dot' + (i === current ? ' active' : '') + '" data-idx="' + i + '"></button>';
-    }).join('');
-    Array.prototype.forEach.call(dotsEl.querySelectorAll('[data-idx]'), function(btn){
-      btn.addEventListener('click', function(){ goTo(parseInt(btn.getAttribute('data-idx'), 10)); });
+  listEl.innerHTML = hotPosts.map(renderPost).join('');
+  Array.prototype.forEach.call(listEl.querySelectorAll('.deckhot-post[data-post-id]'), function(el){
+    el.addEventListener('click', function(){
+      location.href = 'deckbuilder/post/?id=' + encodeURIComponent(el.getAttribute('data-post-id'));
     });
-  }
-
-  var current = 0;
-  var animTimer = null;
-
-  function applyPost(){
-    var post = hotPosts[current];
-    cardEl.innerHTML = renderCard(post);
-    cardEl.onclick = function(){ location.href = 'deckbuilder/post/?id=' + encodeURIComponent(post.id); };
-    renderDots();
-    var multi = hotPosts.length > 1;
-    prevBtn.style.display = multi ? '' : 'none';
-    nextBtn.style.display = multi ? '' : 'none';
-    dotsEl.style.display = multi ? '' : 'none';
-  }
-
-  function render(dir){
-    if (!dir) { applyPost(); return; }
-    if (animTimer) clearTimeout(animTimer);
-    cardEl.classList.remove('anim-in-next', 'anim-in-prev');
-    cardEl.classList.add(dir > 0 ? 'anim-out-next' : 'anim-out-prev');
-    animTimer = setTimeout(function(){
-      applyPost();
-      cardEl.classList.remove('anim-out-next', 'anim-out-prev');
-      cardEl.classList.add(dir > 0 ? 'anim-in-next' : 'anim-in-prev');
-      void cardEl.offsetWidth;
-      cardEl.classList.remove('anim-in-next', 'anim-in-prev');
-    }, ANIM_MS);
-  }
-
-  function goTo(i, dir){
-    var nextIdx = ((i % hotPosts.length) + hotPosts.length) % hotPosts.length;
-    if (nextIdx === current) return;
-    if (dir === undefined) dir = nextIdx > current ? 1 : -1;
-    current = nextIdx;
-    render(dir);
-  }
-
-  var timer = null;
-  function resetTimer(){
-    if (timer) clearInterval(timer);
-    if (hotPosts.length > 1) timer = setInterval(function(){ goTo(current + 1, 1); }, ROTATE_MS);
-  }
-
-  prevBtn.addEventListener('click', function(){ goTo(current - 1, -1); resetTimer(); });
-  nextBtn.addEventListener('click', function(){ goTo(current + 1, 1); resetTimer(); });
-
-  applyPost();
-  resetTimer();
+  });
 })();
 </script>
 
