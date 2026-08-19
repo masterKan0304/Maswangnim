@@ -35,6 +35,80 @@
 // ============================================================
 
 window.AGENTS_CARDS = {
+  arabella: [
+    {
+      name: '대각선 베기',
+      cost: 1,
+      type: 'attack',
+      grade: 'gray',
+      media: 'cards/아라벨라/attack.webp',
+      tooltip: '모든 적 피해 60%'
+    },
+    {
+      name: '대각선 베기',
+      cost: 1,
+      type: 'attack',
+      grade: 'gray',
+      media: 'cards/아라벨라/attack.webp',
+      tooltip: '모든 적 피해 60%'
+    },
+    {
+      name: '진홍빛 영역',
+      cost: 1,
+      type: 'skill',
+      grade: 'gray',
+      media: 'cards/아라벨라/skill.webp',
+      tooltip: '실드 100%'
+    },
+    {
+      name: '비명을 질러 봐',
+      cost: 1,
+      type: 'skill',
+      grade: 'blue',
+      media: 'cards/아라벨라/blue1.webp',
+      tooltip: '[ 주도 ]\n모든 적 피해 40%, 균열 2\n체력이 가장 높은 적 균열 4',
+      awakenings: [
+      ]
+    },
+    {
+      name: '관찰 유희',
+      cost: 0,
+      type: 'skill',
+      grade: 'blue',
+      media: 'cards/아라벨라/blue2.webp',
+      tooltip: '[ 유일 ]\n균열 확장 1\n적 하나 당 1턴간 대상이 받는 피해 +20%',
+      awakenings: [
+      ]
+    },
+    {
+      name: '공허한 선고',
+      cost: 1,
+      type: 'skill',
+      grade: 'blue',
+      media: 'cards/아라벨라/blue3.webp',
+      tooltip: '모든 적 피해 40%, 균열 2\n대상에게 부여된 균열 발동',
+      awakenings: [
+      ]
+    },
+    {
+      name: '가학적 속박',
+      cost: 1,
+      type: 'skill',
+      grade: 'yellow',
+      media: 'cards/아라벨라/yellow.webp',
+      tooltip: '피해 60%, 대상에게 부여된 균열 2회 발동\n대상에게 부여된 디버프의 종류 당 타격 1회 추가 (최대 3회)',
+      awakenings: [
+      ]
+    },
+    {
+      name: '해체의 미학',
+      cost: 1,
+      type: 'attack',
+      grade: 'purple',
+      media: 'cards/아라벨라/purple.webp',
+      tooltip: '[ 유일 ]\n모든 적 피해 200%\n대상에게 부여된 디버프의 종류 당 피해량 15% 증가 (최대 120%)\n균열 확장 : 기본 피해량 2배로 증가'
+    }
+  ],
   hilde: [
     {
       name: '멀티샷',

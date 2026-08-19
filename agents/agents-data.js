@@ -21,6 +21,19 @@
 
 window.AGENTS_DATA = [
   {
+    id: 'arabella',
+    name: '아라벨라',
+    job: 'striker',
+    attribute: 'instinct',
+    grade: 5,
+    illust: 'agents/아라벨라_B.png',
+    icon: 'agents/아라벨라_A.webp',
+    tagline: '-',
+    description: '-\n-\n-\n-',
+    cardTagline: '디버프 부여 및 공격 강화 특화',
+    cardDescription: '[비명을 질러 봐], [관찰 유희] 카드로 적에게 디버프를\n부여하고 [균열], [균열 확장] 등 해로운 효과의 종류 수를\n활용해 [가학적 속박], [해체의 미학] 카드의\n피해량을 대폭 증가시킬 수 있습니다.'
+  },
+  {
     id: 'hilde',
     name: '힐데',
     job: 'ranger',
