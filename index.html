@@ -3329,6 +3329,10 @@ document.getElementById('startBtn').addEventListener('click', function(){
   renderInfo();
   renderIconRow();
   renderFilterTags();
-  preloadImages();
+  if (window.requestIdleCallback) {
+    requestIdleCallback(preloadImages, { timeout: 4000 });
+  } else {
+    setTimeout(preloadImages, 2000);
+  }
 })();
 </script>
