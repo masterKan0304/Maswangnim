@@ -37,7 +37,7 @@
 window.AGENTS_CARDS = {
   arabella: [
     {
-      name: '대각선 베기',
+      name: '사선 베기',
       cost: 1,
       type: 'attack',
       grade: 'gray',
@@ -45,7 +45,7 @@ window.AGENTS_CARDS = {
       tooltip: '모든 적 피해 60%'
     },
     {
-      name: '대각선 베기',
+      name: '사선 베기',
       cost: 1,
       type: 'attack',
       grade: 'gray',
@@ -53,7 +53,7 @@ window.AGENTS_CARDS = {
       tooltip: '모든 적 피해 60%'
     },
     {
-      name: '진홍빛 영역',
+      name: '진홍의 영역',
       cost: 1,
       type: 'skill',
       grade: 'gray',
