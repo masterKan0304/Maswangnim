@@ -198,7 +198,7 @@
 
   /* video banner */
   .media-row{display:grid;grid-template-columns:2fr 1fr;background:#000;}
-  .media-main{aspect-ratio:16/9;background:#000;}
+  .media-main{aspect-ratio:16/9;background:#000;contain:layout paint;will-change:transform;transform:translateZ(0);}
   .media-main video,.media-main iframe{width:100%;height:100%;border:0;display:block;object-fit:cover;background:#000;}
   .media-minis{display:flex;flex-direction:column;}
   .media-mini{flex:1;background-size:cover;background-position:center;min-height:0;}
