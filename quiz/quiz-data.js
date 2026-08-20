@@ -30,6 +30,51 @@
 
 window.QUIZ_CARDS = [
   {
+    name: '비명을 질러 봐',
+    cost: 1,
+    attribute: 'instinct',
+    type: 'attack',
+    rarity: 'blue',
+    illust: 'cards/아라벨라/blue1.webp',
+    tooltip: '[ 주도 ]\n모든 적 피해 40%, 균열 2\n체력이 가장 높은 적에게 균열 4'
+  },
+  {
+    name: '관찰 유희',
+    cost: 0,
+    attribute: 'instinct',
+    type: 'skill',
+    rarity: 'blue',
+    illust: 'cards/아라벨라/blue2.webp',
+    tooltip: '[ 유일 ]\n균열 확장 1\n적 수만큼 1턴간 자신의 피해량 +20%'
+  },
+  {
+    name: '공허한 선고',
+    cost: 1,
+    attribute: 'instinct',
+    type: 'attack',
+    rarity: 'blue',
+    illust: 'cards/아라벨라/blue3.webp',
+    tooltip: '모든 적 피해 40%,;균열 2\n자신의 균열 발동'
+  },
+  {
+    name: '가학적 속박',
+    cost: 1,
+    attribute: 'instinct',
+    type: 'attack',
+    rarity: 'yellow',
+    illust: 'cards/아라벨라/yellow.webp',
+    tooltip: '피해 60%,;자신의 균열 2회 발동\n대상의 해로운 효과 종류 수만큼 타격 1회 추가 (최대 3회)'
+  },
+  {
+    name: '해체의 미학',
+    cost: 1,
+    attribute: 'instinct',
+    type: 'attack',
+    rarity: 'purple',
+    illust: 'cards/아라벨라/purple.webp',
+    tooltip: '[ 유일 ]\n모든 적 피해 200%\n대상의 해로운 효과 종류 수만큼 피해량 15% 증가 (최대 120%)\n균열 확장 : 피해 효과 2배'
+  },
+  {
     name: '퀴버 로딩',
     rarity: 'blue',
     attribute: 'instinct',

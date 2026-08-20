@@ -66,8 +66,13 @@ window.AGENTS_CARDS = {
       type: 'attack',
       grade: 'blue',
       media: 'cards/아라벨라/blue1.webp',
-      tooltip: '[ 주도 ]\n모든 적 피해 40%, 균열 2\n체력이 가장 높은 적 균열 4',
+      tooltip: '[ 주도 ]\n모든 적 피해 40%, 균열 2\n체력이 가장 높은 적에게 균열 4',
       awakenings: [
+        { cost: 1, type: 'attack', tooltip: '[ 주도 ]\n모든 적 피해 |60|%, 균열 |3|\n체력이 가장 높은 적에게 균열 |6|' },
+        { cost: 1, type: 'attack', tooltip: '[ 주도 ]\n모든 적 피해 |60|%, 균열 |3|\n|1턴간 자신의 공격 카드 피해량 50% 증가|' },
+        { cost: 1, type: 'attack', tooltip: '[ 주도 ]\n모든 적 피해 |60|%, 균열 2\n|대상의 해로운 효과 종류 수만큼 균열 1 (최대 5)|' },
+        { cost: 1, type: 'attack', tooltip: '[ 주도 ]\n모든 적 피해 |60|%, 균열 |3|\n|자신의 카드 드로우 2|' },
+        { cost: 1, type: 'attack', tooltip: '[ 주도 ]\n모든 적 피해 |60|%, 균열 2, |고통 4, 작열 2|' }
       ]
     },
     {
@@ -76,8 +81,13 @@ window.AGENTS_CARDS = {
       type: 'skill',
       grade: 'blue',
       media: 'cards/아라벨라/blue2.webp',
-      tooltip: '[ 유일 ]\n균열 확장 1\n적 하나 당 1턴간 대상이 받는 피해 +20%',
+      tooltip: '[ 유일 ]\n균열 확장 1\n적 수만큼 1턴간 자신의 피해량 +20%',
       awakenings: [
+        { cost: 0, type: 'skill', tooltip: '[ 유일 ]\n균열 확장 1\n적 수만큼 1턴간 자신의 피해량 +|30|%' },
+        { cost: 0, type: 'skill', tooltip: '[ 유일 ]\n균열 확장 1\n|대상의 해로운 효과 종류 수만큼 1턴간 자신의 피해량 +20% (최대 120%)|' },
+        { cost: 1, type: 'skill', tooltip: '|[ 유일 / 주도 ]|\n균열 확장 1\n|모든 적 균열 2, 취약 2|\n1턴간 |자신의 공격 카드| 피해량 |50% 증가|' },
+        { cost: 0, type: 'skill', tooltip: '[ 유일 ]\n균열 확장 1\n1턴간 자신의 피해량 +|80|%, |아군이 적 처치 시 대상의 균열 무작위 적에게 전이|' },
+        { cost: 0, type: 'upgrade', tooltip: '|[ 유일 / 개막 ]|\n|턴 시작 시 체력이 가장 높은 적에게 균열 확장 1, 균열 6|' }
       ]
     },
     {
@@ -86,8 +96,13 @@ window.AGENTS_CARDS = {
       type: 'attack',
       grade: 'blue',
       media: 'cards/아라벨라/blue3.webp',
-      tooltip: '모든 적 피해 40%, 균열 2\n대상에게 부여된 균열 발동',
+      tooltip: '모든 적 피해 40%, 균열 2\n자신의 균열 발동',
       awakenings: [
+        { cost: 1, type: 'attack', tooltip: '|[ 유일 ]|\n모든 적 피해 |60|%, 균열 |3|\n|균열 확장 : 아군의 균열 발동|' },
+        { cost: 1, type: 'attack', tooltip: '모든 적 피해 |60|%, 균열 |3|\n자신의 균열 발동\n|균열 확장 : 자신의 균열 발동|' },
+        { cost: 2, type: 'attack', tooltip: '|[ 주도 ]|\n모든 적 피해 |360|%, 균열 2\n|처치 : 모든 적 자신의 균열 발동 (턴당 1회)|' },
+        { cost: 1, type: 'attack', tooltip: '모든 적 피해 |60|%, 균열 2, |고통 4|\n|균열 확장 : 아군의 고통 발동|' },
+        { cost: 1, type: 'attack', tooltip: '모든 적 피해 |100|%, |아군의 균열 제거|\n|그 수 × 2만큼 균열 확장 대상에게 부여|' }
       ]
     },
     {
@@ -96,8 +111,13 @@ window.AGENTS_CARDS = {
       type: 'attack',
       grade: 'yellow',
       media: 'cards/아라벨라/yellow.webp',
-      tooltip: '피해 60%, 대상에게 부여된 균열 2회 발동\n대상에게 부여된 디버프의 종류 당 타격 1회 추가 (최대 3회)',
+      tooltip: '피해 60%, 자신의 균열 2회 발동\n대상의 해로운 효과 종류 수만큼 타격 1회 추가 (최대 3회)',
       awakenings: [
+        { cost: 1, type: 'attack', tooltip: '|[ 유일 ]|\n피해 |100|%\n대상의 해로운 효과 종류 수만큼 타격 1회 추가 (최대 3회)\n|균열 확장 : 아군의 균열 발동|' },
+        { cost: 1, type: 'attack', tooltip: '피해 60% × |4|, 자신의 균열 2회 발동\n|균열 확장 : 자신의 카드 드로우 1|' },
+        { cost: 1, type: 'attack', tooltip: '피해 |240|%, \\자신의 균열 발동\\\n|처치 : 이 카드 핸드로 이동 (턴당 2회)|' },
+        { cost: 2, type: 'attack', tooltip: '|[ 주도 ]|\n|무작위 적들에게| 피해 \\40\\% × |4|, |타격당 균열 2|\n|이 카드의 비용이 감소했다면 타격 1회 추가|' },
+        { cost: 1, type: 'attack', tooltip: '피해 60%, 자신의 균열 2회 발동\n|이번 턴 자신의 균열 발동 횟수만큼 타격 1회 추가 (최대 5회)|' }
       ]
     },
     {
@@ -106,7 +126,7 @@ window.AGENTS_CARDS = {
       type: 'attack',
       grade: 'purple',
       media: 'cards/아라벨라/purple.webp',
-      tooltip: '[ 유일 ]\n모든 적 피해 200%\n대상에게 부여된 디버프의 종류 당 피해량 15% 증가 (최대 120%)\n균열 확장 : 기본 피해량 2배로 증가'
+      tooltip: '[ 유일 ]\n모든 적 피해 200%\n대상의 해로운 효과 종류 수만큼 피해량 15% 증가 (최대 120%)\n균열 확장 : 피해 효과 2배'
     }
   ],
   hilde: [
