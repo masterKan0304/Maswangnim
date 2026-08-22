@@ -750,6 +750,8 @@
     font-size:12.5px;font-weight:700;padding:8px 18px;border-radius:20px;cursor:pointer;transition:background .15s;}
   .quiz-sudoku-tool-btn:hover{background:rgba(255,255,255,.2);}
   .quiz-sudoku-tool-btn:disabled{opacity:.4;cursor:default;pointer-events:none;}
+  .quiz-sudoku-tool-btn-danger{background:rgba(255,82,82,.18);border-color:rgba(255,82,82,.5);color:#ff8f8f;}
+  .quiz-sudoku-tool-btn-danger:hover{background:rgba(255,82,82,.3);}
   .quiz-sudoku-next-btn{background:var(--orange);border:1px solid var(--orange);color:#fff;
     font-size:12.5px;font-weight:800;padding:8px 20px;border-radius:20px;cursor:pointer;transition:background .15s;}
   .quiz-sudoku-next-btn:hover{background:var(--orange-dim);}
@@ -763,9 +765,10 @@
   .quiz-sudoku-zoom-btn:hover{background:rgba(255,255,255,.22);color:#fff;}
   .quiz-sudoku-zoom-btn:disabled{opacity:.3;cursor:default;pointer-events:none;}
 
-  .quiz-sudoku-job-filter{display:flex;justify-content:center;gap:10px;margin-bottom:18px;}
+  .quiz-sudoku-job-filter{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:18px;}
+  .quiz-sudoku-job-filter-label{font-size:12px;font-weight:700;color:rgba(255,255,255,.6);margin-right:2px;}
   .quiz-sudoku-job-btn{position:relative;width:42px;height:42px;border-radius:9px;border:1px solid rgba(255,255,255,.3);
-    background:rgba(255,255,255,.06);cursor:pointer;padding:7px;transition:opacity .15s,background .15s;}
+    background:rgba(255,255,255,.06);cursor:pointer;padding:4px;transition:opacity .15s,background .15s;}
   .quiz-sudoku-job-btn img{width:100%;height:100%;object-fit:contain;display:block;}
   .quiz-sudoku-job-btn:hover{background:rgba(255,255,255,.14);}
   .quiz-sudoku-job-btn.active{border-color:var(--orange);background:var(--orange-soft);}
@@ -795,22 +798,23 @@
   .quiz-sudoku-cell-plus{color:rgba(255,255,255,.3);font-size:min(6cqw,22px);font-weight:300;pointer-events:none;}
   .quiz-sudoku-cell-job-badge{position:absolute;top:3%;left:3%;width:20%;height:20%;border-radius:4px;
     background:rgba(15,12,12,.8);box-sizing:border-box;display:flex;align-items:center;justify-content:center;
-    overflow:visible;pointer-events:none;}
-  .quiz-sudoku-cell-job-badge img{width:150%;height:150%;object-fit:contain;image-rendering:crisp-edges;}
+    overflow:visible;pointer-events:none;border:1px solid transparent;}
+  .quiz-sudoku-cell-job-badge img{width:135%;height:135%;object-fit:contain;}
+  .quiz-sudoku-cell-job-badge.quiz-sudoku-badge-highlight{border-color:#3ddc74;box-shadow:0 0 4px #3ddc74,0 0 9px rgba(61,220,116,.8);}
   .quiz-sudoku-cell-lock{position:absolute;top:3%;right:3%;width:18%;height:18%;border-radius:50%;
     background:#000;display:flex;align-items:center;justify-content:center;box-sizing:border-box;
-    color:#ff5252;pointer-events:none;}
-  .quiz-sudoku-cell-lock svg{width:62%;height:62%;}
+    color:#fff;pointer-events:none;}
+  .quiz-sudoku-cell-lock svg{width:74%;height:74%;}
   .quiz-sudoku-cell-pencil{position:absolute;left:2%;right:2%;bottom:2%;display:flex;justify-content:center;
     gap:2%;flex-wrap:wrap;pointer-events:none;}
-  .quiz-sudoku-cell-pencil img{width:14%;object-fit:contain;border-radius:2px;}
-  .quiz-sudoku-cell-pencil img.quiz-sudoku-pencil-highlight{box-shadow:0 0 0 1px #ff5252,0 0 4px #ff5252,0 0 8px rgba(255,82,82,.8);opacity:1 !important;}
+  .quiz-sudoku-cell-pencil img{width:21%;object-fit:contain;border-radius:2px;}
+  .quiz-sudoku-cell-pencil img.quiz-sudoku-pencil-highlight{box-shadow:0 0 0 1px #3ddc74,0 0 4px #3ddc74,0 0 8px rgba(61,220,116,.8);opacity:1 !important;}
 
-  .quiz-sudoku-cell-tooltip{position:fixed;z-index:20010;display:none;align-items:center;gap:8px;
-    background:#2a2425;border:1px solid rgba(255,255,255,.25);border-radius:8px;padding:8px 12px;
-    font-size:12.5px;color:#fff;font-weight:700;pointer-events:none;box-shadow:0 8px 20px rgba(0,0,0,.5);}
+  .quiz-sudoku-cell-tooltip{position:fixed;z-index:20010;display:none;align-items:center;gap:10px;
+    background:#2a2425;border:1px solid rgba(255,255,255,.25);border-radius:10px;padding:10px 16px;
+    font-size:16px;color:#fff;font-weight:700;pointer-events:none;box-shadow:0 8px 20px rgba(0,0,0,.5);}
   .quiz-sudoku-cell-tooltip.show{display:flex;}
-  .quiz-sudoku-cell-tooltip img{width:18px;height:18px;object-fit:contain;flex:none;}
+  .quiz-sudoku-cell-tooltip img{width:28px;height:28px;object-fit:contain;flex:none;}
 
   .quiz-sudoku-clear-banner{display:none;position:absolute;inset:0;align-items:center;justify-content:center;
     font-family:var(--font-display);font-weight:900;font-size:40px;color:#3ddc74;
@@ -822,7 +826,9 @@
     background:rgba(34,29,30,.7);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
     transition:opacity .25s;}
   .quiz-popup-sudoku-cell.quiz-sudoku-peek{opacity:0;pointer-events:none;}
-  .quiz-eye-btn{position:absolute;top:10px;right:44px;background:none;border:none;color:rgba(255,255,255,.6);
+  #quizSudokuCellOverlay{transition:background-color .25s;}
+  #quizSudokuCellOverlay.quiz-sudoku-peek-bg{background-color:transparent;}
+  .quiz-eye-btn{position:absolute;top:14px;right:44px;background:none;border:none;color:rgba(255,255,255,.6);
     line-height:1;cursor:pointer;padding:4px;}
   .quiz-eye-btn svg{width:19px;height:19px;display:block;}
   .quiz-eye-btn:hover{color:#fff;}
@@ -837,7 +843,6 @@
     background:rgba(255,255,255,.06);cursor:pointer;padding:6px;opacity:.4;transition:opacity .15s,background .15s;}
   .quiz-sudoku-pencil-btn img{width:100%;height:100%;object-fit:contain;display:block;}
   .quiz-sudoku-pencil-btn:hover{background:rgba(255,255,255,.14);}
-  .quiz-sudoku-pencil-btn.state-candidate{opacity:.75;border-style:dashed;}
   .quiz-sudoku-pencil-btn.state-confirmed{opacity:1;border-style:solid;background:rgba(255,255,255,.14);}
   .quiz-sudoku-clear-cell-btn{display:block;width:100%;margin-top:20px;padding:11px 0;border-radius:8px;
     background:rgba(255,82,82,.18);border:1px solid rgba(255,82,82,.5);color:#ff8f8f;font-size:13px;
@@ -2540,6 +2545,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
   var quizSilQuantityFilter = '10';
 
   function renderCategoryButtons3(){
+    var pool = quizSilCategoryFilter === 'all' ? QUIZ_CHAR_POOL : QUIZ_CHAR_POOL.filter(function(c){ return c.category === quizSilCategoryFilter; });
     Array.prototype.forEach.call(quizCategoryPopup3.querySelectorAll('[data-cat3]'), function(btn){
       btn.classList.toggle('active', btn.getAttribute('data-cat3') === quizSilCategoryFilter);
     });
@@ -2547,8 +2553,15 @@ document.getElementById('startBtn').addEventListener('click', function(){
       btn.classList.toggle('active', btn.getAttribute('data-time3') === quizSilTimeFilter);
     });
     Array.prototype.forEach.call(quizCategoryPopup3.querySelectorAll('[data-qty3]'), function(btn){
-      btn.classList.toggle('active', btn.getAttribute('data-qty3') === quizSilQuantityFilter);
+      var qty = btn.getAttribute('data-qty3');
+      btn.disabled = parseInt(qty, 10) > pool.length;
+      btn.classList.toggle('active', qty === quizSilQuantityFilter);
     });
+    var selectedBtn3 = quizCategoryPopup3.querySelector('[data-qty3="' + quizSilQuantityFilter + '"]');
+    if (selectedBtn3 && selectedBtn3.disabled) {
+      quizSilQuantityFilter = '10';
+      renderCategoryButtons3();
+    }
   }
   Array.prototype.forEach.call(quizCategoryPopup3.querySelectorAll('[data-cat3]'), function(btn){
     btn.addEventListener('click', function(){
@@ -2584,7 +2597,6 @@ document.getElementById('startBtn').addEventListener('click', function(){
   }
 
   var QUIZ_SIL_CHOICE_COUNT = 5;
-  var QUIZ_SIL_RECENT_LIMIT = 20;
 
   function pickSilChoices(correctChar, categoryFilter, rng, excludeNames){
     var scoped = categoryFilter === 'all' ? QUIZ_CHAR_POOL : QUIZ_CHAR_POOL.filter(function(c){ return c.category === categoryFilter; });
@@ -2715,8 +2727,9 @@ document.getElementById('startBtn').addEventListener('click', function(){
     quizSilState.answered = false;
     quizSilState.startTime = performance.now();
 
+    var recentLimit = Math.floor(quizSilSet.cards.length / 3);
     quizSilSet.recentAnswers.push(char.name);
-    if (quizSilSet.recentAnswers.length > QUIZ_SIL_RECENT_LIMIT) quizSilSet.recentAnswers.shift();
+    if (quizSilSet.recentAnswers.length > recentLimit) quizSilSet.recentAnswers.shift();
 
     var timeoutTag = document.getElementById('quizSilTimeoutTag');
     if (timeoutTag) timeoutTag.classList.remove('show');
@@ -3048,6 +3061,16 @@ document.getElementById('startBtn').addEventListener('click', function(){
     return conflictSet;
   }
 
+  function sudokuJobDone(job){
+    if (sudokuJobPlacedCount(job) !== quizSudokuSet.size) return false;
+    var conflicts = sudokuComputeConflicts();
+    for (var i = 0; i < quizSudokuSet.placed.length; i++) {
+      var c = quizSudokuSet.placed[i];
+      if (c && c.job === job && conflicts[i]) return false;
+    }
+    return true;
+  }
+
   var quizSudokuZoom = 100;
 
   function startSudokuGame(mode, size){
@@ -3140,8 +3163,8 @@ document.getElementById('startBtn').addEventListener('click', function(){
       }
     } else {
       el.innerHTML =
-        '<button type="button" class="quiz-sudoku-tool-btn" id="quizSudokuUndoBtn">되돌리기</button>' +
-        '<button type="button" class="quiz-sudoku-tool-btn" id="quizSudokuResetBtn">초기화</button>' +
+        '<button type="button" class="quiz-sudoku-tool-btn" id="quizSudokuUndoBtn"' + (quizSudokuSet.history.length ? '' : ' disabled') + '>되돌리기</button>' +
+        '<button type="button" class="quiz-sudoku-tool-btn quiz-sudoku-tool-btn-danger" id="quizSudokuResetBtn">초기화</button>' +
         zoomHtml;
       document.getElementById('quizSudokuUndoBtn').addEventListener('click', sudokuUndo);
       document.getElementById('quizSudokuResetBtn').addEventListener('click', sudokuReset);
@@ -3201,8 +3224,8 @@ document.getElementById('startBtn').addEventListener('click', function(){
     var el = document.getElementById('quizSudokuJobFilter');
     if (!el) return;
     var locked = quizSudokuSet.completed;
-    el.innerHTML = quizSudokuSet.jobs.map(function(j){
-      var done = sudokuJobPlacedCount(j) === quizSudokuSet.size;
+    el.innerHTML = '<span class="quiz-sudoku-job-filter-label">직업 필터</span>' + quizSudokuSet.jobs.map(function(j){
+      var done = sudokuJobDone(j);
       var active = quizSudokuSet.filterJob === j;
       var dim = quizSudokuSet.filterJob && !active;
       return '<button type="button" class="quiz-sudoku-job-btn' + (dim ? ' dim' : '') + (active ? ' active' : '') + '" data-job="' + j + '"' + (locked ? ' disabled' : '') + '>' +
@@ -3229,7 +3252,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
       var state = marks[j] || 0;
       if (!state) return;
       var highlight = quizSudokuSet.filterJob === j;
-      html += '<img src="' + QUIZ_JOB_ICON[j] + '" class="' + (highlight ? 'quiz-sudoku-pencil-highlight' : '') + '" style="opacity:' + (state === 1 ? '.5' : '1') + '" alt="">';
+      html += '<img src="' + QUIZ_JOB_ICON[j] + '" class="' + (highlight ? 'quiz-sudoku-pencil-highlight' : '') + '" alt="">';
     });
     return html ? '<div class="quiz-sudoku-cell-pencil">' + html + '</div>' : '';
   }
@@ -3253,8 +3276,9 @@ document.getElementById('startBtn').addEventListener('click', function(){
       if (quizSudokuSet.filterJob && ch && ch.job !== quizSudokuSet.filterJob) classes.push('quiz-sudoku-dim');
       var inner;
       if (ch) {
+        var badgeHighlight = quizSudokuSet.filterJob === ch.job;
         inner = '<img class="quiz-sudoku-cell-img" src="' + ch.illust + '" alt="" draggable="false" oncontextmenu="return false">' +
-          '<span class="quiz-sudoku-cell-job-badge"><img src="' + QUIZ_JOB_ICON[ch.job] + '" alt=""></span>' +
+          '<span class="quiz-sudoku-cell-job-badge' + (badgeHighlight ? ' quiz-sudoku-badge-highlight' : '') + '"><img src="' + QUIZ_JOB_ICON[ch.job] + '" alt=""></span>' +
           (fixed ? '<span class="quiz-sudoku-cell-lock">' + QUIZ_LOCK_ICON_SVG + '</span>' : '');
       } else {
         inner = '<div class="quiz-sudoku-cell-plus">+</div>' + renderSudokuCellPencilHtml(idx);
@@ -3288,6 +3312,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
       quizSudokuSet.placed[idx] = null;
     }
     quizSudokuSet.history.push({ idx: idx, prevChar: prevChar });
+    renderSudokuTopbar();
     renderSudokuJobFilter();
     renderSudokuGrid();
     checkSudokuCompletion();
@@ -3300,6 +3325,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
     if (curChar) delete quizSudokuSet.usedNames[curChar.name];
     quizSudokuSet.placed[last.idx] = last.prevChar;
     if (last.prevChar) quizSudokuSet.usedNames[last.prevChar.name] = true;
+    renderSudokuTopbar();
     renderSudokuJobFilter();
     renderSudokuGrid();
   }
@@ -3317,6 +3343,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
     }
     quizSudokuSet.usedNames = usedNames;
     quizSudokuSet.history = [];
+    renderSudokuTopbar();
     renderSudokuJobFilter();
     renderSudokuGrid();
   }
@@ -3363,9 +3390,11 @@ document.getElementById('startBtn').addEventListener('click', function(){
 
   function sudokuPeekStart(){
     quizSudokuCellPopup.classList.add('quiz-sudoku-peek');
+    quizSudokuCellOverlay.classList.add('quiz-sudoku-peek-bg');
   }
   function sudokuPeekEndOnce(){
     quizSudokuCellPopup.classList.remove('quiz-sudoku-peek');
+    quizSudokuCellOverlay.classList.remove('quiz-sudoku-peek-bg');
     document.removeEventListener('mouseup', sudokuPeekEndOnce);
     document.removeEventListener('touchend', sudokuPeekEndOnce);
   }
@@ -3473,13 +3502,13 @@ document.getElementById('startBtn').addEventListener('click', function(){
     if (!row) return;
     row.innerHTML = quizSudokuSet.jobs.map(function(j){
       var state = marks[j] || 0;
-      var cls = state === 1 ? 'state-candidate' : (state === 2 ? 'state-confirmed' : '');
+      var cls = state === 1 ? 'state-confirmed' : '';
       return '<button type="button" class="quiz-sudoku-pencil-btn ' + cls + '" data-job="' + j + '"><img src="' + QUIZ_JOB_ICON[j] + '" alt=""></button>';
     }).join('');
     Array.prototype.forEach.call(row.querySelectorAll('.quiz-sudoku-pencil-btn'), function(btn){
       btn.addEventListener('click', function(){
         var job = btn.getAttribute('data-job');
-        marks[job] = ((marks[job] || 0) + 1) % 3;
+        marks[job] = ((marks[job] || 0) + 1) % 2;
         renderSudokuPencilRow();
         renderSudokuGrid();
       });
