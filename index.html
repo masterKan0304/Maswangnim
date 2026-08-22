@@ -3092,7 +3092,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
       placed: placed, pencil: pencil, usedNames: usedNames, history: [],
       filterJob: null, startTime: 0, timerInterval: null, completed: false
     };
-    quizSudokuZoom = 100;
+    quizSudokuZoom = size === 6 ? 150 : 100;
     hideAllQuizPopups();
     quizGamePopup4.classList.add('active');
     openOverlay();
