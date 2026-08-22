@@ -3300,18 +3300,38 @@ document.getElementById('startBtn').addEventListener('click', function(){
     });
   }
 
+  function sudokuClearMatchingPencils(idx, job){
+    var units = sudokuUnitIndices(quizSudokuSet.size).filter(function(u){ return u.indexOf(idx) !== -1; });
+    var cleared = [];
+    var seen = {};
+    units.forEach(function(unit){
+      unit.forEach(function(i){
+        if (i === idx || seen[i]) return;
+        seen[i] = true;
+        var marks = quizSudokuSet.pencil[i];
+        if (marks && marks[job]) {
+          cleared.push({ idx: i, job: job, state: marks[job] });
+          delete marks[job];
+        }
+      });
+    });
+    return cleared;
+  }
+
   function sudokuApplyAction(action){
     var idx = action.idx;
     var prevChar = quizSudokuSet.placed[idx];
     if (prevChar) delete quizSudokuSet.usedNames[prevChar.name];
+    var clearedPencils = [];
     if (action.type === 'place') {
       quizSudokuSet.placed[idx] = action.char;
       quizSudokuSet.usedNames[action.char.name] = true;
       quizSudokuSet.pencil[idx] = {};
+      clearedPencils = sudokuClearMatchingPencils(idx, action.char.job);
     } else {
       quizSudokuSet.placed[idx] = null;
     }
-    quizSudokuSet.history.push({ idx: idx, prevChar: prevChar });
+    quizSudokuSet.history.push({ idx: idx, prevChar: prevChar, clearedPencils: clearedPencils });
     renderSudokuTopbar();
     renderSudokuJobFilter();
     renderSudokuGrid();
@@ -3325,6 +3345,12 @@ document.getElementById('startBtn').addEventListener('click', function(){
     if (curChar) delete quizSudokuSet.usedNames[curChar.name];
     quizSudokuSet.placed[last.idx] = last.prevChar;
     if (last.prevChar) quizSudokuSet.usedNames[last.prevChar.name] = true;
+    if (last.clearedPencils) {
+      last.clearedPencils.forEach(function(cp){
+        if (!quizSudokuSet.pencil[cp.idx]) quizSudokuSet.pencil[cp.idx] = {};
+        quizSudokuSet.pencil[cp.idx][cp.job] = cp.state;
+      });
+    }
     renderSudokuTopbar();
     renderSudokuJobFilter();
     renderSudokuGrid();
