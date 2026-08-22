@@ -731,13 +731,15 @@
   .quiz-sil-silhouette-box{flex:none;width:230px;aspect-ratio:220/360;border-radius:10px;overflow:hidden;background:#4a4442;}
   .quiz-sil-silhouette-img{width:100%;height:100%;object-fit:cover;display:block;filter:brightness(0);transition:filter .3s;}
   .quiz-sil-silhouette-img.revealed{filter:none;}
+  .quiz-sil-silhouette-img.quiz-sil-no-transition{transition:none;}
   .quiz-sil-choices{flex:1;min-width:0;display:flex;flex-direction:column;gap:12px;}
   .quiz-sil-choice-btn{position:relative;flex:1;border-radius:10px;border:1px solid rgba(255,255,255,.3);
-    background:rgba(255,255,255,.08);color:#fff;font-size:15px;font-weight:800;cursor:pointer;transition:background .15s;overflow:hidden;}
+    background:rgba(255,255,255,.08);color:#fff;font-size:18px;font-weight:800;cursor:pointer;transition:background .15s;overflow:hidden;}
   .quiz-sil-choice-btn:hover{background:rgba(255,255,255,.16);}
   .quiz-sil-choice-btn:disabled{cursor:default;}
   .quiz-sil-choice-btn.quiz-match-correct{background:rgba(74,222,128,.12);}
   .quiz-sil-choice-btn.quiz-match-wrong{background:rgba(255,82,82,.12);}
+  .quiz-sil-choice-btn .quiz-match-result-tag{justify-content:flex-start;padding-left:16px;}
 
   @media (max-width:900px){
     .quiz-popup-game{width:94vw;padding:18px;}
@@ -1376,7 +1378,18 @@ document.getElementById('startBtn').addEventListener('click', function(){
     document.getElementById('quizMatchHelpCloseBtn').addEventListener('click', closeMsg);
   }
 
-  quizBannerBtn.addEventListener('click', showMain);
+  var quizImgPreloadTriggered = false;
+  function preloadQuizImages(){
+    if (quizImgPreloadTriggered) return;
+    quizImgPreloadTriggered = true;
+    QUIZ_CARDS_POOL.forEach(function(c){ if (c.illust) { var img = new Image(); img.src = c.illust; } });
+    QUIZ_CHAR_POOL.forEach(function(c){ var img = new Image(); img.src = c.illust; });
+  }
+  quizBannerBtn.addEventListener('click', function(){
+    showMain();
+    if (window.requestIdleCallback) requestIdleCallback(preloadQuizImages, { timeout: 3000 });
+    else setTimeout(preloadQuizImages, 500);
+  });
   quizMainCloseBtn.addEventListener('click', closeOverlay);
   document.getElementById('quizCategoryCloseBtn').addEventListener('click', closeOverlay);
   document.getElementById('quizCategoryCloseBtn2').addEventListener('click', closeOverlay);
@@ -2366,7 +2379,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
     var cards = shuffleArray(pool).slice(0, qty);
     quizSilSet = {
       cards: cards, index: 0, correctCount: 0, totalScore: 0,
-      timeLimit: parseInt(quizSilTimeFilter, 10), category: quizSilCategoryFilter
+      timeLimit: parseInt(quizSilTimeFilter, 10), category: quizSilCategoryFilter, recentAnswers: []
     };
     startSilGame('free');
   });
@@ -2375,11 +2388,20 @@ document.getElementById('startBtn').addEventListener('click', function(){
     return (dateSeed() % 2 === 0) ? 'agent' : 'partner';
   }
 
-  function pickSilChoices(correctChar, categoryFilter, rng){
+  var QUIZ_SIL_CHOICE_COUNT = 5;
+  var QUIZ_SIL_RECENT_LIMIT = 20;
+
+  function pickSilChoices(correctChar, categoryFilter, rng, excludeNames){
     var scoped = categoryFilter === 'all' ? QUIZ_CHAR_POOL : QUIZ_CHAR_POOL.filter(function(c){ return c.category === categoryFilter; });
-    var pool = scoped.filter(function(c){ return c !== correctChar; });
+    var needed = QUIZ_SIL_CHOICE_COUNT - 1;
+    var pool = scoped.filter(function(c){ return c !== correctChar && (!excludeNames || excludeNames.indexOf(c.name) === -1); });
     var shuffled = rng ? seededShuffle(pool, rng) : shuffleArray(pool);
-    var distractors = shuffled.slice(0, 3);
+    var distractors = shuffled.slice(0, needed);
+    if (distractors.length < needed) {
+      var fallbackPool = scoped.filter(function(c){ return c !== correctChar && distractors.indexOf(c) === -1; });
+      var fallbackShuffled = rng ? seededShuffle(fallbackPool, rng) : shuffleArray(fallbackPool);
+      distractors = distractors.concat(fallbackShuffled.slice(0, needed - distractors.length));
+    }
     var choices = distractors.concat([correctChar]);
     return rng ? seededShuffle(choices, rng) : shuffleArray(choices);
   }
@@ -2417,7 +2439,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
       var cat = silDailyCategory();
       var pool = QUIZ_CHAR_POOL.filter(function(c){ return c.category === cat; });
       var picked = seededShuffle(pool, rng).slice(0, Math.min(5, pool.length));
-      quizSilSet = { cards: picked, index: 0, correctCount: 0, totalScore: 0, timeLimit: 10, dailyRng: rng, category: cat };
+      quizSilSet = { cards: picked, index: 0, correctCount: 0, totalScore: 0, timeLimit: 10, dailyRng: rng, category: cat, recentAnswers: [] };
     }
     quizSilState = { mode: mode, phase: 'pregame', answered: false, choices: [], correctIdx: -1, startTime: 0 };
     hideAllQuizPopups();
@@ -2440,7 +2462,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
       '</div>' +
       '<div class="quiz-sil-wrap" id="quizSilWrap">' +
         '<div class="quiz-sil-body">' +
-          '<div class="quiz-sil-silhouette-box"><img class="quiz-sil-silhouette-img" id="quizSilImg" src="" alt="" draggable="false" oncontextmenu="return false"></div>' +
+          '<div class="quiz-sil-silhouette-box"><img class="quiz-sil-silhouette-img" id="quizSilImg" alt="" draggable="false" oncontextmenu="return false"></div>' +
           '<div class="quiz-sil-choices" id="quizSilChoices"></div>' +
         '</div>' +
         '<div class="quiz-match-pregame-overlay" id="quizSilPregameOverlay"></div>' +
@@ -2492,11 +2514,14 @@ document.getElementById('startBtn').addEventListener('click', function(){
   function renderSilQuestion(){
     var char = quizSilSet.cards[quizSilSet.index];
     var rng = (quizSilState.mode === 'daily' && quizSilSet.dailyRng) ? quizSilSet.dailyRng : null;
-    var choices = pickSilChoices(char, quizSilSet.category, rng);
+    var choices = pickSilChoices(char, quizSilSet.category, rng, quizSilSet.recentAnswers);
     quizSilState.choices = choices;
     quizSilState.correctIdx = choices.indexOf(char);
     quizSilState.answered = false;
     quizSilState.startTime = performance.now();
+
+    quizSilSet.recentAnswers.push(char.name);
+    if (quizSilSet.recentAnswers.length > QUIZ_SIL_RECENT_LIMIT) quizSilSet.recentAnswers.shift();
 
     var timeoutTag = document.getElementById('quizSilTimeoutTag');
     if (timeoutTag) timeoutTag.classList.remove('show');
@@ -2505,7 +2530,13 @@ document.getElementById('startBtn').addEventListener('click', function(){
     if (promptEl) promptEl.textContent = '';
 
     var img = document.getElementById('quizSilImg');
-    if (img) { img.src = char.illust; img.classList.remove('revealed'); }
+    if (img) {
+      img.classList.add('quiz-sil-no-transition');
+      img.classList.remove('revealed');
+      img.src = char.illust;
+      void img.offsetWidth;
+      img.classList.remove('quiz-sil-no-transition');
+    }
 
     var choicesEl = document.getElementById('quizSilChoices');
     choicesEl.innerHTML = choices.map(function(c, i){
@@ -2566,7 +2597,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
     var img = document.getElementById('quizSilImg');
     if (img) img.classList.add('revealed');
     var promptEl = document.getElementById('quizSilPrompt');
-    if (promptEl) promptEl.textContent = correctChar.name;
+    if (promptEl) promptEl.textContent = '정답 : ' + correctChar.name;
 
     var choicesEl = document.getElementById('quizSilChoices');
     Array.prototype.forEach.call(choicesEl.querySelectorAll('.quiz-sil-choice-btn'), function(el, i){
