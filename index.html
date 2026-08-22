@@ -836,6 +836,8 @@
   .quiz-sudoku-cell-input{width:100%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.3);
     border-radius:8px;padding:10px 12px;font-size:13.5px;color:#fff;box-sizing:border-box;}
   .quiz-sudoku-cell-input::placeholder{color:rgba(255,255,255,.4);}
+  .quiz-sudoku-cell-error{color:#ff5252;font-size:12px;font-weight:700;margin-top:8px;min-height:14px;opacity:0;transition:opacity 1s linear;}
+  .quiz-sudoku-cell-error.no-transition{transition:none;}
   .quiz-sudoku-autocomplete-item-job{width:18px;height:18px;object-fit:contain;flex:none;}
   .quiz-sudoku-pencil-section{margin-top:20px;}
   .quiz-sudoku-pencil-row{display:flex;gap:8px;justify-content:center;margin-top:10px;}
@@ -1340,6 +1342,11 @@ document.getElementById('startBtn').addEventListener('click', function(){
     <div class="quiz-category-row">
       <button type="button" class="quiz-category-btn" data-size4="3">3 x 3</button>
       <button type="button" class="quiz-category-btn" data-size4="6">6 x 6</button>
+    </div>
+    <div class="quiz-category-section-title">캐릭터 이름 자동 완성 기능</div>
+    <div class="quiz-category-row">
+      <button type="button" class="quiz-category-btn" data-autocomplete4="off">비활성화</button>
+      <button type="button" class="quiz-category-btn" data-autocomplete4="on">활성화</button>
     </div>
     <button type="button" class="quiz-action-btn quiz-category-start-btn" id="quizCategoryStartBtn4">시작</button>
   </div>
@@ -2878,14 +2885,24 @@ document.getElementById('startBtn').addEventListener('click', function(){
   }
 
   var quizSudokuSizeFilter = '3';
+  var quizSudokuAutocompleteFilter = 'on';
   function renderCategoryButtons4(){
     Array.prototype.forEach.call(quizCategoryPopup4.querySelectorAll('[data-size4]'), function(btn){
       btn.classList.toggle('active', btn.getAttribute('data-size4') === quizSudokuSizeFilter);
+    });
+    Array.prototype.forEach.call(quizCategoryPopup4.querySelectorAll('[data-autocomplete4]'), function(btn){
+      btn.classList.toggle('active', btn.getAttribute('data-autocomplete4') === quizSudokuAutocompleteFilter);
     });
   }
   Array.prototype.forEach.call(quizCategoryPopup4.querySelectorAll('[data-size4]'), function(btn){
     btn.addEventListener('click', function(){
       quizSudokuSizeFilter = btn.getAttribute('data-size4');
+      renderCategoryButtons4();
+    });
+  });
+  Array.prototype.forEach.call(quizCategoryPopup4.querySelectorAll('[data-autocomplete4]'), function(btn){
+    btn.addEventListener('click', function(){
+      quizSudokuAutocompleteFilter = btn.getAttribute('data-autocomplete4');
       renderCategoryButtons4();
     });
   });
@@ -3090,7 +3107,8 @@ document.getElementById('startBtn').addEventListener('click', function(){
     quizSudokuSet = {
       mode: mode, size: size, jobs: puzzle.jobs, fixedMask: puzzle.fixedMask,
       placed: placed, pencil: pencil, usedNames: usedNames, history: [],
-      filterJob: null, startTime: 0, timerInterval: null, completed: false
+      filterJob: null, startTime: 0, timerInterval: null, completed: false,
+      autocompleteEnabled: mode === 'daily' ? true : (quizSudokuAutocompleteFilter === 'on')
     };
     quizSudokuZoom = size === 6 ? 150 : 100;
     hideAllQuizPopups();
@@ -3436,6 +3454,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
         '<input type="text" class="quiz-sudoku-cell-input" id="quizSudokuCellInput" placeholder="캐릭터 이름을 입력하세요" autocomplete="off">' +
         '<div class="quiz-autocomplete" id="quizSudokuAutocomplete"></div>' +
       '</div>' +
+      '<div class="quiz-sudoku-cell-error" id="quizSudokuCellError"></div>' +
       '<div class="quiz-sudoku-pencil-section">' +
         '<div class="quiz-category-section-title">연필 메모</div>' +
         '<div class="quiz-sudoku-pencil-row" id="quizSudokuPencilRow"></div>' +
@@ -3465,6 +3484,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
     var input = document.getElementById('quizSudokuCellInput');
     input.addEventListener('input', function(){
       quizSudokuAutocompleteIdx = -1;
+      hideSudokuCellError();
       renderSudokuAutocomplete(input.value.trim());
     });
     input.addEventListener('keydown', function(e){
@@ -3482,6 +3502,10 @@ document.getElementById('startBtn').addEventListener('click', function(){
         sudokuHighlightAutocomplete(items);
       } else if (e.key === 'Enter') {
         e.preventDefault();
+        if (!quizSudokuSet.autocompleteEnabled) {
+          sudokuSubmitExactName(input.value.trim());
+          return;
+        }
         if (quizSudokuAutocompleteIdx >= 0 && items[quizSudokuAutocompleteIdx]) {
           sudokuPlaceChar(items[quizSudokuAutocompleteIdx].getAttribute('data-name'));
         } else if (items.length === 1) {
@@ -3500,7 +3524,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
   function renderSudokuAutocomplete(query){
     var dropdown = document.getElementById('quizSudokuAutocomplete');
     if (!dropdown) return;
-    if (!query) { dropdown.classList.remove('open'); dropdown.innerHTML = ''; return; }
+    if (!quizSudokuSet.autocompleteEnabled || !query) { dropdown.classList.remove('open'); dropdown.innerHTML = ''; return; }
     var matches = sudokuAvailableChars().filter(function(c){ return c.name.indexOf(query) === 0; }).slice(0, 20);
     if (!matches.length) { dropdown.classList.remove('open'); dropdown.innerHTML = ''; return; }
     dropdown.innerHTML = matches.map(function(c){
@@ -3519,6 +3543,57 @@ document.getElementById('startBtn').addEventListener('click', function(){
     if (!char) return;
     sudokuApplyAction({ type: 'place', idx: quizSudokuActiveCellIdx, char: char });
     closeSudokuCellModal();
+  }
+
+  var quizSudokuErrorTimer = null;
+  function showSudokuCellError(msg){
+    var el = document.getElementById('quizSudokuCellError');
+    if (!el) return;
+    if (quizSudokuErrorTimer) { clearTimeout(quizSudokuErrorTimer); quizSudokuErrorTimer = null; }
+    el.textContent = msg;
+    el.classList.add('no-transition');
+    el.style.opacity = '1';
+    void el.offsetWidth;
+    el.classList.remove('no-transition');
+    quizSudokuErrorTimer = setTimeout(function(){
+      el.style.opacity = '0';
+      quizSudokuErrorTimer = null;
+    }, 1000);
+  }
+  function hideSudokuCellError(){
+    var el = document.getElementById('quizSudokuCellError');
+    if (!el) return;
+    if (quizSudokuErrorTimer) { clearTimeout(quizSudokuErrorTimer); quizSudokuErrorTimer = null; }
+    el.classList.add('no-transition');
+    el.style.opacity = '0';
+    void el.offsetWidth;
+    el.classList.remove('no-transition');
+  }
+
+  function sudokuSubmitExactName(name){
+    var input = document.getElementById('quizSudokuCellInput');
+    if (!name) return;
+    var char = QUIZ_SUDOKU_CHAR_POOL.filter(function(c){ return c.name === name; })[0];
+    if (!char) {
+      if (input) input.value = '';
+      showSudokuCellError('해당 캐릭터 이름은 존재하지 않습니다!');
+      return;
+    }
+    var usedElsewhere = false;
+    for (var i = 0; i < quizSudokuSet.placed.length; i++) {
+      if (i !== quizSudokuActiveCellIdx && quizSudokuSet.placed[i] && quizSudokuSet.placed[i].name === char.name) { usedElsewhere = true; break; }
+    }
+    if (usedElsewhere) {
+      if (input) input.value = '';
+      showSudokuCellError('이미 해당 캐릭터가 채워진 칸이 존재합니다!');
+      return;
+    }
+    if (quizSudokuSet.jobs.indexOf(char.job) === -1) {
+      if (input) input.value = '';
+      showSudokuCellError('해당 캐릭터의 직업은 이번 게임에서 제외되었습니다!');
+      return;
+    }
+    sudokuPlaceChar(char.name);
   }
 
   function renderSudokuPencilRow(){
