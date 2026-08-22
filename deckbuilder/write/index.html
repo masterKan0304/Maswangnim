@@ -407,10 +407,16 @@
   .chaos-zoom-preview.visible{display:block;}
 
   /* ============ 파트너 정보 호버 팝업 (에고 스킬 + 파트너 패시브) ============ */
-  .partner-info-zoom-preview{position:fixed;z-index:9999;display:none;pointer-events:none;
+  .partner-info-zoom-preview{position:fixed;z-index:9999;display:none;flex-direction:column;pointer-events:none;
     background:#181820;border-radius:10px;box-shadow:0 10px 34px rgba(0,0,0,.55);
-    padding:14px;gap:16px;}
+    padding:14px;gap:10px;}
   .partner-info-zoom-preview.visible{display:flex;}
+  .partner-info-header{display:flex;align-items:center;gap:6px;padding-bottom:8px;
+    border-bottom:1px solid rgba(255,255,255,.15);}
+  .partner-info-header-icon{width:16px;height:16px;object-fit:contain;flex:none;}
+  .partner-info-header-name{color:#fff;font-weight:900;font-size:15px;line-height:1.3;white-space:nowrap;
+    text-shadow:0 1px 4px rgba(0,0,0,.8);}
+  .partner-info-body{display:flex;gap:16px;}
   .partner-info-col{min-width:0;}
   .partner-info-col-title{color:#fff;font-weight:900;font-size:12px;letter-spacing:.5px;margin-bottom:8px;
     text-shadow:0 1px 4px rgba(0,0,0,.8);}
@@ -2683,10 +2689,17 @@ document.getElementById('startBtn').addEventListener('click', function(){
 
   // ============ 파트너 정보 호버 팝업 (에고 스킬 + 파트너 패시브) ============
   var partnerInfoZoomEl = document.getElementById('partnerInfoZoomPreview');
+  function renderPartnerInfoHeaderHtml(iconsHtml, name){
+    return '<div class="partner-info-header">' + iconsHtml +
+      '<div class="partner-info-header-name">'+(name || '')+'</div></div>';
+  }
   function renderPartnerInfoZoomHtml(partner){
     var jobIcon = JOB_ICON[partner.job];
     var pointHtml = renderTooltip('에고 포인트 ' + (partner.ego_point != null ? partner.ego_point : ''));
+    var headerIcons = jobIcon ? '<img class="partner-info-header-icon" src="'+jobIcon+'" alt="">' : '';
     return (
+      renderPartnerInfoHeaderHtml(headerIcons, partner.name) +
+      '<div class="partner-info-body">' +
       '<div class="partner-info-col partner-info-skill-col">' +
         '<div class="partner-info-col-title">에고 스킬</div>' +
         '<div class="partner-info-skill-row">' +
@@ -2707,6 +2720,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
         '</div>' +
         '<div class="partner-info-passive-hr"></div>' +
         '<div class="partner-info-passive-tooltip">'+parsePartnerPassiveTooltip(partner.passive_tooltip || '')+'</div>' +
+      '</div>' +
       '</div>'
     );
   }
@@ -2716,16 +2730,24 @@ document.getElementById('startBtn').addEventListener('click', function(){
     positionPartnerInfoZoom(x, y);
   }
   function renderAgentEgoZoomHtml(agent){
+    var headerIcons =
+      (ATTR_ICON[agent.attribute] ? '<img class="partner-info-header-icon" src="'+ATTR_ICON[agent.attribute]+'" alt="">' : '') +
+      (JOB_ICON[agent.job] ? '<img class="partner-info-header-icon" src="'+JOB_ICON[agent.job]+'" alt="">' : '');
+    var header = renderPartnerInfoHeaderHtml(headerIcons, agent.name);
     var ego = window.AGENTS_EGO && window.AGENTS_EGO[agent.id];
     if (!ego || !ego.skill) {
-      return '<div class="partner-info-col partner-info-skill-col">' +
-        '<div class="partner-info-col-title">에고 스킬</div>' +
-        '<div class="partner-info-empty">아직 등록된 에고 스킬 정보가 없습니다.</div>' +
+      return header + '<div class="partner-info-body">' +
+        '<div class="partner-info-col partner-info-skill-col">' +
+          '<div class="partner-info-col-title">에고 스킬</div>' +
+          '<div class="partner-info-empty">아직 등록된 에고 스킬 정보가 없습니다.</div>' +
+        '</div>' +
       '</div>';
     }
     var skill = ego.skill;
     var pointHtml = renderTooltip('에고 포인트 ' + (skill.point != null ? skill.point : ''));
     return (
+      header +
+      '<div class="partner-info-body">' +
       '<div class="partner-info-col partner-info-skill-col">' +
         '<div class="partner-info-col-title">에고 스킬</div>' +
         '<div class="partner-info-skill-row">' +
@@ -2737,6 +2759,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
             '<div class="partner-info-skill-tooltip">'+renderTooltip(skill.tooltip || '')+'</div>' +
           '</div>' +
         '</div>' +
+      '</div>' +
       '</div>'
     );
   }
