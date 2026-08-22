@@ -743,11 +743,25 @@
   .quiz-sil-choice-btn .quiz-match-result-tag{justify-content:flex-start;padding-left:16px;}
 
   /* ============ 카제나 스도쿠 (게임 4) ============ */
+  .quiz-popup-sudoku .quiz-title{margin-left:56px;}
   .quiz-sudoku-timer{text-align:center;font-family:var(--font-display);font-weight:900;font-size:22px;color:#fff;margin:2px 0 14px;}
-  .quiz-sudoku-topbar{display:flex;justify-content:center;gap:10px;margin-bottom:16px;}
+  .quiz-sudoku-topbar{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:16px;}
   .quiz-sudoku-tool-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.35);color:#fff;
     font-size:12.5px;font-weight:700;padding:8px 18px;border-radius:20px;cursor:pointer;transition:background .15s;}
   .quiz-sudoku-tool-btn:hover{background:rgba(255,255,255,.2);}
+  .quiz-sudoku-tool-btn:disabled{opacity:.4;cursor:default;pointer-events:none;}
+  .quiz-sudoku-next-btn{background:var(--orange);border:1px solid var(--orange);color:#fff;
+    font-size:12.5px;font-weight:800;padding:8px 20px;border-radius:20px;cursor:pointer;transition:background .15s;}
+  .quiz-sudoku-next-btn:hover{background:var(--orange-dim);}
+
+  .quiz-sudoku-zoom{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:6px 12px;}
+  .quiz-sudoku-zoom-pct{font-size:12px;font-weight:700;color:#fff;min-width:32px;text-align:center;}
+  .quiz-sudoku-zoom-arrows{display:flex;flex-direction:column;gap:2px;}
+  .quiz-sudoku-zoom-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.3);border-radius:3px;
+    color:rgba(255,255,255,.8);font-size:8px;line-height:1;cursor:pointer;padding:2px 4px;}
+  .quiz-sudoku-zoom-btn:hover{background:rgba(255,255,255,.22);color:#fff;}
+  .quiz-sudoku-zoom-btn:disabled{opacity:.3;cursor:default;pointer-events:none;}
 
   .quiz-sudoku-job-filter{display:flex;justify-content:center;gap:10px;margin-bottom:18px;}
   .quiz-sudoku-job-btn{position:relative;width:42px;height:42px;border-radius:9px;border:1px solid rgba(255,255,255,.3);
@@ -756,10 +770,12 @@
   .quiz-sudoku-job-btn:hover{background:rgba(255,255,255,.14);}
   .quiz-sudoku-job-btn.active{border-color:var(--orange);background:var(--orange-soft);}
   .quiz-sudoku-job-btn.dim{opacity:.35;}
+  .quiz-sudoku-job-btn:disabled{opacity:.35;cursor:default;pointer-events:none;}
   .quiz-sudoku-job-done{position:absolute;top:-6px;right:-6px;width:17px;height:17px;display:flex;}
   .quiz-sudoku-job-done svg{width:100%;height:100%;filter:drop-shadow(0 0 0 2px #221d1e);}
 
-  .quiz-sudoku-grid{display:grid;margin:0 auto;width:min(100%,420px);aspect-ratio:1/1;
+  .quiz-sudoku-grid-wrap{position:relative;width:min(100%,420px);margin:0 auto;}
+  .quiz-sudoku-grid{display:grid;width:100%;aspect-ratio:1/1;
     border:2px solid rgba(255,255,255,.5);border-radius:6px;overflow:hidden;}
   .quiz-sudoku-grid[data-size="3"]{grid-template-columns:repeat(3,1fr);}
   .quiz-sudoku-grid[data-size="6"]{grid-template-columns:repeat(6,1fr);}
@@ -776,16 +792,38 @@
   .quiz-sudoku-cell-img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;-webkit-user-drag:none;}
   .quiz-sudoku-cell-plus{color:rgba(255,255,255,.3);font-size:min(6cqw,22px);font-weight:300;pointer-events:none;}
   .quiz-sudoku-cell-job-badge{position:absolute;top:3%;left:3%;width:20%;height:20%;border-radius:4px;
-    background:rgba(15,12,12,.75);object-fit:contain;padding:3%;box-sizing:border-box;pointer-events:none;}
-  .quiz-sudoku-cell-lock{position:absolute;top:3%;right:3%;width:16%;height:16%;color:#fff;
-    filter:drop-shadow(0 1px 3px rgba(0,0,0,.85));pointer-events:none;}
+    background:rgba(15,12,12,.8);box-sizing:border-box;display:flex;align-items:center;justify-content:center;
+    overflow:visible;pointer-events:none;}
+  .quiz-sudoku-cell-job-badge img{width:150%;height:150%;object-fit:contain;image-rendering:crisp-edges;}
+  .quiz-sudoku-cell-lock{position:absolute;top:3%;right:3%;width:18%;height:18%;border-radius:50%;
+    background:#000;display:flex;align-items:center;justify-content:center;box-sizing:border-box;
+    color:#ff5252;pointer-events:none;}
+  .quiz-sudoku-cell-lock svg{width:62%;height:62%;}
   .quiz-sudoku-cell-pencil{position:absolute;left:2%;right:2%;bottom:2%;display:flex;justify-content:center;
     gap:2%;flex-wrap:wrap;pointer-events:none;}
   .quiz-sudoku-cell-pencil img{width:14%;object-fit:contain;border-radius:2px;}
   .quiz-sudoku-cell-pencil img.quiz-sudoku-pencil-highlight{box-shadow:0 0 0 1px #ff5252,0 0 4px #ff5252,0 0 8px rgba(255,82,82,.8);opacity:1 !important;}
 
+  .quiz-sudoku-cell-tooltip{position:fixed;z-index:20010;display:none;align-items:center;gap:8px;
+    background:#2a2425;border:1px solid rgba(255,255,255,.25);border-radius:8px;padding:8px 12px;
+    font-size:12.5px;color:#fff;font-weight:700;pointer-events:none;box-shadow:0 8px 20px rgba(0,0,0,.5);}
+  .quiz-sudoku-cell-tooltip.show{display:flex;}
+  .quiz-sudoku-cell-tooltip img{width:18px;height:18px;object-fit:contain;flex:none;}
+
+  .quiz-sudoku-clear-banner{display:none;position:absolute;inset:0;align-items:center;justify-content:center;
+    font-family:var(--font-display);font-weight:900;font-size:40px;color:#3ddc74;
+    text-shadow:0 0 10px rgba(61,220,116,.8),0 0 24px rgba(61,220,116,.5);
+    background:rgba(10,8,8,.4);border-radius:6px;pointer-events:none;letter-spacing:1px;}
+  .quiz-sudoku-clear-banner.show{display:flex;}
+
   .quiz-popup-sudoku-cell{width:360px;max-width:100%;padding:28px 26px;text-align:left;
-    background:rgba(34,29,30,.7);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);}
+    background:rgba(34,29,30,.7);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+    transition:opacity .25s;}
+  .quiz-popup-sudoku-cell.quiz-sudoku-peek{opacity:0;pointer-events:none;}
+  .quiz-eye-btn{position:absolute;top:10px;right:44px;background:none;border:none;color:rgba(255,255,255,.6);
+    line-height:1;cursor:pointer;padding:4px;}
+  .quiz-eye-btn svg{width:19px;height:19px;display:block;}
+  .quiz-eye-btn:hover{color:#fff;}
   .quiz-sudoku-cell-input-row{position:relative;margin-top:16px;}
   .quiz-sudoku-cell-input{width:100%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.3);
     border-radius:8px;padding:10px 12px;font-size:13.5px;color:#fff;box-sizing:border-box;}
@@ -813,6 +851,8 @@
     .quiz-popup-hub{width:94vw;}
     .quiz-hub-row{flex-direction:column;}
     .quiz-match-grid{grid-template-columns:repeat(2,1fr);}
+    .quiz-popup-sudoku{width:94vw !important;}
+    .quiz-sudoku-grid-wrap{width:min(100%,420px) !important;}
   }
 </style>
 
@@ -1362,6 +1402,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
   var QUIZ_JOB_ICON = { striker:'agents/striker.webp', ranger:'agents/ranger.webp', vanguard:'agents/vanguard.webp', hunter:'agents/hunter.png', controller:'agents/controller.webp', psionic:'agents/psionic.webp' };
   var QUIZ_LOCK_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
   var QUIZ_CHECK_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#3ddc74"/><path d="M7 12.5l3 3 7-7" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var QUIZ_EYE_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>';
 
   var QUIZ_SUDOKU_CHAR_POOL = [];
   (window.AGENTS_DATA || []).forEach(function(a){
@@ -3005,6 +3046,8 @@ document.getElementById('startBtn').addEventListener('click', function(){
     return conflictSet;
   }
 
+  var quizSudokuZoom = 100;
+
   function startSudokuGame(mode, size){
     var rng = mode === 'daily' ? mulberry32(dateSeed() + 424242) : Math.random;
     if (mode === 'daily') size = 3;
@@ -3024,6 +3067,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
       placed: placed, pencil: pencil, usedNames: usedNames, history: [],
       filterJob: null, startTime: 0, timerInterval: null, completed: false
     };
+    quizSudokuZoom = 100;
     hideAllQuizPopups();
     quizGamePopup4.classList.add('active');
     openOverlay();
@@ -3054,12 +3098,13 @@ document.getElementById('startBtn').addEventListener('click', function(){
       '<button type="button" class="quiz-help-btn" id="quizSudokuHelpBtn">?</button>' +
       '<div class="quiz-title">카제나 스도쿠</div>' +
       '<div class="quiz-sudoku-timer" id="quizSudokuTimer">0:00</div>' +
-      '<div class="quiz-sudoku-topbar">' +
-        '<button type="button" class="quiz-sudoku-tool-btn" id="quizSudokuUndoBtn">되돌리기</button>' +
-        '<button type="button" class="quiz-sudoku-tool-btn" id="quizSudokuResetBtn">초기화</button>' +
-      '</div>' +
+      '<div class="quiz-sudoku-topbar" id="quizSudokuTopbar"></div>' +
       '<div class="quiz-sudoku-job-filter" id="quizSudokuJobFilter"></div>' +
-      '<div class="quiz-sudoku-grid" id="quizSudokuGrid" data-size="' + quizSudokuSet.size + '"></div>';
+      '<div class="quiz-sudoku-grid-wrap">' +
+        '<div class="quiz-sudoku-grid" id="quizSudokuGrid" data-size="' + quizSudokuSet.size + '"></div>' +
+        '<div class="quiz-sudoku-clear-banner" id="quizSudokuClearBanner">클리어!</div>' +
+      '</div>' +
+      '<div class="quiz-sudoku-cell-tooltip" id="quizSudokuCellTooltip"></div>';
 
     document.getElementById('quizSudokuCloseBtn').addEventListener('click', closeOverlay);
     document.getElementById('quizSudokuBackBtn').addEventListener('click', function(){
@@ -3067,24 +3112,103 @@ document.getElementById('startBtn').addEventListener('click', function(){
       if (quizSudokuSet.mode === 'daily') showMain(); else showCategoryPopup4();
     });
     document.getElementById('quizSudokuHelpBtn').addEventListener('click', showSudokuHelpPopup);
-    document.getElementById('quizSudokuUndoBtn').addEventListener('click', sudokuUndo);
-    document.getElementById('quizSudokuResetBtn').addEventListener('click', sudokuReset);
+    renderSudokuTopbar();
     renderSudokuJobFilter();
     renderSudokuGrid();
+    applySudokuZoom();
+  }
+
+  function renderSudokuTopbar(){
+    var el = document.getElementById('quizSudokuTopbar');
+    if (!el) return;
+    var zoomHtml =
+      '<div class="quiz-sudoku-zoom">' +
+        '<span class="quiz-sudoku-zoom-pct" id="quizSudokuZoomPct">' + quizSudokuZoom + '%</span>' +
+        '<div class="quiz-sudoku-zoom-arrows">' +
+          '<button type="button" class="quiz-sudoku-zoom-btn" id="quizSudokuZoomUpBtn">&#9650;</button>' +
+          '<button type="button" class="quiz-sudoku-zoom-btn" id="quizSudokuZoomDownBtn">&#9660;</button>' +
+        '</div>' +
+      '</div>';
+    if (quizSudokuSet.completed) {
+      el.innerHTML = (quizSudokuSet.mode === 'free' ? '<button type="button" class="quiz-sudoku-next-btn" id="quizSudokuNextBtn">다음 문제</button>' : '') + zoomHtml;
+      if (quizSudokuSet.mode === 'free') {
+        document.getElementById('quizSudokuNextBtn').addEventListener('click', function(){
+          startSudokuGame('free', quizSudokuSet.size);
+        });
+      }
+    } else {
+      el.innerHTML =
+        '<button type="button" class="quiz-sudoku-tool-btn" id="quizSudokuUndoBtn">되돌리기</button>' +
+        '<button type="button" class="quiz-sudoku-tool-btn" id="quizSudokuResetBtn">초기화</button>' +
+        zoomHtml;
+      document.getElementById('quizSudokuUndoBtn').addEventListener('click', sudokuUndo);
+      document.getElementById('quizSudokuResetBtn').addEventListener('click', sudokuReset);
+    }
+    document.getElementById('quizSudokuZoomUpBtn').addEventListener('click', function(){
+      quizSudokuZoom = Math.min(200, quizSudokuZoom + 10);
+      applySudokuZoom();
+    });
+    document.getElementById('quizSudokuZoomDownBtn').addEventListener('click', function(){
+      quizSudokuZoom = Math.max(100, quizSudokuZoom - 10);
+      applySudokuZoom();
+    });
+    updateSudokuZoomButtons();
+  }
+
+  function applySudokuZoom(){
+    var pctEl = document.getElementById('quizSudokuZoomPct');
+    if (pctEl) pctEl.textContent = quizSudokuZoom + '%';
+    var wrapEl = document.querySelector('.quiz-sudoku-grid-wrap');
+    var boardPx = Math.round(420 * quizSudokuZoom / 100);
+    if (wrapEl) wrapEl.style.width = quizSudokuZoom === 100 ? '' : boardPx + 'px';
+    quizGamePopup4.style.width = quizSudokuZoom === 100 ? '' : Math.max(840, boardPx + 96) + 'px';
+    updateSudokuZoomButtons();
+  }
+
+  function updateSudokuZoomButtons(){
+    var upBtn = document.getElementById('quizSudokuZoomUpBtn');
+    var downBtn = document.getElementById('quizSudokuZoomDownBtn');
+    var locked = quizSudokuSet.completed;
+    if (upBtn) upBtn.disabled = locked || quizSudokuZoom >= 200;
+    if (downBtn) downBtn.disabled = locked || quizSudokuZoom <= 100;
+  }
+
+  function showSudokuCellTooltip(ch, x, y){
+    var el = document.getElementById('quizSudokuCellTooltip');
+    if (!el) return;
+    el.innerHTML = '<img src="' + QUIZ_JOB_ICON[ch.job] + '" alt="">' + ch.name;
+    el.classList.add('show');
+    positionSudokuCellTooltip(x, y);
+  }
+  function positionSudokuCellTooltip(x, y){
+    var el = document.getElementById('quizSudokuCellTooltip');
+    if (!el || !el.classList.contains('show')) return;
+    var rect = el.getBoundingClientRect();
+    var left = x + 14, top = y + 14;
+    if (left + rect.width > window.innerWidth - 8) left = x - rect.width - 14;
+    if (top + rect.height > window.innerHeight - 8) top = y - rect.height - 14;
+    el.style.left = left + 'px';
+    el.style.top = top + 'px';
+  }
+  function hideSudokuCellTooltip(){
+    var el = document.getElementById('quizSudokuCellTooltip');
+    if (el) el.classList.remove('show');
   }
 
   function renderSudokuJobFilter(){
     var el = document.getElementById('quizSudokuJobFilter');
     if (!el) return;
+    var locked = quizSudokuSet.completed;
     el.innerHTML = quizSudokuSet.jobs.map(function(j){
       var done = sudokuJobPlacedCount(j) === quizSudokuSet.size;
       var active = quizSudokuSet.filterJob === j;
       var dim = quizSudokuSet.filterJob && !active;
-      return '<button type="button" class="quiz-sudoku-job-btn' + (dim ? ' dim' : '') + (active ? ' active' : '') + '" data-job="' + j + '">' +
+      return '<button type="button" class="quiz-sudoku-job-btn' + (dim ? ' dim' : '') + (active ? ' active' : '') + '" data-job="' + j + '"' + (locked ? ' disabled' : '') + '>' +
         '<img src="' + QUIZ_JOB_ICON[j] + '" alt="">' +
         (done ? '<span class="quiz-sudoku-job-done">' + QUIZ_CHECK_ICON_SVG + '</span>' : '') +
       '</button>';
     }).join('');
+    if (locked) return;
     Array.prototype.forEach.call(el.querySelectorAll('.quiz-sudoku-job-btn'), function(btn){
       btn.addEventListener('click', function(){
         var job = btn.getAttribute('data-job');
@@ -3128,7 +3252,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
       var inner;
       if (ch) {
         inner = '<img class="quiz-sudoku-cell-img" src="' + ch.illust + '" alt="" draggable="false" oncontextmenu="return false">' +
-          '<img class="quiz-sudoku-cell-job-badge" src="' + QUIZ_JOB_ICON[ch.job] + '" alt="">' +
+          '<span class="quiz-sudoku-cell-job-badge"><img src="' + QUIZ_JOB_ICON[ch.job] + '" alt=""></span>' +
           (fixed ? '<span class="quiz-sudoku-cell-lock">' + QUIZ_LOCK_ICON_SVG + '</span>' : '');
       } else {
         inner = '<div class="quiz-sudoku-cell-plus">+</div>' + renderSudokuCellPencilHtml(idx);
@@ -3136,9 +3260,17 @@ document.getElementById('startBtn').addEventListener('click', function(){
       html += '<div class="' + classes.join(' ') + '" data-idx="' + idx + '" data-fixed="' + (fixed ? 1 : 0) + '">' + inner + '</div>';
     }
     gridEl.innerHTML = html;
+    var locked = quizSudokuSet.completed;
     Array.prototype.forEach.call(gridEl.querySelectorAll('.quiz-sudoku-cell'), function(el){
-      if (el.getAttribute('data-fixed') === '1') return;
-      el.addEventListener('click', function(){ openSudokuCellModal(parseInt(el.getAttribute('data-idx'), 10)); });
+      var cellIdx = parseInt(el.getAttribute('data-idx'), 10);
+      var cellChar = quizSudokuSet.placed[cellIdx];
+      if (cellChar) {
+        el.addEventListener('mouseenter', function(e){ showSudokuCellTooltip(cellChar, e.clientX, e.clientY); });
+        el.addEventListener('mousemove', function(e){ positionSudokuCellTooltip(e.clientX, e.clientY); });
+        el.addEventListener('mouseleave', hideSudokuCellTooltip);
+      }
+      if (el.getAttribute('data-fixed') === '1' || locked) return;
+      el.addEventListener('click', function(){ openSudokuCellModal(cellIdx); });
     });
   }
 
@@ -3195,15 +3327,11 @@ document.getElementById('startBtn').addEventListener('click', function(){
     quizSudokuSet.completed = true;
     if (quizSudokuSet.timerInterval) { clearInterval(quizSudokuSet.timerInterval); quizSudokuSet.timerInterval = null; }
     if (quizSudokuSet.mode === 'daily') setDailyDone();
-    var elapsed = Math.floor((Date.now() - quizSudokuSet.startTime) / 1000);
-    showSudokuResultsPopup(elapsed);
-  }
-
-  function showSudokuResultsPopup(elapsed){
-    document.getElementById('quizResultsScore').textContent = sudokuFormatTime(elapsed);
-    document.getElementById('quizResultsSub').textContent = '스도쿠를 완성했습니다!';
-    hideAllQuizPopups();
-    quizResultsPopup.classList.add('active');
+    var banner = document.getElementById('quizSudokuClearBanner');
+    if (banner) banner.classList.add('show');
+    renderSudokuTopbar();
+    renderSudokuJobFilter();
+    renderSudokuGrid();
   }
 
   function sudokuAvailableChars(){
@@ -3231,10 +3359,20 @@ document.getElementById('startBtn').addEventListener('click', function(){
     updateScrollLock();
   }
 
+  function sudokuPeekStart(){
+    quizSudokuCellPopup.classList.add('quiz-sudoku-peek');
+  }
+  function sudokuPeekEndOnce(){
+    quizSudokuCellPopup.classList.remove('quiz-sudoku-peek');
+    document.removeEventListener('mouseup', sudokuPeekEndOnce);
+    document.removeEventListener('touchend', sudokuPeekEndOnce);
+  }
+
   function renderSudokuCellModal(){
     var idx = quizSudokuActiveCellIdx;
     var placed = quizSudokuSet.placed[idx];
     var html =
+      '<button type="button" class="quiz-eye-btn" id="quizSudokuPeekBtn" aria-label="스도쿠판 보기">' + QUIZ_EYE_ICON_SVG + '</button>' +
       '<button type="button" class="quiz-close-btn" id="quizSudokuCellCloseBtn">&times;</button>' +
       '<div class="quiz-title">캐릭터 이름 입력</div>' +
       '<div class="quiz-sudoku-cell-input-row">' +
@@ -3249,6 +3387,17 @@ document.getElementById('startBtn').addEventListener('click', function(){
     quizSudokuCellPopup.innerHTML = html;
 
     document.getElementById('quizSudokuCellCloseBtn').addEventListener('click', closeSudokuCellModal);
+    var peekBtn = document.getElementById('quizSudokuPeekBtn');
+    peekBtn.addEventListener('mousedown', function(e){
+      e.preventDefault();
+      sudokuPeekStart();
+      document.addEventListener('mouseup', sudokuPeekEndOnce);
+    });
+    peekBtn.addEventListener('touchstart', function(e){
+      e.preventDefault();
+      sudokuPeekStart();
+      document.addEventListener('touchend', sudokuPeekEndOnce);
+    });
     if (placed) {
       document.getElementById('quizSudokuClearCellBtn').addEventListener('click', function(){
         sudokuApplyAction({ type: 'clear', idx: idx });
