@@ -414,6 +414,7 @@
   .partner-info-header{display:flex;align-items:center;gap:6px;padding-bottom:8px;
     border-bottom:1px solid rgba(255,255,255,.15);}
   .partner-info-header-icon{width:19px;height:19px;object-fit:contain;flex:none;border-radius:4px;}
+  .partner-info-header-icon-job{width:23px;height:23px;}
   .partner-info-header-name{color:#fff;font-weight:900;font-size:15px;line-height:1.3;white-space:nowrap;
     text-shadow:0 1px 4px rgba(0,0,0,.8);}
   .partner-info-body{display:flex;gap:16px;}
@@ -2696,7 +2697,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
   function renderPartnerInfoZoomHtml(partner){
     var jobIcon = JOB_ICON[partner.job];
     var pointHtml = renderTooltip('에고 포인트 ' + (partner.ego_point != null ? partner.ego_point : ''));
-    var headerIcons = jobIcon ? '<img class="partner-info-header-icon" src="'+jobIcon+'" alt="">' : '';
+    var headerIcons = jobIcon ? '<img class="partner-info-header-icon partner-info-header-icon-job" src="'+jobIcon+'" alt="">' : '';
     return (
       renderPartnerInfoHeaderHtml(headerIcons, partner.name) +
       '<div class="partner-info-body">' +
@@ -2732,7 +2733,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
   function renderAgentEgoZoomHtml(agent){
     var headerIcons =
       (ATTR_ICON[agent.attribute] ? '<img class="partner-info-header-icon" src="'+ATTR_ICON[agent.attribute]+'" alt="">' : '') +
-      (JOB_ICON[agent.job] ? '<img class="partner-info-header-icon" src="'+JOB_ICON[agent.job]+'" alt="">' : '');
+      (JOB_ICON[agent.job] ? '<img class="partner-info-header-icon partner-info-header-icon-job" src="'+JOB_ICON[agent.job]+'" alt="">' : '');
     var header = renderPartnerInfoHeaderHtml(headerIcons, agent.name);
     var ego = window.AGENTS_EGO && window.AGENTS_EGO[agent.id];
     if (!ego || !ego.skill) {
