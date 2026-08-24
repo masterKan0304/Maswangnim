@@ -212,13 +212,14 @@
   .post-author-banner-media{position:relative;width:100%;line-height:0;border-radius:16px;overflow:hidden;}
   .post-author-banner-media img.post-author-banner-bg{width:100%;height:auto;display:block;}
   .post-author-banner-info{position:absolute;top:calc(7% + 5px);left:3%;}
-  .post-author-banner-name{font-size:20px;font-weight:900;line-height:1.3;-webkit-text-stroke:3px #fff;paint-order:stroke fill;
-    text-shadow:0 2px 4px rgba(0,0,0,.55);}
+  .post-author-banner-name{font-size:20px;font-weight:900;line-height:1.3;
+    text-shadow:0 0 4px #fff,0 0 8px #fff,0 0 14px rgba(255,255,255,.85);}
   .post-author-banner-name .lv{color:#ff5714;}
   .post-author-banner-name .nick{color:#000;margin-left:4px;}
   .post-author-banner-uid{font-size:12.5px;font-weight:700;color:rgba(0,0,0,.55);margin-top:8px;}
   .post-author-banner-badges{position:absolute;top:6%;right:3%;height:40%;display:flex;flex-direction:row-reverse;gap:2%;}
-  .post-author-banner-badges img{height:100%;width:auto;object-fit:contain;cursor:pointer;}
+  .post-author-banner-badges img{height:100%;width:auto;object-fit:contain;cursor:pointer;
+    filter:drop-shadow(0 3px 6px rgba(0,0,0,.55));}
   .badge-zoom-preview{position:fixed;z-index:9999;display:none;pointer-events:none;max-width:240px;
     background:#181820;color:#fff;padding:10px 12px;border-radius:8px;box-shadow:0 10px 34px rgba(0,0,0,.5);}
   .badge-zoom-preview.visible{display:block;}
