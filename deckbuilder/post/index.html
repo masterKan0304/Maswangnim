@@ -209,14 +209,15 @@
 
   /* ============ 게시물 하단 작성자 정보 배너 ============ */
   .post-author-banner{margin-top:8px;}
-  .post-author-banner-media{position:relative;width:100%;line-height:0;border-radius:16px;overflow:hidden;}
-  .post-author-banner-media img.post-author-banner-bg{width:100%;height:auto;display:block;}
-  .post-author-banner-info{position:absolute;top:calc(7% + 5px);left:3%;}
-  .post-author-banner-name{font-size:20px;font-weight:900;line-height:1.3;
-    text-shadow:0 0 4px #fff,0 0 8px #fff,0 0 14px rgba(255,255,255,.85);}
+  .post-author-banner-card{border:1px solid var(--line);border-radius:16px;overflow:hidden;}
+  .post-author-banner-header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;
+    padding:12px 16px;background:#fff;}
+  .post-author-banner-name{font-size:20px;font-weight:900;line-height:1.3;}
   .post-author-banner-name .lv{color:#ff5714;}
   .post-author-banner-name .nick{color:#000;margin-left:4px;}
-  .post-author-banner-uid{font-size:12.5px;font-weight:700;color:rgba(0,0,0,.55);margin-top:8px;}
+  .post-author-banner-uid{font-size:12.5px;font-weight:700;color:rgba(0,0,0,.55);flex:none;}
+  .post-author-banner-media{position:relative;width:100%;line-height:0;}
+  .post-author-banner-media img.post-author-banner-bg{width:100%;height:auto;display:block;}
   .post-author-banner-badges{position:absolute;top:6%;right:3%;height:40%;display:flex;flex-direction:row-reverse;gap:2%;}
   .post-author-banner-badges img{height:100%;width:auto;object-fit:contain;cursor:pointer;
     filter:drop-shadow(0 3px 6px rgba(0,0,0,.55));}
@@ -1818,18 +1819,20 @@ document.getElementById('startBtn').addEventListener('click', function(){
     if (!el || !post.authorBanner) { if (el) el.innerHTML = ''; return; }
     var badges = post.authorBadges || [];
     el.innerHTML =
-      '<div class="post-author-banner-media">' +
-        '<img class="post-author-banner-bg" src="../banner_'+post.authorBanner+'.png" alt="">' +
-        '<div class="post-author-banner-info">' +
+      '<div class="post-author-banner-card">' +
+        '<div class="post-author-banner-header">' +
           '<div class="post-author-banner-name"><span class="lv">Lv.'+post.authorLevel+'</span><span class="nick">'+post.author+'</span></div>' +
           '<div class="post-author-banner-uid">UID : '+post.authorUid+'</div>' +
         '</div>' +
-        '<div class="post-author-banner-badges">' +
-          badges.map(function(b){
-            var badge = BADGE_DATA[b];
-            if (!badge) return '';
-            return '<img src="'+badge.img+'" alt="" data-badge="'+b+'">';
-          }).join('') +
+        '<div class="post-author-banner-media">' +
+          '<img class="post-author-banner-bg" src="../banner_'+post.authorBanner+'.png" alt="">' +
+          '<div class="post-author-banner-badges">' +
+            badges.map(function(b){
+              var badge = BADGE_DATA[b];
+              if (!badge) return '';
+              return '<img src="'+badge.img+'" alt="" data-badge="'+b+'">';
+            }).join('') +
+          '</div>' +
         '</div>' +
       '</div>';
     Array.prototype.forEach.call(el.querySelectorAll('.post-author-banner-badges img'), function(img){
