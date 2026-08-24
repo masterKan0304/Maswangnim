@@ -46,5 +46,9 @@ window.DECKBUILDER_POSTS.push({
   view: 0,
   like: 0,
   comment: 0,
-  date: "2026-08-19"
+  date: "2026-08-19",
+  authorBanner: 4,
+  authorLevel: 55,
+  authorUid: "989592648664",
+  authorBadges: [2, 4]
 });
