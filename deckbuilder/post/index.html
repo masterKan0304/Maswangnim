@@ -101,7 +101,7 @@
     background:rgba(0,0,0,.6);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);padding:20px;}
   .captain-profile-overlay.open{display:flex;}
   .captain-profile-popup{background:#221d1e;border:1.5px solid rgba(255,255,255,.25);border-radius:14px;
-    box-shadow:0 20px 60px rgba(0,0,0,.6);color:#fff;position:relative;width:480px;max-width:100%;
+    box-shadow:0 20px 60px rgba(0,0,0,.6);color:#fff;position:relative;width:734px;max-width:100%;
     padding:26px 28px 30px;box-sizing:border-box;}
   .captain-profile-popup .quiz-close-btn{position:absolute;top:10px;right:14px;background:none;border:none;
     color:rgba(255,255,255,.6);font-size:24px;line-height:1;cursor:pointer;padding:4px;}
@@ -125,15 +125,16 @@
   .captain-banner-name .lv{color:#ff5714;}
   .captain-banner-name .nick{color:#000;margin-left:4px;}
   .captain-banner-uid{font-size:12.5px;font-weight:700;color:rgba(0,0,0,.55);flex:none;}
-  .captain-banner-media{width:100%;line-height:0;}
-  .captain-banner-media img{width:100%;height:auto;display:block;}
-  .captain-badge-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:10px;}
-  .captain-badge-cell{position:relative;border-radius:10px;border:1px solid rgba(255,255,255,.2);
-    background:rgba(255,255,255,.05);padding:8px;cursor:pointer;box-sizing:border-box;
-    transition:border-color .15s,box-shadow .15s;}
-  .captain-badge-cell img{width:100%;height:auto;display:block;}
-  .captain-badge-cell.selected{border-color:#3ddc74;box-shadow:0 0 6px #3ddc74,0 0 14px rgba(61,220,116,.7);}
-  .captain-badge-cell.locked{opacity:.4;cursor:default;}
+  .captain-banner-media{position:relative;width:100%;line-height:0;}
+  .captain-banner-media img.captain-banner-bg{width:100%;height:auto;display:block;}
+  .captain-banner-badges{position:absolute;top:6%;right:3%;height:40%;display:flex;flex-direction:row-reverse;gap:2%;}
+  .captain-banner-badges img{height:100%;width:auto;object-fit:contain;filter:drop-shadow(0 3px 6px rgba(0,0,0,.55));}
+  .captain-badge-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:14px;}
+  .captain-badge-cell{position:relative;cursor:pointer;}
+  .captain-badge-cell img{width:100%;height:auto;display:block;transition:filter .15s;}
+  .captain-badge-cell.selected img{filter:drop-shadow(0 0 6px #3ddc74) drop-shadow(0 0 14px rgba(61,220,116,.8));}
+  .captain-badge-cell.locked{cursor:default;}
+  .captain-badge-cell.locked img{opacity:.2;}
   .captain-badge-zoom-preview{position:fixed;z-index:20010;display:none;pointer-events:none;max-width:240px;
     background:#181820;color:#fff;padding:10px 12px;border-radius:8px;box-shadow:0 10px 34px rgba(0,0,0,.5);}
   .captain-badge-zoom-preview.visible{display:block;}
@@ -851,10 +852,10 @@ document.getElementById('startBtn').addEventListener('click', function(){
     <div class="captain-profile-hr"></div>
 
     <div class="captain-profile-section-title-row">
-      <div class="captain-profile-section-title">인게임 프로필</div>
+      <div class="captain-profile-section-title">함장 프로필 미리보기</div>
       <div class="captain-help-wrap">
         <button type="button" class="captain-help-btn">?</button>
-        <div class="captain-help-tooltip">해당 설정은 카오스 제로 나이트메어 인게임 내용을 반영합니다. 수정을 원하시면 게임 접속 후 인게임 프로필을 변경해주세요.</div>
+        <div class="captain-help-tooltip">함장 레벨 및 닉네임, UID, 프로필 배너는 실제 인게임 내용을 반영합니다. 프로필 배너 수정을 원하시면 게임을 접속하여 직접 수정해주세요.</div>
       </div>
     </div>
     <div class="captain-banner-card">
@@ -863,7 +864,8 @@ document.getElementById('startBtn').addEventListener('click', function(){
         <div class="captain-banner-uid">UID : 443336144407</div>
       </div>
       <div class="captain-banner-media">
-        <img src="../banner_1.png" alt="">
+        <img class="captain-banner-bg" src="../banner_1.png" alt="">
+        <div class="captain-banner-badges" id="captainBannerBadges"></div>
       </div>
     </div>
 
@@ -894,8 +896,17 @@ document.getElementById('startBtn').addEventListener('click', function(){
     { id: 3, img: '../badge_3.png', name: '[덱 빌딩 전문가] 훈장', desc: '이 함장은 덱 빌딩 게시판에서 업로드한 게시물 중 10개 이상이 인기글에 등록되었습니다.', locked: true },
     { id: 4, img: '../badge_4.png', name: '[덱 빌딩 입문자] 훈장', desc: '이 함장은 덱 빌딩 게시판에서 업로드한 게시물 중 1개 이상이 인기글에 등록되었습니다.', locked: true }
   ];
-  var captainSelectedBadges = [];
+  var captainSelectedBadges = [1, 2];
   var badgeZoomEl = document.getElementById('captainBadgeZoomPreview');
+
+  function renderCaptainBannerBadgePreview(){
+    var el = document.getElementById('captainBannerBadges');
+    if (!el) return;
+    el.innerHTML = captainSelectedBadges.map(function(id){
+      var b = CAPTAIN_BADGE_DATA.filter(function(x){ return x.id === id; })[0];
+      return b ? '<img src="'+b.img+'" alt="">' : '';
+    }).join('');
+  }
 
   function showBadgeZoom(badge, x, y){
     var html = '<div class="captain-badge-zoom-name">'+badge.name+'</div><div class="captain-badge-zoom-desc">'+badge.desc+'</div>';
@@ -943,6 +954,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
             captainSelectedBadges.push(id);
           }
           renderCaptainBadgeGrid();
+          renderCaptainBannerBadgePreview();
         });
       }
     });
@@ -952,6 +964,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
     overlay.classList.add('open');
     document.body.style.overflow = 'hidden';
     renderCaptainBadgeGrid();
+    renderCaptainBannerBadgePreview();
   }
   function closeCaptainProfile(){
     overlay.classList.remove('open');
