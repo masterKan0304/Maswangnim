@@ -107,9 +107,20 @@
     color:rgba(255,255,255,.6);font-size:24px;line-height:1;cursor:pointer;padding:4px;}
   .captain-profile-popup .quiz-close-btn:hover{color:#fff;}
   .captain-profile-popup .quiz-title{font-family:var(--font-display);font-weight:900;font-size:19px;letter-spacing:.5px;}
+  .captain-profile-desc{margin-top:8px;font-size:13px;font-weight:600;color:#c7c5c3;line-height:1.6;}
   .captain-profile-hr{height:1px;background:rgba(255,255,255,.15);margin:16px 0;}
   .captain-profile-section-title-row{display:flex;align-items:center;gap:6px;margin-bottom:12px;}
   .captain-profile-section-title{font-size:13px;font-weight:800;color:rgba(255,255,255,.85);}
+  .captain-toggle-row{display:flex;align-items:center;justify-content:space-between;}
+  .captain-toggle-control{display:flex;align-items:center;gap:10px;}
+  .captain-toggle-btn{position:relative;width:42px;height:24px;border-radius:12px;border:none;
+    background:#5c5c5c;cursor:pointer;padding:0;flex:none;transition:background .15s;}
+  .captain-toggle-btn.on{background:#3ddc74;}
+  .captain-toggle-knob{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;
+    background:#fff;transition:left .15s;}
+  .captain-toggle-btn.on .captain-toggle-knob{left:21px;}
+  .captain-toggle-label{font-size:12.5px;font-weight:800;color:#8a8a8a;transition:color .15s;}
+  .captain-toggle-label.on{color:#3ddc74;}
   .captain-help-wrap{position:relative;display:inline-flex;}
   .captain-help-btn{width:18px;height:18px;border-radius:50%;border:1px solid rgba(255,255,255,.4);
     background:rgba(255,255,255,.1);color:rgba(255,255,255,.75);font-size:11px;font-weight:800;
@@ -899,6 +910,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
   <div class="captain-profile-popup" id="captainProfilePopup">
     <button type="button" class="quiz-close-btn" id="captainProfileCloseBtn">&times;</button>
     <div class="quiz-title">함장 프로필 설정</div>
+    <div class="captain-profile-desc">함장 프로필은 카오스 제로 나이트메어 커뮤니티에 내가 작성한 게시물에 남는 내 정보입니다. 실제 인게임 내 설정한 프로필을 기준으로 설정되며, 게임 또는 커뮤니티 업적을 달성해 훈장을 획득해 이를 프로필에 드러낼 수 있습니다. 이 기능은 언제든 켜고 끌 수 있습니다.</div>
     <div class="captain-profile-hr"></div>
 
     <div class="captain-profile-section-title-row">
@@ -916,6 +928,18 @@ document.getElementById('startBtn').addEventListener('click', function(){
       <div class="captain-banner-media">
         <img class="captain-banner-bg" src="../banner_1.png" alt="">
         <div class="captain-banner-badges" id="captainBannerBadges"></div>
+      </div>
+    </div>
+
+    <div class="captain-profile-hr"></div>
+
+    <div class="captain-toggle-row">
+      <div class="captain-profile-section-title">함장 프로필 활성화 여부</div>
+      <div class="captain-toggle-control">
+        <button type="button" class="captain-toggle-btn on" id="captainProfileToggleBtn" role="switch" aria-checked="true">
+          <span class="captain-toggle-knob"></span>
+        </button>
+        <span class="captain-toggle-label on" id="captainProfileToggleLabel">활성화됨</span>
       </div>
     </div>
 
@@ -1024,6 +1048,18 @@ document.getElementById('startBtn').addEventListener('click', function(){
   btn.addEventListener('click', openCaptainProfile);
   closeBtn.addEventListener('click', closeCaptainProfile);
   overlay.addEventListener('click', function(e){ if (e.target === overlay) closeCaptainProfile(); });
+
+  var toggleBtn = document.getElementById('captainProfileToggleBtn');
+  var toggleLabel = document.getElementById('captainProfileToggleLabel');
+  if (toggleBtn && toggleLabel) {
+    toggleBtn.addEventListener('click', function(){
+      var enabled = !toggleBtn.classList.contains('on');
+      toggleBtn.classList.toggle('on', enabled);
+      toggleBtn.setAttribute('aria-checked', enabled ? 'true' : 'false');
+      toggleLabel.classList.toggle('on', enabled);
+      toggleLabel.textContent = enabled ? '활성화됨' : '비활성화됨';
+    });
+  }
 })();
 </script>
 
