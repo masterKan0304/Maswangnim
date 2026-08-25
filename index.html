@@ -65,10 +65,12 @@
   .cover{background:linear-gradient(180deg, rgba(0,0,0,.08) 0%, rgba(0,0,0,.3) 55%, rgba(0,0,0,.9) 92%, var(--cover-bg) 100%), var(--cover-bg-image) center 0px/180% auto no-repeat, var(--cover-bg);color:var(--cover-text);}
   .cover-inner{position:relative;padding:130px 40px 28px;min-height:750px;}
   .content-row-wrap{margin-top:-470px;position:relative;}
-  .cover-top{position:absolute;top:20px;right:40px;}
+  .cover-top{position:absolute;top:20px;right:40px;display:flex;align-items:center;gap:8px;}
   .cover-start-wrap{position:relative;}
   .cover-start-btn{display:inline-flex;align-items:center;gap:8px;background:var(--orange);color:#fff;font-size:13.5px;font-weight:800;padding:11px 20px;border-radius:8px;border:none;}
   .cover-start-btn:hover{background:var(--orange-dim);}
+  .cover-coupon-btn{background:#fff;color:#1a1a1a;font-size:13.5px;font-weight:800;padding:11px 20px;border-radius:8px;border:none;cursor:pointer;}
+  .cover-coupon-btn:hover{background:#f0f0f0;}
   .cover-start-menu{position:absolute;top:calc(100% + 8px);right:0;background:#fff;border-radius:10px;box-shadow:0 12px 28px rgba(0,0,0,.22);padding:6px;min-width:180px;display:none;z-index:20;}
   .cover-start-menu.open{display:block;}
   .cover-start-menu a{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:7px;font-size:13.5px;font-weight:600;color:#1a1a1a;}
@@ -215,6 +217,7 @@
   .post-author .av{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#ffcaa8,#ff5714);flex:none;object-fit:cover;}
   .post-author .official{font-size:10.5px;font-weight:800;color:var(--blue-tag);}
   .post-author .writer{font-size:12px;font-weight:600;color:var(--sub);}
+  .post-author .post-level{font-size:12px;font-weight:800;color:#ff5714;}
   .post-author time{margin-left:auto;font-size:11px;color:var(--sub-dim);}
   .post-thumb{margin:10px 14px 0;aspect-ratio:16/9;border-radius:9px;position:relative;overflow:hidden;background:var(--page);}
   .post-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
@@ -283,6 +286,7 @@
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .freeboard-img-icon{flex:none;width:13px;height:13px;color:var(--sub-dim);}
   .freeboard-meta{display:flex;align-items:center;gap:9px;font-size:11px;color:var(--sub-dim);margin-top:6px;}
+  .freeboard-meta .post-level{font-weight:800;color:#ff5714;}
   .freeboard-meta svg{width:12px;height:12px;flex:none;}
 
   /* 이 덱 어때 (덱 빌딩 게시판 HOT 게시물 미리보기) */
@@ -303,6 +307,7 @@
   .deckhot-footer{display:flex;align-items:center;gap:10px;margin-top:auto;}
   .deckhot-author{display:flex;align-items:center;gap:6px;min-width:0;flex:none;}
   .deckhot-author-avatar{width:16px;height:16px;border-radius:50%;flex:none;background:linear-gradient(135deg,#ffcaa8,#ff5714);}
+  .deckhot-author-level{font-size:11px;font-weight:800;color:#ff5714;flex:none;}
   .deckhot-author-name{font-size:11px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80px;}
   .deckhot-stat{display:flex;align-items:center;gap:3px;font-size:10.5px;color:var(--sub-dim);flex:none;}
   .deckhot-stat svg{width:11px;height:11px;flex:none;}
@@ -933,6 +938,7 @@
 <div class="cover" style="--cover-bg-image:url('https://d2x8kymwjom7h7.cloudfront.net/live/application_no/10009/partners-sns-api/260715_카제나-커뮤니티-헤더(시즌4)_CP커뮤니티_BG_ML2560x736_1a1516.jpg');">
   <div class="wrap cover-inner">
     <div class="cover-top">
+      <button class="cover-coupon-btn" type="button">쿠폰 입력</button>
       <div class="cover-start-wrap">
         <button class="cover-start-btn" id="startBtn" type="button">▶ 게임 시작</button>
         <div class="cover-start-menu" id="startMenu">
@@ -994,7 +1000,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
       <a href="#" class="top-link active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>홈</a>
 
       <details class="lnb-group">
-        <summary><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 2h12a1 1 0 0 1 1 1v19l-7-4-7 4V3a1 1 0 0 1 1-1z"/></svg>최근 방문한 게시판</summary>
+        <summary><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 2h12a1 1 0 0 1 1 1v19l-7-4-7 4V3a1 1 0 0 1 1-1z"/></svg>즐겨찾는 게시판</summary>
         <div class="lnb-sub">
           <a href="#">공지사항</a>
           <a href="#">자유 게시판</a>
@@ -1006,6 +1012,46 @@ document.getElementById('startBtn').addEventListener('click', function(){
 
       <a href="#" class="top-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h16"/></svg>전체글</a>
 
+      <details class="lnb-group" open>
+        <summary><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg>중앙 감찰부</summary>
+        <div class="lnb-sub">
+          <a href="#">공지사항</a>
+          <a href="#">업데이트</a>
+          <a href="#">개발자&amp;GM노트</a>
+          <a href="#">진행중 이벤트</a>
+          <a href="#">당첨자 발표</a>
+        </div>
+      </details>
+
+      <details class="lnb-group">
+        <summary><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16v16H4z"/><path d="M4 9h16"/></svg>퍼스트 작전실</summary>
+        <div class="lnb-sub">
+          <a href="#">자유 게시판</a>
+          <a href="#">질문 게시판</a>
+          <a href="#">공략 게시판</a>
+          <a href="deckbuilder/">덱 빌딩 게시판</a>
+          <a href="#">팬아트</a>
+        </div>
+      </details>
+
+      <details class="lnb-group">
+        <summary><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21c0-4 4-6 8-6s8 2 8 6"/></svg>방주 도시</summary>
+        <div class="lnb-sub">
+          <a href="#">요원 정보</a>
+          <a href="#">웹툰</a>
+          <a href="#">캘린더 &amp; 배경화면</a>
+          <a href="#">BEST 공략 &amp; 팬아트</a>
+        </div>
+      </details>
+
+      <details class="lnb-group">
+        <summary><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg>에피오네 센터</summary>
+        <div class="lnb-sub">
+          <a href="#">고객센터</a>
+          <a href="#">제보/건의사항</a>
+        </div>
+      </details>
+
       <details class="lnb-group">
         <summary><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 2v4M16 2v4"/></svg>SNS</summary>
         <div class="lnb-sub">
@@ -1016,45 +1062,6 @@ document.getElementById('startBtn').addEventListener('click', function(){
         </div>
       </details>
 
-      <details class="lnb-group" open>
-        <summary><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg>중앙 감찰부</summary>
-        <div class="lnb-sub">
-          <a href="#">공지사항</a>
-          <a href="#">업데이트</a>
-          <a href="#">알려진 이슈</a>
-          <a href="#">개발자 노트</a>
-          <a href="#">GM노트</a>
-          <a href="#">진행중 이벤트</a>
-          <a href="#">당첨자 발표</a>
-        </div>
-      </details>
-
-      <details class="lnb-group">
-        <summary><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21c0-4 4-6 8-6s8 2 8 6"/></svg>침투 준비</summary>
-        <div class="lnb-sub">
-          <a href="#">전투원 정보</a>
-          <a href="#">웹툰</a>
-          <a href="#">캘린더 | 배경화면</a>
-          <a href="#">게임 가이드</a>
-          <a href="#">확률 정보</a>
-        </div>
-      </details>
-
-      <details class="lnb-group">
-        <summary><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16v16H4z"/><path d="M4 9h16"/></svg>퍼스트 작전실</summary>
-        <div class="lnb-sub">
-          <a href="#">출석 게시판 <span class="new">N</span></a>
-          <a href="#">자유 게시판</a>
-          <a href="#">Q&amp;A</a>
-          <a href="#">공략 게시판</a>
-          <a href="#">팬아트</a>
-          <a href="deckbuilder/">덱 빌딩 게시판</a>
-          <a href="#">제보/건의사항 <span class="new">N</span></a>
-        </div>
-      </details>
-
-      <a href="#" class="top-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/></svg>쿠폰 입력 바로가기</a>
-      <a href="#" class="top-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg>고객센터</a>
       <a href="#" class="top-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="15" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>종료된 이벤트</a>
 
       <details class="lnb-group">
@@ -1112,7 +1119,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
     <!-- 동영상 배너 -->
     <section class="block" style="padding:0;overflow:hidden;border:none;box-shadow:none;">
       <div class="media-row">
-        <div class="media-main"><iframe src="https://www.youtube.com/embed/1P8l2DQp5vg?autoplay=1&mute=1&loop=1&playlist=1P8l2DQp5vg&playsinline=1" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div>
+        <div class="media-main"><iframe src="https://www.youtube.com/embed/1P8l2DQp5vg?loop=1&playlist=1P8l2DQp5vg&playsinline=1" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div>
         <div class="media-minis">
           <div class="media-mini" style="background-image:url('main/banner_1.png');"></div>
           <div class="media-mini" style="background-image:url('main/banner_2.png');"></div>
@@ -3867,15 +3874,15 @@ document.getElementById('startBtn').addEventListener('click', function(){
     return '<div class="freeboard-post"><div class="freeboard-title-row">'
       + '<div class="freeboard-title">'+o.title+'</div>'
       + (o.img ? imgIcon : '')
-      + '</div><div class="freeboard-meta"><span>'+o.writer+'</span><span>'+viewIcon+o.view+'</span><span>'+replyIcon+(o.comment||0)+'</span></div></div>';
+      + '</div><div class="freeboard-meta"><span class="post-level">Lv.'+o.level+'</span><span>'+o.writer+'</span><span>'+viewIcon+o.view+'</span><span>'+replyIcon+(o.comment||0)+'</span></div></div>';
   }
 
   var freeboardData = [
-    {writer:'제로화신',title:'이번 신캐 아라벨라 조합 좀 짜봤는데 다들 어떻게 생각하세요?',view:'842',comment:27},
-    {writer:'그림쟁이토끼',title:'팬아트 그려봤어요 (테네브리아)',img:'agents/테네브리아_B.png',view:'1.5K',comment:63},
-    {writer:'뉴비각성',title:'초보 질문) 파트너 강화 우선순위가 어떻게 되나요?',view:'530',comment:19},
-    {writer:'덱빌더러버',title:'덱 코드 공유하는 게시판 따로 있나요?',view:'311',comment:8},
-    {writer:'스샷수집가',title:'이번 업데이트 후기 정리해봤어요',img:'partner/가야_B.png',view:'967',comment:41}
+    {writer:'제로화신',title:'이번 신캐 아라벨라 조합 좀 짜봤는데 다들 어떻게 생각하세요?',view:'842',comment:27,level:47},
+    {writer:'그림쟁이토끼',title:'팬아트 그려봤어요 (테네브리아)',img:'agents/테네브리아_B.png',view:'1.5K',comment:63,level:52},
+    {writer:'뉴비각성',title:'초보 질문) 파트너 강화 우선순위가 어떻게 되나요?',view:'530',comment:19,level:41},
+    {writer:'덱빌더러버',title:'덱 코드 공유하는 게시판 따로 있나요?',view:'311',comment:8,level:58},
+    {writer:'스샷수집가',title:'이번 업데이트 후기 정리해봤어요',img:'partner/가야_B.png',view:'967',comment:41,level:45}
   ];
   document.getElementById('freeboardHotList').innerHTML = freeboardData.map(freeboardCompact).join('');
 
@@ -3884,17 +3891,17 @@ document.getElementById('startBtn').addEventListener('click', function(){
       + '<div class="post-thumb"><img src="'+o.img+'" alt="" loading="lazy"></div>'
       + '<div class="post-body">'
         + '<div class="post-title">'+o.title+'</div>'
-        + (noAuthor ? '' : '<div class="post-author">' + (o.official ? '<span class="official">OFFICIAL</span>' : '') + '<span class="writer">'+o.writer+'</span></div>')
+        + (noAuthor ? '' : '<div class="post-author">' + (o.official ? '<span class="official">OFFICIAL</span>' : '<span class="post-level">Lv.'+o.level+'</span>') + '<span class="writer">'+o.writer+'</span></div>')
         + '<div class="post-stats"><span>'+viewIcon+o.view+'</span><span>'+replyIcon+(o.comment||0)+'</span></div>'
       + '</div>'
     + '</div>';
   }
 
   var fanartData = [
-    {writer:'하루원턴킬맨',title:'수영복 하루 그려봄',img:'main/fan1.png',view:'524',comment:12},
-    {writer:'그그림쟁이이',title:'윾키',img:'main/fan2.png',view:'913',comment:33},
-    {writer:'카제나나한판해요',title:'수영장에 간 미카',img:'main/fan3.png',view:'389',comment:9},
-    {writer:'슴니즌쏘구다',title:'리타 예뻐서 그려봤다',img:'main/fan4.png',view:'701',comment:24}
+    {writer:'하루원턴킬맨',title:'수영복 하루 그려봄',img:'main/fan1.png',view:'524',comment:12,level:49},
+    {writer:'그그림쟁이이',title:'윾키',img:'main/fan2.png',view:'913',comment:33,level:55},
+    {writer:'카제나나한판해요',title:'수영장에 간 미카',img:'main/fan3.png',view:'389',comment:9,level:43},
+    {writer:'슴니즌쏘구다',title:'리타 예뻐서 그려봤다',img:'main/fan4.png',view:'701',comment:24,level:60}
   ];
   document.getElementById('fanartGrid').innerHTML = fanartData.map(function(o){ return postCard(o); }).join('');
 
@@ -4006,7 +4013,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
         '<div class="deckhot-post-left">' +
           '<div class="deckhot-title-row"><span class="deckhot-hot-tag">HOT</span><div class="deckhot-title">' + post.title + '</div></div>' +
           '<div class="deckhot-footer">' +
-            '<div class="deckhot-author"><div class="deckhot-author-avatar"></div><span class="deckhot-author-name">' + post.author + '</span></div>' +
+            '<div class="deckhot-author"><div class="deckhot-author-avatar"></div><span class="deckhot-author-level">Lv.' + post.authorLevel + '</span><span class="deckhot-author-name">' + post.author + '</span></div>' +
             '<span class="deckhot-stat">' + viewIcon + formatCount(post.view) + '</span>' +
             '<span class="deckhot-stat">' + likeIcon + formatCount(post.like) + '</span>' +
             '<span class="deckhot-stat">' + commentIcon + formatCount(post.comment) + '</span>' +

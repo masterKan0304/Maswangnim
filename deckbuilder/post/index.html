@@ -264,6 +264,7 @@
     font-size:12.5px;color:var(--sub);}
   .post-detail-meta .deck-author{display:flex;align-items:center;gap:6px;}
   .post-detail-meta .deck-author-avatar{width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,#ff9466,#ff5714);flex:none;}
+  .post-detail-meta .deck-author-level{font-weight:800;color:#ff5714;}
   .post-detail-meta .deck-author-name{font-weight:700;color:var(--ink);}
   .post-detail-content{padding:20px 2px;min-height:120px;font-size:13.5px;line-height:1.8;color:var(--ink);white-space:pre-wrap;word-break:break-word;}
 
@@ -345,6 +346,9 @@
   .deckbuild-add-label{font-size:9px;font-weight:700;color:var(--sub);}
 
   .deckbuild-side-panel{width:200px;flex:none;display:flex;flex-direction:column;gap:12px;margin-left:auto;}
+  .deckbuild-preset-copy-btn{margin-top:auto;width:100%;padding:10px 0;border-radius:8px;border:1px solid var(--line);
+    background:var(--surface-2);color:var(--sub);font-size:12.5px;font-weight:700;cursor:pointer;transition:background .15s;}
+  .deckbuild-preset-copy-btn:hover{background:var(--surface);}
   .deckbuild-side-empty{flex:1;display:flex;align-items:center;justify-content:center;text-align:center;
     color:var(--sub-dim);font-size:11.5px;line-height:1.6;padding:0 10px;}
   .deckbuild-side-row{display:flex;gap:8px;}
@@ -720,7 +724,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
       <a href="../../index.html" class="top-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>홈</a>
 
       <details class="lnb-group">
-        <summary><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 2h12a1 1 0 0 1 1 1v19l-7-4-7 4V3a1 1 0 0 1 1-1z"/></svg>최근 방문한 게시판</summary>
+        <summary><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 2h12a1 1 0 0 1 1 1v19l-7-4-7 4V3a1 1 0 0 1 1-1z"/></svg>즐겨찾는 게시판</summary>
         <div class="lnb-sub">
           <a href="#">공지사항</a>
           <a href="#">자유 게시판</a>
@@ -733,6 +737,46 @@ document.getElementById('startBtn').addEventListener('click', function(){
       <a href="#" class="top-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h16"/></svg>전체글</a>
 
       <details class="lnb-group">
+        <summary><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg>중앙 감찰부</summary>
+        <div class="lnb-sub">
+          <a href="#">공지사항</a>
+          <a href="#">업데이트</a>
+          <a href="#">개발자&amp;GM노트</a>
+          <a href="#">진행중 이벤트</a>
+          <a href="#">당첨자 발표</a>
+        </div>
+      </details>
+
+      <details class="lnb-group" open>
+        <summary><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16v16H4z"/><path d="M4 9h16"/></svg>퍼스트 작전실</summary>
+        <div class="lnb-sub">
+          <a href="#">자유 게시판</a>
+          <a href="#">질문 게시판</a>
+          <a href="#">공략 게시판</a>
+          <a href="../" class="top-link active" style="padding:7px 8px;">덱 빌딩 게시판</a>
+          <a href="#">팬아트</a>
+        </div>
+      </details>
+
+      <details class="lnb-group">
+        <summary><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21c0-4 4-6 8-6s8 2 8 6"/></svg>방주 도시</summary>
+        <div class="lnb-sub">
+          <a href="#">요원 정보</a>
+          <a href="#">웹툰</a>
+          <a href="#">캘린더 &amp; 배경화면</a>
+          <a href="#">BEST 공략 &amp; 팬아트</a>
+        </div>
+      </details>
+
+      <details class="lnb-group">
+        <summary><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg>에피오네 센터</summary>
+        <div class="lnb-sub">
+          <a href="#">고객센터</a>
+          <a href="#">제보/건의사항</a>
+        </div>
+      </details>
+
+      <details class="lnb-group">
         <summary><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 2v4M16 2v4"/></svg>SNS</summary>
         <div class="lnb-sub">
           <a href="https://x.com/CZN_Official_KR" target="_blank">X(구 트위터)</a>
@@ -742,43 +786,6 @@ document.getElementById('startBtn').addEventListener('click', function(){
         </div>
       </details>
 
-      <details class="lnb-group">
-        <summary><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg>중앙 감찰부</summary>
-        <div class="lnb-sub">
-          <a href="#">공지사항</a>
-          <a href="#">업데이트</a>
-          <a href="#">알려진 이슈</a>
-          <a href="#">개발자 노트</a>
-          <a href="#">GM노트</a>
-          <a href="#">진행중 이벤트</a>
-          <a href="#">당첨자 발표</a>
-        </div>
-      </details>
-
-      <details class="lnb-group">
-        <summary><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21c0-4 4-6 8-6s8 2 8 6"/></svg>침투 준비</summary>
-        <div class="lnb-sub">
-          <a href="#">전투원 정보</a>
-          <a href="#">게임 가이드</a>
-          <a href="#">확률 정보</a>
-        </div>
-      </details>
-
-      <details class="lnb-group" open>
-        <summary><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16v16H4z"/><path d="M4 9h16"/></svg>퍼스트 작전실</summary>
-        <div class="lnb-sub">
-          <a href="#">출석 게시판 <span class="new">N</span></a>
-          <a href="#">자유 게시판</a>
-          <a href="#">Q&amp;A</a>
-          <a href="#">공략 게시판</a>
-          <a href="#">팬아트</a>
-          <a href="../" class="top-link active" style="padding:7px 8px;">덱 빌딩 게시판</a>
-          <a href="#">제보/건의사항 <span class="new">N</span></a>
-        </div>
-      </details>
-
-      <a href="#" class="top-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/></svg>쿠폰 입력 바로가기</a>
-      <a href="#" class="top-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg>고객센터</a>
       <a href="#" class="top-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="15" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>종료된 이벤트</a>
 
       <details class="lnb-group">
@@ -1928,7 +1935,8 @@ document.getElementById('startBtn').addEventListener('click', function(){
         '<div class="deckbuild-chaos-title">카오스 구현</div>' +
         chaosBodyHtml +
       '</div>' +
-      renderEquipSection(activeRow);
+      renderEquipSection(activeRow) +
+      '<button type="button" class="deckbuild-preset-copy-btn">프리셋 코드 복사</button>';
 
     var ptGaugeEl = document.getElementById('deckbuildPtGauge');
     ptGaugeEl.addEventListener('mouseenter', function(e){ showPtUsageZoom(activeRow, e.clientX, e.clientY); });
@@ -2254,7 +2262,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
   } else {
     titleEl.textContent = post.title;
     metaEl.innerHTML =
-      '<div class="deck-author"><div class="deck-author-avatar"></div><span class="deck-author-name">'+post.author+'</span></div>' +
+      '<div class="deck-author"><div class="deck-author-avatar"></div><span class="deck-author-level">Lv.'+post.authorLevel+'</span><span class="deck-author-name">'+post.author+'</span></div>' +
       '<span>'+post.date+'</span>';
     contentEl.textContent = post.content || '';
     renderDeckBox();
