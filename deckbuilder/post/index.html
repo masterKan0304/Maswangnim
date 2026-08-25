@@ -616,8 +616,10 @@
   .equip-cell.grade-blue{border-color:#4fc3f7;}
   .equip-cell.grade-yellow{border-color:#f5c518;}
   .equip-cell.grade-purple{border-color:#b26bff;}
-  .equip-cell-icon-box{flex:none;width:64px;aspect-ratio:1/1;border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#2a2a34;}
+  .equip-cell-icon-box{position:relative;flex:none;width:64px;aspect-ratio:1/1;border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#2a2a34;}
   .equip-cell-icon-box img{width:81%;height:81%;object-fit:contain;filter:drop-shadow(0 2px 5px rgba(0,0,0,.65));}
+  .equip-cell-enhance-badge{position:absolute;bottom:4px;left:4px;width:20px;height:20px;z-index:2;}
+  .equip-cell-enhance-badge img{width:100%;height:100%;object-fit:contain;filter:none;}
   .equip-cell-icon-box img.generic-icon{filter:brightness(0) invert(100%) drop-shadow(0 2px 5px rgba(0,0,0,.65));}
   .equip-cell-icon-box.grade-blue{background:linear-gradient(135deg,#152a6e 0%,#2469d6 38%,#3fd6c8 72%,#8ee9ff 100%);}
   .equip-cell-icon-box.grade-yellow{background:linear-gradient(135deg,#e0791e 0%,#6e4022 45%,#f5c518 100%);}
@@ -1112,6 +1114,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
 
   function renderEquipCellHtml(item, enhance){
     var ic = equipIconSrcAndClass(item, item.type);
+    var enhIconSrc = enhanceIconSrc(enhance);
     var statLabel = EQUIP_STAT_LABEL[item.type];
     var sources = equipSourceList(item);
     var sourceHtml = sources.length > 1 ?
@@ -1125,7 +1128,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
     }
     return (
       '<div class="equip-cell grade-'+item.grade+'">' +
-        '<div class="equip-cell-icon-box grade-'+item.grade+'"><img src="'+ic.src+'" alt=""'+(ic.cls ? ' class="'+ic.cls.trim()+'"' : '')+'></div>' +
+        '<div class="equip-cell-icon-box grade-'+item.grade+'"><img src="'+ic.src+'" alt=""'+(ic.cls ? ' class="'+ic.cls.trim()+'"' : '')+'>'+(enhIconSrc ? '<span class="equip-cell-enhance-badge"><img src="'+enhIconSrc+'" alt=""></span>' : '')+'</div>' +
         '<div class="equip-cell-body">' +
           '<div class="equip-cell-name-row"><span class="equip-cell-name">'+item.name+'</span>'+sourceHtml+'</div>' +
           '<div class="equip-cell-stat-row"><span>'+statLabel+'</span><span class="equip-cell-stat-value">+'+item.stat+'</span></div>' +

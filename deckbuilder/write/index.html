@@ -586,9 +586,11 @@
   .awaken-opt-box:hover{border-color:#c7c7c7;}
   .awaken-opt-box.selected{border-color:var(--orange);box-shadow:0 0 0 2px var(--orange-soft);background:var(--orange-soft);}
   .awaken-opt-box.dim{opacity:.35;cursor:help;}
-  .wpop-foot{flex:none;padding:14px 22px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;}
+  .wpop-foot{flex:none;padding:14px 22px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:10px;}
   .awaken-confirm-btn{padding:10px 28px;border-radius:8px;border:none;background:var(--orange);color:#fff;font-size:13px;font-weight:800;cursor:pointer;transition:opacity .15s;}
   .awaken-confirm-btn:disabled{opacity:.4;cursor:default;}
+  .awaken-remove-btn{padding:10px 28px;border-radius:8px;border:1px solid #ff5252;background:#fff;color:#ff5252;font-size:13px;font-weight:800;cursor:pointer;transition:background .15s;}
+  .awaken-remove-btn:hover{background:#fff0f0;}
 
   /* ============ 각인 선택 팝업 ============ */
   .wpop-filters.persona-filters{flex-direction:column;align-items:stretch;gap:10px;}
@@ -635,8 +637,10 @@
   .equip-cell.grade-blue{border-color:#4fc3f7;}
   .equip-cell.grade-yellow{border-color:#f5c518;}
   .equip-cell.grade-purple{border-color:#b26bff;}
-  .equip-cell-icon-box{flex:none;width:64px;aspect-ratio:1/1;border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#2a2a34;}
+  .equip-cell-icon-box{position:relative;flex:none;width:64px;aspect-ratio:1/1;border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#2a2a34;}
   .equip-cell-icon-box img{width:81%;height:81%;object-fit:contain;filter:drop-shadow(0 2px 5px rgba(0,0,0,.65));}
+  .equip-cell-enhance-badge{position:absolute;bottom:4px;left:4px;width:20px;height:20px;z-index:2;}
+  .equip-cell-enhance-badge img{width:100%;height:100%;object-fit:contain;filter:none;}
   .equip-cell-icon-box img.generic-icon{filter:brightness(0) invert(100%) drop-shadow(0 2px 5px rgba(0,0,0,.65));}
   .equip-cell-icon-box.grade-blue{background:linear-gradient(135deg,#152a6e 0%,#2469d6 38%,#3fd6c8 72%,#8ee9ff 100%);}
   .equip-cell-icon-box.grade-yellow{background:linear-gradient(135deg,#e0791e 0%,#6e4022 45%,#f5c518 100%);}
@@ -1208,6 +1212,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
     </div>
     <div class="wpop-body"><div class="enhance-pop-grid" id="enhancePopGrid"></div></div>
     <div class="wpop-foot">
+      <button type="button" class="awaken-remove-btn" id="enhancePopRemoveBtn" style="display:none;">제거</button>
       <button type="button" class="awaken-confirm-btn" id="enhancePopConfirmBtn" disabled>선택</button>
     </div>
   </div>
@@ -1305,6 +1310,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
 
   function renderEquipCellHtml(item, enhance){
     var ic = equipIconSrcAndClass(item, item.type);
+    var enhIconSrc = enhanceIconSrc(enhance);
     var statLabel = EQUIP_STAT_LABEL[item.type];
     var sources = equipSourceList(item);
     var sourceHtml = sources.length > 1 ?
@@ -1318,7 +1324,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
     }
     return (
       '<div class="equip-cell grade-'+item.grade+'">' +
-        '<div class="equip-cell-icon-box grade-'+item.grade+'"><img src="'+ic.src+'" alt=""'+(ic.cls ? ' class="'+ic.cls.trim()+'"' : '')+'></div>' +
+        '<div class="equip-cell-icon-box grade-'+item.grade+'"><img src="'+ic.src+'" alt=""'+(ic.cls ? ' class="'+ic.cls.trim()+'"' : '')+'>'+(enhIconSrc ? '<span class="equip-cell-enhance-badge"><img src="'+enhIconSrc+'" alt=""></span>' : '')+'</div>' +
         '<div class="equip-cell-body">' +
           '<div class="equip-cell-name-row"><span class="equip-cell-name">'+item.name+'</span>'+sourceHtml+'</div>' +
           '<div class="equip-cell-stat-row"><span>'+statLabel+'</span><span class="equip-cell-stat-value">+'+item.stat+'</span></div>' +
@@ -3344,6 +3350,7 @@ document.getElementById('startBtn').addEventListener('click', function(){
   var enhanceSubFilters = document.getElementById('enhanceSubFilters');
   var enhancePopGrid = document.getElementById('enhancePopGrid');
   var enhancePopConfirmBtn = document.getElementById('enhancePopConfirmBtn');
+  var enhancePopRemoveBtn = document.getElementById('enhancePopRemoveBtn');
   var enhancePopState = { rowIdx: -1, type: null, tab: 'refine', search: '', imprintType: null, pendingRefineIdx: null, pendingHammerIdx: null, pendingImprintIdx: null };
 
   function currentEnhance(){
@@ -3514,6 +3521,8 @@ document.getElementById('startBtn').addEventListener('click', function(){
   function updateEnhanceConfirmState(){
     var any = enhancePopState.pendingRefineIdx !== null || enhancePopState.pendingHammerIdx !== null || enhancePopState.pendingImprintIdx !== null;
     enhancePopConfirmBtn.disabled = !any;
+    var enh = currentEnhance();
+    enhancePopRemoveBtn.style.display = enh[enhancePopState.tab] ? '' : 'none';
   }
 
   function renderEnhancePopup(){
@@ -3565,6 +3574,14 @@ document.getElementById('startBtn').addEventListener('click', function(){
       }
     }
     if (!applied) return;
+    closeEnhancePopup();
+    renderDeckBox();
+  });
+
+  enhancePopRemoveBtn.addEventListener('click', function(){
+    var enh = currentEnhance();
+    enh[enhancePopState.tab] = null;
+    setPendingIdxForTab(enhancePopState.tab, null);
     closeEnhancePopup();
     renderDeckBox();
   });
