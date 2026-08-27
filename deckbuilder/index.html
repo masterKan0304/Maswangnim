@@ -165,7 +165,7 @@
   .lnb-quiz-banner a:hover{filter:brightness(1.08);}
   .lnb-quiz-banner img{display:block;width:100%;height:auto;-webkit-user-drag:none;}
 
-  .lnb-menu{padding:8px;}
+  .lnb-menu,.lnb-favorites{padding:8px;}
   .lnb-menu a.top-link{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:7px;font-size:13px;font-weight:600;color:var(--lnb-text);}
   .lnb-menu a.top-link:hover{background:var(--lnb-bg-2);}
   .lnb-menu a.top-link.active{background:var(--orange-soft);color:var(--orange);font-weight:800;}
@@ -384,18 +384,16 @@ document.getElementById('startBtn').addEventListener('click', function(){
       <button class="lnb-write-btn">✎ 글쓰기</button>
     </div>
 
-    <div class="lnb-block lnb-search">
-      <input type="search" placeholder="검색어를 입력하세요." maxlength="20">
-    </div>
-
     <div class="lnb-block lnb-quiz-banner">
       <a href="../index.html"><img src="../quiz/banner.png" alt="카제나 카드 맞히기" draggable="false" ondragstart="return false"></a>
     </div>
 
-    <div class="lnb-sticky-group">
-    <nav class="lnb-block lnb-menu">
-      <a href="../index.html" class="top-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>홈</a>
+    <div class="lnb-block lnb-search">
+      <input type="search" placeholder="검색어를 입력하세요." maxlength="20">
+    </div>
 
+    <div class="lnb-sticky-group">
+    <div class="lnb-block lnb-favorites">
       <details class="lnb-group">
         <summary><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 2h12a1 1 0 0 1 1 1v19l-7-4-7 4V3a1 1 0 0 1 1-1z"/></svg>즐겨찾는 게시판</summary>
         <div class="lnb-sub">
@@ -406,6 +404,9 @@ document.getElementById('startBtn').addEventListener('click', function(){
           <a href="#">Q&amp;A</a>
         </div>
       </details>
+    </div>
+    <nav class="lnb-block lnb-menu">
+      <a href="../index.html" class="top-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>홈</a>
 
       <a href="#" class="top-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h16"/></svg>전체글</a>
 
