@@ -103,7 +103,7 @@
   .captain-profile-overlay.open{display:flex;}
   .captain-profile-popup{background:#221d1e;border:1.5px solid rgba(255,255,255,.25);border-radius:14px;
     box-shadow:0 20px 60px rgba(0,0,0,.6);color:#fff;position:relative;width:734px;max-width:100%;
-    padding:26px 28px 30px;box-sizing:border-box;max-height:calc(100vh - 40px);overflow-y:auto;}
+    padding:26px 28px 30px;box-sizing:border-box;transform-origin:center center;}
   .captain-profile-popup .quiz-close-btn{position:absolute;top:10px;right:14px;background:none;border:none;
     color:rgba(255,255,255,.6);font-size:24px;line-height:1;cursor:pointer;padding:4px;}
   .captain-profile-popup .quiz-close-btn:hover{color:#fff;}
@@ -2275,5 +2275,42 @@ document.getElementById('startBtn').addEventListener('click', function(){
     renderAuthorBanner(post);
     preloadImages();
   }
+})();
+</script>
+
+<!-- ============ 팝업 창을 브라우저 크기에 맞춰 통째로 축소 ============ -->
+<script>
+(function(){
+  var MARGIN = 40;
+  function fitPopup(el){
+    if (window.innerWidth <= 0 || window.innerHeight <= 0) return;
+    el.style.transform = 'none';
+    var rect = el.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    var scale = Math.min(1, (window.innerWidth - MARGIN) / rect.width, (window.innerHeight - MARGIN) / rect.height);
+    scale = Math.max(scale, 0.15);
+    el.style.transform = scale < 1 ? 'scale(' + scale.toFixed(4) + ')' : '';
+  }
+  var targets = document.querySelectorAll('.captain-profile-popup');
+  function refitVisible(){
+    Array.prototype.forEach.call(targets, function(el){
+      if (el.getClientRects().length) fitPopup(el);
+    });
+  }
+  function refitSoon(){
+    refitVisible();
+    setTimeout(refitVisible, 60);
+    setTimeout(refitVisible, 300);
+  }
+  if (window.ResizeObserver) {
+    var ro = new ResizeObserver(function(entries){
+      entries.forEach(function(entry){ fitPopup(entry.target); });
+    });
+    Array.prototype.forEach.call(targets, function(el){ ro.observe(el); });
+  }
+  window.addEventListener('resize', refitVisible);
+  Array.prototype.forEach.call(document.querySelectorAll('.captain-profile-overlay'), function(overlay){
+    new MutationObserver(refitSoon).observe(overlay, { attributes: true, attributeFilter: ['class'], subtree: true });
+  });
 })();
 </script>
