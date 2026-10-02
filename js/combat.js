@@ -360,10 +360,11 @@ export class SkillRuntime {
       this.addZone(e.x, e.z, src.def.element, sample(st.zone), sample(st.zoneArea) / U / 2, avg(st.damage), src, st);
     }
     const tk = game.skills.find((s) => s.key === 'triggerKill');
-    if (tk) {
+    const goal = tk ? triggerGoal(tk) : 0;
+    // 완성된 문장이 장착되어 목표치가 정해진 상태에서만 중첩이 쌓임
+    if (tk && goal > 0) {
       tk.stacks = Math.min(99999, tk.stacks + e.maxHp * 0.2);
-      const goal = triggerGoal(tk);
-      if (goal > 0 && tk.stacks >= goal) {
+      if (tk.stacks >= goal) {
         tk.stacks -= goal;
         const tst = getStats(tk);
         const dur = sample(tst.duration);
