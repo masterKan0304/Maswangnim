@@ -845,7 +845,9 @@ export class SkillRuntime {
         s.embed += dt;
         const k = Math.min(1, s.embed / 0.75);
         const shake = 0.04 * s.size * k;
-        s.ball.position.set(s.x + (Math.random() - 0.5) * shake * 2, s.size * 0.35, s.z + (Math.random() - 0.5) * shake * 2);
+        // 떨어진 직후 빠르게 파고들어 절반 정도가 땅에 묻힘 (구 중심이 지면 높이)
+        const sink = Math.min(1, s.embed / 0.08);
+        s.ball.position.set(s.x + (Math.random() - 0.5) * shake * 2, s.size * 0.4 * (1 - sink), s.z + (Math.random() - 0.5) * shake * 2);
         s.ball.scale.setScalar(s.size * (1 + 0.18 * k + Math.sin(s.embed * 40) * 0.04 * k));
         s.mat.emissiveIntensity = 0.25 + 1.6 * k * k;
         s.markMat.opacity = 0.3 + 0.5 * k * (0.5 + 0.5 * Math.sin(s.embed * 30));
