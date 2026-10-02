@@ -21,8 +21,8 @@ export const SKILL_DEFS = {
     short: '가장 가까운 적에게 화염구를 발사합니다. 적중하면 폭발합니다.',
     desc: '가장 가까운 적에게 화염구를 발사합니다. 적중하면 폭발해 주위 적에게 피해를 줍니다.',
     keywords: ['화염', '효과 범위', '지속 시간', '투사체', '연쇄', '상태이상', '스킬 쿨타임'],
-    base: { damage: [8, 12], duration: 1.5, projSize: 25, projSpeed: 6, projCount: 1, statusChance: 40, manaCost: 5, cooldown: 1.5 },
-    areaFromProjSize: 0.6,   // 기본 폭발 범위 = 최종 투사체 크기 × 0.6 (3레벨부터 × 0.9) — 실제 크기로는 투사체의 6배 / 9배
+    base: { damage: [8, 12], duration: 1.5, projSize: 10, projSpeed: 6, projCount: 1, statusChance: 40, manaCost: 5, cooldown: 1.5 },
+    areaFromProjSize: 1.5,   // 기본 폭발 범위 = 최종 투사체 크기 × 1.5 (3레벨부터 × 2.25) — 실제 크기로는 투사체의 6배 / 9배
     labels: { duration: '투사체 지속 시간' },
     relevant: ['damage', 'area', 'duration', 'pierce', 'projSize', 'projSpeed', 'projCount', 'chains', 'statusChance', 'manaCost', 'cooldown'],
     levelUp: dmgUp40,
@@ -45,7 +45,7 @@ export const SKILL_DEFS = {
     short: '가장 가까운 적에게 번개를 쏘고 다른 적에게 연쇄합니다.',
     desc: '가장 가까운 적에게 번개를 쏩니다. 번개는 주변의 다른 적에게 연쇄합니다.',
     keywords: ['번개', '연쇄', '투사체', '상태이상', '스킬 쿨타임'],
-    base: { damage: [1, 15], range: 30, chains: 3, projCount: 1, projSize: 10, projSpeed: 6, statusChance: 40, manaCost: 6, cooldown: 2 },
+    base: { damage: [1, 15], range: 30, chains: 3, projCount: 1, projSize: 4, projSpeed: 6, statusChance: 40, manaCost: 6, cooldown: 2 },
     labels: { projCount: '번개 줄기 수', projSize: '번개 굵기', projSpeed: '연쇄 속도' },
     relevant: ['damage', 'chains', 'projCount', 'projSize', 'projSpeed', 'statusChance', 'manaCost', 'cooldown'],
     hiddenUses: ['range'],
@@ -60,7 +60,7 @@ export const SKILL_DEFS = {
     desc: '사거리 안 무작위 위치에 아이스볼을 만듭니다. 아이스볼은 얼음 투사체를 흩뿌리고, 닿은 적에게도 피해를 줍니다.',
     keywords: ['냉기', '효과 범위', '지속 시간', '투사체', '연쇄', '상태이상', '스킬 쿨타임'],
     areaUnit: 50,   // 아이스볼 구체 크기는 수치 10 = 실제 0.2 (다른 스킬 효과 범위와 비슷한 자릿수)
-    base: { damage: [4, 7], area: 45, range: 25, duration: 6, projDuration: 0.75, projSize: 10, projSpeed: 6, projCount: 1, statusChance: 30, manaCost: 10, cooldown: 10 },
+    base: { damage: [4, 7], area: 45, range: 25, duration: 6, projDuration: 0.75, projSize: 4, projSpeed: 6, projCount: 1, statusChance: 30, manaCost: 10, cooldown: 10 },
     labels: { duration: '아이스볼 지속 시간' },
     relevant: ['damage', 'area', 'duration', 'projDuration', 'pierce', 'projSize', 'projSpeed', 'projCount', 'chains', 'statusChance', 'manaCost', 'cooldown'],
     hiddenUses: ['range'],
@@ -100,7 +100,7 @@ export const SKILL_DEFS = {
     short: '둔화 상태인 적을 처치하면 얼음 투사체가 사방으로 퍼집니다.',
     desc: '둔화 상태인 적을 처치하면 그 자리에서 얼음 투사체가 사방으로 퍼집니다.',
     keywords: ['냉기', '지속 시간', '투사체', '연쇄', '상태이상', '패시브'],
-    base: { damage: [3, 12], duration: 0.5, projSize: 15, projSpeed: 9, projCount: 10, statusChance: 30 },
+    base: { damage: [3, 12], duration: 0.5, projSize: 6, projSpeed: 9, projCount: 10, statusChance: 30 },
     labels: { duration: '투사체 지속 시간' },
     relevant: ['damage', 'duration', 'pierce', 'projSize', 'projSpeed', 'projCount', 'chains', 'statusChance'],
     levelUp(st, lv) {

@@ -14,7 +14,7 @@ export const MAX_SKILL_LEVEL = 5;
 export const MAX_ENEMIES = 380;
 export const PROJ_SPEED_UNIT = 2;      // 투사체 속도 스탯 1 = 초당 월드 2 (스탯 6 → 기존과 같은 실제 속도)
 export const STAT_UNIT = 5;             // 스탯상의 거리/효과 범위 단위 → 월드 단위 변환 (플레이어 지름 = 스탯 5)
-export const PROJ_SIZE_UNIT = 50;       // 투사체 크기 스탯 → 월드 (수치가 효과 범위와 비슷한 자릿수가 되도록 10배 단위)
+export const PROJ_SIZE_UNIT = 20;       // 투사체 크기 스탯 → 월드 (스탯 20 = 월드 1)
 export const DASH = { cooldown: 5, distance: 3, duration: 0.14 };
 
 export const PLAYER = {
@@ -47,7 +47,7 @@ export const SUBJECTS = {
   castSpeed: { name: '시전 속도',    min: 0.1, max: 20, noWord: true, hidden: true, desc: '스킬을 시전하는 속도입니다.' },
   shield:    { name: '보호막 획득량', min: 0,              desc: '얻는 보호막의 양입니다.' },
   pierce:    { name: '관통 횟수',    min: 0, max: 999, int: true, desc: '투사체가 적을 관통하는 횟수입니다.' },
-  projSize:  { name: '투사체 크기',  min: 5,               desc: '투사체의 크기입니다.' },
+  projSize:  { name: '투사체 크기',  min: 2,               desc: '투사체의 크기입니다.' },
   projSpeed: { name: '투사체 속도',  min: 0.1, max: 50,    desc: '투사체가 날아가는 속도입니다.' },
   projCount: { name: '투사체 개수',  min: 1, max: 40, int: true, desc: '한 번에 발사되는 투사체 수입니다.' },
   chains:    { name: '연쇄 횟수',    min: 0, max: 50, int: true, desc: '적중 후 다른 적에게 다시 이어지는 횟수입니다.' },

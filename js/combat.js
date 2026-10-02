@@ -496,7 +496,7 @@ export class SkillRuntime {
       const dx = Math.cos(a), dz = Math.sin(a);
       this.spawnProj({
         kind: 'fire', sk, ...gen(), gen, x: p.pos.x + dx * 0.45, z: p.pos.z + dz * 0.45, y: 0.62,
-        dx, dz, st, chains: sampleInt(st.chains), split: sk.level >= 5, areaFactor: areaFactor(sk) * 10,   // 실제 크기 기준 배율 (6 / 9)
+        dx, dz, st, chains: sampleInt(st.chains), split: sk.level >= 5, areaFactor: areaFactor(sk) * PZ / U,   // 실제 크기 기준 배율 (6 / 9)
       });
     }
   }
