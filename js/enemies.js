@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { ENEMY_TYPES, WORLD_HALF, STATUS } from './config.js';
 import { slimeBodyGeometry, slimeFaceGeometry, createKingSlime, createEliteSlime } from './models.js';
 import { game } from './state.js';
+import { recordDamage } from './dps.js';
 import { sfx } from './audio.js';
 
 const MAX = 460;
@@ -111,6 +112,7 @@ export class EnemyManager {
     if (element === 'fire' && e.fireVuln) amount *= 1 + e.fireVuln;   // 화염 방사 5레벨 취약
     if (!color && element) color = ELEM_NUM[element];
     amount *= game.mods.dmgMul;   // 업그레이드: 모든 피해 증가
+    recordDamage(src, amount);    // DPS 표 기록
     e.hp -= amount;
     e.flash = 0.12;
     const kb = e.boss ? 0.1 : e.elite ? 0.3 : 1;

@@ -14,6 +14,7 @@ import { randomBlock, randomDistinctBlocks, blockSig } from './blocks.js';
 import { UI } from './ui.js';
 import { Labels } from './labels.js';
 import { rollChoices } from './levelup.js';
+import { updateDpsTable } from './dps.js';
 import { input, updateAim } from './input.js';
 import { STAGE, fitStage, onStageResize } from './stage.js';
 import { initAudio, sfx } from './audio.js';
@@ -495,7 +496,7 @@ function tick(dt, draw = true) {
   labels.update();
   player.render(animTime);
   fx.render(adt);
-  if (game.state !== 'start') ui.updateHUD();
+  if (game.state !== 'start') { ui.updateHUD(); updateDpsTable(adt); }
   ui.setPausedView(game.state === 'playing' && isPaused());
   document.body.classList.toggle('ui-readonly', game.state === 'levelup');
   renderer.render(scene, camera);

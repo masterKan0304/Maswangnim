@@ -36,7 +36,7 @@ function describe(c) {
   if (c.type === 'slot') {
     const sk = c.sk;
     return {
-      id: `slot:${sk.key}`, icon: ic('puzzle'), tag: sk.def.name, title: '문장 블록 최대치 +1',
+      id: `slot:${sk.key}`, icon: `<span class="ic-stack">${sk.def.icon}${ic('puzzle', 'ic-badge')}</span>`, tag: sk.def.name, title: '문장 블록 최대치 +1',
       desc: `${sk.def.name}에 장착할 수 있는 문장 블록 수가 1 증가합니다.`,
       detail: `문장 슬롯 ${sk.maxSlots} → <b>${sk.maxSlots + 1}</b> (최대 ${MAX_SENTENCE_SLOTS})`,
       apply() { sk.maxSlots++; bump(); },

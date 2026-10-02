@@ -357,7 +357,7 @@ export class SkillRuntime {
   onKill(e, src, st) {
     // 처치한 스킬에 '지대' 문장이 있으면 속성 지대를 남김
     if (src && st && st.zone && st.zone.max > 0 && src.def.element) {
-      this.addZone(e.x, e.z, src.def.element, sample(st.zone), sample(st.zoneArea) / U / 2, avg(st.damage));
+      this.addZone(e.x, e.z, src.def.element, sample(st.zone), sample(st.zoneArea) / U / 2, avg(st.damage), src, st);
     }
     const tk = game.skills.find((s) => s.key === 'triggerKill');
     if (tk) {
@@ -434,7 +434,7 @@ export class SkillRuntime {
   }
 
   // ── 속성 지대 ─────────────────────────
-  addZone(x, z, el, time, r, burnBase) {
+  addZone(x, z, el, time, r, burnBase, src = null, st = null) {
     if (time <= 0 || r <= 0) return;
     if (this.zones.length >= 40) this.removeZone(0);
     const mat = new THREE.MeshBasicMaterial({ color: ZONE_COLOR[el], transparent: true, opacity: 0.28, blending: THREE.AdditiveBlending, depthWrite: false });
@@ -448,7 +448,7 @@ export class SkillRuntime {
     ring.position.set(x, 0.05, z);
     ring.scale.setScalar(r);
     this.scene.add(disc, ring);
-    this.zones.push({ x, z, el, t: time, max: time, r, tick: 0, burnBase, disc, ring, mats: [mat, ringMat], age: 0 });
+    this.zones.push({ x, z, el, t: time, max: time, r, tick: 0, burnBase, src, st, disc, ring, mats: [mat, ringMat], age: 0 });
   }
 
   removeZone(i) {
@@ -474,7 +474,7 @@ export class SkillRuntime {
       if (zn.tick <= 0) {
         zn.tick = 0.3;
         for (const e of this.enemies.query(zn.x, zn.z, zn.r + 2.2)) {
-          if (e.alive && Math.hypot(e.x - zn.x, e.z - zn.z) < zn.r + e.r * 0.5) this.enemies.applyStatus(e, zn.el, zn.burnBase);
+          if (e.alive && Math.hypot(e.x - zn.x, e.z - zn.z) < zn.r + e.r * 0.5) this.enemies.applyStatus(e, zn.el, zn.burnBase, zn.src, zn.st);
         }
       }
       if (zn.t <= 0) this.removeZone(i);
@@ -940,6 +940,11 @@ export class SkillRuntime {
     for (let i = this.beams.length - 1; i >= 0; i--) {
       const b = this.beams[i];
       b.age += dt; b.t -= dt;
+      // 추적 대상이 처치되면, 다른 줄기가 추적하지 않는 가까운 적을 새 대상으로 삼음
+      if (b.target && !b.target.alive && b.sk.level >= 3) {
+        b.target = null;
+        b.target = this.pickUntracked(b.x, b.z, 30);
+      }
       // 추적: 대상이 살아 있으면 계속 그쪽으로 방향을 바꿈
       if (b.target && b.target.alive) {
         const tx = b.target.x - b.x, tz = b.target.z - b.z, d = Math.hypot(tx, tz);
