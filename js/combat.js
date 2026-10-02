@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { WORLD_HALF, STAT_UNIT as U, PROJ_SPEED_UNIT as PS, STATUS, ELEMENT_DMG } from './config.js';
+import { WORLD_HALF, STAT_UNIT as U, PROJ_SPEED_UNIT as PS, PROJ_SIZE_UNIT as PZ, STATUS, ELEMENT_DMG } from './config.js';
 import { game, schedule } from './state.js';
 import { getStats, computeStats, sample, sampleInt, avg, statusProb, maxStacks, areaFactor, ATTACK_SKILLS, enchantReq, triggerGoal, completeSentences } from './skills.js';
 import { makeGlowSprite } from './effects.js';
@@ -399,7 +399,7 @@ export class SkillRuntime {
       if (sk) {
         const ast = getStats(sk);
         const n = sampleInt(ast.projCount);
-        const gen = () => ({ size: sample(ast.projSize) / U, speed: sample(ast.projSpeed) * PS, life: sample(ast.duration), pierce: sampleInt(ast.pierce) });
+        const gen = () => ({ size: sample(ast.projSize) / PZ, speed: sample(ast.projSpeed) * PS, life: sample(ast.duration), pierce: sampleInt(ast.pierce) });
         const a0 = Math.random() * Math.PI * 2;
         for (let i = 0; i < n; i++) {
           const a = a0 + (i / n) * Math.PI * 2;
@@ -487,13 +487,13 @@ export class SkillRuntime {
     const base = Math.atan2(p.aim.z, p.aim.x);
     const n = sampleInt(st.projCount);
     // 스탯 단위 → 월드 단위 (연쇄로 다시 생성될 때도 같은 방식으로 새로 뽑음)
-    const gen = () => ({ size: sample(st.projSize) / U, speed: sample(st.projSpeed) * PS, life: sample(st.duration), pierce: sampleInt(st.pierce), area: sample(st.area) / U });
+    const gen = () => ({ size: sample(st.projSize) / PZ, speed: sample(st.projSpeed) * PS, life: sample(st.duration), pierce: sampleInt(st.pierce), area: sample(st.area) / U });
     for (let i = 0; i < n; i++) {
       const a = spreadAngle(base, i);
       const dx = Math.cos(a), dz = Math.sin(a);
       this.spawnProj({
         kind: 'fire', sk, ...gen(), gen, x: p.pos.x + dx * 0.45, z: p.pos.z + dz * 0.45, y: 0.62,
-        dx, dz, st, chains: sampleInt(st.chains), split: sk.level >= 5, areaFactor: areaFactor(sk),
+        dx, dz, st, chains: sampleInt(st.chains), split: sk.level >= 5, areaFactor: areaFactor(sk) * 10,   // 실제 크기 기준 배율 (6 / 9)
       });
     }
   }
@@ -504,7 +504,7 @@ export class SkillRuntime {
     const range = sample(st.range) / U;
     const lineDmg = sk.level >= 5;
     const firsts = this.enemies.nearestN(p.x, p.z, range, sampleInt(st.projCount));
-    const width = Math.max(0.05, sample(st.projSize) / U);
+    const width = Math.max(0.05, sample(st.projSize) / PZ);
     const step = 0.07 * (6 / Math.max(0.1, sample(st.projSpeed)));
     for (const first of firsts) {
       const hit = new Set();
@@ -551,7 +551,7 @@ export class SkillRuntime {
     const a = Math.random() * Math.PI * 2, r = Math.sqrt(Math.random()) * range;
     const x = Math.max(-WORLD_HALF, Math.min(WORLD_HALF, p.x + Math.cos(a) * r));
     const z = Math.max(-WORLD_HALF, Math.min(WORLD_HALF, p.z + Math.sin(a) * r));
-    const size = sample(st.area) / U;
+    const size = sample(st.area) / (sk.def.areaUnit || U);
     const group = new THREE.Group();
     const mat = new THREE.MeshStandardMaterial({ color: 0xb8efff, emissive: 0x2a8fc0, emissiveIntensity: 0.7, roughness: 0.15, flatShading: true, transparent: true, opacity: 0.92 });
     const core = new THREE.Mesh(this.iceballGeo, mat);
@@ -608,7 +608,7 @@ export class SkillRuntime {
         const base = ib.angIdx * ib.step * DEG;
         ib.angIdx++;
         const n = sampleInt(st.projCount);
-        const gen = () => ({ size: sample(st.projSize) / U, speed: sample(st.projSpeed) * PS, life: sample(st.projDuration), pierce: sampleInt(st.pierce) });
+        const gen = () => ({ size: sample(st.projSize) / PZ, speed: sample(st.projSpeed) * PS, life: sample(st.projDuration), pierce: sampleInt(st.pierce) });
         const dirs = ib.backShot ? [base, base + Math.PI] : [base];
         for (const b of dirs) {
           for (let k = 0; k < n; k++) {
