@@ -4,7 +4,7 @@
 import { game } from './state.js';
 
 const BW = 0.5;          // 기록 칸 하나의 길이 (초)
-const NB = 10;           // 칸 수 → 최근 5초 평균
+const NB = 20;           // 칸 수 → 최근 10초 평균
 const ROW_H = 40;        // 표 한 줄 높이 (px)
 
 // 피해 기록 (enemies.damage 에서 호출)
@@ -54,12 +54,13 @@ export function updateDpsTable(dt) {
   acc = 0.25;
   const list = game.skills.filter(isAttack).map((sk) => ({ sk, v: skillDps(sk) }));
   box.classList.toggle('hidden', !list.length || game.state === 'start');
+  const listEl = document.getElementById('dps-list');
   // 사라진 스킬 정리
   for (const [sk, r] of rows) if (!list.some((x) => x.sk === sk)) { r.el.remove(); rows.delete(sk); }
   // 순위: DPS 높은 순 (같으면 획득 순서 유지)
   list.sort((a, b) => b.v - a.v || game.skills.indexOf(a.sk) - game.skills.indexOf(b.sk));
   const top = list.length ? list[0].v : 0;
-  box.style.height = `${list.length * ROW_H}px`;
+  listEl.style.height = `${list.length * ROW_H}px`;
   list.forEach(({ sk, v }, rank) => {
     let r = rows.get(sk);
     if (!r) {
@@ -68,7 +69,7 @@ export function updateDpsTable(dt) {
       el.style.setProperty('--c', sk.def.color);
       el.innerHTML = `<div class="dps-icon">${sk.def.icon}</div><div class="dps-main"><div class="dps-head"><span class="dps-name">${sk.def.name}</span><b class="dps-num"></b></div><div class="dps-bar"><i></i></div></div>`;
       el.style.transform = `translateY(${rank * ROW_H}px)`;
-      box.appendChild(el);
+      listEl.appendChild(el);
       r = { el, num: el.querySelector('.dps-num'), fill: el.querySelector('.dps-bar i') };
       rows.set(sk, r);
     }
