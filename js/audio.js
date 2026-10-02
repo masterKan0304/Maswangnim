@@ -79,6 +79,16 @@ const SFX = {
   // 전투
   fire:    ['sfx', 0.05, () => { noise('sfx', { dur: 0.22, gain: 0.25, type: 'bandpass', freq: 1400, to: 400, q: 0.8 }); tone('sfx', { freq: 220, to: 110, dur: 0.18, type: 'triangle', gain: 0.12 }); }],
   explode: ['sfx', 0.04, () => { noise('sfx', { dur: 0.4, gain: 0.35, type: 'lowpass', freq: 1200, to: 100 }); tone('sfx', { freq: 120, to: 40, dur: 0.3, gain: 0.35 }); }],
+  // 눈 밟는 소리: 짧은 잡음 알갱이를 불규칙하게 여러 번 + 낮은 '푹' 소리
+  snowCrunch: ['sfx', 0.08, () => {
+    noise('sfx', { dur: 0.16, gain: 0.32, type: 'lowpass', freq: 520, to: 180, attack: 0.004 });
+    let t = 0;
+    for (let i = 0; i < 16; i++) {
+      t += 0.008 + Math.random() * 0.028;
+      noise('sfx', { dur: 0.018 + Math.random() * 0.025, gain: 0.07 + Math.random() * 0.1, type: 'bandpass', freq: 1400 + Math.random() * 2600, q: 1.8, delay: t, attack: 0.002 });
+    }
+    noise('sfx', { dur: 0.35, gain: 0.06, type: 'highpass', freq: 3500, delay: 0.02, attack: 0.03 });
+  }],
   zap:     ['sfx', 0.04, () => { tone('sfx', { freq: 1600, to: 220, dur: 0.14, type: 'square', gain: 0.07 }); noise('sfx', { dur: 0.1, gain: 0.15, type: 'highpass', freq: 3000 }); }],
   iceShot: ['sfx', 0.07, () => tone('sfx', { freq: 2200 + Math.random() * 600, to: 1500, dur: 0.07, type: 'triangle', gain: 0.05 })],
   iceball: ['sfx', 0.1, () => { [1318, 1760, 2093].forEach((f, i) => tone('sfx', { freq: f, dur: 0.35, type: 'triangle', gain: 0.08, delay: i * 0.05 })); noise('sfx', { dur: 0.3, gain: 0.08, type: 'highpass', freq: 5000 }); }],

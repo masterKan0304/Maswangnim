@@ -816,7 +816,7 @@ export class SkillRuntime {
 
   // 눈덩이 충격: 강하게 튀는 파편 + 피어오르는 안개 + 범위 피해 / 밀쳐내기
   snowImpact(s) {
-    sfx('explode'); sfx('frost');
+    sfx('snowCrunch');
     const r = s.radius;
     this.fx.ring(s.x, s.z, r, 0xd8f8ff, 0.45);
     this.fx.ring(s.x, s.z, r * 1.3, 0xffffff, 0.6);

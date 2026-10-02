@@ -178,7 +178,8 @@ export class UI {
       if (interactive) {
         const loc = { t: 'sent', block: s, i };
         if (!slot.locked) { chip._drop = loc; chip.classList.add('droppable'); if (slot.block) chip._drag = loc; }
-        if (slot.block && slot.block.kind === 'op') chip._ctx = slot.block;
+        // 끼워진 블록 우클릭 → 즉시 인벤토리로 해제
+        if (slot.block && !slot.locked) chip._rclick = () => this.releaseToInv(loc);
         if (slot.block) { const b = slot.block; chip._tip = () => this.blockTip(b) + (slot.locked ? '<div class="tip-warn">🔒 고정된 칸이라 바꿀 수 없습니다.</div>' : ''); }
         else chip._tip = () => `<div class="tip-title">빈 칸</div><div>${{ subject: '단어:주체 블록을', number: '수치 블록이나 연산 블록을', numflat: '고정값이나 랜덤값 수치 블록을', change: '단어:변화 블록을' }[slot.type]} 넣을 수 있습니다.</div>`;
       }
@@ -485,6 +486,15 @@ export class UI {
     }
   }
 
+  // 문장/연산 블록에 끼워진 블록을 인벤토리 빈칸으로 해제
+  releaseToInv(loc) {
+    if (!getAt(loc)) return;
+    const i = game.inventory.indexOf(null);
+    if (i < 0) { this.toast('인벤토리가 가득 찼습니다', 'warn'); sfx('error'); return; }
+    this.hideTip();
+    this.move(loc, { t: 'inv', i });
+  }
+
   // 재조합 창이 열려 있을 때 인벤토리 블록 클릭 → 빈 재조합 칸으로 바로 이동 (같은 유형만)
   quickRecomb(loc) {
     const b = getAt(loc);
@@ -643,7 +653,7 @@ export class UI {
         body.appendChild(isComplete(b)
           ? el('div', 'pop-status ok', '✔ 완성되었습니다. 스킬에 장착하면 효과가 적용됩니다.')
           : el('div', 'pop-status bad', `✖ 미완성 — 빈 칸 ${missingCount(b)}개`));
-        body.appendChild(el('div', 'pop-hint', '인벤토리의 블록을 빈 칸으로 드래그 · 칸의 블록을 밖으로 드래그해 빼기 · 연산 블록은 우클릭으로 편집'));
+        body.appendChild(el('div', 'pop-hint', '인벤토리의 블록을 빈 칸으로 끌어 넣습니다. 끼워진 블록을 우클릭하면 인벤토리로 돌아갑니다.'));
       } else {
         const line = el('div', 'sentence-line op-line');
         for (let i = 0; i < 2; i++) {
@@ -656,6 +666,7 @@ export class UI {
             chip.classList.add('filled', 'k-number');
             chip.textContent = blockLabel(nb);
             chip._drag = loc;
+            chip._rclick = () => this.releaseToInv(loc);
             chip._tip = () => this.blockTip(nb);
           } else {
             chip.classList.add('empty', 't-number');
@@ -668,7 +679,7 @@ export class UI {
         const v = evalNumber(b);
         line.appendChild(el('span', 'op-res', v ? `= ${fmtValue(v)}` : '= ?'));
         body.appendChild(line);
-        body.appendChild(el('div', 'pop-hint', '문장 블록의 수치 칸에 넣어 사용합니다.'));
+        body.appendChild(el('div', 'pop-hint', '문장 블록의 수치 칸에 넣어 사용합니다. 끼워진 블록을 우클릭하면 인벤토리로 돌아갑니다.'));
       }
       w.appendChild(body);
       w.addEventListener('pointerdown', () => { if (p.z !== this.zTop) { p.z = ++this.zTop; w.style.zIndex = 60 + p.z; } });

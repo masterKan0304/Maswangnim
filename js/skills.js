@@ -345,7 +345,9 @@ function runSentences(skill, stats, extra = [], scale = 1) {
     if (s.template === 'SNC') val = amped(scaleVal(evalNumber(s.slots[1].block), k));
     else {
       // '만큼' 값: 백분율 계열 스탯(확률 등)은 백분율로 적용
-      const src = s.slots[1].block.key;
+      let src = s.slots[1].block.key;
+      // 스킬의 주 속성과 같은 속성 피해 = 그 스킬의 피해량 (예: 파이어볼의 화염 피해)
+      if (SUBJECTS[src].element && SUBJECTS[src].element === d.element) src = 'damage';
       const sv = stats[src];
       val = SUBJECTS[src].pctType ? { min: sv.min / 100, max: sv.max / 100, pct: true } : { ...sv, pct: false };
       val = scaleVal(val, k);
@@ -359,7 +361,10 @@ function runSentences(skill, stats, extra = [], scale = 1) {
     // 실제로 바뀌는 내부 스탯 (저항 무시 % / 치명타 추가 피해)
     const key = subj === 'penetration' && val.pct ? 'penPct' : subj === 'critDamage' && !val.pct ? 'critFlat' : subj;
     const before = { ...stats[key] };
-    applyEffect(stats, subj, val, change);
+    if (SUBJECTS[subj].element && stats[subj].max === 0 && val.pct && change !== 'dec') {
+      // 없던 속성 피해를 백분율로 늘리면: 스킬 피해량의 그 비율만큼 속성 피해가 생김 (냉기 스킬 + 화염 피해 90% 증가)
+      stats[subj] = { min: stats.damage.min * val.min, max: stats.damage.max * val.max };
+    } else applyEffect(stats, subj, val, change);
     // 피해량 변화는 이미 추가된 속성 피해에도 적용
     if (subj === 'damage') for (const ek of ['fireDmg', 'iceDmg', 'lightningDmg']) if (stats[ek].max > 0) applyEffect(stats, ek, val, change);
     // 지속 시간 변화는 투사체 지속 시간에도 똑같이 적용
