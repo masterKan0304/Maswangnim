@@ -885,7 +885,7 @@ export class UI {
     rr.innerHTML = `${ic('dice')} 리롤 (${game.rerolls})`;
     rr.disabled = game.rerolls <= 0;
     rr.onclick = onReroll;
-    $('#lu-title').textContent = title;
+    $('#lu-title').innerHTML = title;   // 제목에 아이콘(SVG)이 들어갈 수 있음
     $('#lu-level').textContent = '하나를 골라 획득';
     $('#levelup').classList.remove('hidden');
   }
