@@ -73,10 +73,11 @@ export class Player {
   update(dt, input, obstacles) {
     // 이동
     const mv = new THREE.Vector3();
-    if (input.keys.has('KeyW')) mv.add(DIR_UP);
-    if (input.keys.has('KeyS')) mv.sub(DIR_UP);
-    if (input.keys.has('KeyD')) mv.add(DIR_RIGHT);
-    if (input.keys.has('KeyA')) mv.sub(DIR_RIGHT);
+    const k = input.keys;   // WASD 또는 방향키
+    if (k.has('KeyW') || k.has('ArrowUp')) mv.add(DIR_UP);
+    if (k.has('KeyS') || k.has('ArrowDown')) mv.sub(DIR_UP);
+    if (k.has('KeyD') || k.has('ArrowRight')) mv.add(DIR_RIGHT);
+    if (k.has('KeyA') || k.has('ArrowLeft')) mv.sub(DIR_RIGHT);
     // 이름표 클릭: 지정한 아이템까지 자동 이동 (직접 이동하면 취소)
     if (mv.lengthSq() > 0) this.moveTarget = null;
     else if (this.moveTarget) {
