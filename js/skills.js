@@ -239,6 +239,9 @@ export function baseStats(skill, level = skill.level) {
   const d = skill.def;
   const st = {};
   for (const k of SUBJECT_ORDER) st[k] = iv(d.base[k] ?? STAT_DEFAULTS[k] ?? 0);
+  // 업그레이드 '기초 훈련': 스킬 기본 피해량 증가
+  const bm = (game.mods && game.mods.baseDmgMul) || 1;
+  st.damage = { min: st.damage.min * bm, max: st.damage.max * bm };
   if (d.levelUp) d.levelUp(st, level);
   const f = areaFactor(skill, level);
   if (f) st.area = { min: st.projSize.min * f, max: st.projSize.max * f };

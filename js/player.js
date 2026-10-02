@@ -164,7 +164,7 @@ export class Player {
 
   // 업그레이드 적용 (게임 시작 시)
   applyMods(m) {
-    this.maxHp = PLAYER.maxHp + m.maxHp;
+    this.maxHp = Math.round((PLAYER.maxHp + m.maxHp) * m.maxHpMul);
     this.hp = this.maxHp;
     this.maxMana = PLAYER.maxMana + m.maxMana;
     this.mana = this.maxMana;
@@ -186,7 +186,7 @@ export class Player {
       sfx('shield');
       game.sys.skillsRt.frostNova(bar);
     }
-    let dmg = amount;
+    let dmg = amount * Math.max(0, 1 - game.mods.dmgTakenMinus);   // 업그레이드: 받는 피해 감소
     if (this.shield > 0) {
       const a = Math.min(this.shield, dmg);
       this.shield -= a;
