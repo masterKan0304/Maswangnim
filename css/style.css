@@ -563,12 +563,34 @@ body.game-paused #bossbar { top: 104px; }
 .set-row input[type=range] { flex: 1; accent-color: #ffb34d; height: 6px; }
 .set-val { width: 36px; text-align: right; font-weight: 900; color: #ffe39a; }
 .toggle {
-  margin-left: auto; position: relative; width: 84px; height: 32px; border-radius: 999px; border: 0;
-  background: #3a3f5c; color: #fff; font-weight: 900; font-size: 12px; text-align: right; padding: 0 12px; transition: background 0.15s;
+  margin-left: auto; position: relative; width: 84px; height: 32px; border-radius: 999px; border: 0; flex: none; overflow: hidden;
+  background: #3a3f5c; color: #fff; font-weight: 900; font-size: 12px; padding: 0;
+  transition: background 0.25s ease, box-shadow 0.25s ease;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.35);
 }
-.toggle i { position: absolute; left: 4px; top: 4px; width: 24px; height: 24px; border-radius: 50%; background: #fff; transition: left 0.15s; }
-.toggle.on { background: #3fbf7f; text-align: left; }
-.toggle.on i { left: 56px; }
+.toggle.on { background: #3fbf7f; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2), 0 0 10px rgba(63,191,127,0.45); }
+/* 동그라미가 좌우로 미끄러짐 (살짝 늘어났다 돌아오는 느낌) */
+.toggle i {
+  position: absolute; left: 4px; top: 4px; width: 24px; height: 24px; border-radius: 999px; background: #fff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.35);
+  transition: left 0.28s cubic-bezier(0.5, 1.6, 0.4, 0.9), width 0.14s ease;
+}
+.toggle:active i { width: 30px; }
+.toggle.on i { left: calc(100% - 28px); }
+.toggle.on:active i { left: calc(100% - 34px); }
+.toggle .t-on, .toggle .t-off { position: absolute; top: 0; bottom: 0; display: flex; align-items: center; transition: opacity 0.2s, transform 0.28s; }
+.toggle .t-on { left: 12px; opacity: 0; transform: translateX(-6px); }
+.toggle .t-off { right: 10px; opacity: 1; }
+.toggle.on .t-on { opacity: 1; transform: none; }
+.toggle.on .t-off { opacity: 0; transform: translateX(6px); }
+.toggle.small { width: 64px; height: 28px; margin-left: 10px; font-size: 11px; }
+.toggle.small i { width: 20px; height: 20px; }
+.toggle.small:active i { width: 26px; }
+.toggle.small.on i { left: calc(100% - 24px); }
+.toggle.small.on:active i { left: calc(100% - 30px); }
+.toggle.small .t-on { left: 9px; }
+.toggle.small .t-off { right: 7px; }
+.set-row.muted input[type=range], .set-row.muted .set-val { opacity: 0.35; filter: grayscale(1); }
 
 #bossbar.elite #bossfill { background: linear-gradient(90deg, #2f6fe0, #7fb8ff); }
 
@@ -595,3 +617,15 @@ body.game-paused #bossbar { top: 104px; }
 #up-canvas { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
 .up-lines { overflow: visible; }
 .up-hint b { color: #fff; }
+
+/* 속성 피해 색 / 치명타 / 문장 희귀도 */
+.st.el-fire b, .tip-stats .el-fire, .st.el-fire { color: #ff8a5a; }
+.st.el-ice b, .tip-stats .el-ice, .st.el-ice { color: #8fe3ff; }
+.st.el-lightning b, .tip-stats .el-lightning, .st.el-lightning { color: #ffe066; }
+.dmg.crit { font-size: 24px; color: #ffe14a; text-shadow: -2px 0 #6a1a00, 2px 0 #6a1a00, 0 -2px #6a1a00, 0 2px #6a1a00, 0 0 10px rgba(255,200,40,0.8); }
+.tile.k-sentence.rar2 { box-shadow: inset 0 2px 0 rgba(255,255,255,0.3), 0 0 0 2px #5fb8ff, 0 0 10px rgba(95,184,255,0.7); }
+.tile.k-sentence.rar3 { box-shadow: inset 0 2px 0 rgba(255,255,255,0.3), 0 0 0 2px #ffd45a, 0 0 12px rgba(255,212,90,0.85); }
+.tip-rar { font-size: 11px; font-weight: 900; margin: 2px 0; }
+.tip-rar.rar1 { color: #c9cdf0; }
+.tip-rar.rar2 { color: #5fb8ff; }
+.tip-rar.rar3 { color: #ffd45a; }

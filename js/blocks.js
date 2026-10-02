@@ -21,10 +21,23 @@ export const makePercent = (p) => ({ id: uid(), kind: 'number', ntype: 'percent'
 export const makeOp = (op) => ({ id: uid(), kind: 'op', op, slots: [null, null] });
 
 // SNC: [주체]-[수치]-[변화],  SSC: [주체]-[주체]-[변화]
+// ZONE: 처치 시 [고정/랜덤 수치]초간 속성 지대,  INFUSE: 지대를 지난 투사체가 [수치]만큼 속성 피해 획득
+// AMP: 장착된 다른 모든 문장의 효과가 [수치] [변화]
 export const TEMPLATES = {
   SNC: ['subject', 'number', 'change'],
   SSC: ['subject', 'subject', 'change'],
+  ZONE: ['numflat'],
+  INFUSE: ['number'],
+  AMP: ['number', 'change'],
 };
+export const TEMPLATE_INFO = {
+  SNC: { label: '주·수·변', rarity: 1 },
+  SSC: { label: '주·주·변', rarity: 1 },
+  ZONE: { label: '지대', rarity: 2 },
+  INFUSE: { label: '흡수', rarity: 2 },
+  AMP: { label: '효과', rarity: 3 },
+};
+export const RARITY_NAME = { 1: '일반', 2: '희귀', 3: '전설' };
 
 export function makeSentence(template, prefill = true) {
   const s = {
@@ -38,10 +51,13 @@ export function makeSentence(template, prefill = true) {
         slot.locked = true;
       }
     }
-    // 백분율 전용 주체(상태이상 발생율)와 고정된 비백분율 수치가 함께 나오지 않게
+    // 백분율 전용 주체와 맞지 않는 값이 고정되어 나오지 않게
     const [a, b] = s.slots;
     if (s.template === 'SNC' && a.block && SUBJECTS[a.block.key].pctOnly && b.block && b.block.kind === 'number' && b.block.ntype !== 'percent') {
       b.block = makePercent(lowBiased(2, 18, 0.88) * 5);
+    }
+    if (s.template === 'SSC' && a.block && SUBJECTS[a.block.key].pctOnly && b.block && !SUBJECTS[b.block.key].pctType) {
+      b.block = makeWord(PCT_SUBJECTS[Math.floor(Math.random() * PCT_SUBJECTS.length)]);
     }
   }
   return s;
@@ -51,20 +67,30 @@ export function makeSentence(template, prefill = true) {
 export function sentenceAccepts(s, i, b) {
   const sl = s.slots[i];
   if (sl.locked || !slotAccepts(sl.type, b)) return false;
-  if (s.template !== 'SNC') return true;
-  const isPlainNum = (x) => x && x.kind === 'number' && x.ntype !== 'percent';
-  if (i === 1) { const subj = s.slots[0].block; if (subj && SUBJECTS[subj.key].pctOnly && isPlainNum(b)) return false; }
-  if (i === 0 && SUBJECTS[b.key] && SUBJECTS[b.key].pctOnly && isPlainNum(s.slots[1].block)) return false;
+  const pctOnly = (w) => w && SUBJECTS[w.key] && SUBJECTS[w.key].pctOnly;
+  if (s.template === 'SNC') {
+    const isPlainNum = (x) => x && x.kind === 'number' && x.ntype !== 'percent';
+    if (i === 1 && pctOnly(s.slots[0].block) && isPlainNum(b)) return false;
+    if (i === 0 && pctOnly(b) && isPlainNum(s.slots[1].block)) return false;
+  }
+  if (s.template === 'SSC') {
+    // 백분율 값(치명타 확률 등)에는 고정/랜덤 값인 주체를 적용할 수 없음
+    const pctType = (w) => w && SUBJECTS[w.key] && SUBJECTS[w.key].pctType;
+    if (i === 1 && pctOnly(s.slots[0].block) && !pctType(b)) return false;
+    if (i === 0 && pctOnly(b) && s.slots[1].block && !pctType(s.slots[1].block)) return false;
+  }
   return true;
 }
 
 function randomForSlot(type) {
   if (type === 'subject') return randomSubject();
   if (type === 'change') return randomChange();
+  if (type === 'numflat') return Math.random() < 0.5 ? makeFixed(lowBiased(2, 8)) : makeRange(lowBiased(2, 4), lowBiased(5, 8));
   return randomNumber();
 }
 
 const WORD_SUBJECTS = SUBJECT_ORDER.filter((k) => !SUBJECTS[k].noWord);
+const PCT_SUBJECTS = WORD_SUBJECTS.filter((k) => SUBJECTS[k].pctType);
 export const randomSubject = () => makeWord(WORD_SUBJECTS[Math.floor(Math.random() * WORD_SUBJECTS.length)]);
 export const randomChange = () => makeWord(weighted(DROP.changes));
 // a~b 정수 중 하나. 클수록 가중치가 falloff 배씩 줄어듦
@@ -183,6 +209,7 @@ export function slotAccepts(type, b) {
   if (type === 'subject') return b.kind === 'word' && b.wtype === 'subject';
   if (type === 'change') return b.kind === 'word' && b.wtype === 'change';
   if (type === 'number') return b.kind === 'number' || b.kind === 'op';
+  if (type === 'numflat') return (b.kind === 'number' && b.ntype !== 'percent') || b.kind === 'op';
   if (type === 'opnum') return b.kind === 'number';
   return false;
 }
@@ -191,7 +218,7 @@ export function isComplete(s) {
   if (!s || s.kind !== 'sentence') return false;
   for (const sl of s.slots) {
     if (!sl.block) return false;
-    if (sl.type === 'number' && !evalNumber(sl.block)) return false;
+    if ((sl.type === 'number' || sl.type === 'numflat') && !evalNumber(sl.block)) return false;
   }
   return true;
 }
@@ -208,7 +235,7 @@ export function missingCount(s) {
 // ─────────────────────────────────────────────
 //  문장 조립 (조사 자동 처리)
 // ─────────────────────────────────────────────
-export const PLACEHOLDER = { subject: '단어:주체', number: '수치', change: '단어:변화' };
+export const PLACEHOLDER = { subject: '단어:주체', number: '수치', numflat: '수치', change: '단어:변화' };
 
 export function slotChipLabel(s, i) {
   const slot = s.slots[i];
@@ -217,15 +244,30 @@ export function slotChipLabel(s, i) {
   if (slot.type === 'change') return CHANGES[b.key].verb;
   if (slot.type === 'subject') return SUBJECTS[b.key].name;
   let t = blockLabel(b);
-  const subj = s.slots[0].block;
   const ev = evalNumber(b);
   const isPct = ev ? ev.pct : b.kind === 'number' && b.ntype === 'percent';
-  if (subj && SUBJECTS[subj.key].sentenceUnit && !isPct) t = (b.kind === 'op' ? `(${t})` : t) + SUBJECTS[subj.key].sentenceUnit;
+  let unit = '';
+  if (s.template === 'SNC') {
+    const subj = s.slots[0].block;
+    if (subj && SUBJECTS[subj.key].sentenceUnit) unit = SUBJECTS[subj.key].sentenceUnit;
+  } else if (s.template === 'ZONE') unit = '초';
+  if (unit && !isPct) t = (b.kind === 'op' ? `(${t})` : t) + unit;
   return t;
 }
 
 // [{slot:i} | {text}] 배열
 export function sentenceParts(s) {
+  if (s.template === 'ZONE') {
+    return [{ text: '적 처치 시 ' }, { slot: 0 }, { text: (s.slots[0].block ? '' : '초') + '간 스킬 속성에 따른 지대를 남깁니다.' }];
+  }
+  if (s.template === 'INFUSE') {
+    return [{ text: '투사체가 속성 지대 위를 지나면 ' }, { slot: 0 }, { text: '만큼 그 속성 피해를 얻습니다.' }];
+  }
+  if (s.template === 'AMP') {
+    const L = slotChipLabel(s, 0);
+    const set = s.slots[1].block && s.slots[1].block.key === 'set';
+    return [{ text: '장착된 다른 모든 문장의 효과가 ' }, { slot: 0 }, { text: set ? josa(L, '과', '와', '와/과') + ' ' : ' ' }, { slot: 1 }, { text: '.' }];
+  }
   const L0 = slotChipLabel(s, 0);
   const L1 = slotChipLabel(s, 1);
   const chg = s.slots[2].block ? s.slots[2].block.key : null;

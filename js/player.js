@@ -217,7 +217,7 @@ export class Player {
     m.arms[0].rotation.x = -sw * 0.6;
     m.arms[1].rotation.x = sw * 0.6;
     m.root.position.y = k * Math.abs(Math.sin(this.walk)) * 0.06 + (1 - k) * Math.sin(time * 2.2) * 0.012;
-    m.headPivot.rotation.z = this.moving ? Math.sin(this.walk) * 0.05 : Math.sin(time * 1.4) * 0.03;
+    m.headPivot.rotation.z = this.moving ? Math.sin(this.walk) * 0.18 : Math.sin(time * 1.6) * 0.1;   // 새싹 잎 살랑살랑
     // 시전 모션: 오른팔 앞으로
     if (this.castT > 0) {
       const c = Math.sin((this.castT / 0.25) * Math.PI);

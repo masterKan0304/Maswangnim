@@ -9,7 +9,7 @@ const SAVE_KEY = 'blockchain-save-v1';
 export const profile = {
   gold: 0,
   upgrades: {},
-  settings: { master: 80, bgm: 50, sfx: 70, ui: 70, labels: true, autoPickup: true },
+  settings: { master: 80, bgm: 50, sfx: 70, ui: 70, masterOn: true, bgmOn: true, sfxOn: true, uiOn: true, labels: true, autoPickup: true },
 };
 
 export function loadProfile() {
@@ -31,7 +31,9 @@ export function saveProfile() {
 
 export function applyVolumeSettings() {
   const s = profile.settings;
-  setVolumes({ master: s.master / 100, bgm: s.bgm / 100, sfx: s.sfx / 100, ui: s.ui / 100 });
+  // 각 항목의 토글이 꺼져 있으면 0
+  const v = (k) => (s[k + 'On'] === false ? 0 : s[k] / 100);
+  setVolumes({ master: v('master'), bgm: v('bgm'), sfx: v('sfx'), ui: v('ui') });
 }
 
 // ─────────────────────────────────────────────
@@ -39,29 +41,29 @@ export function applyVolumeSettings() {
 //  pos: 트리 좌표 (1 = 칸 간격), parent: 선행 업그레이드 (1레벨 이상 필요)
 // ─────────────────────────────────────────────
 export const UPGRADES = [
-  { id: 'core',      name: '기초 훈련',  icon: '💪', pos: [0, 0],       max: 3, cost: 20, desc: '최대 체력 +5',               fx: (m, l) => { m.maxHp += 5 * l; } },
+  { id: 'core',      name: '기초 훈련',  icon: '💪', pos: [0, 0],       max: 3, cost: 20, desc: '최대 체력이 5 증가합니다.',               fx: (m, l) => { m.maxHp += 5 * l; } },
   // 생존 (왼쪽)
-  { id: 'vital',     name: '강인함',     icon: '❤️', pos: [-1.5, 0],    max: 5, cost: 25, parent: 'core',   desc: '최대 체력 +5',               fx: (m, l) => { m.maxHp += 5 * l; } },
-  { id: 'regen',     name: '재생',       icon: '🌿', pos: [-2.8, -0.8], max: 3, cost: 40, parent: 'vital',  desc: '체력 재생 주기 -1.5초',      fx: (m, l) => { m.regenMinus += 1.5 * l; } },
-  { id: 'guard',     name: '보호 본능',  icon: '🛡️', pos: [-2.8, 0.8],  max: 3, cost: 35, parent: 'vital',  desc: '피격 후 무적 시간 +0.1초',   fx: (m, l) => { m.invuln += 0.1 * l; } },
-  { id: 'heal',      name: '응급 처치',  icon: '🩹', pos: [-4.0, 0],    max: 3, cost: 60, parent: 'regen',  desc: '체력 재생량 +1',             fx: (m, l) => { m.regenAmount += l; } },
+  { id: 'vital',     name: '강인함',     icon: '❤️', pos: [-1.5, 0],    max: 5, cost: 25, parent: 'core',   desc: '최대 체력이 5 증가합니다.',               fx: (m, l) => { m.maxHp += 5 * l; } },
+  { id: 'regen',     name: '재생',       icon: '🌿', pos: [-2.8, -0.8], max: 3, cost: 40, parent: 'vital',  desc: '체력 재생 주기가 1.5초 줄어듭니다.',      fx: (m, l) => { m.regenMinus += 1.5 * l; } },
+  { id: 'guard',     name: '보호 본능',  icon: '🛡️', pos: [-2.8, 0.8],  max: 3, cost: 35, parent: 'vital',  desc: '피격 후 무적 시간이 0.1초 늘어납니다.',   fx: (m, l) => { m.invuln += 0.1 * l; } },
+  { id: 'heal',      name: '응급 처치',  icon: '🩹', pos: [-4.0, 0],    max: 3, cost: 60, parent: 'regen',  desc: '체력 재생량이 1 증가합니다.',             fx: (m, l) => { m.regenAmount += l; } },
   // 기동 (위)
-  { id: 'swift',     name: '신속',       icon: '👟', pos: [0, -1.5],    max: 5, cost: 25, parent: 'core',   desc: '이동 속도 +4%',              fx: (m, l) => { m.speedMul += 0.04 * l; } },
-  { id: 'blink',     name: '순간 이동',  icon: '💨', pos: [-0.9, -2.7], max: 3, cost: 40, parent: 'swift',  desc: '대시 쿨타임 -0.5초',         fx: (m, l) => { m.dashCd -= 0.5 * l; } },
-  { id: 'leap',      name: '도약',       icon: '🦘', pos: [0.9, -2.7],  max: 3, cost: 35, parent: 'swift',  desc: '대시 거리 +12%',             fx: (m, l) => { m.dashDistMul += 0.12 * l; } },
-  { id: 'prepared',  name: '준비된 시작', icon: '🎒', pos: [0, -3.6],   max: 3, cost: 70, parent: 'blink',  desc: '게임 시작 시 무작위 블록 +1개', fx: (m, l) => { m.startBlocks += l; } },
+  { id: 'swift',     name: '신속',       icon: '👟', pos: [0, -1.5],    max: 5, cost: 25, parent: 'core',   desc: '이동 속도가 4% 증가합니다.',              fx: (m, l) => { m.speedMul += 0.04 * l; } },
+  { id: 'blink',     name: '순간 이동',  icon: '💨', pos: [-0.9, -2.7], max: 3, cost: 40, parent: 'swift',  desc: '대시 쿨타임이 0.5초 줄어듭니다.',         fx: (m, l) => { m.dashCd -= 0.5 * l; } },
+  { id: 'leap',      name: '도약',       icon: '🦘', pos: [0.9, -2.7],  max: 3, cost: 35, parent: 'swift',  desc: '대시 거리가 12% 늘어납니다.',             fx: (m, l) => { m.dashDistMul += 0.12 * l; } },
+  { id: 'prepared',  name: '준비된 시작', icon: '🎒', pos: [0, -3.6],   max: 3, cost: 70, parent: 'blink',  desc: '게임을 시작할 때 무작위 블록을 1개 더 얻습니다.', fx: (m, l) => { m.startBlocks += l; } },
   // 마법 (오른쪽)
-  { id: 'vessel',    name: '마나 그릇',  icon: '🔷', pos: [1.5, 0],     max: 5, cost: 25, parent: 'core',   desc: '최대 마나 +10',              fx: (m, l) => { m.maxMana += 10 * l; } },
-  { id: 'flow',      name: '마나 순환',  icon: '🌀', pos: [2.8, -0.8],  max: 5, cost: 35, parent: 'vessel', desc: '마나 재생 +1/초',            fx: (m, l) => { m.manaRegen += l; } },
-  { id: 'power',     name: '마력 증폭',  icon: '🔮', pos: [2.8, 0.8],   max: 5, cost: 40, parent: 'vessel', desc: '적에게 주는 모든 피해 +5%',  fx: (m, l) => { m.dmgMul += 0.05 * l; } },
-  { id: 'element',   name: '원소 친화',  icon: '🌈', pos: [4.0, 0.8],   max: 3, cost: 60, parent: 'power',  desc: '상태이상 발생율 +3%p',       fx: (m, l) => { m.statusAdd += 3 * l; } },
-  { id: 'focus',     name: '집중',       icon: '🧘', pos: [4.0, -0.8],  max: 3, cost: 60, parent: 'flow',   desc: '모든 스킬 마나 소모 -0.5',   fx: (m, l) => { m.manaCostMinus += 0.5 * l; } },
+  { id: 'vessel',    name: '마나 그릇',  icon: '🔷', pos: [1.5, 0],     max: 5, cost: 25, parent: 'core',   desc: '최대 마나가 10 증가합니다.',              fx: (m, l) => { m.maxMana += 10 * l; } },
+  { id: 'flow',      name: '마나 순환',  icon: '🌀', pos: [2.8, -0.8],  max: 5, cost: 35, parent: 'vessel', desc: '초당 마나 재생이 1 증가합니다.',            fx: (m, l) => { m.manaRegen += l; } },
+  { id: 'power',     name: '마력 증폭',  icon: '🔮', pos: [2.8, 0.8],   max: 5, cost: 40, parent: 'vessel', desc: '적에게 주는 모든 피해가 5% 증가합니다.',  fx: (m, l) => { m.dmgMul += 0.05 * l; } },
+  { id: 'element',   name: '원소 친화',  icon: '🌈', pos: [4.0, 0.8],   max: 3, cost: 60, parent: 'power',  desc: '상태이상 발생율이 3% 증가합니다.',       fx: (m, l) => { m.statusAdd += 3 * l; } },
+  { id: 'focus',     name: '집중',       icon: '🧘', pos: [4.0, -0.8],  max: 3, cost: 60, parent: 'flow',   desc: '모든 스킬의 마나 소모가 0.5 줄어듭니다.',   fx: (m, l) => { m.manaCostMinus += 0.5 * l; } },
   // 행운 (아래)
-  { id: 'study',     name: '배움',       icon: '📖', pos: [0, 1.5],     max: 5, cost: 25, parent: 'core',   desc: '경험치 획득 +5%',            fx: (m, l) => { m.xpMul += 0.05 * l; } },
-  { id: 'collector', name: '수집가',     icon: '🧲', pos: [-0.9, 2.7],  max: 5, cost: 35, parent: 'study',  desc: '블록 드랍률 +10%',           fx: (m, l) => { m.dropMul += 0.1 * l; } },
-  { id: 'foresight', name: '선견지명',   icon: '🎲', pos: [0.9, 2.7],   max: 3, cost: 45, parent: 'study',  desc: '시작 리롤 +1',               fx: (m, l) => { m.rerolls += l; } },
-  { id: 'reach',     name: '끌림',       icon: '🫴', pos: [-1.8, 3.6],  max: 3, cost: 40, parent: 'collector', desc: '아이템 획득 범위 +15%',   fx: (m, l) => { m.pickupMul += 0.15 * l; } },
-  { id: 'greed',     name: '탐욕',       icon: '💰', pos: [1.8, 3.6],   max: 3, cost: 60, parent: 'foresight', desc: '골드 획득 +10%',          fx: (m, l) => { m.goldMul += 0.1 * l; } },
+  { id: 'study',     name: '배움',       icon: '📖', pos: [0, 1.5],     max: 5, cost: 25, parent: 'core',   desc: '경험치 획득량이 5% 증가합니다.',            fx: (m, l) => { m.xpMul += 0.05 * l; } },
+  { id: 'collector', name: '수집가',     icon: '🧲', pos: [-0.9, 2.7],  max: 5, cost: 35, parent: 'study',  desc: '블록 드랍률이 10% 증가합니다.',           fx: (m, l) => { m.dropMul += 0.1 * l; } },
+  { id: 'foresight', name: '선견지명',   icon: '🎲', pos: [0.9, 2.7],   max: 3, cost: 45, parent: 'study',  desc: '시작 리롤이 1 증가합니다.',               fx: (m, l) => { m.rerolls += l; } },
+  { id: 'reach',     name: '끌림',       icon: '🫴', pos: [-1.8, 3.6],  max: 3, cost: 40, parent: 'collector', desc: '아이템 획득 범위가 15% 넓어집니다.',   fx: (m, l) => { m.pickupMul += 0.15 * l; } },
+  { id: 'greed',     name: '탐욕',       icon: '💰', pos: [1.8, 3.6],   max: 3, cost: 60, parent: 'foresight', desc: '골드 획득량이 10% 증가합니다.',          fx: (m, l) => { m.goldMul += 0.1 * l; } },
 ];
 const UP = Object.fromEntries(UPGRADES.map((u) => [u.id, u]));
 
@@ -186,10 +188,10 @@ export function renderUpgrades(onGold) {
       <div class="un-name">${u.name}</div>
       <div class="un-cost${poor ? ' poor' : ''}">${maxed ? 'MAX' : `${unlocked ? '' : '🔒 '}💰 ${cost}`}</div>`;
     node._tip = () => {
-      let h = `<div class="tip-title">${u.icon} ${u.name} <span class="tip-dim">Lv.${lv}/${u.max}</span></div><div>레벨당 ${u.desc}</div>`;
-      if (!unlocked) h += `<div class="tip-warn">🔒 "${UP[u.parent].name}" 을(를) 먼저 1레벨 이상 올려야 합니다</div>`;
-      else if (maxed) h += '<div class="tip-ok">최대 레벨</div>';
-      else h += `<div class="${poor ? 'tip-warn' : 'tip-ok'}">강화 비용 💰 ${cost} (보유 ${profile.gold})</div>`;
+      let h = `<div class="tip-title">${u.icon} ${u.name} <span class="tip-dim">Lv.${lv}/${u.max}</span></div><div>레벨마다 ${u.desc}</div>`;
+      if (!unlocked) h += `<div class="tip-warn">🔒 "${UP[u.parent].name}"을(를) 먼저 1레벨 이상 올려야 합니다.</div>`;
+      else if (maxed) h += '<div class="tip-ok">최대 레벨입니다.</div>';
+      else h += `<div class="${poor ? 'tip-warn' : 'tip-ok'}">강화 비용은 💰 ${cost}입니다. (보유 ${profile.gold})</div>`;
       return h;
     };
     node.addEventListener('click', () => {
@@ -209,6 +211,19 @@ export function renderUpgrades(onGold) {
 // ─────────────────────────────────────────────
 //  설정 창
 // ─────────────────────────────────────────────
+// 켜고 끄는 토글 버튼: 다시 그리지 않고 클래스만 바꿔서 동그라미가 좌우로 미끄러지게
+function makeToggle(on, onFlip) {
+  const btn = document.createElement('button');
+  btn.className = 'toggle' + (on ? ' on' : '');
+  btn.innerHTML = '<span class="t-on">ON</span><span class="t-off">OFF</span><i></i>';
+  btn.addEventListener('click', () => {
+    const v = !btn.classList.contains('on');
+    btn.classList.toggle('on', v);
+    onFlip(v);
+  });
+  return btn;
+}
+
 export function renderSettings(onChange) {
   const s = profile.settings;
   const box = document.getElementById('set-body');
@@ -218,8 +233,8 @@ export function renderSettings(onChange) {
   sec1.className = 'set-sec';
   sec1.innerHTML = '<div class="set-title">🔊 사운드</div>';
   for (const [k, label] of sliders) {
-    const row = document.createElement('label');
-    row.className = 'set-row';
+    const row = document.createElement('div');
+    row.className = 'set-row' + (s[k + 'On'] === false ? ' muted' : '');
     row.innerHTML = `<span class="set-label">${label}</span><input type="range" min="0" max="100" step="1" value="${s[k]}"><span class="set-val">${s[k]}</span>`;
     const input = row.querySelector('input'), val = row.querySelector('.set-val');
     input.addEventListener('input', () => {
@@ -227,7 +242,16 @@ export function renderSettings(onChange) {
       val.textContent = s[k];
       applyVolumeSettings();
     });
-    input.addEventListener('change', () => { saveProfile(); sfx(k === 'bgm' ? 'click' : k === 'sfx' ? 'kill' : 'click'); });
+    input.addEventListener('change', () => { saveProfile(); sfx(k === 'sfx' ? 'kill' : 'click'); });
+    const tg = makeToggle(s[k + 'On'] !== false, (on) => {
+      s[k + 'On'] = on;
+      row.classList.toggle('muted', !on);
+      applyVolumeSettings();
+      saveProfile();
+      sfx(on ? 'toggleOn' : 'toggleOff');
+    });
+    tg.classList.add('small');
+    row.appendChild(tg);
     sec1.appendChild(row);
   }
   box.appendChild(sec1);
@@ -239,14 +263,13 @@ export function renderSettings(onChange) {
   for (const [k, label, key] of toggles) {
     const row = document.createElement('div');
     row.className = 'set-row';
-    row.innerHTML = `<span class="set-label">${label} <kbd>${key}</kbd></span><button class="toggle ${s[k] ? 'on' : ''}"><i></i><span>${s[k] ? 'ON' : 'OFF'}</span></button>`;
-    row.querySelector('button').addEventListener('click', () => {
-      s[k] = !s[k];
-      sfx(s[k] ? 'toggleOn' : 'toggleOff');
+    row.innerHTML = `<span class="set-label">${label} <kbd>${key}</kbd></span>`;
+    row.appendChild(makeToggle(s[k], (on) => {
+      s[k] = on;
+      sfx(on ? 'toggleOn' : 'toggleOff');
       saveProfile();
-      renderSettings(onChange);
       if (onChange) onChange();
-    });
+    }));
     sec2.appendChild(row);
   }
   box.appendChild(sec2);

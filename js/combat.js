@@ -1,12 +1,14 @@
 import * as THREE from 'three';
-import { WORLD_HALF, STAT_UNIT as U, PROJ_SPEED_UNIT as PS, STATUS } from './config.js';
+import { WORLD_HALF, STAT_UNIT as U, PROJ_SPEED_UNIT as PS, STATUS, ELEMENT_DMG } from './config.js';
 import { game, schedule } from './state.js';
 import { getStats, computeStats, sample, sampleInt, avg, statusProb, maxStacks, areaFactor, ATTACK_SKILLS, enchantReq, triggerGoal, completeSentences } from './skills.js';
 import { makeGlowSprite } from './effects.js';
-import { jitter, paint } from './models.js';
+import { jitter } from './models.js';
 import { sfx } from './audio.js';
 
 const DEG = Math.PI / 180;
+const ELEMS = ['fire', 'ice', 'lightning'];
+const ZONE_COLOR = { fire: 0xff6a1a, ice: 0x7fd8ff, lightning: 0xffe066 };
 
 class Pool {
   constructor(scene, factory) { this.scene = scene; this.factory = factory; this.free = []; }
@@ -41,6 +43,9 @@ export class SkillRuntime {
     this.projs = [];
     this.iceballs = [];
     this.casts = [];
+    this.zones = [];
+    this.snowballs = [];
+    this.beams = [];
 
     // 파이어볼: 울퉁불퉁한 검붉은 돌 + 틈 사이로 비치는 용암 핵 (뜨거운 운석)
     const rockGeo = jitter(new THREE.DodecahedronGeometry(0.5, 0), 0.32, 41);
@@ -69,6 +74,35 @@ export class SkillRuntime {
     });
     this.iceballGeo = new THREE.IcosahedronGeometry(0.5, 0);
     this.shardGeo = new THREE.OctahedronGeometry(0.09, 0).scale(1, 2, 1);
+    this.snowGeo = jitter(new THREE.IcosahedronGeometry(0.5, 1), 0.08, 77);
+    this.beamGeo = new THREE.CylinderGeometry(1, 1, 1, 8, 1, true);
+  }
+
+  // ─────────────────────────────────────────
+  //  피해 처리: 치명타 → 주 속성 피해 → 추가 속성 피해 (저항 / 저항 무시 / 상태이상)
+  //  o.base: 기본 피해 (기본값 = 스킬 피해량 표본), o.mul: 배율, o.statusRatio: 상태이상 확률 배율
+  //  o.infuse: 지대에서 얻은 속성 피해 { fire: {min,max,pct}, ... }
+  // ─────────────────────────────────────────
+  deal(e, sk, st, o = {}) {
+    if (!e.alive) return;
+    const el = sk.def.element;
+    const crit = Math.random() * 100 < sample(st.critChance);
+    const cm = crit ? sample(st.critDamage) / 100 : 1;
+    const pen = { pct: avg(st.penPct), flat: sample(st.penetration) };
+    const mul = o.mul ?? 1;
+    const main = (o.base ?? sample(st.damage)) * mul;
+    const sp = statusProb(st, o.statusRatio ?? 1);
+    const common = { pen, crit, src: sk, st };
+    this.enemies.damage(e, main * cm, { ...common, element: el, status: sp, kx: o.kx || 0, kz: o.kz || 0 });
+    for (const x of ELEMS) {
+      let v = 0;
+      const k = ELEMENT_DMG[x];
+      if (x !== el && st[k].max > 0) v += sample(st[k]) * mul;
+      const inf = o.infuse && o.infuse[x];
+      if (inf) v += inf.pct ? main * sample(inf) : sample(inf) * mul;
+      // 다른 속성의 추가 피해: 상태이상 발생율 절반
+      if (v > 0 && e.alive) this.enemies.damage(e, v * cm, { ...common, element: x, status: x === el ? 0 : sp * 0.5 });
+    }
   }
 
   // ── 시전 ─────────────────────────────
@@ -91,8 +125,11 @@ export class SkillRuntime {
       c.t -= dt;
       if (c.t <= 0) { this.casts.splice(i, 1); this.execute(c.sk, c.st); }
     }
+    this.updateZones(dt);
     this.updateProjectiles(dt);
     this.updateIceballs(dt);
+    this.updateSnowballs(dt);
+    this.updateBeams(dt);
   }
 
   updateBarrier(sk, dt) {
@@ -112,11 +149,11 @@ export class SkillRuntime {
     if (sk.cd > 0) return false;
     let st = getStats(sk);
     const p = this.player.pos;
-    if (sk.key === 'chainLightning' && !this.enemies.anyInRange(p.x, p.z, sample(st.range) / U)) {
-      if (manual) game.sys.ui.toast('사거리 내에 적이 없습니다', 'warn');
+    const need = { chainLightning: sample(st.range) / U, snowfall: sample(st.range) / U, flamethrower: manual ? 0 : (sample(st.area) / U) * 1.3, lightningBeam: manual ? 0 : 14 }[sk.key];
+    if (need && !this.enemies.anyInRange(p.x, p.z, need)) {
+      if (manual) game.sys.ui.toast('사거리 안에 적이 없습니다', 'warn');
       return false;
     }
-    if (sk.key === 'flamethrower' && !manual && !this.enemies.anyInRange(p.x, p.z, (sample(st.area) / U) * 1.3)) return false;
     // 마나
     const cost = Math.max(0, sample(st.manaCost) - game.mods.manaCostMinus);
     if (this.player.mana < cost) {
@@ -142,6 +179,16 @@ export class SkillRuntime {
     this.casts.push({ sk, t: castTime, st });
     this.player.castPulse(sk.def.color);
     return true;
+  }
+
+  execute(sk, st) {
+    if (sk.key === 'fireball') this.castFireball(sk, st);
+    else if (sk.key === 'chainLightning') this.castLightning(sk, st);
+    else if (sk.key === 'iceball') { this.castIceball(sk, st); if (sk.level >= 5) this.castIceball(sk, st); }
+    else if (sk.key === 'magnet') this.castMagnet(st);
+    else if (sk.key === 'flamethrower') this.startFlame(sk, st);
+    else if (sk.key === 'snowfall') this.castSnowfall(sk, st);
+    else if (sk.key === 'lightningBeam') this.castBeam(sk, st);
   }
 
   // ── 효과 부여: 경험치 획득 ──────────────
@@ -214,7 +261,7 @@ export class SkillRuntime {
       const near = this.enemies.nearestN(p.x, p.z, f.R * 3, 1)[0];
       if (near) {
         const target = Math.atan2(near.z - p.z, near.x - p.x);
-        let diff = Math.atan2(Math.sin(target - f.ang), Math.cos(target - f.ang));
+        const diff = Math.atan2(Math.sin(target - f.ang), Math.cos(target - f.ang));
         const maxTurn = sk.def.turnSpeed * DEG * dt;
         f.ang += Math.max(-maxTurn, Math.min(maxTurn, diff));
       }
@@ -231,7 +278,7 @@ export class SkillRuntime {
       const life = 0.34;
       for (let k = 0; k < 26; k++) {
         const r = Math.random();
-        const spread = r < 0.35 ? 0.35 : r < 0.8 ? 0.75 : 1.0;          // 중심일수록 좁게
+        const spread = r < 0.35 ? 0.35 : r < 0.8 ? 0.75 : 1.0;
         const a = f.ang + (Math.random() * 2 - 1) * f.half * spread;
         const sp = (f.R / life) * (0.75 + Math.random() * 0.45);
         const col = r < 0.35 ? (Math.random() < 0.5 ? 0xfff2c0 : 0xffe08a) : r < 0.8 ? (Math.random() < 0.5 ? 0xffb347 : 0xff8a2a) : (Math.random() < 0.5 ? 0xff5a14 : 0xe8380a);
@@ -253,9 +300,10 @@ export class SkillRuntime {
           if (!e.alive) continue;
           const d = Math.hypot(e.x - p.x, e.z - p.z);
           if (d > f.R + e.r * 0.5) continue;
-          const da = Math.abs(Math.atan2(Math.sin(Math.atan2(e.z - p.z, e.x - p.x) - f.ang), Math.cos(Math.atan2(e.z - p.z, e.x - p.x) - f.ang)));
+          const ea = Math.atan2(e.z - p.z, e.x - p.x);
+          const da = Math.abs(Math.atan2(Math.sin(ea - f.ang), Math.cos(ea - f.ang)));
           if (d > 0.3 && da > f.half + Math.asin(Math.min(1, e.r / d))) continue;
-          this.enemies.damage(e, sample(f.st.damage), { element: 'fire', status: statusProb(f.st) });
+          this.deal(e, sk, f.st);
           // 5레벨: 화염 피해 취약 +5% (최대 50%)
           if (sk.level >= 5 && e.alive) e.fireVuln = Math.min(0.5, (e.fireVuln || 0) + 0.05);
         }
@@ -269,14 +317,6 @@ export class SkillRuntime {
         sk.cdMax = sk.cd;
       }
     }
-  }
-
-  execute(sk, st) {
-    if (sk.key === 'fireball') this.castFireball(sk, st);
-    else if (sk.key === 'chainLightning') this.castLightning(sk, st);
-    else if (sk.key === 'iceball') { this.castIceball(sk, st); if (sk.level >= 5) this.castIceball(sk, st); }
-    else if (sk.key === 'magnet') this.castMagnet(st);
-    else if (sk.key === 'flamethrower') this.startFlame(sk, st);
   }
 
   // 자석: 반경 안의 경험치/블록/상자(직접 버린 블록 제외)를 끌어당김
@@ -307,24 +347,25 @@ export class SkillRuntime {
     for (const e of this.enemies.query(p.x, p.z, radius + 2.2)) {
       const d = Math.hypot(e.x - p.x, e.z - p.z);
       if (e.alive && d <= radius + e.r) {
-        this.enemies.damage(e, sample(st.damage), {
-          element: 'ice', status: statusProb(st),
-          kx: ((e.x - p.x) / (d || 1)) * push, kz: ((e.z - p.z) / (d || 1)) * push,
-        });
+        this.deal(e, sk, st, { kx: ((e.x - p.x) / (d || 1)) * push, kz: ((e.z - p.z) / (d || 1)) * push });
       }
     }
   }
 
-  // 적 처치 시 패시브 (발동 : 처치 / 화염의 기운 / 냉기의 기운)
-  onKill(e) {
+  // ── 적 처치 시 (지대 / 발동 : 처치 / 화염·냉기·번개의 기운) ──
+  onKill(e, src, st) {
+    // 처치한 스킬에 '지대' 문장이 있으면 속성 지대를 남김
+    if (src && st && st.zone && st.zone.max > 0 && src.def.element) {
+      this.addZone(e.x, e.z, src.def.element, sample(st.zone), sample(st.zoneArea) / U / 2, avg(st.damage));
+    }
     const tk = game.skills.find((s) => s.key === 'triggerKill');
     if (tk) {
       tk.stacks = Math.min(99999, tk.stacks + e.maxHp * 0.2);
       const goal = triggerGoal(tk);
       if (goal > 0 && tk.stacks >= goal) {
         tk.stacks -= goal;
-        const st = getStats(tk);
-        const dur = sample(st.duration);
+        const tst = getStats(tk);
+        const dur = sample(tst.duration);
         const buff = { key: 'triggerKill', icon: '💀', name: '발동 : 처치', color: tk.def.color, t: dur, max: dur,
           charges: tk.level >= 5 ? 3 : 1, sentences: completeSentences(tk), scale: tk.level >= 3 ? 1.2 : 1 };
         const old = game.buffs.findIndex((b) => b.key === 'triggerKill');
@@ -338,8 +379,8 @@ export class SkillRuntime {
     if (e.burnT > 0) {
       const sk = game.skills.find((s) => s.key === 'fireAura');
       if (sk) {
-        const st = getStats(sk);
-        const radius = sample(st.area) / U / 2;
+        const ast = getStats(sk);
+        const radius = sample(ast.area) / U / 2;
         // 5레벨: 남은 화상 피해 (틱 피해 × 남은 틱 수) 를 폭발 피해에 추가
         const bonus = sk.level >= 5 ? e.burnDmg * Math.ceil(e.burnT / STATUS.burnTick - 1e-6) : 0;
         const x = e.x, z = e.z;
@@ -348,9 +389,7 @@ export class SkillRuntime {
         for (const t of this.enemies.query(x, z, radius + 2.2)) {
           const d = Math.hypot(t.x - x, t.z - z);
           if (t.alive && d <= radius + t.r * 0.7) {
-            this.enemies.damage(t, sample(st.damage) + bonus, {
-              element: 'fire', status: statusProb(st), kx: ((t.x - x) / (d || 1)) * 3, kz: ((t.z - z) / (d || 1)) * 3,
-            });
+            this.deal(t, sk, ast, { base: sample(ast.damage) + bonus, kx: ((t.x - x) / (d || 1)) * 3, kz: ((t.z - z) / (d || 1)) * 3 });
           }
         }
       }
@@ -358,34 +397,103 @@ export class SkillRuntime {
     if (e.chillT > 0) {
       const sk = game.skills.find((s) => s.key === 'frostAura');
       if (sk) {
-        const st = getStats(sk);
-        const n = sampleInt(st.projCount);
-        const size = sample(st.projSize) / U, speed = sample(st.projSpeed) * PS, life = sample(st.duration), pierce = sampleInt(st.pierce);
+        const ast = getStats(sk);
+        const n = sampleInt(ast.projCount);
+        const gen = () => ({ size: sample(ast.projSize) / U, speed: sample(ast.projSpeed) * PS, life: sample(ast.duration), pierce: sampleInt(ast.pierce) });
         const a0 = Math.random() * Math.PI * 2;
         for (let i = 0; i < n; i++) {
           const a = a0 + (i / n) * Math.PI * 2;
           const dx = Math.cos(a), dz = Math.sin(a);
-          this.spawnProj({ kind: 'ice', element: 'ice', x: e.x + dx * e.r, z: e.z + dz * e.r, y: 0.6, dx, dz, speed, size, life, pierce, st, status: statusProb(st), ignore: e, chains: sampleInt(st.chains) });
+          this.spawnProj({ kind: 'ice', sk, ...gen(), gen, x: e.x + dx * e.r, z: e.z + dz * e.r, y: 0.6, dx, dz, st: ast, ignore: e, chains: sampleInt(ast.chains) });
         }
       }
     }
+    if (e.shockT > 0) {
+      const sk = game.skills.find((s) => s.key === 'lightningAura');
+      if (sk) this.thunder(sk, e);
+    }
   }
 
+  // 번개의 기운: 처치된 적 주변 무작위 적에게 낙뢰 (한 대상에 하나씩, 연쇄 없음)
+  thunder(sk, from) {
+    const st = getStats(sk);
+    const range = sample(st.range) / U;
+    const n = sampleInt(st.projCount);
+    const cands = this.enemies.query(from.x, from.z, range + 2).filter((t) => t.alive && t !== from && Math.hypot(t.x - from.x, t.z - from.z) <= range);
+    for (let i = 0; i < n && cands.length; i++) {
+      const t = cands.splice(Math.floor(Math.random() * cands.length), 1)[0];
+      schedule(0.05 * i, () => {
+        if (!t.alive) return;
+        this.fx.lightning({ x: t.x + 1.2, y: 9, z: t.z - 1.2 }, { x: t.x, y: 0.2, z: t.z }, 0.35);
+        this.fx.ring(t.x, t.z, 1.0, 0xffe066, 0.3);
+        sfx('zap');
+        this.deal(t, sk, st);
+      });
+    }
+  }
+
+  // ── 속성 지대 ─────────────────────────
+  addZone(x, z, el, time, r, burnBase) {
+    if (time <= 0 || r <= 0) return;
+    if (this.zones.length >= 40) this.removeZone(0);
+    const mat = new THREE.MeshBasicMaterial({ color: ZONE_COLOR[el], transparent: true, opacity: 0.28, blending: THREE.AdditiveBlending, depthWrite: false });
+    const disc = new THREE.Mesh(this.fx.circleGeo, mat);
+    disc.rotation.x = -Math.PI / 2;
+    disc.position.set(x, 0.04, z);
+    disc.scale.setScalar(r);
+    const ringMat = new THREE.MeshBasicMaterial({ color: ZONE_COLOR[el], transparent: true, opacity: 0.7, side: THREE.DoubleSide, depthWrite: false });
+    const ring = new THREE.Mesh(this.fx.ringGeo, ringMat);
+    ring.rotation.x = -Math.PI / 2;
+    ring.position.set(x, 0.05, z);
+    ring.scale.setScalar(r);
+    this.scene.add(disc, ring);
+    this.zones.push({ x, z, el, t: time, max: time, r, tick: 0, burnBase, disc, ring, mats: [mat, ringMat], age: 0 });
+  }
+
+  removeZone(i) {
+    const zn = this.zones[i];
+    this.scene.remove(zn.disc, zn.ring);
+    zn.mats.forEach((m) => m.dispose());
+    this.zones.splice(i, 1);
+  }
+
+  updateZones(dt) {
+    for (let i = this.zones.length - 1; i >= 0; i--) {
+      const zn = this.zones[i];
+      zn.t -= dt; zn.age += dt;
+      const fade = Math.min(1, zn.t / 0.5) * Math.min(1, zn.age / 0.25);
+      zn.mats[0].opacity = 0.22 * fade + Math.sin(zn.age * 6) * 0.04 * fade;
+      zn.mats[1].opacity = 0.7 * fade;
+      if (Math.random() < dt * 8 * zn.r) {
+        const a = Math.random() * Math.PI * 2, d = Math.sqrt(Math.random()) * zn.r;
+        this.fx.particles.emit(zn.x + Math.cos(a) * d, 0.1, zn.z + Math.sin(a) * d, 0, 1.2, 0, 0.5, 0.08, ZONE_COLOR[zn.el], -1);
+      }
+      // 지대 위의 적에게는 해당 속성 상태이상이 확정으로 걸림
+      zn.tick -= dt;
+      if (zn.tick <= 0) {
+        zn.tick = 0.3;
+        for (const e of this.enemies.query(zn.x, zn.z, zn.r + 2.2)) {
+          if (e.alive && Math.hypot(e.x - zn.x, e.z - zn.z) < zn.r + e.r * 0.5) this.enemies.applyStatus(e, zn.el, zn.burnBase);
+        }
+      }
+      if (zn.t <= 0) this.removeZone(i);
+    }
+  }
+
+  // ── 파이어볼 ──────────────────────────
   castFireball(sk, st) {
     sfx('fire');
     const p = this.player;
     const base = Math.atan2(p.aim.z, p.aim.x);
     const n = sampleInt(st.projCount);
-    // 스탯 단위 → 월드 단위
-    const size = sample(st.projSize) / U, speed = sample(st.projSpeed) * PS, life = sample(st.duration);
-    const pierce = sampleInt(st.pierce), area = sample(st.area) / U;
+    // 스탯 단위 → 월드 단위 (연쇄로 다시 생성될 때도 같은 방식으로 새로 뽑음)
+    const gen = () => ({ size: sample(st.projSize) / U, speed: sample(st.projSpeed) * PS, life: sample(st.duration), pierce: sampleInt(st.pierce), area: sample(st.area) / U });
     for (let i = 0; i < n; i++) {
       const a = spreadAngle(base, i);
       const dx = Math.cos(a), dz = Math.sin(a);
       this.spawnProj({
-        kind: 'fire', element: 'fire', x: p.pos.x + dx * 0.45, z: p.pos.z + dz * 0.45, y: 0.62,
-        dx, dz, speed, size, life, pierce, area, st, status: statusProb(st), chains: sampleInt(st.chains),
-        split: sk.level >= 5, areaFactor: areaFactor(sk),
+        kind: 'fire', sk, ...gen(), gen, x: p.pos.x + dx * 0.45, z: p.pos.z + dz * 0.45, y: 0.62,
+        dx, dz, st, chains: sampleInt(st.chains), split: sk.level >= 5, areaFactor: areaFactor(sk),
       });
     }
   }
@@ -396,8 +504,8 @@ export class SkillRuntime {
     const range = sample(st.range) / U;
     const lineDmg = sk.level >= 5;
     const firsts = this.enemies.nearestN(p.x, p.z, range, sampleInt(st.projCount));
-    const width = Math.max(0.05, sample(st.projSize) / U);            // 기본 1 → 0.2
-    const step = 0.07 * (6 / Math.max(0.1, sample(st.projSpeed)));   // 기본 6 → 0.07초 간격
+    const width = Math.max(0.05, sample(st.projSize) / U);
+    const step = 0.07 * (6 / Math.max(0.1, sample(st.projSpeed)));
     for (const first of firsts) {
       const hit = new Set();
       const lineHit = new Set();
@@ -414,7 +522,7 @@ export class SkillRuntime {
           const end = tgt.alive ? { x: tgt.x, y: to.y, z: tgt.z } : to;
           this.fx.lightning(f, end, width);
           sfx('zap');
-          if (tgt.alive) this.enemies.damage(tgt, sample(st.damage), { element: 'lightning', status: statusProb(st) });
+          if (tgt.alive) this.deal(tgt, sk, st);
           // 5레벨: 번개 줄기에 닿은 적도 피해 (줄기 굵기만큼 판정)
           if (lineDmg) {
             const mx = (f.x + end.x) / 2, mz = (f.z + end.z) / 2;
@@ -423,7 +531,7 @@ export class SkillRuntime {
               if (!e.alive || hit.has(e) || lineHit.has(e)) continue;
               if (segDist(e.x, e.z, f.x, f.z, end.x, end.z) < e.r + width / 2 + 0.05) {
                 lineHit.add(e);
-                this.enemies.damage(e, sample(st.damage), { element: 'lightning', status: statusProb(st) });
+                this.deal(e, sk, st);
               }
             }
           }
@@ -435,6 +543,7 @@ export class SkillRuntime {
     }
   }
 
+  // ── 아이스볼 ──────────────────────────
   castIceball(sk, st) {
     sfx('iceball');
     const p = this.player.pos;
@@ -473,126 +582,6 @@ export class SkillRuntime {
     this.fx.particles.burst(x, 0.5, z, 12, [0xd8f8ff, 0x9fe6ff], { speed: 3, size: 0.1, life: 0.4 });
   }
 
-  spawnProj(o) {
-    const mesh = o.kind === 'fire' ? this.firePool.get() : this.icePool.get();
-    Object.assign(o, { mesh, age: 0, hit: new Set(o.ignore ? [o.ignore] : []), pierceLeft: o.pierce, chainsLeft: o.chains || 0, pierceFlash: 0, dead: false });
-    if (o.dmgMul == null) o.dmgMul = 1;
-    mesh.scale.setScalar(o.size);
-    mesh.position.set(o.x, o.y, o.z);
-    mesh.rotation.set(0, Math.atan2(o.dx, o.dz), 0);
-    this.projs.push(o);
-  }
-
-  // ── 투사체 (투사체 지속 시간 동안 유지) ──
-  updateProjectiles(dt) {
-    const lim = WORLD_HALF + 12;
-    for (let i = this.projs.length - 1; i >= 0; i--) {
-      const p = this.projs[i];
-      const total = p.speed * dt;
-      const subs = Math.max(1, Math.ceil(total / 0.3));
-      const step = total / subs;
-      for (let s = 0; s < subs && !p.dead; s++) {
-        p.x += p.dx * step; p.z += p.dz * step;
-        const cands = this.enemies.query(p.x, p.z, p.size / 2 + 2.2);
-        for (const e of cands) {
-          if (!e.alive || p.hit.has(e)) continue;
-          if (Math.hypot(e.x - p.x, e.z - p.z) < p.size / 2 + e.r) {
-            p.hit.add(e);
-            this.onProjHit(p, e);
-            // 연쇄: 1회 소모해 가장 가까운 다른 적을 향해 다시 발사 (유도 아님)
-            if (p.chainsLeft > 0 && this.redirect(p)) break;
-            if (p.pierceLeft > 0) {
-              p.pierceLeft--;
-              p.pierceFlash = 0.15;
-              this.fx.ring(p.x, p.z, Math.max(0.4, p.size * 1.2), p.kind === 'fire' ? 0xffe08a : 0xd8f8ff, 0.25, p.y);
-            } else { p.dead = true; break; }
-          }
-        }
-      }
-      p.age += dt;
-      if (p.age >= p.life && !p.dead) {
-        p.dead = true;
-        if (p.explodeOnExpire) this.onProjHit(p, null);
-        else if (p.kind === 'fire') this.fx.particles.burst(p.x, p.y, p.z, 5, [0xff9a3a, 0x5a5048], { speed: 1.2, size: 0.1, life: 0.3, up: 1.5 });
-      }
-      if (Math.abs(p.x) > lim || Math.abs(p.z) > lim) p.dead = true;
-
-      p.mesh.position.set(p.x, p.y, p.z);
-      if (p.pierceFlash > 0) { p.pierceFlash -= dt; p.mesh.scale.setScalar(p.size * (1 + p.pierceFlash * 4)); }
-      if (p.kind === 'fire') {
-        const sh = p.mesh.userData.shell;
-        sh.rotation.x += dt * 6; sh.rotation.z += dt * 4;
-        // 불꽃 + 연기 꼬리
-        const c = [0xffb347, 0xff6a1a, 0xffe08a, 0xff4a10][Math.floor(Math.random() * 4)];
-        this.fx.particles.emit(p.x - p.dx * p.size * 0.4 + (Math.random() - 0.5) * p.size * 0.4, p.y, p.z - p.dz * p.size * 0.4 + (Math.random() - 0.5) * p.size * 0.4,
-          -p.dx * 1.2, 0.4 + Math.random() * 0.6, -p.dz * 1.2, 0.28, p.size * 0.4, c, -1.5);
-        if (Math.random() < 0.35) {
-          this.fx.particles.emit(p.x - p.dx * p.size * 0.6, p.y + 0.05, p.z - p.dz * p.size * 0.6,
-            -p.dx * 0.5, 0.8, -p.dz * 0.5, 0.45, p.size * 0.35, Math.random() < 0.5 ? 0x4a3a32 : 0x6a5a50, -1);
-        }
-      }
-      if (p.dead) {
-        (p.kind === 'fire' ? this.firePool : this.icePool).put(p.mesh);
-        this.projs[i] = this.projs[this.projs.length - 1];
-        this.projs.pop();
-      }
-    }
-  }
-
-  redirect(p) {
-    let best = null, bd = 12 * 12;
-    for (const t of this.enemies.query(p.x, p.z, 12)) {
-      if (!t.alive || p.hit.has(t)) continue;
-      const d2 = (t.x - p.x) ** 2 + (t.z - p.z) ** 2;
-      if (d2 < bd) { bd = d2; best = t; }
-    }
-    if (!best) return false;
-    const d = Math.sqrt(bd) || 1;
-    p.dx = (best.x - p.x) / d; p.dz = (best.z - p.z) / d;
-    p.chainsLeft--;
-    p.age = 0;
-    p.mesh.rotation.set(0, Math.atan2(p.dx, p.dz), 0);
-    this.fx.ring(p.x, p.z, Math.max(0.4, p.size * 1.3), 0xfff06a, 0.25, p.y);
-    return true;
-  }
-
-  onProjHit(p, e) {
-    if (p.kind === 'fire') {
-      const radius = p.area / 2;
-      sfx('explode');
-      this.fx.explosion(p.x, p.z, Math.max(0.3, radius));
-      const cands = this.enemies.query(p.x, p.z, radius + 2.2);
-      for (const t of cands) {
-        if (!t.alive) continue;
-        const d = Math.hypot(t.x - p.x, t.z - p.z);
-        if (d <= radius + t.r * 0.7 || t === e) {
-          const nx = (t.x - p.x) / (d || 1), nz = (t.z - p.z) / (d || 1);
-          this.enemies.damage(t, sample(p.st.damage) * p.dmgMul, { kx: nx * 4, kz: nz * 4, element: p.element, status: p.status });
-        }
-      }
-      // 5레벨: 진행 방향으로 작은 투사체 3개 (작은 투사체는 다시 튀지 않음)
-      // 크기 40% · 속도 75% · 지속 25% · 피해 40% · 폭발 범위 = 크기 × 5 (문장 효과 비율 유지)
-      if (p.split) {
-        const base = Math.atan2(p.dz, p.dx);
-        for (const off of [-25, 0, 25]) {
-          const a = base + off * DEG;
-          const dx = Math.cos(a), dz = Math.sin(a);
-          this.spawnProj({
-            kind: 'fire', element: 'fire', x: p.x + dx * 0.2, z: p.z + dz * 0.2, y: p.y, dx, dz,
-            speed: p.speed * 0.75 * 1.3, size: p.size * 0.4, life: p.life * 0.25, pierce: p.pierce,
-            area: p.area * 0.4 * (5 / p.areaFactor), st: p.st, status: p.status, dmgMul: p.dmgMul * 0.4, split: false, ignore: e,
-            chains: p.chainsLeft,
-            explodeOnExpire: true,
-          });
-        }
-      }
-    } else {
-      this.enemies.damage(e, sample(p.st.damage) * p.dmgMul, { kx: p.dx * 1.5, kz: p.dz * 1.5, element: p.element, status: p.status });
-      this.fx.particles.burst(p.x, p.y, p.z, 4, [0xd8f8ff, 0x9fe6ff], { speed: 2, size: 0.06, life: 0.25, up: 1.5 });
-    }
-  }
-
-  // ── 아이스볼 ──────────────────────────
   updateIceballs(dt) {
     for (let i = this.iceballs.length - 1; i >= 0; i--) {
       const ib = this.iceballs[i];
@@ -607,7 +596,7 @@ export class SkillRuntime {
         ib.tick += ib.sk.def.tick;
         for (const e of this.enemies.query(ib.x, ib.z, radius + 2.2)) {
           if (e.alive && Math.hypot(e.x - ib.x, e.z - ib.z) < radius + e.r) {
-            this.enemies.damage(e, sample(ib.contact), { element: 'ice', status: statusProb(st, ib.sk.def.contactChanceRatio) });
+            this.deal(e, ib.sk, st, { base: sample(ib.contact), statusRatio: ib.sk.def.contactChanceRatio });
           }
         }
       }
@@ -619,14 +608,14 @@ export class SkillRuntime {
         const base = ib.angIdx * ib.step * DEG;
         ib.angIdx++;
         const n = sampleInt(st.projCount);
-        const size = sample(st.projSize) / U, speed = sample(st.projSpeed) * PS, pierce = sampleInt(st.pierce), life = sample(st.projDuration);
+        const gen = () => ({ size: sample(st.projSize) / U, speed: sample(st.projSpeed) * PS, life: sample(st.projDuration), pierce: sampleInt(st.pierce) });
         const dirs = ib.backShot ? [base, base + Math.PI] : [base];
         for (const b of dirs) {
           for (let k = 0; k < n; k++) {
             const a = spreadAngle(b, k);
             const dx = Math.cos(a), dz = Math.sin(a);
             sfx('iceShot');
-            this.spawnProj({ kind: 'ice', element: 'ice', x: ib.x + dx * radius, z: ib.z + dz * radius, y: 0.7, dx, dz, speed, size, life, pierce, st, status: statusProb(st), chains: sampleInt(st.chains) });
+            this.spawnProj({ kind: 'ice', sk: ib.sk, ...gen(), gen, x: ib.x + dx * radius, z: ib.z + dz * radius, y: 0.7, dx, dz, st, chains: sampleInt(st.chains) });
           }
         }
       }
@@ -648,6 +637,287 @@ export class SkillRuntime {
         this.scene.remove(ib.group, ib.ring);
         ib.mats.forEach((m) => m.dispose());
         this.iceballs.splice(i, 1);
+      }
+    }
+  }
+
+  // ── 투사체 공통 ───────────────────────
+  spawnProj(o) {
+    const mesh = o.kind === 'fire' ? this.firePool.get() : this.icePool.get();
+    Object.assign(o, {
+      mesh, age: 0, hit: o.hit || new Set(o.ignore ? [o.ignore] : []), pierceLeft: o.pierce, chainsLeft: o.chains || 0,
+      pierceFlash: 0, dead: false, infused: null,
+    });
+    if (o.dmgMul == null) o.dmgMul = 1;
+    mesh.scale.setScalar(o.size);
+    mesh.position.set(o.x, o.y, o.z);
+    mesh.rotation.set(0, Math.atan2(o.dx, o.dz), 0);
+    this.projs.push(o);
+    return o;
+  }
+
+  updateProjectiles(dt) {
+    const lim = WORLD_HALF + 12;
+    for (let i = this.projs.length - 1; i >= 0; i--) {
+      const p = this.projs[i];
+      const total = p.speed * dt;
+      const subs = Math.max(1, Math.ceil(total / 0.3));
+      const step = total / subs;
+      for (let s = 0; s < subs && !p.dead; s++) {
+        p.x += p.dx * step; p.z += p.dz * step;
+        const cands = this.enemies.query(p.x, p.z, p.size / 2 + 2.2);
+        for (const e of cands) {
+          if (!e.alive || p.hit.has(e)) continue;
+          if (Math.hypot(e.x - p.x, e.z - p.z) < p.size / 2 + e.r) {
+            p.hit.add(e);
+            this.onProjHit(p, e);
+            // 연쇄: 1회 소모해 가장 가까운 다른 적을 향해 투사체를 새로 생성 (유도 아님)
+            if (p.chainsLeft > 0 && this.chainProj(p)) { p.dead = true; break; }
+            if (p.pierceLeft > 0) {
+              p.pierceLeft--;
+              p.pierceFlash = 0.15;
+              this.fx.ring(p.x, p.z, Math.max(0.4, p.size * 1.2), p.kind === 'fire' ? 0xffe08a : 0xd8f8ff, 0.25, p.y);
+            } else { p.dead = true; break; }
+          }
+        }
+      }
+      // 지대 흡수: 투사체가 속성 지대 위를 지나면 그 속성 피해를 얻음
+      if (p.st.infuse && this.zones.length && !p.dead) {
+        for (const zn of this.zones) {
+          if (Math.hypot(p.x - zn.x, p.z - zn.z) < zn.r) {
+            if (!p.infused) p.infused = {};
+            if (!p.infused[zn.el]) { p.infused[zn.el] = p.st.infuse; this.fx.ring(p.x, p.z, 0.6, ZONE_COLOR[zn.el], 0.25, p.y); }
+          }
+        }
+      }
+      if (p.infused) {
+        for (const el in p.infused) {
+          if (Math.random() < 0.7) this.fx.particles.emit(p.x + (Math.random() - 0.5) * p.size, p.y + (Math.random() - 0.5) * p.size, p.z + (Math.random() - 0.5) * p.size, 0, 0.5, 0, 0.25, Math.max(0.06, p.size * 0.3), ZONE_COLOR[el], 0);
+        }
+      }
+      p.age += dt;
+      if (p.age >= p.life && !p.dead) {
+        p.dead = true;
+        if (p.explodeOnExpire) this.onProjHit(p, null);
+        else if (p.kind === 'fire') this.fx.particles.burst(p.x, p.y, p.z, 5, [0xff9a3a, 0x5a5048], { speed: 1.2, size: 0.1, life: 0.3, up: 1.5 });
+      }
+      if (Math.abs(p.x) > lim || Math.abs(p.z) > lim) p.dead = true;
+
+      p.mesh.position.set(p.x, p.y, p.z);
+      if (p.pierceFlash > 0) { p.pierceFlash -= dt; p.mesh.scale.setScalar(p.size * (1 + p.pierceFlash * 4)); }
+      if (p.kind === 'fire') {
+        const sh = p.mesh.userData.shell;
+        sh.rotation.x += dt * 6; sh.rotation.z += dt * 4;
+        const c = [0xffb347, 0xff6a1a, 0xffe08a, 0xff4a10][Math.floor(Math.random() * 4)];
+        this.fx.particles.emit(p.x - p.dx * p.size * 0.4 + (Math.random() - 0.5) * p.size * 0.4, p.y, p.z - p.dz * p.size * 0.4 + (Math.random() - 0.5) * p.size * 0.4,
+          -p.dx * 1.2, 0.4 + Math.random() * 0.6, -p.dz * 1.2, 0.28, p.size * 0.4, c, -1.5);
+        if (Math.random() < 0.35) {
+          this.fx.particles.emit(p.x - p.dx * p.size * 0.6, p.y + 0.05, p.z - p.dz * p.size * 0.6,
+            -p.dx * 0.5, 0.8, -p.dz * 0.5, 0.45, p.size * 0.35, Math.random() < 0.5 ? 0x4a3a32 : 0x6a5a50, -1);
+        }
+      }
+      if (p.dead) {
+        (p.kind === 'fire' ? this.firePool : this.icePool).put(p.mesh);
+        this.projs[i] = this.projs[this.projs.length - 1];
+        this.projs.pop();
+      }
+    }
+  }
+
+  // 연쇄: 그 스킬의 투사체를 맞은 자리에서 새로 생성 (크기/속도/지속 시간/관통을 새로 적용, 개수는 1개)
+  chainProj(p) {
+    let best = null, bd = 12 * 12;
+    for (const t of this.enemies.query(p.x, p.z, 12)) {
+      if (!t.alive || p.hit.has(t)) continue;
+      const d2 = (t.x - p.x) ** 2 + (t.z - p.z) ** 2;
+      if (d2 < bd) { bd = d2; best = t; }
+    }
+    if (!best) return false;
+    const d = Math.sqrt(bd) || 1;
+    const fresh = p.gen ? p.gen() : { size: p.size, speed: p.speed, life: p.life, pierce: p.pierce, area: p.area };
+    this.spawnProj({
+      kind: p.kind, sk: p.sk, st: p.st, gen: p.gen, y: p.y, dmgMul: p.dmgMul,
+      split: p.split, areaFactor: p.areaFactor, explodeOnExpire: p.explodeOnExpire,
+      ...fresh, x: p.x, z: p.z, dx: (best.x - p.x) / d, dz: (best.z - p.z) / d,
+      chains: p.chainsLeft - 1, hit: new Set(p.hit),
+    });
+    this.fx.ring(p.x, p.z, Math.max(0.4, p.size * 1.3), 0xfff06a, 0.25, p.y);
+    return true;
+  }
+
+  onProjHit(p, e) {
+    if (p.kind === 'fire') {
+      const radius = p.area / 2;
+      sfx('explode');
+      this.fx.explosion(p.x, p.z, Math.max(0.3, radius));
+      for (const t of this.enemies.query(p.x, p.z, radius + 2.2)) {
+        if (!t.alive) continue;
+        const d = Math.hypot(t.x - p.x, t.z - p.z);
+        if (d <= radius + t.r * 0.7 || t === e) {
+          const nx = (t.x - p.x) / (d || 1), nz = (t.z - p.z) / (d || 1);
+          this.deal(t, p.sk, p.st, { mul: p.dmgMul, kx: nx * 4, kz: nz * 4, infuse: p.infused });
+        }
+      }
+      // 5레벨: 진행 방향으로 작은 투사체 3개 (작은 투사체는 다시 튀지 않음)
+      // 크기 40% · 속도 97.5% · 지속 25% · 피해 40% · 폭발 범위 = 크기 × 5 (문장 효과 비율 유지)
+      if (p.split) {
+        const base = Math.atan2(p.dz, p.dx);
+        const parentGen = p.gen, factor = p.areaFactor;
+        const gen = () => {
+          const g = parentGen();
+          return { size: g.size * 0.4, speed: g.speed * 0.975, life: g.life * 0.25, pierce: g.pierce, area: g.area * 0.4 * (5 / factor) };
+        };
+        for (const off of [-25, 0, 25]) {
+          const a = base + off * DEG;
+          const dx = Math.cos(a), dz = Math.sin(a);
+          this.spawnProj({
+            kind: 'fire', sk: p.sk, ...gen(), gen, x: p.x + dx * 0.2, z: p.z + dz * 0.2, y: p.y, dx, dz,
+            st: p.st, dmgMul: p.dmgMul * 0.4, split: false, ignore: e, chains: p.chainsLeft, explodeOnExpire: true,
+          });
+        }
+      }
+    } else {
+      this.deal(e, p.sk, p.st, { mul: p.dmgMul, kx: p.dx * 1.5, kz: p.dz * 1.5, infuse: p.infused });
+      this.fx.particles.burst(p.x, p.y, p.z, 4, [0xd8f8ff, 0x9fe6ff], { speed: 2, size: 0.06, life: 0.25, up: 1.5 });
+    }
+  }
+
+  // ── 낙석: 체력이 가장 높은 적에게 비스듬히 떨어지는 눈덩이 ──
+  castSnowfall(sk, st) {
+    const p = this.player.pos;
+    const range = sample(st.range) / U;
+    let target = null;
+    for (const e of this.enemies.list) {
+      if (!e.alive || Math.hypot(e.x - p.x, e.z - p.z) > range) continue;
+      if (!target || e.hp > target.hp) target = e;
+    }
+    if (!target) return;
+    this.dropSnowball(sk, st, target.x, target.z, sampleInt(st.chains));
+  }
+
+  dropSnowball(sk, st, x, z, chainsLeft) {
+    const radius = sample(st.area) / U / 2;
+    const mat = new THREE.MeshStandardMaterial({ color: 0xf2fbff, emissive: 0x5aa8d8, emissiveIntensity: 0.25, roughness: 0.6, flatShading: true, transparent: true, opacity: 0.3 });
+    const ball = new THREE.Mesh(this.snowGeo, mat);
+    ball.castShadow = true;
+    const size = radius * 0.9;   // 효과 범위에 비례하는 눈덩이 크기
+    ball.scale.setScalar(size);
+    const markMat = new THREE.MeshBasicMaterial({ color: 0x9fe6ff, transparent: true, opacity: 0.0, side: THREE.DoubleSide, depthWrite: false });
+    const mark = new THREE.Mesh(this.fx.ringGeo, markMat);
+    mark.rotation.x = -Math.PI / 2;
+    mark.position.set(x, 0.05, z);
+    mark.scale.setScalar(radius);
+    this.scene.add(ball, mark);
+    // 하늘 비스듬한 위치에서 출발
+    const from = new THREE.Vector3(x - 4, 9 + size, z + 3);
+    this.snowballs.push({ sk, st, x, z, radius, size, chainsLeft, t: 0, dur: 0.5, ball, mark, mat, markMat, from });
+  }
+
+  updateSnowballs(dt) {
+    for (let i = this.snowballs.length - 1; i >= 0; i--) {
+      const s = this.snowballs[i];
+      s.t += dt;
+      const k = Math.min(1, s.t / s.dur);
+      const e2 = k * k;                                      // 점점 빨라지며 떨어짐
+      s.ball.position.set(s.from.x + (s.x - s.from.x) * e2, s.from.y + (s.size * 0.8 - s.from.y) * e2, s.from.z + (s.z - s.from.z) * e2);
+      s.ball.rotation.x += dt * 5; s.ball.rotation.z += dt * 3;
+      s.mat.opacity = 0.3 + 0.7 * k;                         // 화면을 가리지 않게 처음엔 투명하다가 선명해짐
+      s.markMat.opacity = 0.5 * k;
+      if (Math.random() < 0.6) this.fx.particles.emit(s.ball.position.x, s.ball.position.y, s.ball.position.z, 0, 0.5, 0, 0.35, s.size * 0.25, 0xe8fbff, -0.5);
+      if (k < 1) continue;
+      // 착지: 범위 피해 + 중심에서 범위의 75% 만큼 밀쳐냄
+      sfx('explode'); sfx('frost');
+      this.fx.ring(s.x, s.z, s.radius, 0xd8f8ff, 0.45);
+      this.fx.particles.burst(s.x, 0.4, s.z, 30, [0xffffff, 0xd8f8ff, 0x9fe6ff], { speed: 3 + s.radius * 3, size: 0.18, life: 0.6, up: 4 });
+      for (const e of this.enemies.query(s.x, s.z, s.radius + 2.2)) {
+        const d = Math.hypot(e.x - s.x, e.z - s.z);
+        if (!e.alive || d > s.radius + e.r * 0.7) continue;
+        const push = Math.max(0, s.radius * 0.75 - d) * 7 + 2;
+        this.deal(e, s.sk, s.st, { kx: ((e.x - s.x) / (d || 1)) * push, kz: ((e.z - s.z) / (d || 1)) * push });
+      }
+      this.scene.remove(s.ball, s.mark);
+      s.mat.dispose(); s.markMat.dispose();
+      this.snowballs.splice(i, 1);
+      // 연쇄: 같은 자리에 눈덩이가 다시 떨어짐
+      if (s.chainsLeft > 0) this.dropSnowball(s.sk, s.st, s.x, s.z, s.chainsLeft - 1);
+    }
+  }
+
+  // ── 번개 광선: 하늘에서 비스듬히 내리꽂히며 앞으로 나아감 ──
+  castBeam(sk, st) {
+    const p = this.player.pos;
+    const near = this.enemies.nearestN(p.x, p.z, 30, 1)[0];
+    const ang = near ? Math.atan2(near.z - p.z, near.x - p.x) : Math.atan2(this.player.aim.z, this.player.aim.x);
+    this.spawnBeam(sk, st, p.x + Math.cos(ang) * 1.0, p.z + Math.sin(ang) * 1.0, ang, sampleInt(st.chains));
+    sfx('zap');
+  }
+
+  spawnBeam(sk, st, x, z, ang, chains) {
+    const r = sample(st.area) / U / 2;
+    const mat = new THREE.MeshBasicMaterial({ color: 0xfff6a0, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false });
+    const coreMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false });
+    const outer = new THREE.Mesh(this.beamGeo, mat);
+    const core = new THREE.Mesh(this.beamGeo, coreMat);
+    const footMat = new THREE.MeshBasicMaterial({ color: 0xffe066, transparent: true, opacity: 0.45, blending: THREE.AdditiveBlending, depthWrite: false });
+    const foot = new THREE.Mesh(this.fx.circleGeo, footMat);
+    foot.rotation.x = -Math.PI / 2;
+    foot.scale.setScalar(r);
+    const glow = makeGlowSprite(0xfff27a, r * 3, 0.9);
+    this.scene.add(outer, core, foot, glow);
+    this.beams.push({
+      sk, st, x, z, dx: Math.cos(ang), dz: Math.sin(ang), speed: sample(st.projSpeed) * PS, r,
+      t: sample(st.duration), tick: 0, chains, hit: new Set(), outer, core, foot, glow, mats: [mat, coreMat, footMat, glow.material], age: 0,
+    });
+  }
+
+  updateBeams(dt) {
+    const tmpA = new THREE.Vector3(), tmpB = new THREE.Vector3(), dir = new THREE.Vector3();
+    const UP = new THREE.Vector3(0, 1, 0);
+    for (let i = this.beams.length - 1; i >= 0; i--) {
+      const b = this.beams[i];
+      b.age += dt; b.t -= dt;
+      b.x += b.dx * b.speed * dt; b.z += b.dz * b.speed * dt;
+      // 하늘의 비스듬한 지점에서 바닥으로 내리꽂히는 기둥
+      tmpA.set(b.x - 3, 10, b.z + 2.5);
+      tmpB.set(b.x, 0, b.z);
+      dir.subVectors(tmpB, tmpA);
+      const len = dir.length();
+      dir.normalize();
+      const flick = 0.8 + Math.random() * 0.4;
+      for (const [m, w] of [[b.outer, b.r * 0.32 * flick], [b.core, b.r * 0.1 * flick]]) {
+        m.position.copy(tmpA).addScaledVector(dir, len / 2);
+        m.quaternion.setFromUnitVectors(UP, dir);
+        m.scale.set(w, len, w);
+      }
+      b.foot.position.set(b.x, 0.05, b.z);
+      b.glow.position.set(b.x, 0.4, b.z);
+      const fade = Math.min(1, b.t / 0.3) * Math.min(1, b.age / 0.15);
+      b.mats[0].opacity = 0.32 * fade; b.mats[1].opacity = 0.85 * fade; b.mats[2].opacity = 0.45 * fade; b.mats[3].opacity = 0.9 * fade;
+      if (Math.random() < 0.8) this.fx.particles.emit(b.x + (Math.random() - 0.5) * b.r, 0.1, b.z + (Math.random() - 0.5) * b.r, (Math.random() - 0.5) * 4, 2 + Math.random() * 2, (Math.random() - 0.5) * 4, 0.25, 0.07, Math.random() < 0.5 ? 0xffffff : 0xfff06a, 6);
+      // 0.25초마다 광선에 닿은 적에게 피해
+      b.tick -= dt;
+      if (b.tick <= 0) {
+        b.tick += b.sk.def.tick;
+        for (const e of this.enemies.query(b.x, b.z, b.r + 2.2)) {
+          if (!e.alive || Math.hypot(e.x - b.x, e.z - b.z) > b.r + e.r) continue;
+          const first = !b.hit.has(e);
+          b.hit.add(e);
+          this.deal(e, b.sk, b.st);
+          // 연쇄: 적에게 처음 닿을 때마다 그 자리에서 가까운 적을 향해 광선 하나 더 (새 광선은 연쇄 없음)
+          if (first && b.chains > 0) {
+            const next = this.enemies.query(e.x, e.z, 10).filter((t) => t.alive && !b.hit.has(t))
+              .sort((p, q) => Math.hypot(p.x - e.x, p.z - e.z) - Math.hypot(q.x - e.x, q.z - e.z))[0];
+            if (next) {
+              b.chains--;
+              this.spawnBeam(b.sk, b.st, e.x, e.z, Math.atan2(next.z - e.z, next.x - e.x), 0);
+            }
+          }
+        }
+      }
+      if (b.t <= 0 || Math.abs(b.x) > WORLD_HALF + 4 || Math.abs(b.z) > WORLD_HALF + 4) {
+        this.scene.remove(b.outer, b.core, b.foot, b.glow);
+        b.mats.forEach((m) => m.dispose());
+        this.beams.splice(i, 1);
       }
     }
   }

@@ -1,5 +1,5 @@
-import { SUBJECTS, SUBJECT_ORDER, BASE_SENTENCE_SLOTS, MAX_SENTENCE_SLOTS } from './config.js';
-import { evalNumber, isComplete } from './blocks.js';
+import { SUBJECTS, SUBJECT_ORDER, BASE_SENTENCE_SLOTS, MAX_SENTENCE_SLOTS, CHANGES, ELEMENTS, DAMAGE_EXTRA, STAT_DEFAULTS, ELEMENT_DMG, ZONE_BASE_AREA } from './config.js';
+import { evalNumber, isComplete, fmtValue } from './blocks.js';
 import { game } from './state.js';
 
 // ─────────────────────────────────────────────
@@ -12,63 +12,64 @@ const pctUp = (st, key, rate, lv) => {
   const m = 1 + rate * (lv - 1);
   st[key] = { min: st[key].min * m, max: st[key].max * m };
 };
+const dmgUp40 = (st, lv) => pctUp(st, 'damage', 0.4, lv);
 
 export const SKILL_DEFS = {
   fireball: {
-    key: 'fireball', name: '파이어볼', icon: '🔥', color: '#ff7a2e', element: 'fire', passive: false, castTime: 0.15,
-    short: '커서 방향으로 화염구를 발사합니다. 적중 시 폭발해 주위 적에게 피해를 줍니다.',
-    desc: '커서 방향으로 화염구를 발사합니다. 적중 시 폭발해 범위 안의 모든 적에게 피해를 줍니다. 투사체는 투사체 지속 시간 동안 날아갑니다.',
+    key: 'fireball', name: '파이어볼', icon: '🔥', color: '#ff7a2e', element: 'fire', passive: false, castTime: 0.15, projectile: true,
+    short: '커서 방향으로 화염구를 발사합니다. 적중하면 폭발합니다.',
+    desc: '커서 방향으로 화염구를 발사합니다. 적중하면 폭발해 주위 적에게 피해를 줍니다.',
     keywords: ['화염', '효과 범위', '지속 시간', '투사체', '연쇄', '상태이상', '스킬 쿨타임'],
     base: { damage: [8, 12], duration: 1.5, projSize: 2.5, projSpeed: 6, projCount: 1, statusChance: 40, manaCost: 5, cooldown: 1.5 },
     areaFromProjSize: 6,   // 기본 폭발 범위 = 최종 투사체 크기 × 6 (3레벨부터 × 9)
     labels: { duration: '투사체 지속 시간' },
     relevant: ['damage', 'area', 'duration', 'pierce', 'projSize', 'projSpeed', 'projCount', 'chains', 'statusChance', 'manaCost', 'cooldown'],
-    levelUp(st, lv) { pctUp(st, 'damage', 0.4, lv); },
-    levelText: (lv) => ['피해량 40% 증가', lv === 3 && '기본 폭발 범위 50% 증가 (투사체 크기 × 9)', lv === 5 && '적중 시 진행 방향으로 작은 투사체 3개가 튐'],
-    extra: (sk) => [`기본 폭발 범위 = 투사체 크기 × ${sk.level >= 3 ? 9 : 6}`, '관통 시 적중할 때마다 다시 폭발', sk.level >= 5 && '적중 시 작은 투사체 3개 (크기 40% · 속도 97.5% · 지속 25% · 피해 40%, 만료 시에도 폭발)'],
+    levelUp: dmgUp40,
+    levelText: (lv) => ['피해량이 40% 증가합니다.', lv === 3 && '기본 폭발 범위가 50% 증가합니다.', lv === 5 && '적중하면 작은 화염구 3개가 앞으로 튑니다.'],
+    extra: (sk) => [`폭발 범위는 투사체 크기의 ${sk.level >= 3 ? 9 : 6}배입니다.`, sk.level >= 5 && '적중하면 작은 화염구 3개가 튑니다.'],
   },
   frostBarrier: {
     key: 'frostBarrier', name: '냉기 보호막', icon: '🛡️', color: '#6fd3ff', element: 'ice', passive: true, maxStacks: 3,
-    short: '피해를 입으면 보호막을 얻고, 주위 적에게 냉기 피해를 줍니다.',
-    desc: '패시브. 쿨타임마다 스택을 1개 얻습니다. 피해를 입으면 스택을 소모해 지속 시간 동안 보호막을 얻고, 주위 효과 범위 안의 적에게 냉기 피해를 줍니다. 입은 피해는 보호막이 먼저 받습니다.',
+    short: '피해를 입으면 보호막을 얻고 주위에 냉기 피해를 줍니다.',
+    desc: '쿨타임마다 스택을 얻습니다. 피해를 입으면 스택을 소모해 보호막을 얻고 주위 적에게 냉기 피해를 줍니다.',
     keywords: ['냉기', '보호막', '효과 범위', '지속 시간', '상태이상', '스킬 쿨타임', '패시브'],
     base: { damage: [3, 9], area: 40, duration: 3, shield: 10, statusChance: 80, cooldown: 10 },
     relevant: ['damage', 'area', 'shield', 'duration', 'statusChance', 'cooldown'],
     levelUp(st, lv) { pctUp(st, 'damage', 0.3, lv); pctUp(st, 'shield', 0.3, lv); },
-    levelText: (lv) => ['피해량 30% · 보호막 획득량 30% 증가', lv === 3 && '최대 스택 +1 (4개)', lv === 5 && '피해를 준 적을 효과 범위의 70% 만큼 밀쳐냄'],
-    extra: (sk) => [`최대 스택 ${sk.level >= 3 ? 4 : 3}`, sk.level >= 5 && '적 밀쳐내기 (효과 범위의 70%)'],
+    levelText: (lv) => ['피해량과 보호막 획득량이 30% 증가합니다.', lv === 3 && '최대 스택이 1 증가합니다.', lv === 5 && '피해를 준 적을 밀쳐냅니다.'],
+    extra: (sk) => [`최대 스택은 ${sk.level >= 3 ? 4 : 3}개입니다.`, sk.level >= 5 && '피해를 준 적을 밀쳐냅니다.'],
   },
   chainLightning: {
     key: 'chainLightning', name: '연쇄 번개', icon: '⚡', color: '#ffe066', element: 'lightning', passive: false, castTime: 0.1,
-    short: '가장 가까운 적에게 번개를 쏘고, 다른 적들에게 연쇄됩니다.',
-    desc: '가장 가까운 적에게 번개를 내보낸 뒤, 대상 주변의 무작위 적에게 연쇄 횟수만큼 이어집니다. 연쇄 대상만 피해를 입습니다. (투사체 아님)',
+    short: '가장 가까운 적에게 번개를 쏘고 다른 적에게 연쇄합니다.',
+    desc: '가장 가까운 적에게 번개를 쏩니다. 번개는 주변의 다른 적에게 연쇄합니다.',
     keywords: ['번개', '연쇄', '투사체', '상태이상', '스킬 쿨타임'],
     base: { damage: [1, 15], range: 30, chains: 3, projCount: 1, projSize: 1, projSpeed: 6, statusChance: 40, manaCost: 6, cooldown: 2 },
     labels: { projCount: '번개 줄기 수', projSize: '번개 굵기', projSpeed: '연쇄 속도' },
     relevant: ['damage', 'chains', 'projCount', 'projSize', 'projSpeed', 'statusChance', 'manaCost', 'cooldown'],
     hiddenUses: ['range'],
-    levelUp(st, lv) { pctUp(st, 'damage', 0.4, lv); if (lv >= 3) st.chains = { min: 6, max: 6 }; },
-    levelText: (lv) => ['피해량 40% 증가', lv === 3 && '기본 연쇄 횟수 6회', lv === 5 && '번개 줄기에 닿은 적도 피해를 입음'],
-    extra: (sk) => [sk.level >= 5 && '번개 줄기에 닿은 적도 피해'],
+    levelUp(st, lv) { dmgUp40(st, lv); if (lv >= 3) st.chains = { min: 6, max: 6 }; },
+    levelText: (lv) => ['피해량이 40% 증가합니다.', lv === 3 && '기본 연쇄 횟수가 6회가 됩니다.', lv === 5 && '번개 줄기에 닿은 적도 피해를 입습니다.'],
+    extra: (sk) => [sk.level >= 5 && '번개 줄기에 닿은 적도 피해를 입습니다.'],
   },
   iceball: {
-    key: 'iceball', name: '아이스볼', icon: '❄️', color: '#9fe6ff', element: 'ice', passive: false, castTime: 0.2,
+    key: 'iceball', name: '아이스볼', icon: '❄️', color: '#9fe6ff', element: 'ice', passive: false, castTime: 0.2, projectile: true,
     contactDamage: [1, 2], tick: 0.2, fireInterval: 0.1, contactChanceRatio: 2 / 3,
-    short: '사거리 내 무작위 위치에 아이스볼을 생성합니다. 아이스볼은 주위에 얼음 투사체를 흩뿌려 적중 시 피해를 줍니다.',
-    desc: '사거리 내 무작위 위치에 아이스볼을 설치합니다. 아이스볼은 방향을 바꾸며 얼음 투사체를 흩뿌리고(처음 적중한 적에게만 피해), 닿은 적에게 0.2초마다 접촉 피해를 줍니다.',
+    short: '무작위 위치에 아이스볼을 만듭니다. 아이스볼은 주위에 얼음 투사체를 흩뿌립니다.',
+    desc: '사거리 안 무작위 위치에 아이스볼을 만듭니다. 아이스볼은 얼음 투사체를 흩뿌리고, 닿은 적에게도 피해를 줍니다.',
     keywords: ['냉기', '효과 범위', '지속 시간', '투사체', '연쇄', '상태이상', '스킬 쿨타임'],
     base: { damage: [4, 7], area: 4.5, range: 25, duration: 6, projDuration: 0.75, projSize: 1, projSpeed: 6, projCount: 1, statusChance: 30, manaCost: 10, cooldown: 10 },
     labels: { duration: '아이스볼 지속 시간' },
     relevant: ['damage', 'area', 'duration', 'projDuration', 'pierce', 'projSize', 'projSpeed', 'projCount', 'chains', 'statusChance', 'manaCost', 'cooldown'],
     hiddenUses: ['range'],
-    levelUp(st, lv) { pctUp(st, 'damage', 0.4, lv); },
-    levelText: (lv) => ['피해량 40% 증가', lv === 3 && '투사체가 30°씩 회전하며 반대 방향으로도 1개 추가 발사', lv === 5 && '아이스볼을 무작위 위치에 하나 더 생성'],
-    extra: (sk) => ['접촉 피해 1~2 / 0.2초 (피해량 비율 적용)', '접촉 시 상태이상 확률 = 발생율의 2/3', `발사 각도 ${sk.level >= 3 ? 30 : 36}°${sk.level >= 3 ? ' · 반대 방향 추가 발사' : ''}`, sk.level >= 5 && '아이스볼 2개 생성'],
+    levelUp: dmgUp40,
+    levelText: (lv) => ['피해량이 40% 증가합니다.', lv === 3 && '투사체를 더 촘촘히, 반대 방향으로도 발사합니다.', lv === 5 && '아이스볼을 하나 더 만듭니다.'],
+    extra: (sk) => ['아이스볼에 닿은 적도 피해를 입습니다.', sk.level >= 3 && '반대 방향으로도 투사체를 발사합니다.', sk.level >= 5 && '아이스볼을 2개 만듭니다.'],
   },
   magnet: {
     key: 'magnet', name: '자석', icon: '🧲', color: '#ff6b8a', element: null, passive: false, castTime: 0.1,
     short: '주위의 경험치와 떨어진 블록을 끌어당깁니다.',
-    desc: '사거리(반경) 안의 경험치와 떨어진 블록, 블록 상자를 자신에게 끌어당깁니다. 인벤토리에서 직접 버린 블록은 제외됩니다.',
+    desc: '주위의 경험치, 블록, 블록 상자를 끌어당깁니다. 직접 버린 블록은 끌어당기지 않습니다.',
     keywords: ['스킬 쿨타임'],
     base: { range: 50, manaCost: 10, cooldown: 15 },
     relevant: ['manaCost', 'cooldown'],
@@ -78,76 +79,113 @@ export const SKILL_DEFS = {
       st.range = { min: st.range.min * m, max: st.range.max * m };
       if (lv >= 3) st.cooldown = { min: 10, max: 10 };
     },
-    levelText: (lv) => ['기본 사거리 30% 증가', lv === 3 && '기본 쿨타임 10초', lv === 5 && '기본 사거리 2배'],
-    extra: (sk) => [`끌어당기는 반경 ${Math.round(baseStats(sk).range.min)}`],
+    levelText: (lv) => ['끌어당기는 범위가 30% 증가합니다.', lv === 3 && '기본 쿨타임이 10초가 됩니다.', lv === 5 && '끌어당기는 범위가 2배가 됩니다.'],
+    extra: (sk) => [`끌어당기는 범위는 ${Math.round(baseStats(sk).range.min)}입니다.`],
   },
   fireAura: {
     key: 'fireAura', name: '화염의 기운', icon: '☄️', color: '#ff5a2a', element: 'fire', passive: true,
     short: '화상 상태인 적을 처치하면 폭발이 일어납니다.',
-    desc: '패시브. 화상 상태인 적을 처치하면 그 자리에서 폭발이 일어나 효과 범위 안의 적에게 화염 피해를 줍니다.',
+    desc: '화상 상태인 적을 처치하면 그 자리에서 폭발해 주위 적에게 화염 피해를 줍니다.',
     keywords: ['화염', '효과 범위', '상태이상', '패시브'],
     base: { damage: [4, 8], area: 20, statusChance: 60 },
     relevant: ['damage', 'area', 'statusChance'],
-    levelUp(st, lv) { pctUp(st, 'damage', 0.4, lv); if (lv >= 3) st.area = { min: st.area.min * 1.3, max: st.area.max * 1.3 }; },
-    levelText: (lv) => ['피해량 40% 증가', lv === 3 && '기본 폭발 범위 30% 증가', lv === 5 && '처치된 적의 남은 화상 피해를 폭발 피해에 추가'],
-    extra: (sk) => [sk.level >= 5 && '남은 화상 피해를 폭발 피해에 추가'],
+    levelUp(st, lv) { dmgUp40(st, lv); if (lv >= 3) st.area = { min: st.area.min * 1.3, max: st.area.max * 1.3 }; },
+    levelText: (lv) => ['피해량이 40% 증가합니다.', lv === 3 && '기본 폭발 범위가 30% 증가합니다.', lv === 5 && '남은 화상 피해가 폭발 피해에 더해집니다.'],
+    extra: (sk) => [sk.level >= 5 && '남은 화상 피해가 폭발 피해에 더해집니다.'],
   },
   frostAura: {
-    key: 'frostAura', name: '냉기의 기운', icon: '🌨️', color: '#8fe3ff', element: 'ice', passive: true,
-    short: '둔화 상태인 적을 처치하면 얼음 투사체가 사방으로 흩뿌려집니다.',
-    desc: '패시브. 둔화 상태인 적을 처치하면 그 자리에서 얼음 투사체가 사방으로 흩뿌려져 각각 냉기 피해를 줍니다. 투사체 개수에 따라 발사각이 균등하게 나뉩니다.',
+    key: 'frostAura', name: '냉기의 기운', icon: '🌨️', color: '#8fe3ff', element: 'ice', passive: true, projectile: true,
+    short: '둔화 상태인 적을 처치하면 얼음 투사체가 사방으로 퍼집니다.',
+    desc: '둔화 상태인 적을 처치하면 그 자리에서 얼음 투사체가 사방으로 퍼집니다.',
     keywords: ['냉기', '지속 시간', '투사체', '연쇄', '상태이상', '패시브'],
     base: { damage: [3, 12], duration: 0.5, projSize: 1.5, projSpeed: 9, projCount: 10, statusChance: 30 },
     labels: { duration: '투사체 지속 시간' },
     relevant: ['damage', 'duration', 'pierce', 'projSize', 'projSpeed', 'projCount', 'chains', 'statusChance'],
     levelUp(st, lv) {
-      pctUp(st, 'damage', 0.4, lv);
+      dmgUp40(st, lv);
       if (lv >= 3) st.projCount = { min: 12, max: 12 };
       if (lv >= 5) st.pierce = { min: 2, max: 2 };
     },
-    levelText: (lv) => ['피해량 40% 증가', lv === 3 && '기본 투사체 개수 12개', lv === 5 && '기본 관통 횟수 2회'],
+    levelText: (lv) => ['피해량이 40% 증가합니다.', lv === 3 && '기본 투사체 개수가 12개가 됩니다.', lv === 5 && '기본 관통 횟수가 2회가 됩니다.'],
+  },
+  lightningAura: {
+    key: 'lightningAura', name: '번개의 기운', icon: '🌩️', color: '#ffe066', element: 'lightning', passive: true,
+    short: '감전 상태인 적을 처치하면 주변 적에게 낙뢰가 떨어집니다.',
+    desc: '감전 상태인 적을 처치하면 주변의 무작위 적에게 낙뢰를 내려칩니다. 한 적은 낙뢰를 한 번만 맞습니다.',
+    keywords: ['번개', '투사체', '상태이상', '패시브'],
+    base: { damage: [1, 10], range: 100, projCount: 1, statusChance: 50 },
+    labels: { projCount: '낙뢰 수' },
+    relevant: ['damage', 'projCount', 'statusChance'],
+    hiddenUses: ['range'],
+    levelUp: dmgUp40,
+    levelText: () => ['피해량이 40% 증가합니다.'],
+  },
+  snowfall: {
+    key: 'snowfall', name: '낙석', icon: '☃️', color: '#c8f2ff', element: 'ice', passive: false, castTime: 0.15,
+    short: '체력이 가장 높은 적에게 커다란 눈덩이를 떨어뜨립니다.',
+    desc: '사거리 안에서 체력이 가장 높은 적에게 눈덩이를 떨어뜨립니다. 범위 안의 적은 피해를 입고 밀려납니다.',
+    keywords: ['냉기', '효과 범위', '연쇄', '상태이상', '스킬 쿨타임'],
+    base: { damage: [8, 21], area: 25, range: 80, statusChance: 80, manaCost: 12, cooldown: 6 },
+    relevant: ['damage', 'area', 'chains', 'statusChance', 'manaCost', 'cooldown'],
+    hiddenUses: ['range'],
+    levelUp: dmgUp40,
+    levelText: () => ['피해량이 40% 증가합니다.'],
+    extra: () => ['연쇄하면 같은 자리에 눈덩이가 다시 떨어집니다.'],
+  },
+  lightningBeam: {
+    key: 'lightningBeam', name: '번개 광선', icon: '🔆', color: '#fff27a', element: 'lightning', passive: false, castTime: 0.1,
+    tick: 0.25,
+    short: '가장 가까운 적을 향해 나아가는 번개 광선을 내리꽂습니다.',
+    desc: '가장 가까운 적 방향으로 번개 광선이 하늘에서 내리꽂히며 앞으로 나아갑니다. 광선에 닿은 적은 0.25초마다 피해를 입습니다.',
+    keywords: ['번개', '효과 범위', '지속 시간', '연쇄', '상태이상', '스킬 쿨타임'],
+    base: { damage: [1, 9], area: 10, duration: 5, projSpeed: 3, statusChance: 40, manaCost: 15, cooldown: 12 },
+    labels: { area: '광선 범위', projSpeed: '광선 속도' },
+    relevant: ['damage', 'area', 'duration', 'projSpeed', 'chains', 'statusChance', 'manaCost', 'cooldown'],
+    levelUp: dmgUp40,
+    levelText: () => ['피해량이 40% 증가합니다.'],
+    extra: () => ['연쇄하면 처음 맞은 적에게서 광선이 하나 더 뻗어 나갑니다.'],
   },
   enchant: {
     key: 'enchant', name: '효과 부여', icon: '✨', color: '#ffd45a', element: null, passive: true,
     xpReq: 10, heal: 2, mana: 4,
-    short: '경험치를 일정량 얻을 때마다 보호막 / 마나 회복 / 체력 회복 중 하나를 얻습니다.',
-    desc: '패시브. 경험치를 요구량만큼 얻을 때마다 무작위로 [지속 시간 동안 보호막 획득 · 마나 회복 · 체력 회복] 중 하나가 발동합니다.',
+    short: '경험치를 모을 때마다 보호막, 마나, 체력 중 하나를 얻습니다.',
+    desc: '경험치를 일정량 얻을 때마다 보호막, 마나 회복, 체력 회복 중 하나가 발동합니다.',
     keywords: ['보호막', '지속 시간', '마나', '회복', '패시브'],
     base: { shield: 3, duration: 3 },
     relevant: ['shield', 'duration'],
-    levelText: (lv) => ['경험치 요구량 1 감소', lv === 3 && '보호막 획득량 · 마나 회복량 · 체력 회복량 50% 증가', lv === 5 && '효과가 발동할 때 다른 효과 하나를 추가로 얻음'],
+    levelText: (lv) => ['필요한 경험치가 1 감소합니다.', lv === 3 && '보호막, 마나, 체력 회복량이 50% 증가합니다.', lv === 5 && '발동할 때 다른 효과 하나를 더 얻습니다.'],
     levelUp(st, lv) { if (lv >= 3) st.shield = { min: st.shield.min * 1.5, max: st.shield.max * 1.5 }; },
     extra: (sk) => {
       const m = sk.level >= 3 ? 1.5 : 1;
-      return [`경험치 요구량 ${enchantReq(sk)}`, `마나 회복 ${+(sk.def.mana * m).toFixed(1)}`, `체력 회복 ${+(sk.def.heal * m).toFixed(1)}`, sk.level >= 5 && '발동 시 다른 효과 하나 추가'];
+      return [`경험치 ${enchantReq(sk)}마다 발동합니다.`, `마나 ${+(sk.def.mana * m).toFixed(1)}, 체력 ${+(sk.def.heal * m).toFixed(1)}을 회복합니다.`, sk.level >= 5 && '발동할 때 효과를 하나 더 얻습니다.'];
     },
   },
   triggerKill: {
     key: 'triggerKill', name: '발동 : 처치', icon: '💀', color: '#c07cff', element: null, passive: true, payload: true,
-    short: '적을 처치해 중첩을 모으면, 장착된 문장의 효과를 다음 공격 스킬에 적용합니다.',
-    desc: '패시브. 적 처치 시 그 적 체력의 20% 만큼 중첩을 얻습니다. 중첩이 목표치(장착된 완성 문장 1개당 50)에 도달하면 소모하고, 지속 시간 동안 버프를 얻습니다. 버프 중 다음 공격 스킬을 사용하면 이 스킬에 장착된 문장들의 효과가 그 스킬에 함께 적용됩니다. (이 스킬의 문장은 자신에게는 적용되지 않음)',
+    short: '적을 처치해 중첩을 모으면, 장착된 문장을 다음 공격 스킬에 적용합니다.',
+    desc: '적을 처치하면 중첩을 얻습니다. 중첩이 가득 차면 장착된 문장들이 다음 공격 스킬에 적용됩니다. 이 스킬 자신에게는 적용되지 않습니다.',
     keywords: ['처치', '중첩', '문장', '지속 시간', '패시브'],
     base: { duration: 4 },
     relevant: ['duration'],
-    levelText: (lv) => ['문장 1개당 중첩 목표치 3 감소', lv === 3 && '장착된 문장의 효과 20% 증가', lv === 5 && '목표치 도달 시 다음 3회의 공격 스킬에 적용'],
-    extra: (sk) => [`목표치 ${triggerGoal(sk)} (문장 1개당 ${triggerPer(sk)})`, `현재 중첩 ${Math.floor(sk.stacks)}`, sk.level >= 3 && '문장 효과 20% 증가', sk.level >= 5 && '다음 3회 공격 스킬에 적용'],
+    levelText: (lv) => ['문장 1개당 필요한 중첩이 3 감소합니다.', lv === 3 && '문장의 효과가 20% 강해집니다.', lv === 5 && '다음 3번의 공격 스킬에 적용됩니다.'],
+    extra: (sk) => [`목표치는 ${triggerGoal(sk)}입니다.`, sk.level >= 3 && '문장의 효과가 20% 강해집니다.', sk.level >= 5 && '다음 3번의 공격 스킬에 적용됩니다.'],
   },
   flamethrower: {
     key: 'flamethrower', name: '화염 방사', icon: '🌋', color: '#ff6a1a', element: 'fire', passive: false, castTime: 0.1,
     tick: 0.25, turnSpeed: 60,
-    short: '가장 가까운 적을 향해 부채꼴 불길을 지속 시간 동안 방사합니다.',
-    desc: '가장 가까운 적을 향해 지속 시간 동안 부채꼴 불길을 방사해 0.25초마다 피해를 줍니다. 불길은 초당 60°로 가장 가까운 적을 향해 회전합니다. 지속 시간이 끝난 뒤에 쿨타임이 돌기 시작합니다. (효과 범위 = 불길 길이)',
+    short: '가장 가까운 적을 향해 부채꼴 불길을 내뿜습니다.',
+    desc: '지속 시간 동안 가장 가까운 적을 향해 부채꼴 불길을 내뿜습니다. 불길이 끝나면 쿨타임이 시작됩니다.',
     keywords: ['화염', '효과 범위', '지속 시간', '상태이상', '스킬 쿨타임'],
-    base: { damage: [1, 3], area: 20, duration: 2.5, statusChance: 40, manaCost: 8, cooldown: 2.5 },
+    base: { damage: [2, 5], area: 20, duration: 2.5, statusChance: 40, manaCost: 8, cooldown: 2.5 },
     labels: { area: '불길 길이' },
     relevant: ['damage', 'area', 'duration', 'statusChance', 'manaCost', 'cooldown'],
-    levelUp(st, lv) { pctUp(st, 'damage', 0.4, lv); if (lv >= 3) st.area = { min: 28, max: 28 }; },
-    levelText: (lv) => ['피해량 40% 증가', lv === 3 && '부채꼴 각도 150°, 기본 불길 길이 28', lv === 5 && '불길에 맞은 적은 화염 피해를 5%씩 더 받음 (최대 50%)'],
-    extra: (sk) => [`부채꼴 각도 ${sk.level >= 3 ? 150 : 90}°`, '회전 속도 초당 60°', '0.25초마다 피해', sk.level >= 5 && '맞은 적의 화염 피해 +5%씩 (최대 50%)'],
+    levelUp(st, lv) { dmgUp40(st, lv); if (lv >= 3) st.area = { min: 28, max: 28 }; },
+    levelText: (lv) => ['피해량이 40% 증가합니다.', lv === 3 && '불길이 더 넓고 길어집니다.', lv === 5 && '불길에 맞은 적은 화염 피해를 더 받습니다.'],
+    extra: (sk) => [sk.level >= 5 && '불길에 맞은 적은 화염 피해를 최대 50% 더 받습니다.'],
   },
 };
-export const SKILL_ORDER = ['fireball', 'frostBarrier', 'chainLightning', 'iceball', 'magnet', 'fireAura', 'frostAura', 'enchant', 'triggerKill', 'flamethrower'];
-export const ATTACK_SKILLS = ['fireball', 'chainLightning', 'iceball', 'flamethrower'];
+export const SKILL_ORDER = ['fireball', 'frostBarrier', 'chainLightning', 'iceball', 'magnet', 'fireAura', 'frostAura', 'lightningAura', 'enchant', 'triggerKill', 'flamethrower', 'snowfall', 'lightningBeam'];
+export const ATTACK_SKILLS = ['fireball', 'chainLightning', 'iceball', 'flamethrower', 'snowfall', 'lightningBeam'];
 export const enchantReq = (sk) => Math.max(1, sk.def.xpReq - (sk.level - 1));
 export const triggerPer = (sk) => Math.max(1, 50 - 3 * (sk.level - 1));
 export const completeSentences = (sk) => sk.sentences.slice(0, sk.maxSlots).filter((s) => s && isComplete(s));
@@ -162,11 +200,27 @@ export function createSkill(key) {
   };
 }
 
+export const isDamaging = (def) => def.relevant.includes('damage');
 export const maxStacks = (sk) => (sk.def.maxStacks || 0) + (sk.key === 'frostBarrier' && sk.level >= 3 ? 1 : 0);
-export const statLabel = (def, k) => (def.labels && def.labels[k]) || SUBJECTS[k].name;
-export const skillUses = (def, k) => def.relevant.includes(k) || (def.hiddenUses || []).includes(k);
-export const shownStats = (def) => def.relevant.filter((k) => !SUBJECTS[k].hidden);
+export function statLabel(def, k) {
+  if (k === 'damage' && def.element) return `${ELEMENTS[def.element].name} 피해`;
+  return (def.labels && def.labels[k]) || SUBJECTS[k].name;
+}
+export const skillUses = (def, k) => def.relevant.includes(k) || (def.hiddenUses || []).includes(k) || (isDamaging(def) && DAMAGE_EXTRA.includes(k));
 export const extraLines = (sk) => (typeof sk.def.extra === 'function' ? sk.def.extra(sk) : sk.def.extra || []).filter(Boolean);
+
+// 스킬 창에 보일 스탯 목록: 속성 피해(주 속성 먼저) → 기존 스탯 → 치명타/저항 무시
+export function shownStats(def, stats) {
+  const out = def.relevant.filter((k) => !SUBJECTS[k].hidden);
+  if (isDamaging(def)) {
+    const i = out.indexOf('damage') + 1;
+    const extras = ['fireDmg', 'iceDmg', 'lightningDmg'].filter((k) => k !== ELEMENT_DMG[def.element] && (!stats || stats[k].max > 0));
+    out.splice(i, 0, ...extras);
+    out.push('critChance', 'critDamage');
+    if (!stats || stats.penetration.max > 0 || stats.penPct.max > 0) out.push('penetration');
+  }
+  return out;
+}
 
 // ─────────────────────────────────────────────
 //  스탯 계산 (모든 스탯은 {min, max} 구간)
@@ -181,10 +235,13 @@ export function areaFactor(skill, level = skill.level) {
 export function baseStats(skill, level = skill.level) {
   const d = skill.def;
   const st = {};
-  for (const k of SUBJECT_ORDER) st[k] = iv(d.base[k] ?? (k === 'castSpeed' ? 1 : 0));
+  for (const k of SUBJECT_ORDER) st[k] = iv(d.base[k] ?? STAT_DEFAULTS[k] ?? 0);
   if (d.levelUp) d.levelUp(st, level);
   const f = areaFactor(skill, level);
   if (f) st.area = { min: st.projSize.min * f, max: st.projSize.max * f };
+  st.zone = { min: 0, max: 0 };                  // 처치 시 지대 지속 시간 (문장)
+  st.zoneArea = iv(ZONE_BASE_AREA);
+  st.infuse = null;                              // 지대 통과 시 얻는 속성 피해 (문장)
   return st;
 }
 
@@ -196,10 +253,12 @@ function clampStat(key, x) {
 }
 
 export function applyEffect(stats, subj, val, change) {
+  // 저항 무시: 백분율은 % 저항 무시, 고정/랜덤은 고정 저항 무시로 따로 쌓임
+  if (subj === 'penetration' && val.pct) { subj = 'penPct'; val = { ...val, pct: false }; }
   const s = stats[subj];
   let lo, hi;
   if (SUBJECTS[subj].pctOnly) {
-    // 상태이상 발생율: %p 단위로 더하기/빼기/고정 (40% + 20% 증가 = 60%)
+    // 확률 스탯: %p 단위로 더하기/빼기/고정 (40% + 20% 증가 = 60%)
     const k = val.pct ? 100 : 1;
     const a = val.min * k, b = val.max * k;
     if (change === 'inc') { lo = s.min + a; hi = s.max + b; }
@@ -218,6 +277,24 @@ export function applyEffect(stats, subj, val, change) {
   stats[subj] = { min: Math.min(lo, hi), max: Math.max(lo, hi) };
 }
 
+// "장착된 다른 모든 문장의 효과" 문장이 다른 문장의 수치를 바꿈
+function ampTransform(val, amp) {
+  const v = { ...val };
+  const a = amp.val;
+  if (a.pct) {
+    const f = (x, p) => (amp.change === 'inc' ? x * (1 + p) : amp.change === 'dec' ? x * (1 - p) : x * p);
+    v.min = f(val.min, a.min); v.max = f(val.max, a.max);
+  } else {
+    const k = val.pct ? 0.01 : 1;   // 백분율 수치에는 %p 로 적용
+    if (amp.change === 'inc') { v.min += a.min * k; v.max += a.max * k; }
+    else if (amp.change === 'dec') { v.min -= a.min * k; v.max -= a.max * k; }
+    else { v.min = a.min * k; v.max = a.max * k; }
+  }
+  return { ...v, min: Math.min(v.min, v.max), max: Math.max(v.min, v.max) };
+}
+
+const scaleVal = (val, k) => (k === 1 ? val : { ...val, min: val.min * k, max: val.max * k });
+
 // 장착된 문장 순서대로 적용
 // extra: 추가로 적용할 문장 (발동 : 처치 버프), scale: 추가 문장 수치 배율
 function runSentences(skill, stats, extra = [], scale = 1) {
@@ -226,26 +303,77 @@ function runSentences(skill, stats, extra = [], scale = 1) {
   // 발동 : 처치 처럼 문장이 자신에게 적용되지 않는 스킬
   const own = d.payload ? [] : skill.sentences.slice(0, skill.maxSlots).map((s, i) => ({ s, i, k: 1 }));
   const list = own.concat(extra.map((s, j) => ({ s, i: 100 + j, k: scale })));
+  // 효과 변화 문장 (어느 칸에 있든 다른 모든 문장에 적용)
+  const amps = [];
+  for (const { s, k } of list) {
+    if (s && s.template === 'AMP' && isComplete(s)) amps.push({ val: scaleVal(evalNumber(s.slots[0].block), k), change: s.slots[1].block.key });
+  }
+  const amped = (val) => amps.reduce((v, a) => ampTransform(v, a), val);
+
   for (const { s, i, k } of list) {
     if (!s) continue;
     if (!isComplete(s)) { log.push({ i, ok: false }); continue; }
-    const subj = s.slots[0].block.key;
+
+    if (s.template === 'AMP') {
+      const a = { val: scaleVal(evalNumber(s.slots[0].block), k), change: s.slots[1].block.key };
+      log.push({ i, ok: true, text: `다른 문장 효과 ${fmtValue(a.val)} ${CHANGES[a.change].name}` });
+      continue;
+    }
+    if (s.template === 'ZONE') {
+      const val = amped(scaleVal(evalNumber(s.slots[0].block), k));
+      if (val.pct) { log.push({ i, ok: false, reason: '고정/랜덤 값만 가능' }); continue; }
+      if (!isDamaging(d) || !d.element) { log.push({ i, ok: true, na: true }); continue; }
+      stats.zone = { min: stats.zone.min + Math.max(0, val.min), max: stats.zone.max + Math.max(0, val.max) };
+      log.push({ i, ok: true, text: `처치 시 지대 ${fmtValue(val)}초` });
+      continue;
+    }
+    if (s.template === 'INFUSE') {
+      const val = amped(scaleVal(evalNumber(s.slots[0].block), k));
+      if (!d.projectile) { log.push({ i, ok: true, na: true }); continue; }
+      const cur = stats.infuse;
+      stats.infuse = cur && cur.pct === val.pct ? { min: cur.min + val.min, max: cur.max + val.max, pct: val.pct } : val;
+      log.push({ i, ok: true, text: `지대 통과 시 속성 피해 +${fmtValue(stats.infuse)}` });
+      continue;
+    }
+
+    let subj = s.slots[0].block.key;
     const change = s.slots[2].block.key;
-    let val = s.template === 'SNC'
-      ? evalNumber(s.slots[1].block)
-      : { ...stats[s.slots[1].block.key], pct: false };
-    if (k !== 1) val = { ...val, min: val.min * k, max: val.max * k };
+    let val;
+    if (s.template === 'SNC') val = amped(scaleVal(evalNumber(s.slots[1].block), k));
+    else {
+      // '만큼' 값: 백분율 계열 스탯(확률 등)은 백분율로 적용
+      const src = s.slots[1].block.key;
+      const sv = stats[src];
+      val = SUBJECTS[src].pctType ? { min: sv.min / 100, max: sv.max / 100, pct: true } : { ...sv, pct: false };
+      val = scaleVal(val, k);
+    }
     // 백분율 전용 스탯에 백분율이 아닌 수치 (연산 결과 포함)
-    if (s.template === 'SNC' && SUBJECTS[subj].pctOnly && !val.pct) { log.push({ i, ok: false, reason: '백분율만 가능' }); continue; }
+    if (SUBJECTS[subj].pctOnly && !val.pct) { log.push({ i, ok: false, reason: '백분율만 가능' }); continue; }
+    // 스킬의 주 속성과 같은 속성 피해는 피해량에 더함
+    if (SUBJECTS[subj].element && SUBJECTS[subj].element === d.element) subj = 'damage';
     // 스킬에 없는 키워드 → 적용되지 않음
     if (!skillUses(d, subj)) { log.push({ i, ok: true, na: true, subj }); continue; }
     const before = { ...stats[subj] };
     applyEffect(stats, subj, val, change);
-    // 아이스볼: 지속 시간 변화가 투사체 지속 시간에도 똑같이 적용
+    // 피해량 변화는 이미 추가된 속성 피해에도 적용
+    if (subj === 'damage') for (const ek of ['fireDmg', 'iceDmg', 'lightningDmg']) if (stats[ek].max > 0) applyEffect(stats, ek, val, change);
+    // 지속 시간 변화는 투사체 지속 시간에도 똑같이 적용
     if (subj === 'duration' && skillUses(d, 'projDuration')) applyEffect(stats, 'projDuration', val, change);
     log.push({ i, ok: true, subj, before, after: { ...stats[subj] } });
   }
   return log;
+}
+
+// 지대: 스킬의 지속 시간 / 효과 범위 변화 비율을 그대로 따라감
+function finishZone(stats, base) {
+  if (stats.zone.max <= 0) return;
+  const ratio = (k) => {
+    const b = (base[k].min + base[k].max) / 2, f = (stats[k].min + stats[k].max) / 2;
+    return b > 0 ? f / b : 1;
+  };
+  const rd = ratio('duration'), ra = ratio('area');
+  stats.zone = { min: stats.zone.min * rd, max: stats.zone.max * rd };
+  stats.zoneArea = { min: stats.zoneArea.min * ra, max: stats.zoneArea.max * ra };
 }
 
 export function computeStats(skill, extra = [], scale = 1) {
@@ -259,6 +387,7 @@ export function computeStats(skill, extra = [], scale = 1) {
     stats = { ...base, area: { min: ps.min * f, max: ps.max * f } };
     log = runSentences(skill, stats, extra, scale);
   }
+  finishZone(stats, base);
   return { stats, log };
 }
 
@@ -275,7 +404,7 @@ export const getStats = (skill) => getResult(skill).stats;
 //  표시 / 샘플링
 // ─────────────────────────────────────────────
 export function fmtNum(key, x) {
-  if (key === 'damage') return Math.floor(x);           // UI 에서는 소수점 버림
+  if (key === 'damage' || SUBJECTS[key].element) return Math.floor(x);   // UI 에서는 소수점 버림
   if (SUBJECTS[key].int) return Math.round(x);
   return Math.round(x * 100) / 100;
 }
@@ -283,6 +412,14 @@ export function fmtStat(key, v) {
   const a = fmtNum(key, v.min), b = fmtNum(key, v.max);
   const u = SUBJECTS[key].unit || '';
   return (a === b ? `${a}` : `${a}~${b}`) + u;
+}
+// 스탯 표시 (저항 무시는 % + 고정값을 함께)
+export function statText(k, stats) {
+  if (k === 'penetration') {
+    const p = Math.round(((stats.penPct.min + stats.penPct.max) / 2) * 100);
+    return `${p}% + ${fmtStat('penetration', stats.penetration)}`;
+  }
+  return fmtStat(k, stats[k]);
 }
 export const sample = (v) => v.min + Math.random() * (v.max - v.min);
 export const sampleInt = (v) => Math.round(sample(v));

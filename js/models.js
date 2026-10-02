@@ -130,131 +130,127 @@ export function flowerHeadGeo() {
 }
 
 // ─────────────────────────────────────────────
-//  플레이어 (마크풍 1.5등신)
+//  플레이어: 머리 위에 새싹 잎이 난 동글동글한 초록 몸통 + 짧은 팔다리
 // ─────────────────────────────────────────────
-const SKIN = '#f6cfae', SKIN2 = '#e8b58f', HAIR = '#6b4226', HAIR2 = '#553219', HAIR_HL = '#8c5c37';
+const BODY = 0x6fcf5a, BODY_DARK = 0x58b546, BODY_LIGHT = 0x8fe070, LEAF = 0x5cc048, LEAF_DARK = 0x449a35;
 
-function pixelTex(draw, size = 16) {
-  const c = document.createElement('canvas');
-  c.width = c.height = size;
-  const g = c.getContext('2d');
-  const r = (x, y, w, h, col) => { g.fillStyle = col; g.fillRect(x, y, w, h); };
-  draw(r);
-  const t = new THREE.CanvasTexture(c);
-  t.magFilter = THREE.NearestFilter;
-  t.minFilter = THREE.NearestFilter;
-  t.colorSpace = THREE.SRGBColorSpace;
-  return t;
+// 아래로 갈수록 살짝 퍼지는 물방울형 몸통
+function sproutBodyGeo() {
+  const g = new THREE.SphereGeometry(0.5, 16, 12);
+  const p = g.attributes.position;
+  for (let i = 0; i < p.count; i++) {
+    let x = p.getX(i), y = p.getY(i), z = p.getZ(i);
+    const t = (0.5 - y) / 1.0;                 // 위 0 → 아래 1
+    const widen = 0.9 + t * 0.22;
+    x *= widen; z *= widen * 0.92;
+    y *= 1.08;
+    if (y < -0.38) y = -0.38 - (y + 0.38) * 0.3; // 바닥을 조금 평평하게
+    p.setXYZ(i, x, y, z);
+  }
+  g.computeVertexNormals();
+  // 위쪽은 밝게, 아래쪽은 어둡게 (면 단위 색)
+  const ng = g.toNonIndexed();
+  const pos = ng.attributes.position;
+  const cols = new Float32Array(pos.count * 3);
+  const top = new THREE.Color(BODY_LIGHT), mid = new THREE.Color(BODY), low = new THREE.Color(BODY_DARK), c = new THREE.Color();
+  for (let f = 0; f < pos.count; f += 3) {
+    const y = (pos.getY(f) + pos.getY(f + 1) + pos.getY(f + 2)) / 3;
+    if (y > 0.15) c.copy(mid).lerp(top, Math.min(1, (y - 0.15) / 0.35));
+    else c.copy(mid).lerp(low, Math.min(1, (0.15 - y) / 0.5));
+    const v = 1 + (Math.random() - 0.5) * 0.06;
+    for (let k = 0; k < 3; k++) { cols[(f + k) * 3] = c.r * v; cols[(f + k) * 3 + 1] = c.g * v; cols[(f + k) * 3 + 2] = c.b * v; }
+  }
+  ng.setAttribute('color', new THREE.BufferAttribute(cols, 3));
+  ng.computeVertexNormals();
+  return ng;
 }
 
-function headMaterials() {
-  const front = pixelTex((r) => {
-    r(0, 0, 16, 16, SKIN);
-    r(0, 0, 16, 5, HAIR);
-    r(3, 1, 4, 1, HAIR_HL); r(9, 2, 3, 1, HAIR_HL);
-    // 앞머리
-    r(0, 5, 4, 1, HAIR); r(6, 5, 3, 1, HAIR); r(11, 5, 5, 1, HAIR);
-    r(0, 6, 2, 1, HAIR); r(7, 6, 1, 1, HAIR); r(13, 6, 3, 1, HAIR);
-    // 옆머리
-    r(0, 5, 2, 7, HAIR); r(14, 5, 2, 7, HAIR); r(0, 12, 1, 2, HAIR2); r(15, 12, 1, 2, HAIR2);
-    // 눈
-    r(4, 8, 2, 3, '#2a2140'); r(10, 8, 2, 3, '#2a2140');
-    r(4, 8, 1, 1, '#ffffff'); r(10, 8, 1, 1, '#ffffff');
-    r(5, 10, 1, 1, '#4b3a7a'); r(11, 10, 1, 1, '#4b3a7a');
-    // 볼터치, 입
-    r(2, 11, 2, 1, '#f4a0a0'); r(12, 11, 2, 1, '#f4a0a0');
-    r(7, 12, 2, 1, '#b35d55');
-  });
-  const side = pixelTex((r) => {
-    r(0, 0, 16, 16, SKIN);
-    r(0, 0, 16, 9, HAIR);
-    r(0, 9, 5, 5, HAIR); r(11, 9, 5, 5, HAIR);
-    r(2, 2, 5, 1, HAIR_HL);
-    r(7, 10, 2, 3, SKIN2);
-  });
-  const back = pixelTex((r) => {
-    r(0, 0, 16, 16, HAIR);
-    r(0, 14, 16, 2, SKIN);
-    r(3, 3, 4, 1, HAIR_HL); r(9, 6, 4, 1, HAIR_HL);
-    r(0, 12, 16, 2, HAIR2);
-  });
-  const top = pixelTex((r) => {
-    r(0, 0, 16, 16, HAIR);
-    r(3, 3, 5, 2, HAIR_HL); r(9, 9, 4, 2, HAIR_HL); r(6, 12, 3, 1, HAIR2);
-  });
-  const bottom = pixelTex((r) => r(0, 0, 16, 16, SKIN2));
-  const m = (map) => new THREE.MeshStandardMaterial({ map, roughness: 0.85 });
-  // +x, -x, +y, -y, +z(앞), -z(뒤)
-  return [m(side), m(side), m(top), m(bottom), m(front), m(back)];
+// 잎사귀 한 장 (끝이 뾰족한 납작한 타원)
+function leafGeo() {
+  const g = new THREE.SphereGeometry(0.5, 8, 6);
+  const p = g.attributes.position;
+  for (let i = 0; i < p.count; i++) {
+    let x = p.getX(i), y = p.getY(i), z = p.getZ(i);
+    const t = (y + 0.5);                          // 0(밑동) → 1(끝)
+    const w = Math.sin(Math.min(1, t) * Math.PI) * (1 - t * 0.35);
+    p.setXYZ(i, x * w * 0.36, y, z * w * 0.1 + Math.sin(t * Math.PI) * 0.04);
+  }
+  g.translate(0, 0.5, 0);
+  return paint(g, LEAF, 0.05);
 }
-
-const box = (w, h, d, color) => new THREE.Mesh(
-  new THREE.BoxGeometry(w, h, d),
-  new THREE.MeshStandardMaterial({ color, roughness: 0.8 }));
 
 export function createPlayer() {
   const group = new THREE.Group();
   const root = new THREE.Group();
   group.add(root);
+  const std = (opts) => new THREE.MeshStandardMaterial({ roughness: 0.65, flatShading: true, ...opts });
+  const bodyMat = std({ vertexColors: true });
+  const limbMat = std({ color: BODY_DARK });
+  const mk = (geo, mat) => { const m = new THREE.Mesh(geo, mat); m.castShadow = true; return m; };
 
-  const HEAD = 0.74, bodyH = 0.3, bodyW = 0.48, bodyD = 0.34, legH = 0.2, legW = 0.2, armH = 0.3, armW = 0.14;
-  const ROBE = 0x4a6fe3, ROBE2 = 0x3a58bb, PANTS = 0x2e3558, SHOE = 0x3a2a1e;
-
-  const mk = (m) => { m.castShadow = true; return m; };
-
-  // 다리
+  // 다리 (짧고 뭉툭)
   const legs = [];
   for (const sx of [-1, 1]) {
     const pivot = new THREE.Group();
-    pivot.position.set(sx * 0.105, legH, 0);
-    const leg = mk(box(legW, legH, legW, PANTS)); leg.position.y = -legH / 2 + 0.02;
-    const shoe = mk(box(legW + 0.02, 0.07, legW + 0.05, SHOE)); shoe.position.set(0, -legH + 0.035, 0.02);
-    pivot.add(leg, shoe);
+    pivot.position.set(sx * 0.2, 0.2, 0.02);
+    const leg = mk(new THREE.SphereGeometry(0.13, 8, 6).scale(1, 1.15, 1.1), limbMat);
+    leg.position.y = -0.1;
+    pivot.add(leg);
     root.add(pivot);
     legs.push(pivot);
   }
 
   // 몸통
-  const body = mk(box(bodyW, bodyH, bodyD, ROBE)); body.position.y = legH + bodyH / 2;
-  const hem = mk(box(bodyW + 0.03, 0.07, bodyD + 0.03, ROBE2)); hem.position.y = legH + 0.035;
-  const belt = mk(box(bodyW + 0.02, 0.045, bodyD + 0.02, 0x6b4a2b)); belt.position.y = legH + 0.1;
-  const buckle = box(0.07, 0.05, 0.02, 0xffd45a); buckle.position.set(0, legH + 0.1, bodyD / 2 + 0.015);
-  root.add(body, hem, belt, buckle);
+  const body = mk(sproutBodyGeo(), bodyMat);
+  body.position.y = 0.66;
+  root.add(body);
 
-  // 스카프
-  const scarf = mk(box(bodyW + 0.06, 0.07, bodyD + 0.06, 0xe04848)); scarf.position.y = legH + bodyH - 0.01;
-  const tail = mk(box(0.1, 0.16, 0.04, 0xe04848)); tail.position.set(0.1, legH + bodyH - 0.1, -bodyD / 2 - 0.04);
-  root.add(scarf, tail);
-
-  // 팔
+  // 팔 (몸통 옆 작은 혹)
   const arms = [];
   for (const sx of [-1, 1]) {
     const pivot = new THREE.Group();
-    pivot.position.set(sx * (bodyW / 2 + armW / 2), legH + bodyH - 0.02, 0);
-    const sleeve = mk(box(armW, armH * 0.65, armW, ROBE)); sleeve.position.y = -armH * 0.325;
-    const hand = mk(box(armW - 0.01, armH * 0.35, armW - 0.01, 0xf6cfae)); hand.position.y = -armH * 0.82;
-    pivot.add(sleeve, hand);
+    pivot.position.set(sx * 0.5, 0.58, 0.04);
+    const arm = mk(new THREE.SphereGeometry(0.11, 8, 6).scale(1, 1.3, 1), limbMat);
+    arm.position.set(sx * 0.03, -0.1, 0);
+    pivot.add(arm);
     root.add(pivot);
     arms.push(pivot);
   }
 
-  // 머리
+  // 얼굴: 작은 점 눈 + 세로로 긴 빨간 입
+  const eyeMat = new THREE.MeshBasicMaterial({ color: 0x1d1b2a });
+  for (const sx of [-1, 1]) {
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.038, 6, 5), eyeMat);
+    eye.position.set(sx * 0.17, 0.8, 0.43);
+    root.add(eye);
+  }
+  const mouth = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 6).scale(0.85, 1.6, 0.5),
+    new THREE.MeshStandardMaterial({ color: 0xd9452e, emissive: 0x5a1208, roughness: 0.5 }));
+  mouth.position.set(0.02, 0.66, 0.47);
+  mouth.rotation.z = 0.1;
+  root.add(mouth);
+
+  // 머리 위 새싹 (잎 두 장) — headPivot 으로 살랑살랑 흔들림
   const headPivot = new THREE.Group();
-  headPivot.position.y = legH + bodyH;
-  const head = new THREE.Mesh(new THREE.BoxGeometry(HEAD, HEAD, HEAD), headMaterials());
-  head.castShadow = true;
-  head.position.y = HEAD / 2 - 0.01;
-  // 더듬이 머리카락
-  const ahoge = mk(box(0.06, 0.14, 0.06, 0x6b4226)); ahoge.position.set(0.05, HEAD + 0.05, 0.05); ahoge.rotation.z = -0.4;
-  headPivot.add(head, ahoge);
+  headPivot.position.y = 1.18;
+  const stem = mk(paint(new THREE.CylinderGeometry(0.025, 0.04, 0.14, 5).translate(0, 0.07, 0), LEAF_DARK, 0), std({ vertexColors: true }));
+  const leafMat = std({ vertexColors: true, side: THREE.DoubleSide });
+  const leafA = mk(leafGeo(), leafMat);
+  leafA.position.set(0, 0.1, 0);
+  leafA.scale.setScalar(0.62);
+  leafA.rotation.set(0.2, 0.4, 0.75);
+  const leafB = mk(leafGeo(), leafMat);
+  leafB.position.set(0, 0.12, 0);
+  leafB.scale.setScalar(0.74);
+  leafB.rotation.set(-0.15, -0.3, -0.55);
+  headPivot.add(stem, leafA, leafB);
   root.add(headPivot);
 
   const materials = [];
   group.traverse((o) => {
-    if (o.isMesh) (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => materials.push(m));
+    if (o.isMesh && o.material.emissive) materials.push(o.material);
   });
-
-  return { group, root, legs, arms, headPivot, materials };
+  return { group, root, legs, arms, headPivot, materials: [...new Set(materials)] };
 }
 
 // ─────────────────────────────────────────────

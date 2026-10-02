@@ -87,9 +87,9 @@ game.sys = {
 };
 
 // 적 처치 → 경험치 / 블록 드랍
-enemies.onKill = (e) => {
+enemies.onKill = (e, src, st) => {
   game.kills++;
-  skillsRt.onKill(e);
+  skillsRt.onKill(e, src, st);
   if (e.boss) {
     fx.explosion(e.x, e.z, 4, 0xb07cff);
     startVictory();

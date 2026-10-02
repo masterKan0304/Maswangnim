@@ -28,7 +28,7 @@ function describe(c) {
     return {
       id: `level:${d.key}`, icon: d.icon, tag: `Lv.${sk.level} → Lv.${nl}`, title: `${d.name} 레벨 업`,
       desc: lines[0] + milestone,
-      detail: diffs.join('<br>') || '능력치 변화',
+      detail: diffs.join('<br>') || '능력이 강화됩니다.',
       apply() { sk.level++; bump(); },
     };
   }
@@ -43,8 +43,8 @@ function describe(c) {
   }
   return {
     id: 'pickBlock', type: 'pickBlock', icon: '🎁', tag: '블록', title: '블록 선택 획득',
-    desc: '무작위 블록 3개가 제시되고, 그중 하나를 골라 획득합니다. (리롤 가능)',
-    detail: '문장 / 단어 / 수치 / 연산 블록 중 무작위',
+    desc: '무작위 블록 3개 중 하나를 골라 얻습니다.',
+    detail: '블록 종류는 무작위입니다.',
     apply() {},
   };
 }

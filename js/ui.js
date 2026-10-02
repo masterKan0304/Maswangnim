@@ -4,9 +4,9 @@ import { game, bump, inventoryAdd } from './state.js';
 import { INV_W, INV_H, MAX_SKILLS, MAX_SENTENCE_SLOTS, SUBJECTS, CHANGES, STAGE_TIME, DASH, ELEMENTS, xpToNext } from './config.js';
 import {
   blockLabel, colorKey, kindName, isComplete, missingCount, sentenceParts, slotChipLabel, PLACEHOLDER,
-  evalNumber, fmtValue, slotAccepts, sentenceAccepts, dismantle, OP_SYMBOL, numText, blockSig, randomOfType,
+  evalNumber, fmtValue, slotAccepts, sentenceAccepts, dismantle, OP_SYMBOL, numText, blockSig, randomOfType, TEMPLATE_INFO, RARITY_NAME,
 } from './blocks.js';
-import { getResult, baseStats, fmtStat, statLabel, shownStats, extraLines, maxStacks, getStats, avg, enchantReq, triggerGoal } from './skills.js';
+import { getResult, baseStats, fmtStat, statText, statLabel, shownStats, extraLines, maxStacks, getStats, avg, enchantReq, triggerGoal } from './skills.js';
 
 const $ = (s) => document.querySelector(s);
 function el(tag, cls, html) {
@@ -22,9 +22,14 @@ function findProp(node, prop) {
   }
   return null;
 }
+const NUM_DESC = { fixed: '항상 같은 값입니다.', range: '적용될 때마다 범위 안에서 무작위로 정해집니다.', percent: '비율로 적용됩니다.' };
 const KIND_BADGE = { sentence: '문장', subject: '주체', change: '변화', number: '수치', op: '연산' };
-const STAT_SHORT = { damage: '피해량', area: '효과 범위', range: '사거리', duration: '지속 시간', castSpeed: '시전 속도', shield: '보호막', pierce: '관통', projSize: '투사체 크기', projSpeed: '투사체 속도', projCount: '투사체 개수', chains: '연쇄 횟수', statusChance: '상태이상 발생율', projDuration: '투사체 지속 시간', manaCost: '마나', cooldown: '쿨타임' };
-const shortName = (def, k) => (def.labels && def.labels[k]) || STAT_SHORT[k];
+const STAT_SHORT = { damage: '피해량', area: '효과 범위', range: '사거리', duration: '지속 시간', castSpeed: '시전 속도', shield: '보호막', pierce: '관통', projSize: '투사체 크기', projSpeed: '투사체 속도', projCount: '투사체 개수', chains: '연쇄 횟수', statusChance: '상태이상 발생율', projDuration: '투사체 지속 시간', manaCost: '마나', cooldown: '쿨타임',
+  critChance: '치명타 확률', critDamage: '치명타 피해', penetration: '저항 무시', fireDmg: '화염 피해', iceDmg: '냉기 피해', lightningDmg: '번개 피해' };
+const shortName = (def, k) => (k === 'damage' && def.element ? statLabel(def, k) : (def.labels && def.labels[k]) || STAT_SHORT[k]);
+// 속성 피해 표시 색
+const ELEM_CLASS = { fireDmg: 'fire', iceDmg: 'ice', lightningDmg: 'lightning' };
+const statElemClass = (def, k) => (k === 'damage' ? def.element : ELEM_CLASS[k]) || '';
 
 // ─────────────────────────────────────────────
 //  위치(loc) 추상화 — 인벤토리 칸 / 문장 칸 / 연산 칸 / 스킬 문장 칸
@@ -136,9 +141,11 @@ export class UI {
     t.appendChild(el('span', 'badge', KIND_BADGE[k]));
     if (b.kind === 'sentence') {
       if (isComplete(b)) t.classList.add('complete');
-      t.appendChild(el('div', 'tlabel small', b.template === 'SNC' ? '주·수·변' : '주·주·변'));
+      const info = TEMPLATE_INFO[b.template];
+      t.classList.add('rar' + info.rarity);
+      t.appendChild(el('div', 'tlabel small', info.label));
       const dots = el('div', 'sdots');
-      for (const sl of b.slots) dots.appendChild(el('i', `sd t-${sl.type}${sl.block ? ' on' : ''}${sl.locked ? ' lk' : ''}`));
+      for (const sl of b.slots) dots.appendChild(el('i', `sd t-${sl.type === 'numflat' ? 'number' : sl.type}${sl.block ? ' on' : ''}${sl.locked ? ' lk' : ''}`));
       t.appendChild(dots);
     } else if (b.kind === 'op') {
       const f = b.slots.filter(Boolean).length;
@@ -172,8 +179,8 @@ export class UI {
         const loc = { t: 'sent', block: s, i };
         if (!slot.locked) { chip._drop = loc; chip.classList.add('droppable'); if (slot.block) chip._drag = loc; }
         if (slot.block && slot.block.kind === 'op') chip._ctx = slot.block;
-        if (slot.block) { const b = slot.block; chip._tip = () => this.blockTip(b) + (slot.locked ? '<div class="tip-warn">🔒 고정된 칸 — 변경 불가</div>' : ''); }
-        else chip._tip = () => `<div class="tip-title">빈 칸</div><div>${{ subject: '단어:주체 블록', number: '수치 블록 또는 연산 블록', change: '단어:변화 블록' }[slot.type]}을 끌어다 놓으세요.</div>`;
+        if (slot.block) { const b = slot.block; chip._tip = () => this.blockTip(b) + (slot.locked ? '<div class="tip-warn">🔒 고정된 칸이라 바꿀 수 없습니다.</div>' : ''); }
+        else chip._tip = () => `<div class="tip-title">빈 칸</div><div>${{ subject: '단어:주체 블록을', number: '수치 블록이나 연산 블록을', numflat: '고정값이나 랜덤값 수치 블록을', change: '단어:변화 블록을' }[slot.type]} 넣을 수 있습니다.</div>`;
       }
       container.appendChild(chip);
     }
@@ -190,23 +197,25 @@ export class UI {
     let h = `<div class="tip-kind k-${k}">${kindName(b)}</div>`;
     if (b.kind === 'sentence') {
       h += `<div class="tip-sentence">${this.sentenceHTML(b)}</div>`;
-      h += isComplete(b) ? '<div class="tip-ok">✔ 완성된 문장 — 스킬에 장착하면 효과 발동</div>'
-        : `<div class="tip-warn">✖ 미완성 (빈 칸 ${missingCount(b)}개)</div>`;
-      if (b.slots.some((s) => s.locked)) h += '<div class="tip-dim">🔒 표시된 칸은 고정되어 바꿀 수 없습니다.</div>';
-      h += '<div class="tip-dim">우클릭: 문장 편집 · 스킬 창의 문장 칸으로 드래그해 장착</div>';
+      const r = TEMPLATE_INFO[b.template].rarity;
+      h += `<div class="tip-rar rar${r}">희귀도 ${r} · ${RARITY_NAME[r]}</div>`;
+      h += isComplete(b) ? '<div class="tip-ok">✔ 완성된 문장입니다. 스킬에 장착하면 효과가 적용됩니다.</div>'
+        : `<div class="tip-warn">✖ 빈 칸이 ${missingCount(b)}개 남았습니다.</div>`;
+      if (b.slots.some((s) => s.locked)) h += '<div class="tip-dim">🔒 표시된 칸은 바꿀 수 없습니다.</div>';
+      h += '<div class="tip-dim">우클릭하면 문장을 편집합니다.</div>';
     } else if (b.kind === 'word') {
       const d = SUBJECTS[b.key] || CHANGES[b.key];
       h += `<div class="tip-title">${d.name}</div><div>${d.desc}</div>`;
     } else if (b.kind === 'op') {
       const v = evalNumber(b);
       h += `<div class="tip-title">${numText(b).slice(1, -1)}</div>`;
-      h += v ? `<div class="tip-ok">= ${fmtValue(v)}</div>` : '<div class="tip-warn">빈 칸에 수치 블록을 넣어야 합니다</div>';
-      h += '<div class="tip-dim">문장의 [수치] 칸에 넣을 수 있습니다. 연산 블록 안에는 연산 블록을 넣을 수 없습니다.<br>우클릭: 연산 편집</div>';
+      h += v ? `<div class="tip-ok">= ${fmtValue(v)}</div>` : '<div class="tip-warn">빈 칸에 수치 블록을 넣어야 합니다.</div>';
+      h += '<div class="tip-dim">문장의 수치 칸에 넣습니다. 우클릭하면 편집합니다.</div>';
     } else {
       h += `<div class="tip-title big">${blockLabel(b)}</div>`;
-      h += `<div class="tip-dim">${{ fixed: '고정값', range: '랜덤값 — 적용될 때마다 범위 안에서 무작위', percent: '백분율 — 증가/감소는 곱연산, 같음은 직전 값의 N%' }[b.ntype]}</div>`;
+      h += `<div class="tip-dim">${NUM_DESC[b.ntype]}</div>`;
     }
-    h += '<div class="tip-dim">바깥으로 드래그: 버리기</div>';
+    h += '<div class="tip-dim">창 밖으로 끌어 놓으면 버립니다.</div>';
     return h;
   }
 
@@ -253,7 +262,7 @@ export class UI {
         if (i >= sk.maxSlots) {
           sq.classList.add('locked');
           sq.textContent = '🔒';
-          sq._tip = () => '<div class="tip-dim">잠긴 슬롯 — 레벨업 "문장 블록 최대치 +1" 로 해금</div>';
+          sq._tip = () => '<div class="tip-dim">잠긴 칸입니다. 레벨업 선택지로 열 수 있습니다.</div>';
         } else {
           const loc = { t: 'skill', skill: sk, i };
           sq._drop = loc;
@@ -266,7 +275,7 @@ export class UI {
             sq.appendChild(tile);
           } else {
             sq.appendChild(el('span', 'sq-num', `${i + 1}`));
-            sq._tip = () => '<div>문장 블록을 끌어다 놓아 장착하세요.</div><div class="tip-dim">왼쪽 칸부터 순서대로 적용됩니다.</div>';
+            sq._tip = () => '<div>문장 블록을 끌어다 놓으면 장착됩니다.</div><div class="tip-dim">왼쪽 칸부터 순서대로 적용됩니다.</div>';
           }
         }
         slots.appendChild(sq);
@@ -312,9 +321,14 @@ export class UI {
               // 스킬에 없는 키워드를 바꾸려는 문장
               row.classList.add('na');
               row.appendChild(el('span', 'sr-eff na', '적용되지 않음'));
+            } else if (entry && entry.ok && entry.text) {
+              row.classList.add('ok');
+              row.appendChild(el('span', 'sr-eff', entry.text));
             } else if (entry && entry.ok) {
               row.classList.add('ok');
-              row.appendChild(el('span', 'sr-eff', `${shortName(d, entry.subj)} ${fmtStat(entry.subj, entry.before)} → <b>${fmtStat(entry.subj, entry.after)}</b>`));
+              const sub = entry.subj === 'penPct' ? 'penetration' : entry.subj;
+              const fmt = (v) => (sub === 'penetration' && entry.subj === 'penPct' ? `${Math.round(v.max * 100)}%` : fmtStat(sub, v));
+              row.appendChild(el('span', 'sr-eff', `${shortName(d, sub)} ${fmt(entry.before)} → <b>${fmt(entry.after)}</b>`));
             } else {
               row.classList.add('bad');
               row.appendChild(el('span', 'sr-eff warn', (entry && entry.reason) || '미완성'));
@@ -327,11 +341,12 @@ export class UI {
         card.appendChild(rows);
 
         const sts = el('div', 'sc-stats');
-        for (const k of shownStats(d)) {
-          if (stats[k].max === 0) continue; // 0 인 값은 표시하지 않음 (예: 관통 기능이 없는 스킬)
-          const changed = fmtStat(k, stats[k]) !== fmtStat(k, base[k]);
-          const span = el('span', 'st' + (changed ? ' changed' : ''), `${shortName(d, k)} <b>${fmtStat(k, stats[k])}</b>`);
-          span._tip = () => `<div class="tip-title">${statLabel(d, k)}</div><div>${SUBJECTS[k].desc}</div><div class="tip-dim">기본 ${fmtStat(k, base[k])} → 최종 ${fmtStat(k, stats[k])}</div>`;
+        for (const k of shownStats(d, stats)) {
+          if (k !== 'penetration' && stats[k].max === 0) continue; // 0 인 값은 표시하지 않음 (예: 관통 기능이 없는 스킬)
+          const changed = statText(k, stats) !== statText(k, base);
+          const ec = statElemClass(d, k);
+          const span = el('span', 'st' + (changed ? ' changed' : '') + (ec ? ' el-' + ec : ''), `${shortName(d, k)} <b>${statText(k, stats)}</b>`);
+          span._tip = () => `<div class="tip-title">${statLabel(d, k)}</div><div>${k === 'damage' && d.element ? `${ELEMENTS[d.element].name} 속성의 피해량입니다.` : SUBJECTS[k].desc}</div><div class="tip-dim">기본 ${statText(k, base)} → 최종 ${statText(k, stats)}</div>`;
           sts.appendChild(span);
         }
         for (const x of extraLines(sk)) sts.appendChild(el('span', 'st extra', x));
@@ -340,7 +355,7 @@ export class UI {
       wrap.appendChild(card);
     });
     for (let i = game.skills.length; i < MAX_SKILLS; i++) {
-      wrap.appendChild(el('div', 'skill-empty', `빈 스킬 슬롯 ${(i + 1) % 10} — 레벨업 선택지로 스킬 획득`));
+      wrap.appendChild(el('div', 'skill-empty', `빈 스킬 슬롯 ${(i + 1) % 10} · 레벨업 선택지로 스킬을 얻을 수 있습니다.`));
     }
   }
 
@@ -348,12 +363,15 @@ export class UI {
     const d = sk.def;
     const { stats } = getResult(sk);
     let h = `<div class="tip-title">${d.icon} ${d.name} <span class="tip-dim">Lv.${sk.level}</span>${d.element ? ` <span class="elem e-${d.element}">${ELEMENTS[d.element].name}</span>` : ''}</div><div>${d.desc}</div>`;
-    if (d.element) h += `<div class="tip-dim">${ELEMENTS[d.element].name} 피해 · 20% 확률로 ${ELEMENTS[d.element].status}: ${ELEMENTS[d.element].desc}</div>`;
-    h += `<div class="tip-stats">${shownStats(d).filter((k) => stats[k].max !== 0).map((k) => `${shortName(d, k)} <b>${fmtStat(k, stats[k])}</b>`).join('<br>')}</div>`;
+    if (d.element) h += `<div class="tip-dim">${ELEMENTS[d.element].status}: ${ELEMENTS[d.element].desc}</div>`;
+    for (const [k, el2] of [['fireDmg', 'fire'], ['iceDmg', 'ice'], ['lightningDmg', 'lightning']]) {
+      if (el2 !== d.element && stats[k] && stats[k].max > 0) h += `<div class="tip-ok">추가 ${ELEMENTS[el2].name} 피해를 얻었습니다.</div>`;
+    }
+    h += `<div class="tip-stats">${shownStats(d, stats).filter((k) => k === 'penetration' || stats[k].max !== 0).map((k) => { const ec = statElemClass(d, k); return `<span class="${ec ? 'el-' + ec : ''}">${shortName(d, k)}</span> <b>${statText(k, stats)}</b>`; }).join('<br>')}</div>`;
     if (sk.key === 'frostBarrier') h += `<div class="tip-dim">스택 ${sk.stacks} / ${maxStacks(sk)}</div>`;
-    if (sk.key === 'triggerKill') h += `<div class="tip-dim">중첩 ${Math.floor(sk.stacks)} / ${triggerGoal(sk) || '— (완성된 문장을 장착하세요)'}</div>`;
+    if (sk.key === 'triggerKill') h += `<div class="tip-dim">중첩 ${Math.floor(sk.stacks)} / ${triggerGoal(sk) || '완성된 문장을 장착해야 합니다.'}</div>`;
     if (sk.key === 'enchant') h += `<div class="tip-dim">경험치 ${Math.floor(sk.xpAcc || 0)} / ${enchantReq(sk)}</div>`;
-    else h += `<div class="tip-dim">클릭 / 숫자키: 사용 · 우클릭: 자동 사용 ${sk.auto ? 'ON' : 'OFF'}</div>`;
+    if (!d.passive) h += `<div class="tip-dim">클릭하거나 숫자키로 사용합니다. 우클릭하면 자동 사용이 ${sk.auto ? '꺼집니다' : '켜집니다'}.</div>`;
     return h;
   }
 
@@ -552,7 +570,7 @@ export class UI {
         sq.appendChild(tile);
       } else {
         sq.appendChild(el('span', 'sq-num', '+'));
-        sq._tip = () => (type ? `<div><span class="tchip k-${type}">${KIND_BADGE[type]}</span> 유형 블록만 넣을 수 있습니다.</div>` : '<div>블록을 끌어다 놓으세요.</div><div class="tip-dim">같은 유형 블록 3개가 필요합니다.</div>');
+        sq._tip = () => (type ? `<div><span class="tchip k-${type}">${KIND_BADGE[type]}</span> 유형 블록만 넣을 수 있습니다.</div>` : '<div>블록을 끌어다 놓으면 들어갑니다.</div><div class="tip-dim">같은 유형 블록 3개가 필요합니다.</div>');
       }
       row.appendChild(sq);
       if (i < 2) row.appendChild(el('span', 'rc-plus', '+'));
@@ -623,7 +641,7 @@ export class UI {
         this.renderSentenceInto(line, b, true);
         body.appendChild(line);
         body.appendChild(isComplete(b)
-          ? el('div', 'pop-status ok', '✔ 완성 — 스킬 창의 문장 칸에 장착하면 효과가 적용됩니다')
+          ? el('div', 'pop-status ok', '✔ 완성되었습니다. 스킬에 장착하면 효과가 적용됩니다.')
           : el('div', 'pop-status bad', `✖ 미완성 — 빈 칸 ${missingCount(b)}개`));
         body.appendChild(el('div', 'pop-hint', '인벤토리의 블록을 빈 칸으로 드래그 · 칸의 블록을 밖으로 드래그해 빼기 · 연산 블록은 우클릭으로 편집'));
       } else {
@@ -642,7 +660,7 @@ export class UI {
           } else {
             chip.classList.add('empty', 't-number');
             chip.textContent = '[수치]';
-            chip._tip = () => '<div>수치 블록을 끌어다 놓으세요. (연산 블록 불가)</div>';
+            chip._tip = () => '<div>수치 블록을 넣을 수 있습니다. 연산 블록은 넣을 수 없습니다.</div>';
           }
           line.appendChild(chip);
           if (i === 0) line.appendChild(el('span', 'op-sym', OP_SYMBOL[b.op]));
@@ -650,7 +668,7 @@ export class UI {
         const v = evalNumber(b);
         line.appendChild(el('span', 'op-res', v ? `= ${fmtValue(v)}` : '= ?'));
         body.appendChild(line);
-        body.appendChild(el('div', 'pop-hint', '문장 블록의 [수치] 칸에 넣어 사용합니다. 백분율끼리의 연산은 백분율, 섞이면 백분율은 소수(40% → 0.4)로 계산됩니다.'));
+        body.appendChild(el('div', 'pop-hint', '문장 블록의 수치 칸에 넣어 사용합니다.'));
       }
       w.appendChild(body);
       w.addEventListener('pointerdown', () => { if (p.z !== this.zTop) { p.z = ++this.zTop; w.style.zIndex = 60 + p.z; } });
@@ -845,7 +863,7 @@ export class UI {
       if (b.kind === 'sentence') desc = `<div class="tip-sentence">${this.sentenceHTML(b)}</div>`;
       else if (b.kind === 'word') desc = (SUBJECTS[b.key] || CHANGES[b.key]).desc;
       else if (b.kind === 'op') desc = '두 수치 블록을 연산해 하나의 수치로 만듭니다.';
-      else desc = { fixed: '고정값', range: '랜덤값 — 적용될 때마다 범위 안에서 무작위', percent: '백분율 — 증가/감소는 곱연산, 같음은 직전 값의 N%' }[b.ntype];
+      else desc = NUM_DESC[b.ntype];
       card.appendChild(el('div', 'lu-desc', desc));
       card.addEventListener('click', () => { sfx('select'); onPick(b); });
       card._tip = () => this.blockTip(b);

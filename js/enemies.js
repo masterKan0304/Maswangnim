@@ -96,10 +96,17 @@ export class EnemyManager {
   }
 
   // element: 'fire' | 'ice' | 'lightning', status: 상태이상 부여 확률(0~1). 상태이상을 먼저 부여한 뒤 피해 적용
+  // pen: 저항 무시 { pct(0~1), flat }, crit: 치명타 여부, src/st: 피해를 준 스킬 (처치 시 효과용)
   // (dot: 지속 피해는 상태이상을 부여하지 않음)
-  damage(e, amount, { kx = 0, kz = 0, color, element = null, status = 0, dot = false } = {}) {
+  damage(e, amount, { kx = 0, kz = 0, color, element = null, status = 0, dot = false, pen = null, crit = false, src = null, st = null } = {}) {
     if (!e.alive) return;
-    if (element && !dot && Math.random() < status) this.applyStatus(e, element, amount);
+    if (element && !dot && Math.random() < status) this.applyStatus(e, element, amount, src, st);
+    // 속성 저항: 피해 × 100 / (100 + 저항). 저항 무시로 음수가 되면 그만큼 더 받음
+    if (element) {
+      let res = e.T.res || 0;
+      if (pen) res = res * (1 - Math.min(1, pen.pct)) - pen.flat;
+      amount *= res >= 0 ? 100 / (100 + res) : 2 - 100 / (100 - res);
+    }
     if (e.shockT > 0) amount *= 1 + STATUS.shockAmp;
     if (element === 'fire' && e.fireVuln) amount *= 1 + e.fireVuln;   // 화염 방사 5레벨 취약
     if (!color && element) color = ELEM_NUM[element];
@@ -108,7 +115,7 @@ export class EnemyManager {
     e.flash = 0.12;
     const kb = e.boss ? 0.1 : e.elite ? 0.3 : 1;
     e.kx += kx * kb; e.kz += kz * kb;
-    this.fx.numbers.spawn(e.x, 0.9 + e.r * 1.4, e.z, Math.floor(amount), color || '');
+    this.fx.numbers.spawn(e.x, 0.9 + e.r * 1.4, e.z, crit ? `${Math.floor(amount)}!` : Math.floor(amount), (color || '') + (crit ? ' crit' : ''));
     if (!dot) sfx('hit');
     if (e.hp <= 0) {
       e.alive = false;
@@ -116,12 +123,13 @@ export class EnemyManager {
       this.fx.particles.burst(e.x, 0.4, e.z, e.boss ? 60 : e.elite ? 30 : 12, [e.T.color, 0xffffff, e.T.color], { speed: e.boss ? 8 : e.elite ? 5 : 3.5, size: e.boss ? 0.35 : e.elite ? 0.24 : 0.16, life: 0.6, up: 4 });
       this.fx.splat(e.x, e.z, e.T.color, e.r);
       if (e.model) this.scene.remove(e.model.group);
-      if (this.onKill) this.onKill(e);
+      if (this.onKill) this.onKill(e, src, st);
     }
   }
 
-  applyStatus(e, element, amount) {
+  applyStatus(e, element, amount, src = null, st = null) {
     if (element === 'fire') {
+      e.burnSrc = src; e.burnSt = st;
       e.burnT = STATUS.duration;
       e.burnDmg = Math.max(1, amount * (0.1 + Math.random() * 0.1));
       if (e.burnTick <= 0) e.burnTick = STATUS.burnTick;
@@ -141,7 +149,7 @@ export class EnemyManager {
         0, 1.2, 0, 0.4, 0.1, Math.random() < 0.5 ? 0xff7a2a : 0xffc04a, -2);
       if (e.burnTick <= 0) {
         e.burnTick += STATUS.burnTick;
-        this.damage(e, e.burnDmg, { element: 'fire', dot: true, color: 'burn' });
+        this.damage(e, e.burnDmg, { element: 'fire', dot: true, color: 'burn', src: e.burnSrc, st: e.burnSt });
       }
       if (e.burnT <= 0) e.burnTick = 0;
     }
