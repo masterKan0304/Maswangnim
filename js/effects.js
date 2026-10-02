@@ -270,6 +270,26 @@ export class FX {
     this.add([r], life, (k) => { r.scale.setScalar(radius * (0.3 + 0.7 * k)); mat.opacity = 0.8 * (1 - k); }, [mat]);
   }
 
+  // 폭발하듯 피어오르는 안개 (부드러운 반투명 구름 여러 장이 퍼지며 사라짐)
+  mist(x, z, radius, color = 0xeef8ff) {
+    const n = 9;
+    for (let i = 0; i < n; i++) {
+      const mat = new THREE.SpriteMaterial({ map: getGlowTexture(), color, transparent: true, opacity: 0, depthWrite: false });
+      const sp = new THREE.Sprite(mat);
+      const a = (i / n) * Math.PI * 2 + Math.random() * 0.5;
+      const v = radius * (0.9 + Math.random() * 0.8);
+      const y0 = 0.25 + Math.random() * 0.4;
+      sp.position.set(x, y0, z);
+      const s0 = radius * (0.6 + Math.random() * 0.4);
+      this.add([sp], 1.1 + Math.random() * 0.4, (k) => {
+        const e = 1 - (1 - k) ** 2;
+        sp.position.set(x + Math.cos(a) * v * e, y0 + e * 0.6, z + Math.sin(a) * v * e);
+        sp.scale.setScalar(s0 * (1 + e * 1.4));
+        mat.opacity = (k < 0.15 ? k / 0.15 : (1 - k) / 0.85) * 0.75;
+      }, [mat]);
+    }
+  }
+
   splat(x, z, color, radius) {
     const mat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.55, depthWrite: false });
     const s = new THREE.Mesh(this.circleGeo, mat);

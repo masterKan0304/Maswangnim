@@ -68,11 +68,12 @@ kbd {
 #kills { font-size: 20px; background: rgba(20,22,40,0.55); padding: 2px 12px; border-radius: 10px; }
 @keyframes pulse { 50% { transform: scale(1.08); } }
 
-#bossbar { position: absolute; top: 78px; left: 50%; transform: translateX(-50%); width: 640px; text-align: center; }
+#bossbar { position: absolute; top: 78px; left: 50%; transform: translateX(-50%); width: 760px; display: flex; gap: 12px; text-align: center; }
+#bossbar .bb { flex: 1; min-width: 0; }
 .bb-name { font-family: 'Jua', sans-serif; font-size: 18px; text-shadow: 0 2px 0 #000; margin-bottom: 4px; }
 .bb-name span { font-family: 'Noto Sans KR'; font-size: 12px; opacity: 0.8; }
 .bb-track { height: 14px; border-radius: 8px; background: rgba(20,10,30,0.8); border: 2px solid #1a0f28; overflow: hidden; }
-#bossfill { height: 100%; background: linear-gradient(90deg, #7b3cf0, #c07cff); transition: width 0.15s; }
+.bb-fill { height: 100%; background: linear-gradient(90deg, #7b3cf0, #c07cff); transition: width 0.15s; }
 
 #hpbox {
   position: absolute; left: 18px; bottom: 18px; width: 290px;
@@ -592,7 +593,7 @@ body.game-paused #bossbar { top: 104px; }
 .toggle.small .t-off { right: 7px; }
 .set-row.muted input[type=range], .set-row.muted .set-val { opacity: 0.35; filter: grayscale(1); }
 
-#bossbar.elite #bossfill { background: linear-gradient(90deg, #2f6fe0, #7fb8ff); }
+.bb.elite .bb-fill { background: linear-gradient(90deg, #2f6fe0, #7fb8ff); }
 
 /* 1920x1080 기준에서 메뉴/결과/레벨업 화면을 크게 */
 .screen-box { transform: scale(1.05); }
@@ -629,3 +630,17 @@ body.game-paused #bossbar { top: 104px; }
 .tip-rar.rar1 { color: #c9cdf0; }
 .tip-rar.rar2 { color: #5fb8ff; }
 .tip-rar.rar3 { color: #ffd45a; }
+
+.bb-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bb-status { display: flex; gap: 4px; justify-content: center; margin-top: 4px; min-height: 22px; }
+.bs { position: relative; font-size: 15px; width: 24px; height: 22px; border-radius: 6px; display: flex; align-items: center; justify-content: center;
+  background: rgba(20,22,40,0.8); border: 1.5px solid rgba(255,255,255,0.25); }
+.bs.e-fire { border-color: #ff8a4a; } .bs.e-ice { border-color: #8fe3ff; } .bs.e-lightning { border-color: #ffe066; }
+.bs i { position: absolute; right: -4px; bottom: -5px; font-style: normal; font-size: 10px; font-weight: 900; text-shadow: 0 0 3px #000; }
+
+/* 선택지 고르는 중 열린 스킬/인벤토리 창: 보기만 가능 (스크롤과 닫기만 동작) */
+body.ui-readonly .window { z-index: 115; }
+body.ui-readonly .window * { pointer-events: none; }
+body.ui-readonly .window .win-close { pointer-events: auto; }
+body.ui-readonly .window .win-head::after { content: '보기 전용'; font-family: 'Noto Sans KR'; font-size: 11px; font-weight: 700; color: #ffd45a; background: rgba(255,212,90,0.12); border-radius: 6px; padding: 1px 8px; margin-left: 6px; }
+body.ui-readonly #popups { display: none; }

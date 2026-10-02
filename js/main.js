@@ -271,6 +271,14 @@ function rerollBlocks() {
 //  입력 (단축키)
 // ─────────────────────────────────────────────
 input.onKey = (e) => {
+  // 선택지 고르는 중: 스킬 창 / 인벤토리 창만 열어서 볼 수 있음 (읽기 전용)
+  if (game.state === 'levelup') {
+    if (e.code === 'KeyE') ui.setWindows(!game.invOpen, game.skillsOpen);
+    else if (e.code === 'KeyQ') ui.setWindows(game.invOpen, !game.skillsOpen);
+    else if (e.code === 'Tab') { const open = !(game.invOpen && game.skillsOpen); ui.setWindows(open, open); }
+    else if (e.code === 'Escape' && (game.invOpen || game.skillsOpen)) ui.setWindows(false, false);
+    return;
+  }
   if (game.state !== 'playing') return;
   switch (e.code) {
     case 'Space':
@@ -478,6 +486,7 @@ function tick(dt, draw = true) {
   fx.render(adt);
   if (game.state !== 'start') ui.updateHUD();
   ui.setPausedView(game.state === 'playing' && isPaused());
+  document.body.classList.toggle('ui-readonly', game.state === 'levelup');
   renderer.render(scene, camera);
 }
 

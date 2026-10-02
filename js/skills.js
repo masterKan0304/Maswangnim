@@ -117,20 +117,21 @@ export const SKILL_DEFS = {
     labels: { projCount: '낙뢰 수' },
     relevant: ['damage', 'projCount', 'statusChance'],
     hiddenUses: ['range'],
-    levelUp: dmgUp40,
-    levelText: () => ['피해량이 40% 증가합니다.'],
+    levelUp(st, lv) { dmgUp40(st, lv); if (lv >= 3) st.projCount = { min: 2, max: 2 }; },
+    levelText: (lv) => ['피해량이 40% 증가합니다.', lv === 3 && '기본 낙뢰 수가 2개가 됩니다.', lv === 5 && '감전된 적에게는 낙뢰 피해가 50% 증가합니다.'],
+    extra: (sk) => [sk.level >= 5 && '감전된 적에게는 낙뢰 피해가 50% 증가합니다.'],
   },
   snowfall: {
     key: 'snowfall', name: '낙석', icon: '☃️', color: '#c8f2ff', element: 'ice', passive: false, castTime: 0.15,
     short: '체력이 가장 높은 적에게 커다란 눈덩이를 떨어뜨립니다.',
     desc: '사거리 안에서 체력이 가장 높은 적에게 눈덩이를 떨어뜨립니다. 범위 안의 적은 피해를 입고 밀려납니다.',
     keywords: ['냉기', '효과 범위', '연쇄', '상태이상', '스킬 쿨타임'],
-    base: { damage: [8, 21], area: 25, range: 80, statusChance: 80, manaCost: 12, cooldown: 6 },
+    base: { damage: [8, 21], area: 25, range: 40, statusChance: 80, manaCost: 12, cooldown: 6 },
     relevant: ['damage', 'area', 'chains', 'statusChance', 'manaCost', 'cooldown'],
     hiddenUses: ['range'],
-    levelUp: dmgUp40,
-    levelText: () => ['피해량이 40% 증가합니다.'],
-    extra: () => ['연쇄하면 같은 자리에 눈덩이가 다시 떨어집니다.'],
+    levelUp(st, lv) { dmgUp40(st, lv); if (lv >= 3) st.area = { min: st.area.min * 1.5, max: st.area.max * 1.5 }; },
+    levelText: (lv) => ['피해량이 40% 증가합니다.', lv === 3 && '기본 범위가 50% 증가합니다.', lv === 5 && '박힌 눈덩이가 잠시 후 한 번 더 폭발합니다.'],
+    extra: (sk) => ['연쇄하면 같은 자리에 눈덩이가 다시 떨어집니다.', sk.level >= 5 && '박힌 눈덩이가 0.75초 후 폭발합니다.'],
   },
   lightningBeam: {
     key: 'lightningBeam', name: '번개 광선', icon: '🔆', color: '#fff27a', element: 'lightning', passive: false, castTime: 0.1,
@@ -138,12 +139,12 @@ export const SKILL_DEFS = {
     short: '가장 가까운 적을 향해 나아가는 번개 광선을 내리꽂습니다.',
     desc: '가장 가까운 적 방향으로 번개 광선이 하늘에서 내리꽂히며 앞으로 나아갑니다. 광선에 닿은 적은 0.25초마다 피해를 입습니다.',
     keywords: ['번개', '효과 범위', '지속 시간', '연쇄', '상태이상', '스킬 쿨타임'],
-    base: { damage: [1, 9], area: 10, duration: 5, projSpeed: 3, statusChance: 40, manaCost: 15, cooldown: 12 },
+    base: { damage: [1, 9], area: 10, duration: 5, projSpeed: 0.75, statusChance: 40, manaCost: 15, cooldown: 12 },
     labels: { area: '광선 범위', projSpeed: '광선 속도' },
     relevant: ['damage', 'area', 'duration', 'projSpeed', 'chains', 'statusChance', 'manaCost', 'cooldown'],
     levelUp: dmgUp40,
-    levelText: () => ['피해량이 40% 증가합니다.'],
-    extra: () => ['연쇄하면 처음 맞은 적에게서 광선이 하나 더 뻗어 나갑니다.'],
+    levelText: (lv) => ['피해량이 40% 증가합니다.', lv === 3 && '광선이 대상 적을 계속 따라갑니다.', lv === 5 && '추적 대상에게 피해를 줄 때마다 작은 번개 5개가 튑니다.'],
+    extra: (sk) => ['연쇄하면 처음 맞은 적에게서 광선이 하나 더 뻗어 나갑니다.', sk.level >= 3 && '광선이 대상 적을 계속 따라갑니다.', sk.level >= 5 && '추적 대상을 맞히면 작은 번개 5개가 튑니다.'],
   },
   enchant: {
     key: 'enchant', name: '효과 부여', icon: '✨', color: '#ffd45a', element: null, passive: true,
@@ -255,6 +256,8 @@ function clampStat(key, x) {
 export function applyEffect(stats, subj, val, change) {
   // 저항 무시: 백분율은 % 저항 무시, 고정/랜덤은 고정 저항 무시로 따로 쌓임
   if (subj === 'penetration' && val.pct) { subj = 'penPct'; val = { ...val, pct: false }; }
+  // 치명타 피해: 백분율은 배율(200%)에, 고정/랜덤은 치명타 때 더해지는 추가 피해에 적용
+  if (subj === 'critDamage' && !val.pct) subj = 'critFlat';
   const s = stats[subj];
   let lo, hi;
   if (SUBJECTS[subj].pctOnly) {
@@ -353,13 +356,15 @@ function runSentences(skill, stats, extra = [], scale = 1) {
     if (SUBJECTS[subj].element && SUBJECTS[subj].element === d.element) subj = 'damage';
     // 스킬에 없는 키워드 → 적용되지 않음
     if (!skillUses(d, subj)) { log.push({ i, ok: true, na: true, subj }); continue; }
-    const before = { ...stats[subj] };
+    // 실제로 바뀌는 내부 스탯 (저항 무시 % / 치명타 추가 피해)
+    const key = subj === 'penetration' && val.pct ? 'penPct' : subj === 'critDamage' && !val.pct ? 'critFlat' : subj;
+    const before = { ...stats[key] };
     applyEffect(stats, subj, val, change);
     // 피해량 변화는 이미 추가된 속성 피해에도 적용
     if (subj === 'damage') for (const ek of ['fireDmg', 'iceDmg', 'lightningDmg']) if (stats[ek].max > 0) applyEffect(stats, ek, val, change);
     // 지속 시간 변화는 투사체 지속 시간에도 똑같이 적용
     if (subj === 'duration' && skillUses(d, 'projDuration')) applyEffect(stats, 'projDuration', val, change);
-    log.push({ i, ok: true, subj, before, after: { ...stats[subj] } });
+    log.push({ i, ok: true, subj: key, before, after: { ...stats[key] } });
   }
   return log;
 }
@@ -415,6 +420,10 @@ export function fmtStat(key, v) {
 }
 // 스탯 표시 (저항 무시는 % + 고정값을 함께)
 export function statText(k, stats) {
+  if (k === 'critDamage') {
+    const f = stats.critFlat;
+    return fmtStat('critDamage', stats.critDamage) + (f && f.max > 0 ? ` + ${fmtStat('critFlat', f)}` : '');
+  }
   if (k === 'penetration') {
     const p = Math.round(((stats.penPct.min + stats.penPct.max) / 2) * 100);
     return `${p}% + ${fmtStat('penetration', stats.penetration)}`;

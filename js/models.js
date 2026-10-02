@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { DecalGeometry } from 'three/addons/geometries/DecalGeometry.js';
 
 // ─────────────────────────────────────────────
 //  로우폴리 지오메트리 헬퍼
@@ -179,6 +180,40 @@ function leafGeo() {
   return paint(g, LEAF, 0.05);
 }
 
+// 얼굴 무늬 텍스처 (눈: 검은 점 + 하이라이트, 입: 세로로 긴 빨간 타원)
+const faceTexCache = {};
+function faceTex(kind) {
+  if (faceTexCache[kind]) return faceTexCache[kind];
+  const c = document.createElement('canvas');
+  c.width = c.height = 64;
+  const g = c.getContext('2d');
+  if (kind === 'eye') {
+    g.fillStyle = '#1d1b2a';
+    g.beginPath(); g.arc(32, 32, 26, 0, Math.PI * 2); g.fill();
+    g.fillStyle = 'rgba(255,255,255,0.85)';
+    g.beginPath(); g.arc(23, 22, 7, 0, Math.PI * 2); g.fill();
+  } else {
+    g.fillStyle = '#c8321f';
+    g.beginPath(); g.ellipse(32, 32, 17, 29, 0, 0, Math.PI * 2); g.fill();
+    g.fillStyle = '#e8573c';
+    g.beginPath(); g.ellipse(28, 24, 6, 11, 0, 0, Math.PI * 2); g.fill();
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  faceTexCache[kind] = t;
+  return t;
+}
+
+// 메시 표면에 무늬를 투영해 붙임 (DecalGeometry) — 결과는 메시의 자식으로 따라 움직임
+function printOn(mesh, worldPos, size, tex, rotZ = 0) {
+  mesh.updateMatrixWorld(true);
+  const geo = new DecalGeometry(mesh, worldPos, new THREE.Euler(0, 0, rotZ), size);
+  geo.applyMatrix4(mesh.matrixWorld.clone().invert());
+  const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4 }));
+  mesh.add(m);
+  return m;
+}
+
 export function createPlayer() {
   const group = new THREE.Group();
   const root = new THREE.Group();
@@ -217,18 +252,10 @@ export function createPlayer() {
     arms.push(pivot);
   }
 
-  // 얼굴: 작은 점 눈 + 세로로 긴 빨간 입
-  const eyeMat = new THREE.MeshBasicMaterial({ color: 0x1d1b2a });
-  for (const sx of [-1, 1]) {
-    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.038, 6, 5), eyeMat);
-    eye.position.set(sx * 0.17, 0.8, 0.43);
-    root.add(eye);
-  }
-  const mouth = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 6).scale(0.85, 1.6, 0.5),
-    new THREE.MeshStandardMaterial({ color: 0xd9452e, emissive: 0x5a1208, roughness: 0.5 }));
-  mouth.position.set(0.02, 0.66, 0.47);
-  mouth.rotation.z = 0.1;
-  root.add(mouth);
+  // 얼굴: 몸통 표면에 그대로 인쇄된 듯한 데칼 (튀어나오지 않음)
+  group.updateMatrixWorld(true);
+  for (const sx of [-1, 1]) printOn(body, new THREE.Vector3(sx * 0.17, 0.8, 0.45), new THREE.Vector3(0.1, 0.1, 0.4), faceTex('eye'));
+  printOn(body, new THREE.Vector3(0.02, 0.66, 0.47), new THREE.Vector3(0.12, 0.2, 0.4), faceTex('mouth'), 0.1);
 
   // 머리 위 새싹 (잎 두 장) — headPivot 으로 살랑살랑 흔들림
   const headPivot = new THREE.Group();

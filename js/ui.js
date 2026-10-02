@@ -25,7 +25,7 @@ function findProp(node, prop) {
 const NUM_DESC = { fixed: '항상 같은 값입니다.', range: '적용될 때마다 범위 안에서 무작위로 정해집니다.', percent: '비율로 적용됩니다.' };
 const KIND_BADGE = { sentence: '문장', subject: '주체', change: '변화', number: '수치', op: '연산' };
 const STAT_SHORT = { damage: '피해량', area: '효과 범위', range: '사거리', duration: '지속 시간', castSpeed: '시전 속도', shield: '보호막', pierce: '관통', projSize: '투사체 크기', projSpeed: '투사체 속도', projCount: '투사체 개수', chains: '연쇄 횟수', statusChance: '상태이상 발생율', projDuration: '투사체 지속 시간', manaCost: '마나', cooldown: '쿨타임',
-  critChance: '치명타 확률', critDamage: '치명타 피해', penetration: '저항 무시', fireDmg: '화염 피해', iceDmg: '냉기 피해', lightningDmg: '번개 피해' };
+  critChance: '치명타 확률', critDamage: '치명타 피해', critFlat: '치명타 추가 피해', penetration: '저항 무시', fireDmg: '화염 피해', iceDmg: '냉기 피해', lightningDmg: '번개 피해' };
 const shortName = (def, k) => (k === 'damage' && def.element ? statLabel(def, k) : (def.labels && def.labels[k]) || STAT_SHORT[k]);
 // 속성 피해 표시 색
 const ELEM_CLASS = { fireDmg: 'fire', iceDmg: 'ice', lightningDmg: 'lightning' };
@@ -896,6 +896,41 @@ export class UI {
     });
   }
 
+  // 보스 체력 바: 살아 있는 보스(킹 슬라임 먼저, 중간 보스 순)를 최대 4개까지 가로로 나눠 표시
+  updateBossBars() {
+    const list = game.sys.enemies.list.filter((e) => e.alive && (e.boss || e.elite))
+      .sort((a, b) => (b.boss ? 1 : 0) - (a.boss ? 1 : 0)).slice(0, 4);
+    const box = $('#bossbar');
+    box.classList.toggle('hidden', list.length === 0);
+    if (!this.bossList || this.bossList.length !== list.length || this.bossList.some((e, i) => e !== list[i])) {
+      this.bossList = list;
+      box.innerHTML = '';
+      for (const e of list) {
+        const d = el('div', 'bb' + (e.elite ? ' elite' : ''));
+        d.innerHTML = `<div class="bb-name">${e.boss ? '👑 킹 슬라임' : '💠 정예 슬라임'} <span class="bb-hp"></span></div>
+          <div class="bb-track"><div class="bb-fill"></div></div><div class="bb-status"></div>`;
+        box.appendChild(d);
+      }
+    }
+    list.forEach((e, i) => {
+      const d = box.children[i];
+      d.querySelector('.bb-fill').style.width = `${Math.max(0, e.hp / e.maxHp) * 100}%`;
+      d.querySelector('.bb-hp').textContent = `${Math.floor(Math.max(0, e.hp))} / ${Math.floor(e.maxHp)}`;
+      // 걸려 있는 상태이상 아이콘
+      const st = [];
+      if (e.burnT > 0) st.push(['🔥', '화상', 'fire', e.burnT]);
+      if (e.chillT > 0) st.push(['❄️', '둔화', 'ice', e.chillT]);
+      if (e.shockT > 0) st.push(['⚡', '감전', 'lightning', e.shockT]);
+      if (e.fireVuln > 0) st.push(['🌋', `화염 취약 +${Math.round(e.fireVuln * 100)}%`, 'fire', 0]);
+      const key = st.map((x) => x[0] + (x[3] > 0 ? Math.ceil(x[3]) : x[1])).join('|');
+      const sd = d.querySelector('.bb-status');
+      if (sd._key !== key) {
+        sd._key = key;
+        sd.innerHTML = st.map(([ic, name, cls, t]) => `<span class="bs e-${cls}" title="${name}">${ic}${t > 0 ? `<i>${Math.ceil(t)}</i>` : ''}</span>`).join('');
+      }
+    });
+  }
+
   // ── HUD (매 프레임) ───────────────────
   updateHUD() {
     const pl = game.sys.player;
@@ -917,15 +952,7 @@ export class UI {
     }
     $('#timer').classList.toggle('boss', game.bossSpawned);
     $('#kills').textContent = `☠ ${game.kills}`;
-    // 보스 체력 바: 킹 슬라임 > 정예 슬라임(중간 보스)
-    const boss = game.boss && game.boss.alive ? game.boss : game.elite && game.elite.alive ? game.elite : null;
-    $('#bossbar').classList.toggle('hidden', !boss);
-    $('#bossbar').classList.toggle('elite', !!(boss && boss.elite));
-    if (boss) {
-      $('#bossname').textContent = boss.elite ? '💠 정예 슬라임' : '👑 킹 슬라임';
-      $('#bossfill').style.width = `${(boss.hp / boss.maxHp) * 100}%`;
-      $('#bosshp').textContent = `${Math.floor(Math.max(0, boss.hp))} / ${Math.floor(boss.maxHp)}`;
-    }
+    this.updateBossBars();
 
     const db = $('#dashbox');
     const dcd = Math.max(0, pl.dashCd);

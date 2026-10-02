@@ -75,7 +75,6 @@ export class SkillRuntime {
     this.iceballGeo = new THREE.IcosahedronGeometry(0.5, 0);
     this.shardGeo = new THREE.OctahedronGeometry(0.09, 0).scale(1, 2, 1);
     this.snowGeo = jitter(new THREE.IcosahedronGeometry(0.5, 1), 0.08, 77);
-    this.beamGeo = new THREE.CylinderGeometry(1, 1, 1, 8, 1, true);
   }
 
   // ─────────────────────────────────────────
@@ -93,7 +92,8 @@ export class SkillRuntime {
     const main = (o.base ?? sample(st.damage)) * mul;
     const sp = statusProb(st, o.statusRatio ?? 1);
     const common = { pen, crit, src: sk, st };
-    this.enemies.damage(e, main * cm, { ...common, element: el, status: sp, kx: o.kx || 0, kz: o.kz || 0 });
+    const critAdd = crit && st.critFlat ? sample(st.critFlat) : 0;   // 치명타: 피해 × 배율 + 추가 피해
+    this.enemies.damage(e, main * cm + critAdd, { ...common, element: el, status: sp, kx: o.kx || 0, kz: o.kz || 0 });
     for (const x of ELEMS) {
       let v = 0;
       const k = ELEMENT_DMG[x];
@@ -427,7 +427,7 @@ export class SkillRuntime {
         this.fx.lightning({ x: t.x + 1.2, y: 9, z: t.z - 1.2 }, { x: t.x, y: 0.2, z: t.z }, 0.35);
         this.fx.ring(t.x, t.z, 1.0, 0xffe066, 0.3);
         sfx('zap');
-        this.deal(t, sk, st);
+        this.deal(t, sk, st, { mul: sk.level >= 5 && t.shockT > 0 ? 1.5 : 1 });
       });
     }
   }
@@ -795,7 +795,8 @@ export class SkillRuntime {
     this.dropSnowball(sk, st, target.x, target.z, sampleInt(st.chains));
   }
 
-  dropSnowball(sk, st, x, z, chainsLeft) {
+  // dur: 떨어지는 시간 (처음 0.5초, 연쇄로 다시 떨어질 때는 0.25초)
+  dropSnowball(sk, st, x, z, chainsLeft, dur = 0.5) {
     const radius = sample(st.area) / U / 2;
     const mat = new THREE.MeshStandardMaterial({ color: 0xf2fbff, emissive: 0x5aa8d8, emissiveIntensity: 0.25, roughness: 0.6, flatShading: true, transparent: true, opacity: 0.3 });
     const ball = new THREE.Mesh(this.snowGeo, mat);
@@ -810,13 +811,45 @@ export class SkillRuntime {
     this.scene.add(ball, mark);
     // 하늘 비스듬한 위치에서 출발
     const from = new THREE.Vector3(x - 4, 9 + size, z + 3);
-    this.snowballs.push({ sk, st, x, z, radius, size, chainsLeft, t: 0, dur: 0.5, ball, mark, mat, markMat, from });
+    this.snowballs.push({ sk, st, x, z, radius, size, chainsLeft, t: 0, dur, ball, mark, mat, markMat, from, embed: -1 });
+  }
+
+  // 눈덩이 충격: 강하게 튀는 파편 + 피어오르는 안개 + 범위 피해 / 밀쳐내기
+  snowImpact(s) {
+    sfx('explode'); sfx('frost');
+    const r = s.radius;
+    this.fx.ring(s.x, s.z, r, 0xd8f8ff, 0.45);
+    this.fx.ring(s.x, s.z, r * 1.3, 0xffffff, 0.6);
+    this.fx.particles.burst(s.x, 0.5, s.z, 46, [0xffffff, 0xeefaff, 0xd8f8ff], { speed: 6 + r * 4, size: 0.26, life: 0.9, up: 7, grav: 14 });
+    this.fx.particles.burst(s.x, 0.3, s.z, 26, [0x9fe6ff, 0xffffff], { speed: 9 + r * 3, size: 0.1, life: 0.5, up: 3 });
+    this.fx.mist(s.x, s.z, r);
+    for (const e of this.enemies.query(s.x, s.z, r + 2.2)) {
+      const d = Math.hypot(e.x - s.x, e.z - s.z);
+      if (!e.alive || d > r + e.r * 0.7) continue;
+      const push = Math.max(0, r * 0.75 - d) * 7 + 2;
+      this.deal(e, s.sk, s.st, { kx: ((e.x - s.x) / (d || 1)) * push, kz: ((e.z - s.z) / (d || 1)) * push });
+    }
   }
 
   updateSnowballs(dt) {
     for (let i = this.snowballs.length - 1; i >= 0; i--) {
       const s = this.snowballs[i];
       s.t += dt;
+      // 5레벨: 바닥에 박힌 눈덩이가 부풀고 떨리며 빛나다가 폭발
+      if (s.embed >= 0) {
+        s.embed += dt;
+        const k = Math.min(1, s.embed / 0.75);
+        const shake = 0.04 * s.size * k;
+        s.ball.position.set(s.x + (Math.random() - 0.5) * shake * 2, s.size * 0.35, s.z + (Math.random() - 0.5) * shake * 2);
+        s.ball.scale.setScalar(s.size * (1 + 0.18 * k + Math.sin(s.embed * 40) * 0.04 * k));
+        s.mat.emissiveIntensity = 0.25 + 1.6 * k * k;
+        s.markMat.opacity = 0.3 + 0.5 * k * (0.5 + 0.5 * Math.sin(s.embed * 30));
+        if (Math.random() < 0.5 + k) this.fx.particles.emit(s.x + (Math.random() - 0.5) * s.size, s.size * 0.6, s.z + (Math.random() - 0.5) * s.size, 0, 1.2, 0, 0.4, 0.08, 0xd8f8ff, -1);
+        if (k < 1) continue;
+        this.snowImpact(s);
+        this.removeSnowball(i);
+        continue;
+      }
       const k = Math.min(1, s.t / s.dur);
       const e2 = k * k;                                      // 점점 빨라지며 떨어짐
       s.ball.position.set(s.from.x + (s.x - s.from.x) * e2, s.from.y + (s.size * 0.8 - s.from.y) * e2, s.from.z + (s.z - s.from.z) * e2);
@@ -825,75 +858,137 @@ export class SkillRuntime {
       s.markMat.opacity = 0.5 * k;
       if (Math.random() < 0.6) this.fx.particles.emit(s.ball.position.x, s.ball.position.y, s.ball.position.z, 0, 0.5, 0, 0.35, s.size * 0.25, 0xe8fbff, -0.5);
       if (k < 1) continue;
-      // 착지: 범위 피해 + 중심에서 범위의 75% 만큼 밀쳐냄
-      sfx('explode'); sfx('frost');
-      this.fx.ring(s.x, s.z, s.radius, 0xd8f8ff, 0.45);
-      this.fx.particles.burst(s.x, 0.4, s.z, 30, [0xffffff, 0xd8f8ff, 0x9fe6ff], { speed: 3 + s.radius * 3, size: 0.18, life: 0.6, up: 4 });
-      for (const e of this.enemies.query(s.x, s.z, s.radius + 2.2)) {
-        const d = Math.hypot(e.x - s.x, e.z - s.z);
-        if (!e.alive || d > s.radius + e.r * 0.7) continue;
-        const push = Math.max(0, s.radius * 0.75 - d) * 7 + 2;
-        this.deal(e, s.sk, s.st, { kx: ((e.x - s.x) / (d || 1)) * push, kz: ((e.z - s.z) / (d || 1)) * push });
-      }
-      this.scene.remove(s.ball, s.mark);
-      s.mat.dispose(); s.markMat.dispose();
-      this.snowballs.splice(i, 1);
-      // 연쇄: 같은 자리에 눈덩이가 다시 떨어짐
-      if (s.chainsLeft > 0) this.dropSnowball(s.sk, s.st, s.x, s.z, s.chainsLeft - 1);
+      this.snowImpact(s);
+      // 연쇄: 같은 자리에 0.25초 간격으로 다시 떨어짐
+      if (s.chainsLeft > 0) this.dropSnowball(s.sk, s.st, s.x, s.z, s.chainsLeft - 1, 0.25);
+      if (s.sk.level >= 5) { s.embed = 0; s.mat.opacity = 1; continue; }
+      this.removeSnowball(i);
     }
   }
 
+  removeSnowball(i) {
+    const s = this.snowballs[i];
+    this.scene.remove(s.ball, s.mark);
+    s.mat.dispose(); s.markMat.dispose();
+    this.snowballs.splice(i, 1);
+  }
+
   // ── 번개 광선: 하늘에서 비스듬히 내리꽂히며 앞으로 나아감 ──
+  // 3레벨: 대상을 추적 (광선마다 서로 다른 대상) / 5레벨: 추적 대상을 맞힐 때마다 작은 번개 5개
+  pickUntracked(x, z, radius, exclude = null) {
+    let best = null, bd = Infinity;
+    for (const e of this.enemies.query(x, z, radius)) {
+      if (!e.alive || e === exclude || this.beams.some((b) => b.target === e)) continue;
+      const d = Math.hypot(e.x - x, e.z - z);
+      if (d < bd && d <= radius) { bd = d; best = e; }
+    }
+    return best;
+  }
+
   castBeam(sk, st) {
     const p = this.player.pos;
-    const near = this.enemies.nearestN(p.x, p.z, 30, 1)[0];
+    const track = sk.level >= 3;
+    const near = track ? this.pickUntracked(p.x, p.z, 30) || this.enemies.nearestN(p.x, p.z, 30, 1)[0] : this.enemies.nearestN(p.x, p.z, 30, 1)[0];
     const ang = near ? Math.atan2(near.z - p.z, near.x - p.x) : Math.atan2(this.player.aim.z, this.player.aim.x);
-    this.spawnBeam(sk, st, p.x + Math.cos(ang) * 1.0, p.z + Math.sin(ang) * 1.0, ang, sampleInt(st.chains));
+    this.spawnBeam(sk, st, p.x + Math.cos(ang) * 1.0, p.z + Math.sin(ang) * 1.0, ang, sampleInt(st.chains), track ? near : null);
     sfx('zap');
   }
 
-  spawnBeam(sk, st, x, z, ang, chains) {
+  spawnBeam(sk, st, x, z, ang, chains, target = null) {
     const r = sample(st.area) / U / 2;
-    const mat = new THREE.MeshBasicMaterial({ color: 0xfff6a0, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false });
-    const coreMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false });
-    const outer = new THREE.Mesh(this.beamGeo, mat);
-    const core = new THREE.Mesh(this.beamGeo, coreMat);
-    const footMat = new THREE.MeshBasicMaterial({ color: 0xffe066, transparent: true, opacity: 0.45, blending: THREE.AdditiveBlending, depthWrite: false });
+    const SEG = 12;
+    // 지지직거리는 번개 줄기: 위로 갈수록 투명해지도록 마디마다 재질을 따로 둠
+    const segs = [];
+    for (let i = 0; i < SEG; i++) {
+      const glowMat = new THREE.MeshBasicMaterial({ color: 0xffe866, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
+      const coreMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
+      const glow = new THREE.Mesh(this.fx.cylGeo, glowMat), core = new THREE.Mesh(this.fx.cylGeo, coreMat);
+      this.scene.add(glow, core);
+      segs.push({ glow, core, glowMat, coreMat, a: i / SEG });
+    }
+    const footMat = new THREE.MeshBasicMaterial({ color: 0xffe066, transparent: true, opacity: 0.16, blending: THREE.AdditiveBlending, depthWrite: false });
     const foot = new THREE.Mesh(this.fx.circleGeo, footMat);
     foot.rotation.x = -Math.PI / 2;
     foot.scale.setScalar(r);
-    const glow = makeGlowSprite(0xfff27a, r * 3, 0.9);
-    this.scene.add(outer, core, foot, glow);
+    const light = makeGlowSprite(0xfff27a, r * 1.6, 0.35);
+    this.scene.add(foot, light);
+    const mats = [footMat, light.material];
+    segs.forEach((g) => mats.push(g.glowMat, g.coreMat));
     this.beams.push({
       sk, st, x, z, dx: Math.cos(ang), dz: Math.sin(ang), speed: sample(st.projSpeed) * PS, r,
-      t: sample(st.duration), tick: 0, chains, hit: new Set(), outer, core, foot, glow, mats: [mat, coreMat, footMat, glow.material], age: 0,
+      t: sample(st.duration), tick: 0, chains, hit: new Set(), segs, foot, light, mats, age: 0,
+      pts: null, jitterT: 0, sparkT: 0, target,
     });
   }
 
+  removeBeam(i) {
+    const b = this.beams[i];
+    for (const g of b.segs) this.scene.remove(g.glow, g.core);
+    this.scene.remove(b.foot, b.light);
+    b.mats.forEach((m) => m.dispose());
+    this.beams.splice(i, 1);
+  }
+
   updateBeams(dt) {
-    const tmpA = new THREE.Vector3(), tmpB = new THREE.Vector3(), dir = new THREE.Vector3();
-    const UP = new THREE.Vector3(0, 1, 0);
+    const UP = new THREE.Vector3(0, 1, 0), dir = new THREE.Vector3(), mid = new THREE.Vector3();
     for (let i = this.beams.length - 1; i >= 0; i--) {
       const b = this.beams[i];
       b.age += dt; b.t -= dt;
-      b.x += b.dx * b.speed * dt; b.z += b.dz * b.speed * dt;
-      // 하늘의 비스듬한 지점에서 바닥으로 내리꽂히는 기둥
-      tmpA.set(b.x - 3, 10, b.z + 2.5);
-      tmpB.set(b.x, 0, b.z);
-      dir.subVectors(tmpB, tmpA);
-      const len = dir.length();
-      dir.normalize();
-      const flick = 0.8 + Math.random() * 0.4;
-      for (const [m, w] of [[b.outer, b.r * 0.32 * flick], [b.core, b.r * 0.1 * flick]]) {
-        m.position.copy(tmpA).addScaledVector(dir, len / 2);
-        m.quaternion.setFromUnitVectors(UP, dir);
-        m.scale.set(w, len, w);
+      // 추적: 대상이 살아 있으면 계속 그쪽으로 방향을 바꿈
+      if (b.target && b.target.alive) {
+        const tx = b.target.x - b.x, tz = b.target.z - b.z, d = Math.hypot(tx, tz);
+        if (d > 0.05) { b.dx = tx / d; b.dz = tz / d; }
+        if (d < b.speed * dt) { b.x = b.target.x; b.z = b.target.z; } else { b.x += b.dx * b.speed * dt; b.z += b.dz * b.speed * dt; }
+      } else {
+        b.x += b.dx * b.speed * dt; b.z += b.dz * b.speed * dt;
       }
-      b.foot.position.set(b.x, 0.05, b.z);
-      b.glow.position.set(b.x, 0.4, b.z);
       const fade = Math.min(1, b.t / 0.3) * Math.min(1, b.age / 0.15);
-      b.mats[0].opacity = 0.32 * fade; b.mats[1].opacity = 0.85 * fade; b.mats[2].opacity = 0.45 * fade; b.mats[3].opacity = 0.9 * fade;
-      if (Math.random() < 0.8) this.fx.particles.emit(b.x + (Math.random() - 0.5) * b.r, 0.1, b.z + (Math.random() - 0.5) * b.r, (Math.random() - 0.5) * 4, 2 + Math.random() * 2, (Math.random() - 0.5) * 4, 0.25, 0.07, Math.random() < 0.5 ? 0xffffff : 0xfff06a, 6);
+      // 번개 줄기 모양을 계속 다시 그려 지지직거리게
+      b.jitterT -= dt;
+      if (!b.pts || b.jitterT <= 0) {
+        b.jitterT = 0.05;
+        const top = new THREE.Vector3(b.x - 3, 10, b.z + 2.5), bot = new THREE.Vector3(b.x, 0, b.z);
+        const n = b.segs.length;
+        b.pts = [];
+        for (let k = 0; k <= n; k++) {
+          const t = k / n;
+          const p = top.clone().lerp(bot, t);
+          if (k > 0 && k < n) { p.x += (Math.random() - 0.5) * 0.7; p.z += (Math.random() - 0.5) * 0.7; p.y += (Math.random() - 0.5) * 0.3; }
+          b.pts.push(p);
+        }
+        b.flick = 0.75 + Math.random() * 0.5;
+      } else {
+        // 줄기가 광선 위치를 따라가도록 (모양은 유지)
+        const ox = b.x - b.pts[b.pts.length - 1].x, oz = b.z - b.pts[b.pts.length - 1].z;
+        for (const p of b.pts) { p.x += ox; p.z += oz; }
+      }
+      b.segs.forEach((g, k) => {
+        const a = b.pts[k], c = b.pts[k + 1];
+        dir.subVectors(c, a);
+        const len = dir.length();
+        dir.normalize();
+        mid.addVectors(a, c).multiplyScalar(0.5);
+        const lowness = (k + 1) / b.segs.length;               // 아래일수록 1 → 위로 갈수록 투명
+        const alpha = fade * Math.pow(lowness, 1.6);
+        for (const [m, w, mat, base] of [[g.glow, b.r * 0.3 * b.flick, g.glowMat, 0.45], [g.core, b.r * 0.09 * b.flick, g.coreMat, 0.95]]) {
+          m.position.copy(mid);
+          m.quaternion.setFromUnitVectors(UP, dir);
+          m.scale.set(w, len, w);
+          mat.opacity = base * alpha;
+        }
+      });
+      b.foot.position.set(b.x, 0.05, b.z);
+      b.light.position.set(b.x, 0.3, b.z);
+      b.mats[0].opacity = 0.16 * fade * (0.8 + Math.random() * 0.4);
+      b.mats[1].opacity = 0.35 * fade;
+      // 바닥에 튀는 작은 번개
+      b.sparkT -= dt;
+      if (b.sparkT <= 0 && fade > 0.5) {
+        b.sparkT = 0.07;
+        const a = Math.random() * Math.PI * 2, d = b.r * (0.6 + Math.random() * 0.9);
+        this.fx.lightning({ x: b.x, y: 0.15, z: b.z }, { x: b.x + Math.cos(a) * d, y: 0.05, z: b.z + Math.sin(a) * d }, 0.06);
+      }
+      if (Math.random() < 0.7) this.fx.particles.emit(b.x + (Math.random() - 0.5) * b.r, 0.1, b.z + (Math.random() - 0.5) * b.r, (Math.random() - 0.5) * 5, 2 + Math.random() * 3, (Math.random() - 0.5) * 5, 0.25, 0.06, Math.random() < 0.5 ? 0xffffff : 0xfff06a, 8);
       // 0.25초마다 광선에 닿은 적에게 피해
       b.tick -= dt;
       if (b.tick <= 0) {
@@ -903,21 +998,43 @@ export class SkillRuntime {
           const first = !b.hit.has(e);
           b.hit.add(e);
           this.deal(e, b.sk, b.st);
+          // 5레벨: 추적 대상을 맞힐 때마다 작은 번개 5개
+          if (b.target === e && b.sk.level >= 5) this.miniBolts(b, e);
           // 연쇄: 적에게 처음 닿을 때마다 그 자리에서 가까운 적을 향해 광선 하나 더 (새 광선은 연쇄 없음)
           if (first && b.chains > 0) {
-            const next = this.enemies.query(e.x, e.z, 10).filter((t) => t.alive && !b.hit.has(t))
+            const track = b.sk.level >= 3;
+            const next = track ? this.pickUntracked(e.x, e.z, 10, e) : this.enemies.query(e.x, e.z, 10).filter((t) => t.alive && !b.hit.has(t))
               .sort((p, q) => Math.hypot(p.x - e.x, p.z - e.z) - Math.hypot(q.x - e.x, q.z - e.z))[0];
             if (next) {
               b.chains--;
-              this.spawnBeam(b.sk, b.st, e.x, e.z, Math.atan2(next.z - e.z, next.x - e.x), 0);
+              this.spawnBeam(b.sk, b.st, e.x, e.z, Math.atan2(next.z - e.z, next.x - e.x), 0, track ? next : null);
             }
           }
         }
       }
-      if (b.t <= 0 || Math.abs(b.x) > WORLD_HALF + 4 || Math.abs(b.z) > WORLD_HALF + 4) {
-        this.scene.remove(b.outer, b.core, b.foot, b.glow);
-        b.mats.forEach((m) => m.dispose());
-        this.beams.splice(i, 1);
+      if (b.t <= 0 || Math.abs(b.x) > WORLD_HALF + 4 || Math.abs(b.z) > WORLD_HALF + 4) this.removeBeam(i);
+    }
+  }
+
+  // 번개 광선 5레벨: 주변 적들에게 작은 번개 5개 (기본 피해의 25%, 연쇄 가능)
+  miniBolts(b, from) {
+    const range = 6;
+    const pool = this.enemies.query(from.x, from.z, range + 2).filter((t) => t.alive && t !== from && Math.hypot(t.x - from.x, t.z - from.z) <= range);
+    const chains = sampleInt(b.st.chains);
+    for (let n = 0; n < 5 && pool.length; n++) {
+      let tgt = pool.splice(Math.floor(Math.random() * pool.length), 1)[0];
+      const hit = new Set([from]);
+      let src = { x: from.x, y: 0.6, z: from.z };
+      for (let c = 0, delay = 0; c <= chains && tgt; c++, delay += 0.06) {
+        const t = tgt, f = src;
+        hit.add(t);
+        schedule(delay, () => {
+          if (!t.alive) return;
+          this.fx.lightning(f, { x: t.x, y: 0.4, z: t.z }, 0.08);
+          this.deal(t, b.sk, b.st, { mul: 0.25 });
+        });
+        src = { x: t.x, y: 0.4, z: t.z };
+        tgt = this.enemies.randomInRange(t.x, t.z, range, hit);
       }
     }
   }
