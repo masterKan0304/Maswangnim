@@ -1,3 +1,4 @@
+import { ic } from './icons.js';
 import { game, bump } from './state.js';
 import { MAX_SKILLS, MAX_SKILL_LEVEL, MAX_SENTENCE_SLOTS, SUBJECTS, ELEMENTS } from './config.js';
 import { SKILL_DEFS, SKILL_ORDER, createSkill, baseStats, fmtStat } from './skills.js';
@@ -35,14 +36,14 @@ function describe(c) {
   if (c.type === 'slot') {
     const sk = c.sk;
     return {
-      id: `slot:${sk.key}`, icon: '🧩', tag: sk.def.name, title: '문장 블록 최대치 +1',
+      id: `slot:${sk.key}`, icon: ic('puzzle'), tag: sk.def.name, title: '문장 블록 최대치 +1',
       desc: `${sk.def.name}에 장착할 수 있는 문장 블록 수가 1 증가합니다.`,
       detail: `문장 슬롯 ${sk.maxSlots} → <b>${sk.maxSlots + 1}</b> (최대 ${MAX_SENTENCE_SLOTS})`,
       apply() { sk.maxSlots++; bump(); },
     };
   }
   return {
-    id: 'pickBlock', type: 'pickBlock', icon: '🎁', tag: '블록', title: '블록 선택 획득',
+    id: 'pickBlock', type: 'pickBlock', icon: ic('gift'), tag: '블록', title: '블록 선택 획득',
     desc: '무작위 블록 3개 중 하나를 골라 얻습니다.',
     detail: '블록 종류는 무작위입니다.',
     apply() {},

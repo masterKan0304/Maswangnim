@@ -89,6 +89,12 @@ const SFX = {
     }
     noise('sfx', { dur: 0.35, gain: 0.06, type: 'highpass', freq: 3500, delay: 0.02, attack: 0.03 });
   }],
+  // 번개 광선이 유지되는 동안 반복되는 지지직 소리
+  crackle: ['sfx', 0.07, () => {
+    for (let i = 0; i < 4; i++) noise('sfx', { dur: 0.02 + Math.random() * 0.03, gain: 0.04 + Math.random() * 0.06, type: 'highpass', freq: 2500 + Math.random() * 4000, delay: Math.random() * 0.06, attack: 0.002 });
+    if (Math.random() < 0.35) tone('sfx', { freq: 900 + Math.random() * 1400, to: 200, dur: 0.05, type: 'square', gain: 0.025 });
+    noise('sfx', { dur: 0.08, gain: 0.03, type: 'bandpass', freq: 160, q: 2 });
+  }],
   zap:     ['sfx', 0.04, () => { tone('sfx', { freq: 1600, to: 220, dur: 0.14, type: 'square', gain: 0.07 }); noise('sfx', { dur: 0.1, gain: 0.15, type: 'highpass', freq: 3000 }); }],
   iceShot: ['sfx', 0.07, () => tone('sfx', { freq: 2200 + Math.random() * 600, to: 1500, dur: 0.07, type: 'triangle', gain: 0.05 })],
   iceball: ['sfx', 0.1, () => { [1318, 1760, 2093].forEach((f, i) => tone('sfx', { freq: f, dur: 0.35, type: 'triangle', gain: 0.08, delay: i * 0.05 })); noise('sfx', { dur: 0.3, gain: 0.08, type: 'highpass', freq: 5000 }); }],

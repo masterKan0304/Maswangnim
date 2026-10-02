@@ -174,7 +174,7 @@ export class Player {
   castPulse(color) { this.castT = 0.25; this.castColor.set(color); }
 
   takeDamage(amount) {
-    if (this.invuln > 0 || game.state !== 'playing') return;
+    if (this.invuln > 0 || game.state !== 'playing' || game.debug.god) return;
     this.invuln = PLAYER.invuln + game.mods.invuln;
     const bar = game.skills.find((s) => s.key === 'frostBarrier');
     if (bar && this.shield <= 0 && bar.stacks > 0) {

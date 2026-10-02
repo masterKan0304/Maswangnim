@@ -1,3 +1,4 @@
+import { ic } from './icons.js';
 import { STAGE } from './stage.js';
 import * as THREE from 'three';
 import { game } from './state.js';
@@ -21,7 +22,7 @@ export class Labels {
     const el = document.createElement('div');
     if (b.chest) {
       el.className = 'tag chest';
-      el.textContent = '🎁 블록 상자';
+      el.innerHTML = `${ic('gift')} 블록 상자`;
     } else {
       const blk = b.block;
       el.className = `tag k-${colorKey(blk)}`;

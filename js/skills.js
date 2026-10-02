@@ -1,3 +1,4 @@
+import { ic } from './icons.js';
 import { SUBJECTS, SUBJECT_ORDER, BASE_SENTENCE_SLOTS, MAX_SENTENCE_SLOTS, CHANGES, ELEMENTS, DAMAGE_EXTRA, STAT_DEFAULTS, ELEMENT_DMG, ZONE_BASE_AREA } from './config.js';
 import { evalNumber, isComplete, fmtValue } from './blocks.js';
 import { game } from './state.js';
@@ -16,7 +17,7 @@ const dmgUp40 = (st, lv) => pctUp(st, 'damage', 0.4, lv);
 
 export const SKILL_DEFS = {
   fireball: {
-    key: 'fireball', name: '파이어볼', icon: '🔥', color: '#ff7a2e', element: 'fire', passive: false, castTime: 0.15, projectile: true,
+    key: 'fireball', name: '파이어볼', icon: ic('fire'), color: '#ff7a2e', element: 'fire', passive: false, castTime: 0.15, projectile: true,
     short: '커서 방향으로 화염구를 발사합니다. 적중하면 폭발합니다.',
     desc: '커서 방향으로 화염구를 발사합니다. 적중하면 폭발해 주위 적에게 피해를 줍니다.',
     keywords: ['화염', '효과 범위', '지속 시간', '투사체', '연쇄', '상태이상', '스킬 쿨타임'],
@@ -29,7 +30,7 @@ export const SKILL_DEFS = {
     extra: (sk) => [`폭발 범위는 실제 투사체 크기의 ${sk.level >= 3 ? 9 : 6}배입니다.`, sk.level >= 5 && '적중하면 작은 화염구 3개가 튑니다.'],
   },
   frostBarrier: {
-    key: 'frostBarrier', name: '냉기 보호막', icon: '🛡️', color: '#6fd3ff', element: 'ice', passive: true, maxStacks: 3,
+    key: 'frostBarrier', name: '냉기 보호막', icon: ic('shield'), color: '#6fd3ff', element: 'ice', passive: true, maxStacks: 3,
     short: '피해를 입으면 보호막을 얻고 주위에 냉기 피해를 줍니다.',
     desc: '쿨타임마다 스택을 얻습니다. 피해를 입으면 스택을 소모해 보호막을 얻고 주위 적에게 냉기 피해를 줍니다.',
     keywords: ['냉기', '보호막', '효과 범위', '지속 시간', '상태이상', '스킬 쿨타임', '패시브'],
@@ -40,7 +41,7 @@ export const SKILL_DEFS = {
     extra: (sk) => [`최대 스택은 ${sk.level >= 3 ? 4 : 3}개입니다.`, sk.level >= 5 && '피해를 준 적을 밀쳐냅니다.'],
   },
   chainLightning: {
-    key: 'chainLightning', name: '연쇄 번개', icon: '⚡', color: '#ffe066', element: 'lightning', passive: false, castTime: 0.1,
+    key: 'chainLightning', name: '연쇄 번개', icon: ic('bolt'), color: '#ffe066', element: 'lightning', passive: false, castTime: 0.1,
     short: '가장 가까운 적에게 번개를 쏘고 다른 적에게 연쇄합니다.',
     desc: '가장 가까운 적에게 번개를 쏩니다. 번개는 주변의 다른 적에게 연쇄합니다.',
     keywords: ['번개', '연쇄', '투사체', '상태이상', '스킬 쿨타임'],
@@ -53,7 +54,7 @@ export const SKILL_DEFS = {
     extra: (sk) => [sk.level >= 5 && '번개 줄기에 닿은 적도 피해를 입습니다.'],
   },
   iceball: {
-    key: 'iceball', name: '아이스볼', icon: '❄️', color: '#9fe6ff', element: 'ice', passive: false, castTime: 0.2, projectile: true,
+    key: 'iceball', name: '아이스볼', icon: ic('snowflake'), color: '#9fe6ff', element: 'ice', passive: false, castTime: 0.2, projectile: true,
     contactDamage: [1, 2], tick: 0.2, fireInterval: 0.1, contactChanceRatio: 2 / 3,
     short: '무작위 위치에 아이스볼을 만듭니다. 아이스볼은 주위에 얼음 투사체를 흩뿌립니다.',
     desc: '사거리 안 무작위 위치에 아이스볼을 만듭니다. 아이스볼은 얼음 투사체를 흩뿌리고, 닿은 적에게도 피해를 줍니다.',
@@ -68,7 +69,7 @@ export const SKILL_DEFS = {
     extra: (sk) => ['아이스볼에 닿은 적도 피해를 입습니다.', sk.level >= 3 && '반대 방향으로도 투사체를 발사합니다.', sk.level >= 5 && '아이스볼을 2개 만듭니다.'],
   },
   magnet: {
-    key: 'magnet', name: '자석', icon: '🧲', color: '#ff6b8a', element: null, passive: false, castTime: 0.1,
+    key: 'magnet', name: '자석', icon: ic('magnet'), color: '#ff6b8a', element: null, passive: false, castTime: 0.1,
     short: '주위의 경험치와 떨어진 블록을 끌어당깁니다.',
     desc: '주위의 경험치, 블록, 블록 상자를 끌어당깁니다. 직접 버린 블록은 끌어당기지 않습니다.',
     keywords: ['스킬 쿨타임'],
@@ -84,7 +85,7 @@ export const SKILL_DEFS = {
     extra: (sk) => [`끌어당기는 범위는 ${Math.round(baseStats(sk).range.min)}입니다.`],
   },
   fireAura: {
-    key: 'fireAura', name: '화염의 기운', icon: '☄️', color: '#ff5a2a', element: 'fire', passive: true,
+    key: 'fireAura', name: '화염의 기운', icon: ic('meteor'), color: '#ff5a2a', element: 'fire', passive: true,
     short: '화상 상태인 적을 처치하면 폭발이 일어납니다.',
     desc: '화상 상태인 적을 처치하면 그 자리에서 폭발해 주위 적에게 화염 피해를 줍니다.',
     keywords: ['화염', '효과 범위', '상태이상', '패시브'],
@@ -95,7 +96,7 @@ export const SKILL_DEFS = {
     extra: (sk) => [sk.level >= 5 && '남은 화상 피해가 폭발 피해에 더해집니다.'],
   },
   frostAura: {
-    key: 'frostAura', name: '냉기의 기운', icon: '🌨️', color: '#8fe3ff', element: 'ice', passive: true, projectile: true,
+    key: 'frostAura', name: '냉기의 기운', icon: ic('snowcloud'), color: '#8fe3ff', element: 'ice', passive: true, projectile: true,
     short: '둔화 상태인 적을 처치하면 얼음 투사체가 사방으로 퍼집니다.',
     desc: '둔화 상태인 적을 처치하면 그 자리에서 얼음 투사체가 사방으로 퍼집니다.',
     keywords: ['냉기', '지속 시간', '투사체', '연쇄', '상태이상', '패시브'],
@@ -110,7 +111,7 @@ export const SKILL_DEFS = {
     levelText: (lv) => ['피해량이 40% 증가합니다.', lv === 3 && '기본 투사체 개수가 12개가 됩니다.', lv === 5 && '기본 관통 횟수가 2회가 됩니다.'],
   },
   lightningAura: {
-    key: 'lightningAura', name: '번개의 기운', icon: '🌩️', color: '#ffe066', element: 'lightning', passive: true,
+    key: 'lightningAura', name: '번개의 기운', icon: ic('storm'), color: '#ffe066', element: 'lightning', passive: true,
     short: '감전 상태인 적을 처치하면 주변 적에게 낙뢰가 떨어집니다.',
     desc: '감전 상태인 적을 처치하면 주변의 무작위 적에게 낙뢰를 내려칩니다. 한 적은 낙뢰를 한 번만 맞습니다.',
     keywords: ['번개', '투사체', '상태이상', '패시브'],
@@ -123,7 +124,7 @@ export const SKILL_DEFS = {
     extra: (sk) => [sk.level >= 5 && '감전된 적에게는 낙뢰 피해가 50% 증가합니다.'],
   },
   snowfall: {
-    key: 'snowfall', name: '낙석', icon: '☃️', color: '#c8f2ff', element: 'ice', passive: false, castTime: 0.15,
+    key: 'snowfall', name: '낙석', icon: ic('snowball'), color: '#c8f2ff', element: 'ice', passive: false, castTime: 0.15,
     short: '체력이 가장 높은 적에게 커다란 눈덩이를 떨어뜨립니다.',
     desc: '사거리 안에서 체력이 가장 높은 적에게 눈덩이를 떨어뜨립니다. 범위 안의 적은 피해를 입고 밀려납니다.',
     keywords: ['냉기', '효과 범위', '연쇄', '상태이상', '스킬 쿨타임'],
@@ -135,7 +136,7 @@ export const SKILL_DEFS = {
     extra: (sk) => ['연쇄하면 같은 자리에 눈덩이가 다시 떨어집니다.', sk.level >= 5 && '박힌 눈덩이가 0.75초 후 폭발합니다.'],
   },
   lightningBeam: {
-    key: 'lightningBeam', name: '번개 광선', icon: '🔆', color: '#fff27a', element: 'lightning', passive: false, castTime: 0.1,
+    key: 'lightningBeam', name: '번개 광선', icon: ic('beam'), color: '#fff27a', element: 'lightning', passive: false, castTime: 0.1,
     tick: 0.25,
     short: '가장 가까운 적을 향해 나아가는 번개 광선을 내리꽂습니다.',
     desc: '가장 가까운 적 방향으로 번개 광선이 하늘에서 내리꽂히며 앞으로 나아갑니다. 광선에 닿은 적은 0.25초마다 피해를 입습니다.',
@@ -148,7 +149,7 @@ export const SKILL_DEFS = {
     extra: (sk) => ['연쇄하면 처음 맞은 적에게서 광선이 하나 더 뻗어 나갑니다.', sk.level >= 3 && '광선이 대상 적을 계속 따라갑니다.', sk.level >= 5 && '추적 대상을 맞히면 작은 번개 5개가 튑니다.'],
   },
   enchant: {
-    key: 'enchant', name: '효과 부여', icon: '✨', color: '#ffd45a', element: null, passive: true,
+    key: 'enchant', name: '효과 부여', icon: ic('sparkle'), color: '#ffd45a', element: null, passive: true,
     xpReq: 10, heal: 2, mana: 4,
     short: '경험치를 모을 때마다 보호막, 마나, 체력 중 하나를 얻습니다.',
     desc: '경험치를 일정량 얻을 때마다 보호막, 마나 회복, 체력 회복 중 하나가 발동합니다.',
@@ -163,7 +164,7 @@ export const SKILL_DEFS = {
     },
   },
   triggerKill: {
-    key: 'triggerKill', name: '발동 : 처치', icon: '💀', color: '#c07cff', element: null, passive: true, payload: true,
+    key: 'triggerKill', name: '발동 : 처치', icon: ic('skull'), color: '#c07cff', element: null, passive: true, payload: true,
     short: '적을 처치해 중첩을 모으면, 장착된 문장을 다음 공격 스킬에 적용합니다.',
     desc: '적을 처치하면 중첩을 얻습니다. 중첩이 가득 차면 장착된 문장들이 다음 공격 스킬에 적용됩니다. 이 스킬 자신에게는 적용되지 않습니다.',
     keywords: ['처치', '중첩', '문장', '지속 시간', '패시브'],
@@ -173,7 +174,7 @@ export const SKILL_DEFS = {
     extra: (sk) => [`목표치는 ${triggerGoal(sk)}입니다.`, sk.level >= 3 && '문장의 효과가 20% 강해집니다.', sk.level >= 5 && '다음 3번의 공격 스킬에 적용됩니다.'],
   },
   flamethrower: {
-    key: 'flamethrower', name: '화염 방사', icon: '🌋', color: '#ff6a1a', element: 'fire', passive: false, castTime: 0.1,
+    key: 'flamethrower', name: '화염 방사', icon: ic('flamewave'), color: '#ff6a1a', element: 'fire', passive: false, castTime: 0.1,
     tick: 0.25, turnSpeed: 60,
     short: '가장 가까운 적을 향해 부채꼴 불길을 내뿜습니다.',
     desc: '지속 시간 동안 가장 가까운 적을 향해 부채꼴 불길을 내뿜습니다. 불길이 끝나면 쿨타임이 시작됩니다.',
@@ -195,7 +196,7 @@ export const triggerGoal = (sk) => completeSentences(sk).length * triggerPer(sk)
 
 export function createSkill(key) {
   return {
-    key, def: SKILL_DEFS[key], level: 1, maxSlots: BASE_SENTENCE_SLOTS,
+    key, def: SKILL_DEFS[key], level: 1, maxSlots: game.debug && game.debug.unlockSlots ? MAX_SENTENCE_SLOTS : BASE_SENTENCE_SLOTS,
     sentences: new Array(MAX_SENTENCE_SLOTS).fill(null),
     auto: true, cd: 0, cdMax: 1,
     stacks: 0, stackTimer: 0, stackNeed: 0,
@@ -416,7 +417,7 @@ export const getStats = (skill) => getResult(skill).stats;
 // ─────────────────────────────────────────────
 export function fmtNum(key, x) {
   if (key === 'damage' || SUBJECTS[key].element) return Math.floor(x);   // UI 에서는 소수점 버림
-  if (SUBJECTS[key].int) return Math.round(x);
+  if (SUBJECTS[key].int) return Math.floor(x + 1e-9);   // 정수 스탯(관통/개수/연쇄)은 소수점 버림
   return Math.round(x * 100) / 100;
 }
 export function fmtStat(key, v) {
@@ -437,7 +438,11 @@ export function statText(k, stats) {
   return fmtStat(k, stats[k]);
 }
 export const sample = (v) => v.min + Math.random() * (v.max - v.min);
-export const sampleInt = (v) => Math.round(sample(v));
+// 정수 스탯 표본: 소수점은 버리고, 범위 안의 정수를 고르게 뽑음 (2 × 150% = 3, 2.5 → 2)
+export const sampleInt = (v) => {
+  const lo = Math.floor(v.min + 1e-9), hi = Math.floor(v.max + 1e-9);
+  return lo + Math.floor(Math.random() * (hi - lo + 1));
+};
 export const avg = (v) => (v.min + v.max) / 2;
 // 상태이상 확률 (0~1)
 export const statusProb = (st, ratio = 1) => ((sample(st.statusChance) + game.mods.statusAdd) / 100) * ratio;

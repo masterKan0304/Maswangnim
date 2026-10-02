@@ -1,3 +1,4 @@
+import { ic } from './icons.js';
 import * as THREE from 'three';
 import { WORLD_HALF, STAT_UNIT as U, PROJ_SPEED_UNIT as PS, PROJ_SIZE_UNIT as PZ, STATUS, ELEMENT_DMG } from './config.js';
 import { game, schedule } from './state.js';
@@ -155,7 +156,7 @@ export class SkillRuntime {
       return false;
     }
     // 마나
-    const cost = Math.max(0, sample(st.manaCost) - game.mods.manaCostMinus);
+    const cost = game.debug.god ? 0 : Math.max(0, sample(st.manaCost) - game.mods.manaCostMinus);
     if (this.player.mana < cost) {
       if (manual) { game.sys.ui.toast('마나가 부족합니다', 'warn'); sfx('error'); }
       return false;
@@ -366,13 +367,13 @@ export class SkillRuntime {
         tk.stacks -= goal;
         const tst = getStats(tk);
         const dur = sample(tst.duration);
-        const buff = { key: 'triggerKill', icon: '💀', name: '발동 : 처치', color: tk.def.color, t: dur, max: dur,
+        const buff = { key: 'triggerKill', icon: ic('skull'), name: '발동 : 처치', color: tk.def.color, t: dur, max: dur,
           charges: tk.level >= 5 ? 3 : 1, sentences: completeSentences(tk), scale: tk.level >= 3 ? 1.2 : 1 };
         const old = game.buffs.findIndex((b) => b.key === 'triggerKill');
         if (old >= 0) game.buffs[old] = buff; else game.buffs.push(buff);
         const p = this.player.pos;
         this.fx.ring(p.x, p.z, 1.6, 0xc07cff, 0.5, 0.6);
-        game.sys.ui.toast('💀 발동 : 처치 — 다음 공격 스킬 강화!', 'pick');
+        game.sys.ui.toast(`${ic('skull')} 발동 : 처치 — 다음 공격 스킬 강화!`, 'pick');
         sfx('levelup');
       }
     }
@@ -796,7 +797,8 @@ export class SkillRuntime {
   }
 
   // dur: 떨어지는 시간 (처음 0.5초, 연쇄로 다시 떨어질 때는 0.25초)
-  dropSnowball(sk, st, x, z, chainsLeft, dur = 0.5) {
+  // origin: 처음 떨어진 위치 (연쇄 시 그 주변 효과 범위의 20% 안 무작위 위치에 떨어짐)
+  dropSnowball(sk, st, x, z, chainsLeft, dur = 0.5, origin = null) {
     const radius = sample(st.area) / U / 2;
     const mat = new THREE.MeshStandardMaterial({ color: 0xf2fbff, emissive: 0x5aa8d8, emissiveIntensity: 0.25, roughness: 0.6, flatShading: true, transparent: true, opacity: 0.3 });
     const ball = new THREE.Mesh(this.snowGeo, mat);
@@ -811,7 +813,7 @@ export class SkillRuntime {
     this.scene.add(ball, mark);
     // 하늘 비스듬한 위치에서 출발
     const from = new THREE.Vector3(x - 4, 9 + size, z + 3);
-    this.snowballs.push({ sk, st, x, z, radius, size, chainsLeft, t: 0, dur, ball, mark, mat, markMat, from, embed: -1 });
+    this.snowballs.push({ sk, st, x, z, radius, size, chainsLeft, t: 0, dur, ball, mark, mat, markMat, from, embed: -1, origin: origin || { x, z } });
   }
 
   // 눈덩이 충격: 강하게 튀는 파편 + 피어오르는 안개 + 범위 피해 / 밀쳐내기
@@ -860,7 +862,10 @@ export class SkillRuntime {
       if (k < 1) continue;
       this.snowImpact(s);
       // 연쇄: 같은 자리에 0.25초 간격으로 다시 떨어짐
-      if (s.chainsLeft > 0) this.dropSnowball(s.sk, s.st, s.x, s.z, s.chainsLeft - 1, 0.25);
+      if (s.chainsLeft > 0) {
+        const a = Math.random() * Math.PI * 2, d = Math.sqrt(Math.random()) * s.radius * 2 * 0.2;
+        this.dropSnowball(s.sk, s.st, s.origin.x + Math.cos(a) * d, s.origin.z + Math.sin(a) * d, s.chainsLeft - 1, 0.25, s.origin);
+      }
       if (s.sk.level >= 5) { s.embed = 0; s.mat.opacity = 1; continue; }
       this.removeSnowball(i);
     }
@@ -930,6 +935,7 @@ export class SkillRuntime {
   }
 
   updateBeams(dt) {
+    if (this.beams.length) sfx('crackle');
     const UP = new THREE.Vector3(0, 1, 0), dir = new THREE.Vector3(), mid = new THREE.Vector3();
     for (let i = this.beams.length - 1; i >= 0; i--) {
       const b = this.beams[i];

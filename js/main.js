@@ -1,3 +1,5 @@
+import { ic, hydrateIcons } from './icons.js';
+import { toggleDebug, initDebug } from './debug.js';
 import * as THREE from 'three';
 import { game, isPaused, updateTimers, bump, inventoryAdd } from './state.js';
 import { STAGE_TIME, WORLD_HALF, MAX_ENEMIES, DROP, ENEMY_TYPES, BOX, START_REROLLS, ELITE_TIMES, xpToNext, hpScale } from './config.js';
@@ -16,6 +18,9 @@ import { input, updateAim } from './input.js';
 import { STAGE, fitStage, onStageResize } from './stage.js';
 import { initAudio, sfx } from './audio.js';
 import { profile, loadProfile, saveProfile, computeMods, renderUpgrades, renderSettings } from './meta.js';
+
+hydrateIcons();   // HTML 의 아이콘 자리 표시를 SVG 아이콘으로 교체
+initDebug();
 
 // ─────────────────────────────────────────────
 //  렌더러 / 카메라 (아이소메트릭 직교 카메라)
@@ -92,7 +97,7 @@ enemies.onKill = (e, src, st) => {
   skillsRt.onKill(e, src, st);
   if (e.boss) {
     fx.explosion(e.x, e.z, 4, 0xb07cff);
-    startVictory();
+    if (!e.debugSpawn) startVictory();   // 디버그로 만든 보스는 처치해도 게임이 끝나지 않음
     return;
   }
   if (e.elite) {
@@ -121,6 +126,7 @@ function addXp(v) {
   if (game.state === 'victory') return;   // 보스 처치 후에는 레벨업 없이 골드용으로만 집계
   skillsRt.onXp(v);
   game.xp += v;
+  if (game.debug.noLevelUp) { game.xp = Math.min(game.xp, xpToNext(game.level) - 0.01); return; }   // 디버그: 레벨업 막기
   while (game.xp >= xpToNext(game.level)) {
     game.xp -= xpToNext(game.level);
     game.level++;
@@ -183,7 +189,7 @@ function director(dt) {
       const z = THREE.MathUtils.clamp(player.pos.z + Math.sin(a) * 17, -WORLD_HALF, WORLD_HALF);
       enemies.spawn(type, x, z, hpScale(t));
     }
-    ui.toast('⚠ 슬라임 무리가 몰려옵니다!', 'warn');
+    ui.toast(`${ic('warn')} 슬라임 무리가 몰려옵니다!`, 'warn');
   }
   // 중간 보스 (2/4/6/8분)
   if (game.eliteIdx < ELITE_TIMES.length && t >= ELITE_TIMES[game.eliteIdx]) {
@@ -193,7 +199,7 @@ function director(dt) {
     const z = THREE.MathUtils.clamp(player.pos.z + Math.sin(a) * 14, -WORLD_HALF + 2, WORLD_HALF - 2);
     game.elite = enemies.spawn('elite', x, z, hpScale(t));
     fx.ring(x, z, 3, 0x3f8cff, 0.8);
-    ui.toast('💠 정예 슬라임이 나타났다!', 'boss');
+    ui.toast(`${ic('gem')} 정예 슬라임이 나타났다!`, 'boss');
     sfx('elite');
   }
   // 보스
@@ -204,7 +210,7 @@ function director(dt) {
     const z = THREE.MathUtils.clamp(player.pos.z + Math.sin(a) * 12, -WORLD_HALF + 3, WORLD_HALF - 3);
     game.boss = enemies.spawn('boss', x, z, 1);
     fx.ring(x, z, 6, 0xb07cff, 1.0);
-    ui.toast('👑 킹 슬라임이 나타났다!', 'boss');
+    ui.toast(`${ic('crown')} 킹 슬라임이 나타났다!`, 'boss');
     sfx('boss');
   }
 }
@@ -243,7 +249,7 @@ let blockChoices = [];
 let blockPickMode = 'level';   // 'level' | 'box'
 function openBlockPick(exclude = new Set()) {
   blockChoices = randomDistinctBlocks(3, exclude);
-  ui.showBlockPick(blockChoices, pickBlock, rerollBlocks, blockPickMode === 'box' ? '🎁 블록 상자' : '블록 선택');
+  ui.showBlockPick(blockChoices, pickBlock, rerollBlocks, blockPickMode === 'box' ? `${ic('gift')} 블록 상자` : '블록 선택');
 }
 function pickBlock(b) {
   if (!inventoryAdd(b)) game.sys.dropBlocks([b], player.pos.x, player.pos.z, { minD: 1.5, maxD: 2.5 });
@@ -306,8 +312,13 @@ input.onKey = (e) => {
       ui.setWindows(open, open);
       break;
     }
+    case 'F8':
+      e.preventDefault();
+      toggleDebug();
+      break;
     case 'Escape':
-      if (game.popups.length) ui.closeTopPopup();
+      if (game.debugOpen) toggleDebug(false);
+      else if (game.popups.length) ui.closeTopPopup();
       else if (game.invOpen || game.skillsOpen) ui.setWindows(false, false);
       else togglePause();
       break;
@@ -380,7 +391,7 @@ function startGame() {
     game.sys.dropBlocks(Array.from({ length: game.mods.startBlocks }, () => randomBlock()), player.pos.x, player.pos.z, { minD: 1.8, maxD: 3 });
   }
   ui.refresh();
-  ui.toast('🔥 파이어볼 획득! 커서 방향으로 자동 발사됩니다');
+  ui.toast(`${ic('fire')} 파이어볼 획득! 커서 방향으로 자동 발사됩니다`);
 }
 $id('btn-start').addEventListener('click', startGame);
 
@@ -396,7 +407,7 @@ function startVictory() {
     if (e.model) scene.remove(e.model.group);
   }
   for (const g of pickups.gems) { g.mag = true; g.sp = 40; }
-  ui.toast('👑 킹 슬라임 처치! 경험치를 모으는 중...', 'boss');
+  ui.toast(`${ic('crown')} 킹 슬라임 처치! 경험치를 모으는 중...`, 'boss');
   sfx('victory');
 }
 
@@ -418,7 +429,7 @@ function showEndScreen(kind) {
     <div class="result">생존 시간 <b>${String(Math.floor(t / 60)).padStart(2, '0')}:${String(Math.floor(t % 60)).padStart(2, '0')}</b>
       · 레벨 <b>${game.level}</b> · 처치 <b>${game.kills}</b></div>
     <div class="end-gold">획득한 경험치 <b>${Math.floor(game.totalXp).toLocaleString()}</b>${game.mods.goldMul > 1 ? ` (골드 보너스 +${Math.round((game.mods.goldMul - 1) * 100)}%)` : ''}<br>
-      → 💰 <b>${gold.toLocaleString()}</b> 골드로 환산되었습니다 · 보유 골드 <b>${Math.floor(profile.gold).toLocaleString()}</b></div>
+      → ${ic('coin')} <b>${gold.toLocaleString()}</b> 골드로 환산되었습니다 · 보유 골드 <b>${Math.floor(profile.gold).toLocaleString()}</b></div>
     <button class="big-btn" id="btn-main">메인으로</button></div>`;
   s.classList.remove('hidden');
   $id('btn-main').addEventListener('click', () => location.reload());

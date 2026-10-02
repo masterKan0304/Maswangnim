@@ -20,6 +20,8 @@ export const game = {
   // 업그레이드 효과 (meta.computeMods 로 덮어씀)
   mods: { maxHp: 0, regenMinus: 0, regenAmount: 0, invuln: 0, speedMul: 1, dashCd: 0, dashDistMul: 1, startBlocks: 0,
     maxMana: 0, manaRegen: 0, dmgMul: 1, statusAdd: 0, manaCostMinus: 0, xpMul: 1, dropMul: 1, rerolls: 0, pickupMul: 1, goldMul: 1 },
+  debug: { unlockSlots: false, noLevelUp: false, god: false },   // F8 디버그 모드
+  debugOpen: false,
   showLabels: true,      // Z: 드랍 아이템 이름표 표시
   autoPickup: true,      // X: 경험치 외 아이템 자동 획득
   version: 0,            // 블록/스킬 구성이 바뀔 때마다 증가 → 스탯 캐시 무효화
@@ -40,7 +42,7 @@ export function bump() { game.version++; }
 export function isPaused() {
   if (game.state === 'victory') return false;
   if (game.state !== 'playing') return true;
-  if (game.menuOpen) return true;
+  if (game.menuOpen || game.debugOpen) return true;
   if (PAUSE_ON_MENU && (game.invOpen || game.skillsOpen)) return true;
   return false;
 }

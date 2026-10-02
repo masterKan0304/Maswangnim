@@ -3,6 +3,7 @@
 // ─────────────────────────────────────────────
 import { sfx, setVolumes } from './audio.js';
 import { STAGE } from './stage.js';
+import { ic } from './icons.js';
 
 const SAVE_KEY = 'blockchain-save-v1';
 
@@ -41,29 +42,29 @@ export function applyVolumeSettings() {
 //  pos: 트리 좌표 (1 = 칸 간격), parent: 선행 업그레이드 (1레벨 이상 필요)
 // ─────────────────────────────────────────────
 export const UPGRADES = [
-  { id: 'core',      name: '기초 훈련',  icon: '💪', pos: [0, 0],       max: 3, cost: 20, desc: '최대 체력이 5 증가합니다.',               fx: (m, l) => { m.maxHp += 5 * l; } },
+  { id: 'core',      name: '기초 훈련',  icon: ic('dumbbell'), pos: [0, 0],       max: 3, cost: 20, desc: '최대 체력이 5 증가합니다.',               fx: (m, l) => { m.maxHp += 5 * l; } },
   // 생존 (왼쪽)
-  { id: 'vital',     name: '강인함',     icon: '❤️', pos: [-1.5, 0],    max: 5, cost: 25, parent: 'core',   desc: '최대 체력이 5 증가합니다.',               fx: (m, l) => { m.maxHp += 5 * l; } },
-  { id: 'regen',     name: '재생',       icon: '🌿', pos: [-2.8, -0.8], max: 3, cost: 40, parent: 'vital',  desc: '체력 재생 주기가 1.5초 줄어듭니다.',      fx: (m, l) => { m.regenMinus += 1.5 * l; } },
-  { id: 'guard',     name: '보호 본능',  icon: '🛡️', pos: [-2.8, 0.8],  max: 3, cost: 35, parent: 'vital',  desc: '피격 후 무적 시간이 0.1초 늘어납니다.',   fx: (m, l) => { m.invuln += 0.1 * l; } },
-  { id: 'heal',      name: '응급 처치',  icon: '🩹', pos: [-4.0, 0],    max: 3, cost: 60, parent: 'regen',  desc: '체력 재생량이 1 증가합니다.',             fx: (m, l) => { m.regenAmount += l; } },
+  { id: 'vital',     name: '강인함',     icon: ic('heart'), pos: [-1.5, 0],    max: 5, cost: 25, parent: 'core',   desc: '최대 체력이 5 증가합니다.',               fx: (m, l) => { m.maxHp += 5 * l; } },
+  { id: 'regen',     name: '재생',       icon: ic('leaf'), pos: [-2.8, -0.8], max: 3, cost: 40, parent: 'vital',  desc: '체력 재생 주기가 1.5초 줄어듭니다.',      fx: (m, l) => { m.regenMinus += 1.5 * l; } },
+  { id: 'guard',     name: '보호 본능',  icon: ic('shield'), pos: [-2.8, 0.8],  max: 3, cost: 35, parent: 'vital',  desc: '피격 후 무적 시간이 0.1초 늘어납니다.',   fx: (m, l) => { m.invuln += 0.1 * l; } },
+  { id: 'heal',      name: '응급 처치',  icon: ic('bandage'), pos: [-4.0, 0],    max: 3, cost: 60, parent: 'regen',  desc: '체력 재생량이 1 증가합니다.',             fx: (m, l) => { m.regenAmount += l; } },
   // 기동 (위)
-  { id: 'swift',     name: '신속',       icon: '👟', pos: [0, -1.5],    max: 5, cost: 25, parent: 'core',   desc: '이동 속도가 4% 증가합니다.',              fx: (m, l) => { m.speedMul += 0.04 * l; } },
-  { id: 'blink',     name: '순간 이동',  icon: '💨', pos: [-0.9, -2.7], max: 3, cost: 40, parent: 'swift',  desc: '대시 쿨타임이 0.5초 줄어듭니다.',         fx: (m, l) => { m.dashCd -= 0.5 * l; } },
-  { id: 'leap',      name: '도약',       icon: '🦘', pos: [0.9, -2.7],  max: 3, cost: 35, parent: 'swift',  desc: '대시 거리가 12% 늘어납니다.',             fx: (m, l) => { m.dashDistMul += 0.12 * l; } },
-  { id: 'prepared',  name: '준비된 시작', icon: '🎒', pos: [0, -3.6],   max: 3, cost: 70, parent: 'blink',  desc: '게임을 시작할 때 무작위 블록을 1개 더 얻습니다.', fx: (m, l) => { m.startBlocks += l; } },
+  { id: 'swift',     name: '신속',       icon: ic('boot'), pos: [0, -1.5],    max: 5, cost: 25, parent: 'core',   desc: '이동 속도가 4% 증가합니다.',              fx: (m, l) => { m.speedMul += 0.04 * l; } },
+  { id: 'blink',     name: '순간 이동',  icon: ic('wind'), pos: [-0.9, -2.7], max: 3, cost: 40, parent: 'swift',  desc: '대시 쿨타임이 0.5초 줄어듭니다.',         fx: (m, l) => { m.dashCd -= 0.5 * l; } },
+  { id: 'leap',      name: '도약',       icon: ic('leap'), pos: [0.9, -2.7],  max: 3, cost: 35, parent: 'swift',  desc: '대시 거리가 12% 늘어납니다.',             fx: (m, l) => { m.dashDistMul += 0.12 * l; } },
+  { id: 'prepared',  name: '준비된 시작', icon: ic('bag'), pos: [0, -3.6],   max: 3, cost: 70, parent: 'blink',  desc: '게임을 시작할 때 무작위 블록을 1개 더 얻습니다.', fx: (m, l) => { m.startBlocks += l; } },
   // 마법 (오른쪽)
-  { id: 'vessel',    name: '마나 그릇',  icon: '🔷', pos: [1.5, 0],     max: 5, cost: 25, parent: 'core',   desc: '최대 마나가 10 증가합니다.',              fx: (m, l) => { m.maxMana += 10 * l; } },
-  { id: 'flow',      name: '마나 순환',  icon: '🌀', pos: [2.8, -0.8],  max: 5, cost: 35, parent: 'vessel', desc: '초당 마나 재생이 1 증가합니다.',            fx: (m, l) => { m.manaRegen += l; } },
-  { id: 'power',     name: '마력 증폭',  icon: '🔮', pos: [2.8, 0.8],   max: 5, cost: 40, parent: 'vessel', desc: '적에게 주는 모든 피해가 5% 증가합니다.',  fx: (m, l) => { m.dmgMul += 0.05 * l; } },
-  { id: 'element',   name: '원소 친화',  icon: '🌈', pos: [4.0, 0.8],   max: 3, cost: 60, parent: 'power',  desc: '상태이상 발생율이 3% 증가합니다.',       fx: (m, l) => { m.statusAdd += 3 * l; } },
-  { id: 'focus',     name: '집중',       icon: '🧘', pos: [4.0, -0.8],  max: 3, cost: 60, parent: 'flow',   desc: '모든 스킬의 마나 소모가 0.5 줄어듭니다.',   fx: (m, l) => { m.manaCostMinus += 0.5 * l; } },
+  { id: 'vessel',    name: '마나 그릇',  icon: ic('crystal'), pos: [1.5, 0],     max: 5, cost: 25, parent: 'core',   desc: '최대 마나가 10 증가합니다.',              fx: (m, l) => { m.maxMana += 10 * l; } },
+  { id: 'flow',      name: '마나 순환',  icon: ic('swirl'), pos: [2.8, -0.8],  max: 5, cost: 35, parent: 'vessel', desc: '초당 마나 재생이 1 증가합니다.',            fx: (m, l) => { m.manaRegen += l; } },
+  { id: 'power',     name: '마력 증폭',  icon: ic('orb'), pos: [2.8, 0.8],   max: 5, cost: 40, parent: 'vessel', desc: '적에게 주는 모든 피해가 5% 증가합니다.',  fx: (m, l) => { m.dmgMul += 0.05 * l; } },
+  { id: 'element',   name: '원소 친화',  icon: ic('prism'), pos: [4.0, 0.8],   max: 3, cost: 60, parent: 'power',  desc: '상태이상 발생율이 3% 증가합니다.',       fx: (m, l) => { m.statusAdd += 3 * l; } },
+  { id: 'focus',     name: '집중',       icon: ic('lotus'), pos: [4.0, -0.8],  max: 3, cost: 60, parent: 'flow',   desc: '모든 스킬의 마나 소모가 0.5 줄어듭니다.',   fx: (m, l) => { m.manaCostMinus += 0.5 * l; } },
   // 행운 (아래)
-  { id: 'study',     name: '배움',       icon: '📖', pos: [0, 1.5],     max: 5, cost: 25, parent: 'core',   desc: '경험치 획득량이 5% 증가합니다.',            fx: (m, l) => { m.xpMul += 0.05 * l; } },
-  { id: 'collector', name: '수집가',     icon: '🧲', pos: [-0.9, 2.7],  max: 5, cost: 35, parent: 'study',  desc: '블록 드랍률이 10% 증가합니다.',           fx: (m, l) => { m.dropMul += 0.1 * l; } },
-  { id: 'foresight', name: '선견지명',   icon: '🎲', pos: [0.9, 2.7],   max: 3, cost: 45, parent: 'study',  desc: '시작 리롤이 1 증가합니다.',               fx: (m, l) => { m.rerolls += l; } },
-  { id: 'reach',     name: '끌림',       icon: '🫴', pos: [-1.8, 3.6],  max: 3, cost: 40, parent: 'collector', desc: '아이템 획득 범위가 15% 넓어집니다.',   fx: (m, l) => { m.pickupMul += 0.15 * l; } },
-  { id: 'greed',     name: '탐욕',       icon: '💰', pos: [1.8, 3.6],   max: 3, cost: 60, parent: 'foresight', desc: '골드 획득량이 10% 증가합니다.',          fx: (m, l) => { m.goldMul += 0.1 * l; } },
+  { id: 'study',     name: '배움',       icon: ic('book'), pos: [0, 1.5],     max: 5, cost: 25, parent: 'core',   desc: '경험치 획득량이 5% 증가합니다.',            fx: (m, l) => { m.xpMul += 0.05 * l; } },
+  { id: 'collector', name: '수집가',     icon: ic('magnet'), pos: [-0.9, 2.7],  max: 5, cost: 35, parent: 'study',  desc: '블록 드랍률이 10% 증가합니다.',           fx: (m, l) => { m.dropMul += 0.1 * l; } },
+  { id: 'foresight', name: '선견지명',   icon: ic('dice'), pos: [0.9, 2.7],   max: 3, cost: 45, parent: 'study',  desc: '시작 리롤이 1 증가합니다.',               fx: (m, l) => { m.rerolls += l; } },
+  { id: 'reach',     name: '끌림',       icon: ic('hand'), pos: [-1.8, 3.6],  max: 3, cost: 40, parent: 'collector', desc: '아이템 획득 범위가 15% 넓어집니다.',   fx: (m, l) => { m.pickupMul += 0.15 * l; } },
+  { id: 'greed',     name: '탐욕',       icon: ic('coin'), pos: [1.8, 3.6],   max: 3, cost: 60, parent: 'foresight', desc: '골드 획득량이 10% 증가합니다.',          fx: (m, l) => { m.goldMul += 0.1 * l; } },
 ];
 const UP = Object.fromEntries(UPGRADES.map((u) => [u.id, u]));
 
@@ -186,12 +187,12 @@ export function renderUpgrades(onGold) {
     node.style.top = y + 'px';
     node.innerHTML = `<div class="un-circle"><span class="un-icon">${u.icon}</span><span class="un-lv">${lv}/${u.max}</span></div>
       <div class="un-name">${u.name}</div>
-      <div class="un-cost${poor ? ' poor' : ''}">${maxed ? 'MAX' : `${unlocked ? '' : '🔒 '}💰 ${cost}`}</div>`;
+      <div class="un-cost${poor ? ' poor' : ''}">${maxed ? 'MAX' : `${unlocked ? '' : ic('lock') + ' '}${ic('coin')} ${cost}`}</div>`;
     node._tip = () => {
       let h = `<div class="tip-title">${u.icon} ${u.name} <span class="tip-dim">Lv.${lv}/${u.max}</span></div><div>레벨마다 ${u.desc}</div>`;
-      if (!unlocked) h += `<div class="tip-warn">🔒 "${UP[u.parent].name}"을(를) 먼저 1레벨 이상 올려야 합니다.</div>`;
+      if (!unlocked) h += `<div class="tip-warn">${ic('lock')} "${UP[u.parent].name}"을(를) 먼저 1레벨 이상 올려야 합니다.</div>`;
       else if (maxed) h += '<div class="tip-ok">최대 레벨입니다.</div>';
-      else h += `<div class="${poor ? 'tip-warn' : 'tip-ok'}">강화 비용은 💰 ${cost}입니다. (보유 ${profile.gold})</div>`;
+      else h += `<div class="${poor ? 'tip-warn' : 'tip-ok'}">강화 비용은 ${ic('coin')} ${cost}입니다. (보유 ${profile.gold})</div>`;
       return h;
     };
     node.addEventListener('click', () => {
@@ -231,7 +232,7 @@ export function renderSettings(onChange) {
   const sliders = [['master', '전체 사운드'], ['bgm', '배경 사운드'], ['sfx', '전투 사운드'], ['ui', 'UI 사운드']];
   const sec1 = document.createElement('div');
   sec1.className = 'set-sec';
-  sec1.innerHTML = '<div class="set-title">🔊 사운드</div>';
+  sec1.innerHTML = `<div class="set-title">${ic('speaker')} 사운드</div>`;
   for (const [k, label] of sliders) {
     const row = document.createElement('div');
     row.className = 'set-row' + (s[k + 'On'] === false ? ' muted' : '');
@@ -258,7 +259,7 @@ export function renderSettings(onChange) {
 
   const sec2 = document.createElement('div');
   sec2.className = 'set-sec';
-  sec2.innerHTML = '<div class="set-title">🎮 게임</div>';
+  sec2.innerHTML = `<div class="set-title">${ic('gamepad')} 게임</div>`;
   const toggles = [['labels', '아이템 이름표 표시', 'Z'], ['autoPickup', '아이템 자동 획득', 'X']];
   for (const [k, label, key] of toggles) {
     const row = document.createElement('div');

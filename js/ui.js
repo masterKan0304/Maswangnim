@@ -1,3 +1,4 @@
+import { ic } from './icons.js';
 import { STAGE, toStageX, toStageY, stageRect } from './stage.js';
 import { sfx } from './audio.js';
 import { game, bump, inventoryAdd } from './state.js';
@@ -180,7 +181,7 @@ export class UI {
         if (!slot.locked) { chip._drop = loc; chip.classList.add('droppable'); if (slot.block) chip._drag = loc; }
         // 끼워진 블록 우클릭 → 즉시 인벤토리로 해제
         if (slot.block && !slot.locked) chip._rclick = () => this.releaseToInv(loc);
-        if (slot.block) { const b = slot.block; chip._tip = () => this.blockTip(b) + (slot.locked ? '<div class="tip-warn">🔒 고정된 칸이라 바꿀 수 없습니다.</div>' : ''); }
+        if (slot.block) { const b = slot.block; chip._tip = () => this.blockTip(b) + (slot.locked ? `<div class="tip-warn">${ic('lock')} 고정된 칸이라 바꿀 수 없습니다.</div>` : ''); }
         else chip._tip = () => `<div class="tip-title">빈 칸</div><div>${{ subject: '단어:주체 블록을', number: '수치 블록이나 연산 블록을', numflat: '고정값이나 랜덤값 수치 블록을', change: '단어:변화 블록을' }[slot.type]} 넣을 수 있습니다.</div>`;
       }
       container.appendChild(chip);
@@ -202,7 +203,7 @@ export class UI {
       h += `<div class="tip-rar rar${r}">희귀도 ${r} · ${RARITY_NAME[r]}</div>`;
       h += isComplete(b) ? '<div class="tip-ok">✔ 완성된 문장입니다. 스킬에 장착하면 효과가 적용됩니다.</div>'
         : `<div class="tip-warn">✖ 빈 칸이 ${missingCount(b)}개 남았습니다.</div>`;
-      if (b.slots.some((s) => s.locked)) h += '<div class="tip-dim">🔒 표시된 칸은 바꿀 수 없습니다.</div>';
+      if (b.slots.some((s) => s.locked)) h += `<div class="tip-dim">${ic('lock')} 표시된 칸은 바꿀 수 없습니다.</div>`;
       h += '<div class="tip-dim">우클릭하면 문장을 편집합니다.</div>';
     } else if (b.kind === 'word') {
       const d = SUBJECTS[b.key] || CHANGES[b.key];
@@ -262,7 +263,7 @@ export class UI {
         const sq = el('div', 'sq');
         if (i >= sk.maxSlots) {
           sq.classList.add('locked');
-          sq.textContent = '🔒';
+          sq.innerHTML = ic('lock');
           sq._tip = () => '<div class="tip-dim">잠긴 칸입니다. 레벨업 선택지로 열 수 있습니다.</div>';
         } else {
           const loc = { t: 'skill', skill: sk, i };
@@ -391,7 +392,7 @@ export class UI {
     this.sbSlots.forEach((s, i) => {
       const sk = game.skills[i];
       s.classList.toggle('empty', !sk);
-      s.querySelector('.sb-icon').textContent = sk ? sk.def.icon : '';
+      s.querySelector('.sb-icon').innerHTML = sk ? sk.def.icon : '';
       s.classList.toggle('auto', !!(sk && sk.auto && !sk.def.passive));
       s.classList.toggle('passive', !!(sk && sk.def.passive));
       s.classList.toggle('stacked', !!(sk && (sk.key === 'frostBarrier' || sk.key === 'triggerKill')));
@@ -530,7 +531,7 @@ export class UI {
       game.sys.dropBlocks(left, p.x, p.z, { minD: 1.5, maxD: 2.5 });
     }
     this.lastRecomb = result;
-    this.toast(`⚗ 재조합 완료! <span class="tchip k-${type}">${KIND_BADGE[type]}</span> ${result.kind === 'sentence' ? '문장 블록' : blockLabel(result)}`, 'pick');
+    this.toast(`${ic('flask')} 재조합 완료! <span class="tchip k-${type}">${KIND_BADGE[type]}</span> ${result.kind === 'sentence' ? '문장 블록' : blockLabel(result)}`, 'pick');
     if (extras.length) this.toast(`안에 끼워져 있던 블록 ${extras.length}개를 돌려받았습니다`);
     this.changed();
     const idx = game.inventory.indexOf(result);
@@ -545,7 +546,7 @@ export class UI {
     w.style.left = (p.x ?? 0) + 'px';
     w.style.top = (p.y ?? 0) + 'px';
     w.style.zIndex = 60 + p.z;
-    const head = el('div', 'pop-head', '<span>⚗ 재조합</span>');
+    const head = el('div', 'pop-head', `<span>${ic('flask')} 재조합</span>`);
     const close = el('button', 'pop-close', '✕');
     close.addEventListener('click', () => this.closeRecomb(true));
     head.appendChild(close);
@@ -626,7 +627,7 @@ export class UI {
       w.style.left = p.x + 'px';
       w.style.top = p.y + 'px';
       w.style.zIndex = 60 + p.z;
-      const head = el('div', 'pop-head', `<span>${b.kind === 'sentence' ? '📜 문장 블록' : `🧮 연산 블록 (${OP_SYMBOL[b.op]})`}</span>`);
+      const head = el('div', 'pop-head', `<span>${b.kind === 'sentence' ? `${ic('scroll')} 문장 블록` : `${ic('calc')} 연산 블록 (${OP_SYMBOL[b.op]})`}</span>`);
       const close = el('button', 'pop-close', '✕');
       close.addEventListener('click', () => this.closePopup(b));
       head.appendChild(close);
@@ -850,7 +851,7 @@ export class UI {
       box.appendChild(card);
     });
     const rr = $('#lu-reroll');
-    rr.textContent = `🎲 리롤 (${game.rerolls})`;
+    rr.innerHTML = `${ic('dice')} 리롤 (${game.rerolls})`;
     rr.disabled = game.rerolls <= 0;
     rr.onclick = onReroll;
     $('#lu-title').textContent = 'LEVEL UP!';
@@ -881,7 +882,7 @@ export class UI {
       box.appendChild(card);
     });
     const rr = $('#lu-reroll');
-    rr.textContent = `🎲 리롤 (${game.rerolls})`;
+    rr.innerHTML = `${ic('dice')} 리롤 (${game.rerolls})`;
     rr.disabled = game.rerolls <= 0;
     rr.onclick = onReroll;
     $('#lu-title').textContent = title;
@@ -918,7 +919,7 @@ export class UI {
       box.innerHTML = '';
       for (const e of list) {
         const d = el('div', 'bb' + (e.elite ? ' elite' : ''));
-        d.innerHTML = `<div class="bb-name">${e.boss ? '👑 킹 슬라임' : '💠 정예 슬라임'} <span class="bb-hp"></span></div>
+        d.innerHTML = `<div class="bb-name">${e.boss ? `${ic('crown')} 킹 슬라임` : `${ic('gem')} 정예 슬라임`} <span class="bb-hp"></span></div>
           <div class="bb-track"><div class="bb-fill"></div></div><div class="bb-status"></div>`;
         box.appendChild(d);
       }
@@ -929,11 +930,11 @@ export class UI {
       d.querySelector('.bb-hp').textContent = `${Math.floor(Math.max(0, e.hp))} / ${Math.floor(e.maxHp)}`;
       // 걸려 있는 상태이상 아이콘
       const st = [];
-      if (e.burnT > 0) st.push(['🔥', '화상', 'fire', e.burnT]);
-      if (e.chillT > 0) st.push(['❄️', '둔화', 'ice', e.chillT]);
-      if (e.shockT > 0) st.push(['⚡', '감전', 'lightning', e.shockT]);
-      if (e.fireVuln > 0) st.push(['🌋', `화염 취약 +${Math.round(e.fireVuln * 100)}%`, 'fire', 0]);
-      const key = st.map((x) => x[0] + (x[3] > 0 ? Math.ceil(x[3]) : x[1])).join('|');
+      if (e.burnT > 0) st.push([ic('fire'), '화상', 'fire', e.burnT]);
+      if (e.chillT > 0) st.push([ic('snowflake'), '둔화', 'ice', e.chillT]);
+      if (e.shockT > 0) st.push([ic('bolt'), '감전', 'lightning', e.shockT]);
+      if (e.fireVuln > 0) st.push([ic('flamewave'), `화염 취약 +${Math.round(e.fireVuln * 100)}%`, 'fire', 0]);
+      const key = st.map((x) => x[1] + (x[3] > 0 ? Math.ceil(x[3]) : '')).join('|');
       const sd = d.querySelector('.bb-status');
       if (sd._key !== key) {
         sd._key = key;
@@ -962,7 +963,7 @@ export class UI {
       $('#timer').textContent = `${String(Math.floor(r / 60)).padStart(2, '0')}:${String(Math.floor(r % 60)).padStart(2, '0')}`;
     }
     $('#timer').classList.toggle('boss', game.bossSpawned);
-    $('#kills').textContent = `☠ ${game.kills}`;
+    $('#killnum').textContent = game.kills;
     this.updateBossBars();
 
     const db = $('#dashbox');
