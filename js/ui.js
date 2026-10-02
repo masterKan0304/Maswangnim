@@ -146,7 +146,8 @@ export class UI {
       t.classList.add('rar' + info.rarity);
       t.appendChild(el('div', 'tlabel small', info.label));
       const dots = el('div', 'sdots');
-      for (const sl of b.slots) dots.appendChild(el('i', `sd t-${sl.type === 'numflat' ? 'number' : sl.type}${sl.block ? ' on' : ''}${sl.locked ? ' lk' : ''}`));
+      // 연산 블록이 들어간 칸은 연산 색으로 표시
+      for (const sl of b.slots) dots.appendChild(el('i', `sd t-${sl.block && sl.block.kind === 'op' ? 'op' : sl.type === 'numflat' ? 'number' : sl.type}${sl.block ? ' on' : ''}${sl.locked ? ' lk' : ''}`));
       t.appendChild(dots);
     } else if (b.kind === 'op') {
       const f = b.slots.filter(Boolean).length;

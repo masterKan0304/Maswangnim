@@ -204,6 +204,7 @@ kbd {
 .sd.on.t-subject { background: var(--k-subject); }
 .sd.on.t-number { background: var(--k-number); }
 .sd.on.t-change { background: var(--k-change); }
+.sd.on.t-op { background: var(--k-op); }
 .sd.lk { border-color: #ffd45a; }
 
 /* chip (문장 안의 칸) */
