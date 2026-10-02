@@ -395,7 +395,7 @@ export class UI {
       s.querySelector('.sb-icon').innerHTML = sk ? sk.def.icon : '';
       s.classList.toggle('auto', !!(sk && sk.auto && !sk.def.passive));
       s.classList.toggle('passive', !!(sk && sk.def.passive));
-      s.classList.toggle('stacked', !!(sk && (sk.key === 'frostBarrier' || sk.key === 'triggerKill')));
+      s.classList.toggle('stacked', !!(sk && (sk.key === 'frostBarrier' || sk.key === 'triggerKill' || sk.key === 'enchant')));
       if (sk) s.style.setProperty('--sc', sk.def.color);
       s._tip = sk ? () => this.skillTip(sk) : null;
       s._click = sk && !sk.def.passive ? () => { game.sys.skillsRt.tryCast(sk, true); } : null;
@@ -984,7 +984,8 @@ export class UI {
         const goal = triggerGoal(sk);
         s.querySelector('.sb-stack').textContent = goal > 0 ? `${Math.floor(Math.min(1, sk.stacks / goal) * 100)}%` : '-';
       } else if (sk.key === 'enchant') {
-        frac = 1 - (sk.xpAcc || 0) / enchantReq(sk);
+        // 목표 경험치까지의 진행률 (%)
+        s.querySelector('.sb-stack').textContent = `${Math.floor(Math.min(1, (sk.xpAcc || 0) / enchantReq(sk)) * 100)}%`;
       } else if (sk.def.passive) {
         frac = 0;
       } else if (sk.flame) {
