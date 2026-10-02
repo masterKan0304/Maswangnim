@@ -1,35 +1,14 @@
 // ─────────────────────────────────────────────
-//  DPS 표 (화면 좌측): 공격 스킬별 최근 피해량 기록 / 순위 표시
+//  피해량 표 (화면 좌측): 공격 스킬별 총 누적 피해량 / 순위 표시
 // ─────────────────────────────────────────────
 import { game } from './state.js';
 
-const BW = 0.5;          // 기록 칸 하나의 길이 (초)
-const NB = 20;           // 칸 수 → 최근 10초 평균
 const ROW_H = 40;        // 표 한 줄 높이 (px)
 
-// 피해 기록 (enemies.damage 에서 호출)
+// 피해 기록 (enemies.damage 에서 호출) — 스킬별 총 누적 피해량
 export function recordDamage(sk, amount) {
   if (!sk || !(amount > 0)) return;
-  const idx = Math.floor(game.time / BW);
-  advance(sk, idx);
-  sk.dmgB[idx % NB] += amount;
-}
-
-function advance(sk, idx) {
-  if (!sk.dmgB) { sk.dmgB = new Float64Array(NB); sk.dmgI = idx; if (sk.dpsStart == null) sk.dpsStart = game.time; return; }
-  if (idx <= sk.dmgI) return;
-  for (let i = sk.dmgI + 1; i <= Math.min(idx, sk.dmgI + NB); i++) sk.dmgB[i % NB] = 0;
-  sk.dmgI = idx;
-}
-
-export function skillDps(sk) {
-  if (sk.dpsStart == null) sk.dpsStart = game.time;
-  if (!sk.dmgB) return 0;
-  advance(sk, Math.floor(game.time / BW));
-  let sum = 0;
-  for (let i = 0; i < NB; i++) sum += sk.dmgB[i];
-  const span = Math.max(1, Math.min(NB * BW, game.time - sk.dpsStart));
-  return sum / span;
+  sk.dmgTotal = (sk.dmgTotal || 0) + amount;
 }
 
 // 한국식 단위 표기 (최대 2개 단위): 3450만 2432 / 1억 3450만 / 1조 1000억
@@ -52,12 +31,12 @@ export function updateDpsTable(dt) {
   acc -= dt;
   if (acc > 0) return;
   acc = 0.25;
-  const list = game.skills.filter(isAttack).map((sk) => ({ sk, v: skillDps(sk) }));
+  const list = game.skills.filter(isAttack).map((sk) => ({ sk, v: sk.dmgTotal || 0 }));
   box.classList.toggle('hidden', !list.length || game.state === 'start');
   const listEl = document.getElementById('dps-list');
   // 사라진 스킬 정리
   for (const [sk, r] of rows) if (!list.some((x) => x.sk === sk)) { r.el.remove(); rows.delete(sk); }
-  // 순위: DPS 높은 순 (같으면 획득 순서 유지)
+  // 순위: 누적 피해량 높은 순 (같으면 획득 순서 유지)
   list.sort((a, b) => b.v - a.v || game.skills.indexOf(a.sk) - game.skills.indexOf(b.sk));
   const top = list.length ? list[0].v : 0;
   listEl.style.height = `${list.length * ROW_H}px`;
