@@ -150,7 +150,7 @@ export class SkillRuntime {
     if (sk.cd > 0) return false;
     let st = getStats(sk);
     const p = this.player.pos;
-    const need = { chainLightning: sample(st.range) / U, snowfall: sample(st.range) / U, flamethrower: manual ? 0 : (sample(st.area) / U) * 1.3, lightningBeam: manual ? 0 : 14 }[sk.key];
+    const need = { fireball: manual ? 0 : 20, chainLightning: sample(st.range) / U, snowfall: sample(st.range) / U, flamethrower: manual ? 0 : (sample(st.area) / U) * 1.3, lightningBeam: manual ? 0 : 14 }[sk.key];
     if (need && !this.enemies.anyInRange(p.x, p.z, need)) {
       if (manual) game.sys.ui.toast('사거리 안에 적이 없습니다', 'warn');
       return false;
@@ -485,7 +485,9 @@ export class SkillRuntime {
   castFireball(sk, st) {
     sfx('fire');
     const p = this.player;
-    const base = Math.atan2(p.aim.z, p.aim.x);
+    // 가장 가까운 적을 향해 발사 (적이 없으면 바라보는 방향)
+    const near = this.enemies.nearestN(p.pos.x, p.pos.z, 30, 1)[0];
+    const base = near ? Math.atan2(near.z - p.pos.z, near.x - p.pos.x) : Math.atan2(p.aim.z, p.aim.x);
     const n = sampleInt(st.projCount);
     // 스탯 단위 → 월드 단위 (연쇄로 다시 생성될 때도 같은 방식으로 새로 뽑음)
     const gen = () => ({ size: sample(st.projSize) / PZ, speed: sample(st.projSpeed) * PS, life: sample(st.duration), pierce: sampleInt(st.pierce), area: sample(st.area) / U });

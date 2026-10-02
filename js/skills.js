@@ -18,8 +18,8 @@ const dmgUp40 = (st, lv) => pctUp(st, 'damage', 0.4, lv);
 export const SKILL_DEFS = {
   fireball: {
     key: 'fireball', name: '파이어볼', icon: ic('fire'), color: '#ff7a2e', element: 'fire', passive: false, castTime: 0.15, projectile: true,
-    short: '커서 방향으로 화염구를 발사합니다. 적중하면 폭발합니다.',
-    desc: '커서 방향으로 화염구를 발사합니다. 적중하면 폭발해 주위 적에게 피해를 줍니다.',
+    short: '가장 가까운 적에게 화염구를 발사합니다. 적중하면 폭발합니다.',
+    desc: '가장 가까운 적에게 화염구를 발사합니다. 적중하면 폭발해 주위 적에게 피해를 줍니다.',
     keywords: ['화염', '효과 범위', '지속 시간', '투사체', '연쇄', '상태이상', '스킬 쿨타임'],
     base: { damage: [8, 12], duration: 1.5, projSize: 25, projSpeed: 6, projCount: 1, statusChance: 40, manaCost: 5, cooldown: 1.5 },
     areaFromProjSize: 0.6,   // 기본 폭발 범위 = 최종 투사체 크기 × 0.6 (3레벨부터 × 0.9) — 실제 크기로는 투사체의 6배 / 9배

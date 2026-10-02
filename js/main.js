@@ -392,7 +392,7 @@ function startGame() {
     game.sys.dropBlocks(Array.from({ length: game.mods.startBlocks }, () => randomBlock()), player.pos.x, player.pos.z, { minD: 1.8, maxD: 3 });
   }
   ui.refresh();
-  ui.toast(`${ic('fire')} 파이어볼 획득! 커서 방향으로 자동 발사됩니다`);
+  ui.toast(`${ic('fire')} 파이어볼 획득! 가장 가까운 적에게 자동 발사됩니다`);
 }
 $id('btn-start').addEventListener('click', startGame);
 

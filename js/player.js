@@ -106,10 +106,8 @@ export class Player {
     this.pos.x = Math.max(-WORLD_HALF, Math.min(WORLD_HALF, this.pos.x));
     this.pos.z = Math.max(-WORLD_HALF, Math.min(WORLD_HALF, this.pos.z));
 
-    // 시선: 커서 방향
-    const ax = input.ground.x - this.pos.x, az = input.ground.z - this.pos.z;
-    const al = Math.hypot(ax, az);
-    if (al > 0.05) this.aim.set(ax / al, 0, az / al);
+    // 시선: 이동 방향 (멈추면 마지막 이동 방향 유지)
+    if (this.moving) this.aim.copy(this.moveDir);
     const target = Math.atan2(this.aim.x, this.aim.z);
     let diff = target - this.facing;
     diff = Math.atan2(Math.sin(diff), Math.cos(diff));
