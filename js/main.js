@@ -544,7 +544,6 @@ ui.refresh();
 const demo = new Demo({
   player, enemies, pickups, skillsRt, scene, fx, cutEl: $id('preview-cut'),
   onTeleport: (p) => camTarget.copy(p),
-  onCaption: (st) => { $id('preview-name').textContent = `스테이지 ${st.id} · ${st.name}`; },
 });
 initMenu({ onStart: requestStart, refreshGold: refreshMenuGold, applySettings: applySettingsToGame, hideTip: () => ui.hideTip() });
 const auto = sessionStorage.getItem(AUTOSTART);
