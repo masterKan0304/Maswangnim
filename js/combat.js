@@ -253,6 +253,15 @@ export class SkillRuntime {
     sk.flame = { t: sample(st.duration), st, R, half, ang, tick: 0, mesh, geo, mat, core, coreGeo, coreMat, glow };
   }
 
+  // 화염 방사 불길 제거
+  endFlame(sk) {
+    const f = sk.flame;
+    if (!f) return;
+    this.scene.remove(f.mesh, f.glow);
+    f.geo.dispose(); f.mat.dispose(); f.coreGeo.dispose(); f.coreMat.dispose(); f.glow.material.dispose();
+    sk.flame = null;
+  }
+
   updateFlames(dt) {
     for (const sk of game.skills) {
       const f = sk.flame;
@@ -311,9 +320,7 @@ export class SkillRuntime {
       }
       f.t -= dt;
       if (f.t <= 0) {
-        this.scene.remove(f.mesh, f.glow);
-        f.geo.dispose(); f.mat.dispose(); f.coreGeo.dispose(); f.coreMat.dispose(); f.glow.material.dispose();
-        sk.flame = null;
+        this.endFlame(sk);
         sk.cd = sample(f.st.cooldown);
         sk.cdMax = sk.cd;
       }

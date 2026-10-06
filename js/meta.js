@@ -10,6 +10,8 @@ const SAVE_KEY = 'blockchain-save-v1';
 export const profile = {
   gold: 0,
   upgrades: {},
+  cleared: [],     // 클리어한 스테이지 번호
+  stage: 1,        // 마지막으로 고른 스테이지
   settings: { master: 80, bgm: 50, sfx: 70, ui: 70, masterOn: true, bgmOn: true, sfxOn: true, uiOn: true, labels: true, autoPickup: true },
 };
 
@@ -20,6 +22,8 @@ export function loadProfile() {
       const d = JSON.parse(raw);
       profile.gold = d.gold || 0;
       profile.upgrades = d.upgrades || {};
+      profile.cleared = Array.isArray(d.cleared) ? d.cleared : [];
+      profile.stage = d.stage || 1;
       // 최대 레벨이 줄어든 업그레이드: 초과한 레벨의 비용을 골드로 돌려줌
       for (const u of UPGRADES) {
         let lv = profile.upgrades[u.id] || 0;

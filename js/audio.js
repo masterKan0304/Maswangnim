@@ -6,6 +6,7 @@ let ctx = null;
 let master, buses, noiseBuf;
 const vol = { master: 0.8, bgm: 0.5, sfx: 0.7, ui: 0.7 };
 const lastPlay = {};
+let sfxMuted = false;   // 메인 화면 미리보기 중에는 전투 효과음을 끔
 
 export function initAudio() {
   if (ctx) { if (ctx.state === 'suspended') ctx.resume(); return; }
@@ -25,6 +26,12 @@ export function initAudio() {
   startBgm();
 }
 
+// 전투 효과음(sfx 버스)만 끄고 켬 — UI 효과음 / 배경 음악은 그대로
+export function setSfxMuted(on) {
+  sfxMuted = on;
+  applyVolumes();
+}
+
 export function setVolumes(v) {
   Object.assign(vol, v);
   applyVolumes();
@@ -34,7 +41,7 @@ function applyVolumes() {
   const t = ctx.currentTime;
   master.gain.setTargetAtTime(vol.master, t, 0.05);
   buses.bgm.gain.setTargetAtTime(vol.bgm * 0.55, t, 0.05);
-  buses.sfx.gain.setTargetAtTime(vol.sfx, t, 0.05);
+  buses.sfx.gain.setTargetAtTime(sfxMuted ? 0 : vol.sfx, t, 0.05);
   buses.ui.gain.setTargetAtTime(vol.ui, t, 0.05);
 }
 

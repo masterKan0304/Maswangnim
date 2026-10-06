@@ -106,19 +106,6 @@
     </div>
   </div>
 
-  <!-- 업그레이드 -->
-  <div id="upgrade" class="overlay hidden">
-    <div class="up-panel ui-zone">
-      <div class="up-head">
-        <span class="up-title"><i data-ic="arrowUp"></i> 업그레이드</span>
-        <span class="up-goldbox"><i data-ic="coin"></i> <b id="up-gold">0</b> 골드</span>
-        <span class="up-hint">전투에서 얻은 경험치만큼 골드를 받습니다 · 노드를 <b>클릭</b>해 강화 · 배경을 <b>드래그</b>해 이동 · <b>휠</b>로 확대/축소</span>
-        <button class="pop-close up-close" data-close="upgrade">✕</button>
-      </div>
-      <div id="up-tree"></div>
-    </div>
-  </div>
-
   <!-- 설정 -->
   <div id="settings" class="overlay hidden">
     <div class="set-panel ui-zone">
@@ -127,29 +114,44 @@
     </div>
   </div>
 
-  <!-- 시작 화면 -->
-  <div id="screen" class="overlay">
-    <div class="screen-box ui-zone">
+  <!-- 메인 화면: 왼쪽 30% 메뉴 / 오른쪽 70% 게임 미리보기 · 스테이지 선택 · 업그레이드 -->
+  <div id="menu" class="hidden">
+    <div id="menu-left" class="ui-zone">
       <div class="dev-credit">개발 - 마솽님</div>
       <div class="logo"><span class="lb k-sentence">B</span><span class="lb k-subject">L</span><span class="lb k-change">O</span><span class="lb k-number">C</span><span class="lb k-op">K</span></div>
       <div class="title">BLOCK CHAIN</div>
-      <div class="sub">블록을 엮어 나만의 스킬을 만들고, 10분을 버텨 보스를 쓰러뜨리세요!</div>
       <div class="gold-line"><i data-ic="coin"></i> 보유 골드 <b id="menu-gold">0</b></div>
-      <div class="howto">
-        <div><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 이동 · <kbd>Space</kbd> 대시</div>
-        <div><kbd>Q</kbd> 스킬 창 · <kbd>E</kbd> 인벤토리 · <kbd>Tab</kbd> 둘 다 · <kbd>1</kbd>~<kbd>0</kbd> 스킬 수동 사용</div>
-        <div><kbd>Z</kbd> 아이템 이름표 표시 · <kbd>X</kbd> 아이템 자동 획득 · 이름표 클릭으로 획득</div>
-        <div>적이 떨어뜨린 <b>블록</b>을 주워 문장을 완성하고 스킬에 장착하세요</div>
-        <div class="ex"><span class="chip filled k-subject">피해량</span>이 <span class="chip filled k-number">5~6</span> <span class="chip filled k-change">증가합니다</span>.</div>
+      <div class="stage-tag" id="menu-stage">스테이지 1 · 초원</div>
+      <div class="ml-nav">
+        <button class="nav-btn" data-view="stage"><i data-ic="flag"></i><span>스테이지 선택</span></button>
+        <button class="nav-btn" data-view="upgrade"><i data-ic="arrowUp"></i><span>업그레이드</span></button>
+        <button class="nav-btn" data-view="settings"><i data-ic="gear"></i><span>설정</span></button>
       </div>
-      <div class="stage-tag">스테이지 1 · 초원</div>
-      <button class="big-btn" id="btn-start">게임 시작</button>
-      <div class="menu-row">
-        <button class="menu-btn" id="btn-upgrade"><i data-ic="arrowUp"></i> 업그레이드</button>
-        <button class="menu-btn" id="btn-settings"><i data-ic="gear"></i> 설정</button>
+    </div>
+    <div id="menu-right">
+      <div id="preview-cut"></div>
+      <div id="preview-caption"><span class="pc-dot"></span>미리보기 · <span id="preview-name"></span></div>
+      <!-- 스테이지 선택 -->
+      <div id="view-stage" class="mview hidden ui-zone">
+        <div class="up-head"><span class="up-title"><i data-ic="flag"></i> 스테이지 선택</span><span class="up-hint">앞 스테이지를 클리어하면 다음 스테이지가 열립니다</span><button class="pop-close up-close" data-view-close>✕</button></div>
+        <div id="stage-body"></div>
+      </div>
+      <!-- 업그레이드 -->
+      <div id="view-upgrade" class="mview hidden ui-zone">
+        <div class="up-head">
+          <span class="up-title"><i data-ic="arrowUp"></i> 업그레이드</span>
+          <span class="up-goldbox"><i data-ic="coin"></i> <b id="up-gold">0</b> 골드</span>
+          <span class="up-hint">전투에서 얻은 경험치만큼 골드를 받습니다 · 노드를 <b>클릭</b>해 강화 · 배경을 <b>드래그</b>해 이동 · <b>휠</b>로 확대/축소</span>
+          <button class="pop-close up-close" data-view-close>✕</button>
+        </div>
+        <div id="up-tree"></div>
       </div>
     </div>
   </div>
+
+  <!-- 결과 화면 -->
+  <div id="screen" class="overlay hidden"></div>
+  <div id="fade"></div>
 
   <div id="tooltip" class="hidden"></div>
   <div id="ghost" class="hidden"></div>

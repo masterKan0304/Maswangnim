@@ -17,8 +17,11 @@ import { rollChoices } from './levelup.js';
 import { updateDpsTable } from './dps.js';
 import { input, updateAim } from './input.js';
 import { STAGE, fitStage, onStageResize } from './stage.js';
-import { initAudio, sfx } from './audio.js';
-import { profile, loadProfile, saveProfile, computeMods, renderUpgrades, renderSettings } from './meta.js';
+import { initAudio, sfx, setSfxMuted } from './audio.js';
+import { profile, loadProfile, saveProfile, computeMods, renderSettings } from './meta.js';
+import { Demo } from './demo.js';
+import { initMenu, showMenu, hideMenu, menuBack } from './menu.js';
+import { stageById } from './stages.js';
 
 hydrateIcons();   // HTML 의 아이콘 자리 표시를 SVG 아이콘으로 교체
 initDebug();
@@ -48,6 +51,9 @@ function resize() {
   const a = STAGE.W / STAGE.H;
   camera.left = (-VIEW * a) / 2; camera.right = (VIEW * a) / 2;
   camera.top = VIEW / 2; camera.bottom = -VIEW / 2;
+  // 메인 화면: 오른쪽 70% 영역의 가운데가 화면 중심이 되도록 옮겨 그림
+  if (document.body.classList.contains('in-menu')) camera.setViewOffset(STAGE.W, STAGE.H, -STAGE.W * 0.15, 0, STAGE.W, STAGE.H);
+  else camera.clearViewOffset();
   camera.updateProjectionMatrix();
 }
 onStageResize(resize);
@@ -94,6 +100,12 @@ game.sys = {
 
 // 적 처치 → 경험치 / 블록 드랍
 enemies.onKill = (e, src, st) => {
+  if (game.demo) {   // 메인 화면 미리보기: 경험치 보석만 떨어뜨림 (블록/상자/승리 없음)
+    skillsRt.onKill(e, src, st);
+    if (e.boss || e.elite) fx.explosion(e.x, e.z, e.boss ? 4 : 2.5, e.boss ? 0xb07cff : 0x3f8cff);
+    pickups.addGem(e.x, e.z, e.T.xp);
+    return;
+  }
   game.kills++;
   skillsRt.onKill(e, src, st);
   if (e.boss) {
@@ -286,6 +298,7 @@ input.onKey = (e) => {
     else if (e.code === 'Escape' && (game.invOpen || game.skillsOpen)) ui.setWindows(false, false);
     return;
   }
+  if (game.state === 'start') { if (e.code === 'Escape') menuBack(); return; }
   if (game.state !== 'playing') return;
   switch (e.code) {
     case 'Space':
@@ -366,9 +379,7 @@ function openOverlay(id) { $id(id).classList.remove('hidden'); sfx('open'); }
 function closeOverlay(id) { $id(id).classList.add('hidden'); ui.hideTip(); sfx('close'); }
 document.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', () => closeOverlay(b.dataset.close)));
 
-$id('btn-upgrade').addEventListener('click', () => { openOverlay('upgrade'); renderUpgrades(refreshMenuGold); });
 function openSettings() { openOverlay('settings'); renderSettings(applySettingsToGame); }
-$id('btn-settings').addEventListener('click', openSettings);
 $id('btn-pause-settings').addEventListener('click', openSettings);
 $id('btn-giveup').addEventListener('click', () => {
   if (game.state !== 'playing') return;
@@ -379,9 +390,21 @@ $id('btn-giveup').addEventListener('click', () => {
   showEndScreen('giveup');
 });
 
-function startGame() {
+// 메인 화면에서 시작: 미리보기로 바뀐 게임 상태를 깨끗이 비우기 위해 페이지를 새로 불러온 뒤 바로 시작
+const AUTOSTART = 'bc-autostart';
+function requestStart(stageId) {
   sfx('start');
-  $id('screen').classList.add('hidden');
+  $id('fade').classList.add('on');
+  setTimeout(() => { sessionStorage.setItem(AUTOSTART, String(stageId)); location.reload(); }, 280);
+}
+
+function startGame(stageId = 1) {
+  sfx('start');
+  demo.stop();
+  hideMenu();
+  setSfxMuted(false);
+  resize();
+  game.stage = stageId;
   game.mods = computeMods();
   player.applyMods(game.mods);
   game.rerolls = START_REROLLS + game.mods.rerolls;
@@ -394,7 +417,6 @@ function startGame() {
   ui.refresh();
   ui.toast(`${ic('fire')} 파이어볼 획득! 가장 가까운 적에게 자동 발사됩니다`);
 }
-$id('btn-start').addEventListener('click', startGame);
 
 // 보스 처치: 남은 적 정리 → 맵의 경험치를 모두 빠르게 끌어와 획득 → 종료 화면
 function startVictory() {
@@ -417,6 +439,7 @@ function showEndScreen(kind) {
   const t = game.time;
   const gold = Math.floor(game.totalXp * game.mods.goldMul);
   profile.gold += gold;
+  if (kind === 'clear' && !profile.cleared.includes(game.stage)) profile.cleared.push(game.stage);   // 다음 스테이지 열림
   saveProfile();
   const T = {
     clear:  ['STAGE CLEAR!', 'win', '보스를 쓰러뜨렸습니다!'],
@@ -466,6 +489,15 @@ function tick(dt, draw = true) {
     fx.update(dt);
     game.victoryT += dt;
     if (pickups.gems.length === 0 && game.victoryT > 1.2) { game.state = 'clear'; showEndScreen('clear'); }
+  } else if (game.state === 'start' && demo.active) {
+    // 메인 화면 미리보기: 자동 조작 캐릭터로 실제 전투를 돌림
+    demo.update(dt);
+    player.update(dt, demo.input, world.obstacles);
+    enemies.update(dt, player, world.obstacles);
+    skillsRt.update(dt);
+    pickups.update(dt, player, () => {});
+    updateTimers(dt);
+    fx.update(dt);
   } else if (!isPaused()) {
     game.time += dt;
     director(dt);
@@ -508,6 +540,26 @@ game.mods = computeMods();
 applySettingsToGame();
 refreshMenuGold();
 ui.refresh();
+
+const demo = new Demo({
+  player, enemies, pickups, skillsRt, scene, fx, cutEl: $id('preview-cut'),
+  onTeleport: (p) => camTarget.copy(p),
+  onCaption: (st) => { $id('preview-name').textContent = `스테이지 ${st.id} · ${st.name}`; },
+});
+initMenu({ onStart: requestStart, refreshGold: refreshMenuGold, applySettings: applySettingsToGame, hideTip: () => ui.hideTip() });
+const auto = sessionStorage.getItem(AUTOSTART);
+sessionStorage.removeItem(AUTOSTART);
+if (auto) {
+  // 시작 버튼으로 새로 불러온 경우: 바로 게임 시작 (암전에서 밝아짐)
+  $id('fade').classList.add('on', 'instant');
+  startGame(stageById(+auto).id);
+  requestAnimationFrame(() => requestAnimationFrame(() => $id('fade').classList.remove('on', 'instant')));
+} else {
+  showMenu();
+  setSfxMuted(true);
+  resize();
+  demo.start();
+}
 // 디버그용 핸들
 window.__game = game;
 window.__tick = (n = 1, dt = 1 / 60, draw = true) => { for (let i = 0; i < n; i++) tick(dt, draw || i === n - 1); };

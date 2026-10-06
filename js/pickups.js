@@ -141,23 +141,26 @@ export class Pickups {
       if (b.t < b.fly) continue;
       const dx = px - b.x, dz = pz - b.z;
       const d = Math.hypot(dx, dz) || 0.001;
-      // 이름표 클릭으로 지정한 아이템: 가까이 가면 언제든 획득
+      const reach = PLAYER.blockMagnet * game.mods.pickupMul;   // 자동 획득 거리
+      // 이름표 클릭으로 지정한 아이템: 자동 획득 거리 안에 들어오면 끌어당겨 획득
       if (b === target) {
-        if (d < 0.7) { player.moveTarget = null; this.collect(i, true); }
-        continue;
+        if (d < reach) { player.moveTarget = null; b.mag = true; b.manual = true; }
+        else continue;
       }
-      if (!game.autoPickup) { b.mag = false; b.pulled = false; continue; }   // 자동 획득 꺼짐: 근접/자석 획득 없음
-      if (b.requireExit && !b.exited) { if (d > 2.4) b.exited = true; else continue; }
-      if (!b.mag && (d < PLAYER.blockMagnet * game.mods.pickupMul || b.pulled)) {
-        b.pulled = false;
-        if (b.chest || game.inventory.includes(null)) b.mag = true;
-        else if (this.fullToastT <= 0) { this.fullToastT = 3; game.sys.ui.toast('인벤토리가 가득 찼습니다!', 'warn'); }
+      if (!b.manual) {
+        if (!game.autoPickup) { b.mag = false; b.pulled = false; continue; }   // 자동 획득 꺼짐: 근접/자석 획득 없음
+        if (b.requireExit && !b.exited) { if (d > 2.4) b.exited = true; else continue; }
+        if (!b.mag && (d < reach || b.pulled)) {
+          b.pulled = false;
+          if (b.chest || game.inventory.includes(null)) b.mag = true;
+          else if (this.fullToastT <= 0) { this.fullToastT = 3; game.sys.ui.toast('인벤토리가 가득 찼습니다!', 'warn'); }
+        }
       }
       if (b.mag) {
         b.sp += dt * 20;
         const step = Math.min(d, (3 + b.sp) * dt);
         b.x += (dx / d) * step; b.z += (dz / d) * step;
-        if (d < 0.5 && !this.collect(i, false)) { b.mag = false; b.sp = 0; }
+        if (d < 0.5 && !this.collect(i, !!b.manual)) { b.mag = false; b.manual = false; b.sp = 0; }
       }
     }
     if (target && !this.blocks.includes(target)) player.moveTarget = null;
