@@ -553,7 +553,7 @@ if (auto) {
   // 시작 버튼으로 새로 불러온 경우: 바로 게임 시작 (암전에서 밝아짐)
   $id('fade').classList.add('on', 'instant');
   startGame(stageById(+auto).id);
-  requestAnimationFrame(() => requestAnimationFrame(() => $id('fade').classList.remove('on', 'instant')));
+  setTimeout(() => $id('fade').classList.remove('on', 'instant'), 60);
 } else {
   showMenu();
   setSfxMuted(true);
