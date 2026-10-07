@@ -18,6 +18,8 @@ export const game = {
   accountLevel: 1,       // 계정 레벨 (해금된 스킬 / 문장 결정)
   demo: false,           // 메인 화면 미리보기 중
   tutorial: null,        // 튜토리얼 진행 객체 (튜토리얼 스테이지일 때)
+  overkill: 180,         // 오버킬 시간 (보이지 않음)
+  timeMul: 1,            // 스테이지 시간 가속 배율 (오버킬)
   elite: null,
   eliteIdx: 0,
   victoryT: 0,

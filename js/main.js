@@ -2,7 +2,7 @@ import { ic, hydrateIcons } from './icons.js';
 import { toggleDebug, initDebug } from './debug.js';
 import * as THREE from 'three';
 import { game, isPaused, updateTimers, bump, inventoryAdd } from './state.js';
-import { STAGE_TIME, WORLD_HALF, MAX_ENEMIES, DROP, ENEMY_TYPES, BOX, START_REROLLS, ELITE_TIMES, xpToNext, hpScale } from './config.js';
+import { OVERKILL, STAGE_TIME, WORLD_HALF, MAX_ENEMIES, DROP, ENEMY_TYPES, BOX, START_REROLLS, ELITE_TIMES, xpToNext, hpScale } from './config.js';
 import { createWorld } from './world.js';
 import { FX } from './effects.js';
 import { EnemyManager } from './enemies.js';
@@ -23,7 +23,8 @@ import { profile, loadProfile, saveProfile, computeMods, renderSettings, addAcco
 import { Demo } from './demo.js';
 import { Tutorial } from './tutorial.js';
 import { EnemySkills } from './bossai.js';
-import { initCodex, renderCodexPreview, codexPreviewActive } from './codex.js';
+import { initCodex, renderCodexPreview, codexPreviewActive, TEMPLATE_DESC } from './codex.js';
+import { makeSentence, RARITY_NAME } from './blocks.js';
 import { initMenu, showMenu, hideMenu, menuBack, setView } from './menu.js';
 import { stageById, stageLabel, lastStartable } from './stages.js';
 import { SKILL_DEFS } from './skills.js';
@@ -198,6 +199,16 @@ function spawnEnemy(type) {
   enemies.spawn(type || pickType(game.time), s.x, s.z, hpScale(game.time));
 }
 
+// 오버킬 시간: 맵의 적(보스 기술로 소환된 적 제외)이 30 이하면 줄고, 90 이상이면 늘어남 (최대 3분)
+function updateOverkill(dt) {
+  if (game.time >= STAGE_TIME) { game.timeMul = 1; return; }   // 보스 등장 후에는 가속 없음
+  let n = 0;
+  for (const e of enemies.list) if (e.alive && !e.noDrop) n++;
+  if (n <= OVERKILL.low) game.overkill = Math.max(0, game.overkill - dt);
+  else if (n >= OVERKILL.high) game.overkill = Math.min(OVERKILL.max, game.overkill + dt);
+  game.timeMul = game.overkill <= 0 ? OVERKILL.mul2 : game.overkill <= OVERKILL.fast ? OVERKILL.mul1 : 1;
+}
+
 function director(dt) {
   const t = game.time;
   const rate = t < STAGE_TIME ? 0.8 + (t / STAGE_TIME) * 5.4 : 2.2;
@@ -320,6 +331,7 @@ input.onKey = (e) => {
   if (game.state !== 'playing') return;
   if (e.code === 'F8') { e.preventDefault(); toggleDebug(); return; }
   if (e.code === 'Escape') {
+    if (!$id('settings').classList.contains('hidden')) { closeOverlay('settings'); return; }   // 설정 창부터 닫음
     if (game.debugOpen) toggleDebug(false);
     else if (game.popups.length) ui.closeTopPopup();
     else if (game.invOpen || game.skillsOpen) ui.setWindows(false, false);
@@ -503,7 +515,7 @@ function showEndScreen(kind) {
       <div class="acct-bar"><i style="width:${Math.min(100, (profile.accountXp / need) * 100)}%"></i></div>
       <div class="ea-xp">${Math.floor(profile.accountXp).toLocaleString()} / ${need.toLocaleString()}</div>
       ${acc.to > acc.from ? `<div class="ea-up">계정 레벨 업! Lv.${acc.from} → Lv.${acc.to}</div>` : ''}
-      ${unlockNames.length ? `<div class="ea-unlock">새로 해금: ${unlockNames.map((n) => `<span>${n}</span>`).join('')}</div>` : ''}
+      ${unlockNames.length ? '<div class="ea-unlock"><div class="eu-title">새로 해금</div><div class="eu-list"></div></div>' : ''}
     </div>`;
   const T = {
     clear:  ['STAGE CLEAR!', 'win', st.tutorial ? '튜토리얼을 모두 마쳤습니다!' : '보스를 쓰러뜨렸습니다!'],
@@ -523,6 +535,32 @@ function showEndScreen(kind) {
       → ${ic('coin')} <b>${gold.toLocaleString()}</b> 골드로 환산되었습니다 · 보유 골드 <b>${Math.floor(profile.gold).toLocaleString()}</b></div>
     ${acctHtml}
     <button class="big-btn" id="btn-main">${kind === 'clear' ? '스테이지 완료' : '메인으로'}</button></div>`;
+  // 새로 해금된 스킬 / 문장: 아이콘을 가로로 나열 (마우스를 올리면 정보)
+  const list = s.querySelector('.eu-list');
+  if (list) {
+    for (const k of acc.unlocked.skills) {
+      const d = SKILL_DEFS[k];
+      const it = document.createElement('div');
+      it.className = 'eu-item';
+      it.innerHTML = `<div class="eu-ic" style="--c:${d.color}">${d.icon}</div><div class="eu-name">${d.name}</div>`;
+      it._tip = () => `<div class="tip-title">${d.icon} ${d.name}</div><div>${d.short}</div><div class="kw-list">${d.keywords.map((w) => `<span class="kw">${w}</span>`).join('')}</div>`;
+      list.appendChild(it);
+    }
+    for (const t of acc.unlocked.templates) {
+      const inf = TEMPLATE_INFO[t];
+      const it = document.createElement('div');
+      it.className = 'eu-item';
+      const ic2 = document.createElement('div');
+      ic2.className = 'eu-ic tilebox';
+      ic2.appendChild(ui.makeTile(makeSentence(t, false)));
+      it.appendChild(ic2);
+      it.insertAdjacentHTML('beforeend', `<div class="eu-name">문장:${inf.label}</div>`);
+      it._tip = () => `<div class="tip-title">문장 블록 · ${inf.label} <span class="tip-dim">${RARITY_NAME[inf.rarity]}</span></div><div>${TEMPLATE_DESC[t]}</div>`;
+      list.appendChild(it);
+    }
+    // 휠로 가로 스크롤
+    list.addEventListener('wheel', (e) => { if (list.scrollWidth > list.clientWidth) { e.preventDefault(); list.scrollLeft += e.deltaY; } }, { passive: false });
+  }
   s.classList.remove('hidden');
   $id('btn-main').addEventListener('click', () => {
     if (kind === 'clear') sessionStorage.setItem(OPEN_VIEW, 'stage');   // 스테이지 선택 화면으로 돌아감
@@ -571,7 +609,11 @@ function tick(dt, draw = true) {
     updateTimers(dt);
     fx.update(dt);
   } else if (!isPaused()) {
-    if (!game.tutorial) { game.time += dt; director(dt); }
+    if (!game.tutorial) {
+      updateOverkill(dt);
+      game.time += dt * game.timeMul;      // 오버킬로 가속되면 스테이지 시간과
+      director(dt * game.timeMul);         // 적 생성 주기도 함께 빨라짐
+    }
     player.update(dt, input, world.obstacles);
     enemies.update(dt, player, world.obstacles);
     enemySkills.update(dt);

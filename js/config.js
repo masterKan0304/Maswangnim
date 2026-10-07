@@ -1,7 +1,9 @@
 // ─────────────────────────────────────────────
 //  게임 전역 설정값
 // ─────────────────────────────────────────────
-export const STAGE_TIME = 600;          // 보스 등장까지 (초)
+export const STAGE_TIME = 600;
+// 오버킬: 맵의 적이 적으면 줄고(30 이하), 많으면 늘어남(90 이상, 최대 3분). 1분 이하면 스테이지 시간 1.5배, 0이면 2배
+export const OVERKILL = { max: 180, low: 30, high: 90, fast: 60, mul1: 1.5, mul2: 2 };          // 보스 등장까지 (초)
 export const WORLD_HALF = 58;           // 플레이 가능 영역 반경 (정사각형 half size)
 export const PAUSE_ON_MENU = true;      // 인벤토리/스킬 창을 열면 게임 일시정지
 export const INV_W = 10;

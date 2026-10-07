@@ -16,7 +16,7 @@ const $ = (s) => document.querySelector(s);
 const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
 
 // ── 블록 도감 데이터 ──
-const TEMPLATE_DESC = {
+export const TEMPLATE_DESC = {
   SNC: '주체의 값을 수치만큼 바꾸는 문장입니다.',
   SSC: '앞 주체의 값만큼 뒤 주체의 값을 바꾸는 문장입니다.',
   ZONE: '적을 처치하면 그 자리에 스킬 속성의 지대를 남깁니다. 지대 위의 적은 해당 상태이상에 걸립니다.',

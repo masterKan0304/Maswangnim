@@ -717,6 +717,7 @@ export class UI {
     });
     document.addEventListener('pointerdown', (e) => {
       if (e.button !== 0) return;
+      if (game.state === 'levelup') return;   // 선택지 고르는 중: 보기만 (툴팁은 표시)
       const n = findProp(e.target, '_drag');
       if (n) {
         const b = getAt(n._drag);
@@ -757,7 +758,7 @@ export class UI {
 
     document.addEventListener('contextmenu', (e) => {
       e.preventDefault();
-      if (this.drag) return;
+      if (this.drag || game.state === 'levelup') return;
       const r = findProp(e.target, '_rclick');
       if (r) { r._rclick(); return; }
       const n = findProp(e.target, '_ctx');
@@ -975,6 +976,9 @@ export class UI {
       $('#timer').textContent = `${String(Math.floor(r / 60)).padStart(2, '0')}:${String(Math.floor(r % 60)).padStart(2, '0')}`;
     }
     $('#timer').classList.toggle('boss', game.bossSpawned);
+    // 오버킬 가속: 1.5배는 조금 붉게, 2배는 강하게 붉게 + 불타는 효과
+    $('#timer').classList.toggle('fast1', !game.bossSpawned && game.timeMul > 1 && game.timeMul < 2);
+    $('#timer').classList.toggle('fast2', !game.bossSpawned && game.timeMul >= 2);
     $('#killnum').textContent = game.kills;
     this.updateBossBars();
 
