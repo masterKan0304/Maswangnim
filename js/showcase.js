@@ -152,6 +152,8 @@ export class Showcase {
     if (!this.cfg) return;
     this.t += dt;
     const { player, enemies, pickups, skillsRt } = this.sys;
+    // 미리보기에서는 쿨타임이 긴 스킬도 자주 보이도록 최대 3초로
+    for (const k of game.skills) if (k.cd > 3) k.cd = 3;
     if (this.cfg.kind === 'character') {
       this.demo.steer(dt);
       this.spawnAcc = (this.spawnAcc || 0) + dt * 6;
