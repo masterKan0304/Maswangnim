@@ -91,9 +91,9 @@ export class SkillRuntime {
       return g;
     });
     // 뿌리: 세로로 선 고리(반쯤 땅에 묻힌 뿌리)들이 차례로 솟았다 들어가며 나아감
-    const rootRingGeo = new THREE.TorusGeometry(0.32, 0.075, 6, 14);
+    const rootRingGeo = new THREE.TorusGeometry(0.62, 0.15, 6, 16);
     const rootMats = [0x7a5a2a, 0x6a4a22, 0x8a6a34].map((c) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.85, flatShading: true }));
-    const vineLeafGeo = new THREE.SphereGeometry(0.12, 5, 3).scale(1.6, 0.3, 0.8);
+    const vineLeafGeo = new THREE.SphereGeometry(0.22, 5, 3).scale(1.6, 0.3, 0.8);
     const vineLeafMat = new THREE.MeshStandardMaterial({ color: 0x7ed957, roughness: 0.7, flatShading: true });
     this.rootPool = new Pool(scene, () => {
       const g = new THREE.Group();
@@ -102,11 +102,11 @@ export class SkillRuntime {
       for (let i = 0; i < 5; i++) {
         const r = new THREE.Mesh(rootRingGeo, rootMats[i % 3]);
         r.rotation.y = Math.PI / 2;           // 고리 면이 진행 방향을 따라 세로로
-        r.position.z = -i * 0.36;             // 머리부터 꼬리까지 일렬
+        r.position.z = -i * 0.75;             // 머리부터 꼬리까지 일렬
         r.castShadow = true;
         if (i % 2 === 0) {
           const lf = new THREE.Mesh(vineLeafGeo, vineLeafMat);
-          lf.position.set(0, 0.36, 0); lf.rotation.z = 0.5;
+          lf.position.set(0, 0.7, 0); lf.rotation.z = 0.5;
           r.add(lf);
         }
         rings.push(r);
@@ -1275,7 +1275,7 @@ export class SkillRuntime {
         // 고리가 차례로 땅에서 솟았다가 들어감 (뿌리가 땅을 뚫고 나아가는 모습)
         p.mesh.userData.rings.forEach((r, i) => {
           const w = Math.sin(p.age * 14 - i * 1.25);
-          r.position.y = -0.12 + w * 0.2;
+          r.position.y = -0.25 + w * 0.4;
           r.scale.setScalar(0.85 + 0.25 * Math.max(0, w));
         });
         if (Math.random() < 0.8) this.fx.particles.emit(p.x, 0.05, p.z, (Math.random() - 0.5) * 1.5, 1, (Math.random() - 0.5) * 1.5, 0.45, 0.08, Math.random() < 0.6 ? 0x8a6a3a : 0x5a4020, -3);
