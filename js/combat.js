@@ -90,24 +90,31 @@ export class SkillRuntime {
       g.add(makeGlowSprite(0x8ff07a, 1.4, 0.45));
       return g;
     });
-    // 뿌리: 땅을 타고 나아가는 덩굴 (갈색 줄기 + 잎)
-    const rootGeo = new THREE.ConeGeometry(0.22, 1.5, 5).rotateX(Math.PI / 2);
-    const rootMat = new THREE.MeshStandardMaterial({ color: 0x7a5a2a, roughness: 0.8, flatShading: true });
-    const vineLeafGeo = new THREE.SphereGeometry(0.16, 5, 3).scale(1.6, 0.3, 0.8);
+    // 뿌리: 세로로 선 고리(반쯤 땅에 묻힌 뿌리)들이 차례로 솟았다 들어가며 나아감
+    const rootRingGeo = new THREE.TorusGeometry(0.32, 0.075, 6, 14);
+    const rootMats = [0x7a5a2a, 0x6a4a22, 0x8a6a34].map((c) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.85, flatShading: true }));
+    const vineLeafGeo = new THREE.SphereGeometry(0.12, 5, 3).scale(1.6, 0.3, 0.8);
     const vineLeafMat = new THREE.MeshStandardMaterial({ color: 0x7ed957, roughness: 0.7, flatShading: true });
     this.rootPool = new Pool(scene, () => {
       const g = new THREE.Group();
       const body = new THREE.Group();
-      const stem = new THREE.Mesh(rootGeo, rootMat);
-      stem.castShadow = true;
-      body.add(stem);
-      for (const s of [-1, 1]) {
-        const lf = new THREE.Mesh(vineLeafGeo, vineLeafMat);
-        lf.position.set(s * 0.22, 0.05, -0.2 * s); lf.rotation.y = s * 0.6;
-        body.add(lf);
+      const rings = [];
+      for (let i = 0; i < 5; i++) {
+        const r = new THREE.Mesh(rootRingGeo, rootMats[i % 3]);
+        r.rotation.y = Math.PI / 2;           // 고리 면이 진행 방향을 따라 세로로
+        r.position.z = -i * 0.36;             // 머리부터 꼬리까지 일렬
+        r.castShadow = true;
+        if (i % 2 === 0) {
+          const lf = new THREE.Mesh(vineLeafGeo, vineLeafMat);
+          lf.position.set(0, 0.36, 0); lf.rotation.z = 0.5;
+          r.add(lf);
+        }
+        rings.push(r);
+        body.add(r);
       }
       g.add(body);
       g.userData.shell = body;
+      g.userData.rings = rings;
       return g;
     });
     this.vineGeo = new THREE.TorusGeometry(1, 0.12, 5, 14);
@@ -312,6 +319,14 @@ export class SkillRuntime {
     const range = sample(st.range) / U;
     for (let i = 0; i < n; i++) {
       let x = p.x, z = p.z;
+      // 미리보기: 끌어들이는 모습이 잘 보이도록 적 근처에 세움
+      const near = game.demo ? this.enemies.nearestN(p.x, p.z, range, 6) : [];
+      if (near.length) {
+        const e = near[Math.floor(Math.random() * near.length)];
+        const a = Math.random() * Math.PI * 2;
+        this.spawnDoll(sk, st, e.x + Math.cos(a) * 1.4, e.z + Math.sin(a) * 1.4);
+        continue;
+      }
       for (let k = 0; k < 12; k++) {
         const a = Math.random() * Math.PI * 2, d = 1.5 + Math.random() * (range - 1.5);
         x = Math.max(-WORLD_HALF + 1, Math.min(WORLD_HALF - 1, p.x + Math.cos(a) * d));
@@ -443,6 +458,15 @@ export class SkillRuntime {
         if (Math.random() < 0.8) this.fx.particles.emit(p.pos.x, 1.7, p.pos.z, (Math.random() - 0.5) * 1.5, 1, (Math.random() - 0.5) * 1.5, 0.5, 0.08, 0xffd27a, -2);
       }
       const k = Math.min(1, h.ticks / Math.max(1, h.max));   // 열매 크기 (0~1)
+      h.k = k;
+      // 주위에서 꿀 방울이 열매로 빨려 들어감
+      for (let q = 0; q < 2; q++) {
+        if (Math.random() > 0.75) continue;
+        const a = Math.random() * Math.PI * 2, d = 1.4 + Math.random() * (1.2 + k * 2);
+        const sx = p.pos.x + Math.cos(a) * d, sz = p.pos.z + Math.sin(a) * d, sy = 0.3 + Math.random() * 1.2;
+        const ty = 1.5 + k * 0.45, life = 0.45;
+        this.fx.particles.emit(sx, sy, sz, (p.pos.x - sx) / life, (ty - sy) / life, (p.pos.z - sz) / life, life, 0.07 + k * 0.05, Math.random() < 0.6 ? 0xffb52e : 0xffd98a, 0);
+      }
       slow = Math.max(slow, (0.2 + 0.3 * k) * (sk.level >= 3 ? 0.5 : 1));   // 커질수록 느려짐 (3레벨: 절반)
       h.fruit.position.set(p.pos.x, 1.45 + k * 0.45, p.pos.z);
       h.fruit.scale.setScalar(0.6 + k * 1.6 + Math.sin(h.dur * 14) * 0.04);
@@ -490,7 +514,10 @@ export class SkillRuntime {
     }
     this.fx.ring(p.x, p.z, R, 0xffc94a, 0.55);
     this.fx.ring(p.x, p.z, R * 0.6, 0xffffff, 0.4);
-    this.fx.particles.burst(p.x, 1.2, p.z, 40, [0xffb52e, 0xffd27a, 0xfff0c0], { speed: 4 + R * 1.2, size: 0.13, life: 0.7, up: 4 });
+    // 열매 크기에 비례해 꿀이 더 많이, 더 크게, 더 멀리 튐
+    const k = h.k || 0;
+    this.fx.particles.burst(p.x, 1.6, p.z, Math.round(24 + k * 70), [0xffb52e, 0xffd27a, 0xfff0c0, 0xe8901a], { speed: 3 + R * 1.4 + k * 4, size: 0.1 + k * 0.16, life: 0.7 + k * 0.4, up: 4 + k * 3, grav: 10 });
+    this.fx.particles.burst(p.x, 0.3, p.z, Math.round(10 + k * 30), [0xffb52e, 0xe8901a], { speed: 2 + R + k * 2, size: 0.14 + k * 0.12, life: 1 + k * 0.5, up: 1 });
     sfx('explode');
   }
 
@@ -1188,7 +1215,8 @@ export class SkillRuntime {
         if (t) {
           const want = Math.atan2(t.z - p.z, t.x - p.x), cur = Math.atan2(p.dz, p.dx);
           const diff = Math.atan2(Math.sin(want - cur), Math.cos(want - cur));
-          const a = cur + Math.max(-9 * dt, Math.min(9 * dt, diff));
+          const turn = (p.kind === 'root' ? 60 : 9) * dt;   // 뿌리 추적: 매우 빠르게 방향을 바꿔 바로 닿음
+          const a = cur + Math.max(-turn, Math.min(turn, diff));
           p.dx = Math.cos(a); p.dz = Math.sin(a);
         }
       }
@@ -1242,9 +1270,15 @@ export class SkillRuntime {
 
       p.mesh.position.set(p.x, p.y, p.z);
       if (p.kind === 'root') {
+        p.mesh.position.y = 0;
         p.mesh.rotation.set(0, Math.atan2(p.dx, p.dz), 0);
-        p.mesh.userData.shell.rotation.z = Math.sin(p.age * 18) * 0.35;   // 꿈틀꿈틀
-        if (Math.random() < 0.7) this.fx.particles.emit(p.x, 0.1, p.z, (Math.random() - 0.5), 0.6, (Math.random() - 0.5), 0.5, 0.09, Math.random() < 0.5 ? 0x8a6a3a : 0x7ed957, -1);
+        // 고리가 차례로 땅에서 솟았다가 들어감 (뿌리가 땅을 뚫고 나아가는 모습)
+        p.mesh.userData.rings.forEach((r, i) => {
+          const w = Math.sin(p.age * 14 - i * 1.25);
+          r.position.y = -0.12 + w * 0.2;
+          r.scale.setScalar(0.85 + 0.25 * Math.max(0, w));
+        });
+        if (Math.random() < 0.8) this.fx.particles.emit(p.x, 0.05, p.z, (Math.random() - 0.5) * 1.5, 1, (Math.random() - 0.5) * 1.5, 0.45, 0.08, Math.random() < 0.6 ? 0x8a6a3a : 0x5a4020, -3);
       }
       if (p.kind === 'leaf') {
         // 진행 방향을 바라보며 빙글빙글

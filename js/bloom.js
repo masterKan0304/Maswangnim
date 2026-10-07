@@ -20,6 +20,7 @@ export class Bloom {
     Object.assign(this, { scene, fx, enemies, player, skillsRt });
     this.flowers = [];
     this.fruits = [];        // 자라는 중 / 날아가는 중
+    this.waves = [];         // 세계수의 씨앗 파동
     this.nutrients = 0;
     this.count = 0;          // 지금까지 핀 꽃 수 (열매 주기)
     // 꽃 모양 (공용 지오메트리 / 재질)
@@ -54,30 +55,70 @@ export class Bloom {
     }
   }
 
-  // 세계수의 씨앗: 범위 안 모든 적에게 피해, 맞은 적 하나당 양분 2 (5레벨: 그 자리에 꽃)
+  // 세계수의 씨앗: 마솽을 중심으로 파동이 퍼져 나가며 닿는 적마다 피해 (맞은 적 하나당 양분 2, 5레벨: 그 자리에 꽃)
   seedBurst(sk) {
     const st = getStats(sk);
     const p = this.player.pos;
     const R = sample(st.area) / U / 2;
-    const hit = [];
-    for (const e of this.enemies.query(p.x, p.z, R + 2.2)) {
-      if (!e.alive || Math.hypot(e.x - p.x, e.z - p.z) > R + e.r * 0.5) continue;
-      this.skillsRt.deal(e, sk, st);
-      hit.push({ x: e.x, z: e.z });
-      this.fx.particles.burst(e.x, 0.5, e.z, 6, [0xffe680, 0x7ed957], { speed: 2, size: 0.1, life: 0.5, up: 3 });
+    const mk = (color, opacity, geo = this.fx.ringGeo) => {
+      const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color, transparent: true, opacity, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+      m.rotation.x = -Math.PI / 2;
+      m.position.set(p.x, 0.07, p.z);
+      this.scene.add(m);
+      return m;
+    };
+    // 파동 고리 3겹 (금빛 · 초록 · 흰빛) + 바닥에 번지는 빛
+    const rings = [mk(0xffe680, 0.95), mk(0x7ed957, 0.8), mk(0xffffff, 0.6)];
+    const glow = mk(0xfff3a0, 0.35, this.fx.circleGeo);
+    this.waves.push({ sk, st, x: p.x, z: p.z, R, t: 0, dur: 1.6, hit: new Set(), spots: [], rings, glow });
+    // 가운데에서 솟는 빛 기둥
+    for (let k = 0; k < 70; k++) {
+      const a = Math.random() * Math.PI * 2, d = Math.random() * 0.9;
+      this.fx.particles.emit(p.x + Math.cos(a) * d, 0.2 + Math.random(), p.z + Math.sin(a) * d, Math.cos(a) * 0.5, 6 + Math.random() * 6, Math.sin(a) * 0.5, 1.2, 0.14 + Math.random() * 0.12,
+        [0xffe680, 0x7ed957, 0xffffff, 0xff9ec4][k % 4], -1.5);
     }
-    // 세계수 연출: 플레이어 자리에서 솟는 빛 기둥 + 퍼지는 고리
-    for (let k = 0; k < 40; k++) {
-      const a = Math.random() * Math.PI * 2, d = Math.random() * 0.8;
-      this.fx.particles.emit(p.x + Math.cos(a) * d, 0.2 + Math.random(), p.z + Math.sin(a) * d, Math.cos(a) * 0.6, 5 + Math.random() * 4, Math.sin(a) * 0.6, 1, 0.16, Math.random() < 0.5 ? 0xffe680 : 0x7ed957, -2);
-    }
-    this.fx.ring(p.x, p.z, R, 0xffe680, 0.8);
-    this.fx.ring(p.x, p.z, R * 0.66, 0x7ed957, 0.65);
-    this.fx.ring(p.x, p.z, R * 0.33, 0xffffff, 0.5);
+    this.fx.ring(p.x, p.z, 2.2, 0xffffff, 0.5);
     sfx('explode');
-    if (!game.demo) sfx('levelup');
-    if (hit.length) this.addNutrient(hit.length * 2, true);
-    if (sk.level >= 5) for (const h of hit.slice(0, 12)) this.spawnFlower(h);
+    if (!game.demo) { sfx('levelup'); sfx('boss'); }
+  }
+
+  updateWaves(dt) {
+    for (const w of [...this.waves]) {
+      w.t += dt;
+      const k = Math.min(1, w.t / w.dur);
+      const ease = 1 - Math.pow(1 - k, 2.2);   // 처음엔 빠르게, 끝으로 갈수록 천천히
+      const r = Math.max(0.1, w.R * ease);
+      const fade = 1 - Math.max(0, (k - 0.75) / 0.25);
+      w.rings[0].scale.setScalar(r); w.rings[0].material.opacity = 0.95 * fade;
+      w.rings[1].scale.setScalar(Math.max(0.1, r * 0.93)); w.rings[1].material.opacity = 0.75 * fade;
+      w.rings[2].scale.setScalar(Math.max(0.1, r * 0.82)); w.rings[2].material.opacity = 0.5 * fade;
+      w.glow.scale.setScalar(r); w.glow.material.opacity = 0.28 * fade * (1 - k * 0.5);
+      // 파동 앞쪽에서 꽃잎 · 잎사귀 · 금빛 가루가 흩날림
+      const n = Math.round(8 + r * 2);
+      for (let q = 0; q < n; q++) {
+        const a = Math.random() * Math.PI * 2;
+        const roll = Math.random();
+        const col = roll < 0.35 ? (Math.random() < 0.5 ? 0xff9ec4 : 0xffd0e4) : roll < 0.7 ? (Math.random() < 0.5 ? 0x7ed957 : 0x4fbf4a) : 0xffe680;
+        this.fx.particles.emit(w.x + Math.cos(a) * r, 0.15 + Math.random() * 0.4, w.z + Math.sin(a) * r, Math.cos(a) * 3, 2 + Math.random() * 3, Math.sin(a) * 3,
+          0.6 + Math.random() * 0.5, roll < 0.7 ? 0.11 + Math.random() * 0.06 : 0.07, col, 1.2);
+      }
+      // 파동이 닿는 적에게 피해
+      for (const e of this.enemies.query(w.x, w.z, r + 2.2)) {
+        if (!e.alive || w.hit.has(e)) continue;
+        const d = Math.hypot(e.x - w.x, e.z - w.z);
+        if (d > r + e.r * 0.5) continue;
+        w.hit.add(e);
+        w.spots.push({ x: e.x, z: e.z });
+        this.skillsRt.deal(e, w.sk, w.st, { kx: ((e.x - w.x) / (d || 1)) * 4, kz: ((e.z - w.z) / (d || 1)) * 4 });
+        this.fx.particles.burst(e.x, 0.6, e.z, 8, [0xffe680, 0x7ed957, 0xff9ec4], { speed: 2.5, size: 0.11, life: 0.55, up: 3.5 });
+      }
+      if (k >= 1) {
+        for (const m of [...w.rings, w.glow]) { this.scene.remove(m); m.material.dispose(); }
+        this.waves = this.waves.filter((x) => x !== w);
+        if (w.hit.size) this.addNutrient(w.hit.size * 2, true);
+        if (w.sk.level >= 5) for (const h of w.spots.slice(0, 12)) this.spawnFlower(h);
+      }
+    }
   }
 
   // ── 꽃 ──
@@ -117,7 +158,7 @@ export class Bloom {
     this.scene.add(g);
     const f = { x, z, mesh: g, head, age: 0, armT: -1, ry: Math.random() * 6 };
     this.flowers.push(f);
-    if (this.flowers.length > MAX_FLOWERS) this.removeFlower(this.flowers[0]);
+    if (this.flowers.length > (game.demo ? 10 : MAX_FLOWERS)) this.removeFlower(this.flowers[0]);   // 미리보기에서는 최대 10개
     this.fx.particles.burst(x, 0.4, z, 10, [0xff9ec4, 0xffd0e4, 0x8ff07a], { speed: 1.6, size: 0.08, life: 0.5, up: 2.5 });
     sfx('gem');
     this.count++;
@@ -204,6 +245,7 @@ export class Bloom {
   }
 
   update(dt) {
+    this.updateWaves(dt);
     // 꽃: 자라남 / 적이 닿으면 1초 뒤 폭발
     for (const f of [...this.flowers]) {
       f.age += dt;
@@ -256,7 +298,8 @@ export class Bloom {
   clear() {
     for (const f of this.flowers) this.scene.remove(f.mesh);
     for (const fr of this.fruits) { this.scene.remove(fr.mesh); fr.mat.dispose(); }
-    this.flowers = []; this.fruits = [];
+    for (const w of this.waves) for (const m of [...w.rings, w.glow]) { this.scene.remove(m); m.material.dispose(); }
+    this.flowers = []; this.fruits = []; this.waves = [];
     this.nutrients = 0; this.count = 0;
   }
 }
