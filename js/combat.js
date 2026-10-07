@@ -90,6 +90,7 @@ export class SkillRuntime {
     // 솔바람: 수평으로 도는 바람 고리
     this.windRingGeo = new THREE.TorusGeometry(1, 0.08, 6, 28);
     this.windDiscGeo = new THREE.CircleGeometry(1, 24);
+    this.windFunnelGeo = new THREE.CylinderGeometry(1.05, 0.28, 1.9, 18, 1, true).translate(0, 0.95, 0);
     this.iceballGeo = new THREE.IcosahedronGeometry(0.5, 0);
     this.shardGeo = new THREE.OctahedronGeometry(0.09, 0).scale(1, 2, 1);
     this.snowGeo = jitter(new THREE.IcosahedronGeometry(0.5, 1), 0.08, 77);
@@ -276,17 +277,30 @@ export class SkillRuntime {
   spawnWind(sk, st, x, z, dx, dz, chains) {
     const ringMat = new THREE.MeshBasicMaterial({ color: 0xd8fff0, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false });
     const discMat = new THREE.MeshBasicMaterial({ color: 0x9fe8c0, transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+    // 회오리: 위로 갈수록 넓어지는 고리들 + 깔때기 모양의 바람막
     const g = new THREE.Group();
-    const r1 = new THREE.Mesh(this.windRingGeo, ringMat), r2 = new THREE.Mesh(this.windRingGeo, ringMat);
-    r1.rotation.x = r2.rotation.x = Math.PI / 2;
-    r2.scale.setScalar(0.62);
+    const rings = [];
+    for (let k = 0; k < 5; k++) {
+      const r = new THREE.Mesh(this.windRingGeo, ringMat);
+      r.rotation.x = Math.PI / 2;
+      const t = k / 4;
+      r.position.y = t * 1.9;
+      r.scale.setScalar(0.32 + t * 0.75);
+      r.userData.spin = (k % 2 ? -1 : 1) * (7 + k * 2);
+      rings.push(r);
+      g.add(r);
+    }
+    const funnel = new THREE.Mesh(this.windFunnelGeo, discMat);
+    g.add(funnel);
     const disc = new THREE.Mesh(this.windDiscGeo, discMat);
     disc.rotation.x = -Math.PI / 2;
-    g.add(r1, r2, disc);
+    disc.scale.setScalar(0.5);
+    g.add(disc);
     this.scene.add(g);
+    const r1 = rings[0], r2 = rings[1];
     const w = {
       sk, st, x, z, dx, dz, r: sample(st.projSize) / PZ / 2, speed: sample(st.projSpeed) * PS, life: sample(st.duration), age: 0,
-      mul: 1, boosts: 0, petals: false, chains, inside: new Set(), mesh: g, r1, r2, mats: [ringMat, discMat],
+      mul: 1, boosts: 0, petals: false, chains, inside: new Set(), mesh: g, r1, r2, rings, funnel, mats: [ringMat, discMat],
     };
     this.winds.push(w);
     return w;
@@ -339,15 +353,21 @@ export class SkillRuntime {
       // 모습
       const fade = Math.min(1, (w.life - w.age) / 0.4) * Math.min(1, w.age / 0.12);
       w.mats[0].opacity = 0.7 * fade; w.mats[1].opacity = 0.22 * fade;
-      w.mesh.position.set(w.x, 0.45, w.z);
-      w.mesh.scale.setScalar(w.r);
-      w.r1.rotation.z += dt * 9; w.r2.rotation.z -= dt * 13;
-      w.mesh.rotation.y += dt * 4;
-      if (Math.random() < 0.8) {
-        const a = Math.random() * Math.PI * 2;
+      w.mesh.position.set(w.x, 0.05, w.z);
+      w.mesh.scale.set(w.r, Math.max(0.9, w.r * 1.1), w.r);
+      for (const r of w.rings) {
+        r.rotation.z += dt * r.userData.spin;
+        r.position.x = Math.sin(w.age * 9 + r.position.y * 2) * 0.08;   // 살짝 흔들리는 회오리
+      }
+      w.funnel.rotation.y -= dt * 10;
+      // 나선을 그리며 위로 솟는 잎 / 꽃잎
+      for (let k = 0; k < 2; k++) {
+        if (Math.random() > 0.85) continue;
+        const a = Math.random() * Math.PI * 2, h = Math.random();
+        const rr = w.r * (0.35 + h * 0.75);
         const petal = w.petals && Math.random() < 0.6;
-        this.fx.particles.emit(w.x + Math.cos(a) * w.r, 0.3 + Math.random() * 0.6, w.z + Math.sin(a) * w.r, -Math.sin(a) * 3, 0.6, Math.cos(a) * 3, 0.45,
-          petal ? 0.11 : 0.07, petal ? (Math.random() < 0.5 ? 0xff9ec4 : 0xffd0e4) : (Math.random() < 0.5 ? 0x9fe8c0 : 0xe8fff4), -0.6);
+        this.fx.particles.emit(w.x + Math.cos(a) * rr, 0.1 + h * 1.7 * w.mesh.scale.y, w.z + Math.sin(a) * rr, -Math.sin(a) * 4 * rr, 1.8, Math.cos(a) * 4 * rr, 0.5,
+          petal ? 0.11 : 0.07, petal ? (Math.random() < 0.5 ? 0xff9ec4 : 0xffd0e4) : (Math.random() < 0.5 ? 0x9fe8c0 : 0xe8fff4), 0.4);
       }
       if (w.age >= w.life) {
         // 연쇄: 사라진 자리에서 가장 가까운 적을 향해 새 솔바람

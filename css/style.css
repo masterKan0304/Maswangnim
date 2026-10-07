@@ -1090,3 +1090,6 @@ body.in-menu #hud, body.in-menu #label-layer, body.in-menu #vignette { display: 
 .ea-mastery { margin-top: 10px; }
 .ea-mastery b { color: #b8f5a0 !important; }
 .acct-bar.mastery i { background: linear-gradient(90deg, #4fbf4a, #b8f5a0); }
+
+.cx-item.name-first .cx-name { order: -1; }
+.cx-item.name-first { padding-top: 16px; }

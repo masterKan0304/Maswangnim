@@ -44,10 +44,11 @@ export class Demo {
   // 도감 미리보기: cfg 가 있으면 고정 장면, null 이면 다시 교차 편집 미리보기로
   setShowcase(cfg) {
     if (cfg) {
-      if (!this.showcase) this.showcase = new Showcase(this.sys);
+      if (!this.showcase) this.showcase = new Showcase(this.sys, this);
       this.mode = 'showcase';
       this.input.virtual.clear();
       this.input.vdir.set(0, 0, 0);
+      this.legT = 0;
       this.showcase.set(cfg);
       return;
     }

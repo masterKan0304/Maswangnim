@@ -45,8 +45,9 @@ const SKILL_SCENES = {
 };
 
 export class Showcase {
-  constructor(sys) {
-    this.sys = sys;   // { player, enemies, pickups, skillsRt, scene, enemySkills }
+  constructor(sys, demo) {
+    this.sys = sys;
+    this.demo = demo;   // 캐릭터 미리보기: 메인 화면 미리보기와 같은 자동 조작 / 적 생성을 씀   // { player, enemies, pickups, skillsRt, scene, enemySkills }
     this.cfg = null;
   }
 
@@ -110,18 +111,17 @@ export class Showcase {
     this.slots = scn.slots.map(([u, v]) => ({ ...W(u, v), e: null, wait: 0.2 + Math.random() * 0.3 }));
   }
 
-  // 캐릭터 장면: 해금된 전용 스킬들로 고정된 적 무리와 싸움 (개화 / 열매도 함께)
+  // 캐릭터 장면: 해금된 전용 스킬만 가득 채워 실제로 플레이하는 모습 (캐릭터가 돌아다니고 적이 계속 몰려옴)
   setCharacter(keys) {
     const { player } = this.sys;
-    const p0 = W(PX, PV);
-    player.pos.set(p0.x, 0, p0.z);
-    player.aim.set(R2, 0, -R2);
-    player.facing = Math.atan2(R2, -R2);
-    this.scn = { slots: [...CLUSTER, ...BEHIND, [0.4, 1.9], [0.4, -1.9], [2.6, 1.8], [2.6, -1.8]], hp: 1.6 };
-    for (const k of keys) { const sk = createSkill(k); sk.level = 3; sk.cd = Math.random(); game.skills.push(sk); }
+    player.pos.set(0, 0, 0);
+    this.scn = { slots: [] };
+    for (const k of keys) { const sk = createSkill(k); sk.level = 3; sk.cd = Math.random() * 0.8; game.skills.push(sk); }
     this.sk = game.skills[0];
     bump();
-    this.slots = this.scn.slots.map(([u, v]) => ({ ...W(u, v), e: null, wait: 0.2 + Math.random() * 0.4 }));
+    game.time = 150;
+    for (let i = 0; i < 26; i++) this.demo.spawnAround(5 + Math.random() * 9);
+    this.snap = true;
   }
 
   // 적 장면: 플레이어 없이 화면 오른쪽 아래로 계속 이동 (보이지 않는 공격 목표가 그 방향 앞에 있음)
@@ -139,6 +139,7 @@ export class Showcase {
   // 미리보기 카메라가 바라볼 곳 (적 미리보기는 적을 따라감)
   focus() {
     if (this.cfg && this.cfg.kind === 'enemy' && this.enemy && this.enemy.alive) return { x: this.enemy.x + 1, z: this.enemy.z };
+    if (this.cfg && this.cfg.kind === 'character') return { x: this.sys.player.pos.x, z: this.sys.player.pos.z };
     return SC_CENTER;
   }
 
@@ -146,6 +147,12 @@ export class Showcase {
     if (!this.cfg) return;
     this.t += dt;
     const { player, enemies, pickups, skillsRt } = this.sys;
+    if (this.cfg.kind === 'character') {
+      this.demo.steer(dt);
+      this.spawnAcc = (this.spawnAcc || 0) + dt * 6;
+      while (this.spawnAcc >= 1) { this.spawnAcc -= 1; if (enemies.list.length < 90) this.demo.spawnAround(10 + Math.random() * 5); }
+      return;
+    }
     if (this.cfg.kind === 'enemy') {
       const e = this.enemy;
       if (!e.alive) { this.setEnemy(this.enemyType); return; }

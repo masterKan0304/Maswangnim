@@ -77,7 +77,7 @@ function setPreview(cfg) {
   if (!cfg) return;
   const f = opts.demo.showcase.focus();
   look.set(f.x, 0, f.z);   // 장면이 바뀌면 바로 그 자리로
-  viewW = cfg.kind === 'enemy' ? (cfg.type === 'boss' ? 17 : cfg.type === 'elite' ? 13 : 9) : 11.5;
+  viewW = cfg.kind === 'enemy' ? (cfg.type === 'boss' ? 17 : cfg.type === 'elite' ? 13 : 9) : cfg.kind === 'character' ? 14 : 11.5;
 }
 
 // 다른 화면(캐릭터 선택)에서 같은 미리보기를 씀
@@ -164,6 +164,7 @@ function item(grid, id, iconHtml, name, opts2 = {}) {
   const tab = state.tab;
   const it = el('div', 'cx-item' + (state.sel[tab] === id ? ' sel' : '') + (opts2.locked ? ' locked' : ''), `<div class="cx-ic">${iconHtml}</div><div class="cx-name">${name}</div>${opts2.badge ? `<span class="cx-badge">${opts2.badge}</span>` : ''}`);
   it.dataset.id = id;
+  if (opts2.nameFirst) it.classList.add('name-first');
   if (opts2.ap) it.insertAdjacentHTML('beforeend', `<span class="cx-ap ${opts2.ap}">${opts2.ap === 'a' ? 'A' : 'P'}</span>`);
   if (opts2.color) it.style.setProperty('--c', opts2.color);
   it.addEventListener('click', () => {
@@ -277,7 +278,7 @@ function gridEnemies(grid) {
   for (const en of ENEMIES) {
     const T = ENEMY_TYPES[en.type];
     const col = '#' + T.color.toString(16).padStart(6, '0');
-    item(grid, en.type, `<img class="cx-enemy" src="${enemyIcon(en.type)}" alt="">`, T.name, { color: col, badge: en.grade !== '일반' ? en.grade : '' });
+    item(grid, en.type, `<img class="cx-enemy" src="${enemyIcon(en.type)}" alt="">`, T.name, { color: col, badge: en.grade !== '일반' ? en.grade : '', nameFirst: true });
   }
 }
 
