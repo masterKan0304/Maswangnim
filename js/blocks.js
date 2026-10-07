@@ -273,7 +273,7 @@ export function sentenceParts(s) {
   if (s.template === 'AMP') {
     const L = slotChipLabel(s, 0);
     const set = s.slots[1].block && s.slots[1].block.key === 'set';
-    return [{ text: '장착된 다른 모든 문장의 효과가 ' }, { slot: 0 }, { text: set ? josa(L, '과', '와', '와/과') + ' ' : ' ' }, { slot: 1 }, { text: '.' }];
+    return [{ text: '다른 모든 문장의 수치 블록의 효과가 ' }, { slot: 0 }, { text: set ? josa(L, '과', '와', '와/과') + ' ' : ' ' }, { slot: 1 }, { text: '.' }];
   }
   const L0 = slotChipLabel(s, 0);
   const L1 = slotChipLabel(s, 1);

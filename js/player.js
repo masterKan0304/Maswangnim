@@ -76,11 +76,14 @@ export class Player {
     // 이동
     const mv = new THREE.Vector3();
     // 설정된 이동 키 (방향키는 다른 조작에 쓰이지 않으면 함께 동작) / 미리보기 캐릭터는 가상 입력
-    const press = input.virtual ? (d) => input.virtual.has(d) : (d) => movePressed(input.keys, d);
-    if (press('up')) mv.add(DIR_UP);
-    if (press('down')) mv.sub(DIR_UP);
-    if (press('right')) mv.add(DIR_RIGHT);
-    if (press('left')) mv.sub(DIR_RIGHT);
+    if (input.vdir) mv.copy(input.vdir);   // 미리보기 캐릭터: 부드러운 방향 입력
+    else {
+      const press = input.virtual ? (d) => input.virtual.has(d) : (d) => movePressed(input.keys, d);
+      if (press('up')) mv.add(DIR_UP);
+      if (press('down')) mv.sub(DIR_UP);
+      if (press('right')) mv.add(DIR_RIGHT);
+      if (press('left')) mv.sub(DIR_RIGHT);
+    }
     // 이름표 클릭: 지정한 아이템까지 자동 이동 (직접 이동하면 취소)
     if (mv.lengthSq() > 0) this.moveTarget = null;
     else if (this.moveTarget) {

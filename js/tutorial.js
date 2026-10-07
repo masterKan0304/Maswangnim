@@ -82,7 +82,7 @@ export class Tutorial {
       { title: '경험치를 모아 레벨업하기', hint: '적이 떨어뜨린 경험치를 모아 레벨 2가 되세요.',
         progress: () => `Lv.${game.level}`, update: () => game.level >= 2 },
       { title: '선택지 고르기', hint: '',
-        enter: () => { game.rerolls = Math.max(1, game.rerolls); this.lu = 'locked'; },
+        enter: () => { game.rerolls = 1; this.lu = 'locked'; },
         hintFn: () => (this.lu === 'locked'
           ? '처음에는 스킬을 하나 더 얻는 것이 효율적입니다. 리롤을 눌러 선택지를 바꿔 보세요.'
           : '새 스킬 하나를 골라 보세요.'),

@@ -443,8 +443,12 @@ $id('btn-giveup').addEventListener('click', () => {
 const AUTOSTART = 'bc-autostart';
 function requestStart(stageId) {
   sfx('start');
-  $id('fade').classList.add('on');
-  setTimeout(() => { sessionStorage.setItem(AUTOSTART, String(stageId)); location.reload(); }, 280);
+  // 로딩 화면을 먼저 덮은 뒤 새로 불러옴
+  const ld = document.createElement('div');
+  ld.id = 'loading';
+  ld.innerHTML = '<div class="ld-box"><div class="ld-text">로딩 중...</div><div class="ld-bar"><i id="ld-fill"></i></div></div>';
+  $id('stage').appendChild(ld);
+  setTimeout(() => { sessionStorage.setItem(AUTOSTART, String(stageId)); location.reload(); }, 120);
 }
 
 function startGame(stageId = 1) {
@@ -455,9 +459,10 @@ function startGame(stageId = 1) {
   resize();
   game.stage = stageId;
   game.accountLevel = profile.accountLevel;
-  game.mods = computeMods();
+  const tut = stageById(stageId).tutorial;
+  game.mods = computeMods(tut);   // 튜토리얼: 업그레이드 효과 없음
   player.applyMods(game.mods);
-  game.rerolls = START_REROLLS + game.mods.rerolls;
+  game.rerolls = tut ? 1 : START_REROLLS + game.mods.rerolls;   // 튜토리얼: 리롤 1회
   game.skills.push(createSkill('fireball'));
   bump();
   game.state = 'playing';
@@ -672,9 +677,7 @@ const auto = sessionStorage.getItem(AUTOSTART);
 sessionStorage.removeItem(AUTOSTART);
 if (auto) {
   // 시작 버튼으로 새로 불러온 경우: 바로 게임 시작 (암전에서 밝아짐)
-  $id('fade').classList.add('on', 'instant');
   startGame(stageById(+auto).id);
-  setTimeout(() => $id('fade').classList.remove('on', 'instant'), 60);
 } else {
   showMenu();
   setSfxMuted(true);

@@ -22,7 +22,7 @@ export class Demo {
   // sys: { player, enemies, pickups, skillsRt, scene, fx, onTeleport(pos), onCaption(stage), cutEl }
   constructor(sys) {
     this.sys = sys;
-    this.input = { keys: new Set(), virtual: new Set(), ground: new THREE.Vector3() };
+    this.input = { keys: new Set(), virtual: new Set(), vdir: new THREE.Vector3(), ground: new THREE.Vector3() };
     this.t = 0;
     this.fadeT = 0;
     this.spawnAcc = 0;
@@ -47,6 +47,7 @@ export class Demo {
       if (!this.showcase) this.showcase = new Showcase(this.sys);
       this.mode = 'showcase';
       this.input.virtual.clear();
+      this.input.vdir.set(0, 0, 0);
       this.showcase.set(cfg);
       return;
     }
@@ -115,28 +116,22 @@ export class Demo {
     enemies.spawn(type, x, z, hpMul);
   }
 
-  // 플레이어 자동 조작: 가까운 적을 피하며 돌아다님 (가끔 대시)
+  // 플레이어 자동 조작: 천천히 방향을 틀며 돌아다님 (적은 피하지 않고 뚫고 지나감)
   steer(dt) {
-    const { player, enemies } = this.sys;
+    const { player } = this.sys;
     const p = player.pos;
-    this.wander += (Math.random() - 0.5) * dt * 3;
-    let vx = Math.cos(this.wander) * 0.6, vz = Math.sin(this.wander) * 0.6;
-    let threat = 0;
-    for (const e of enemies.query(p.x, p.z, 6)) {
-      const dx = p.x - e.x, dz = p.z - e.z, d2 = Math.max(0.3, dx * dx + dz * dz);
-      vx += (dx / d2) * 2.5; vz += (dz / d2) * 2.5;
-      threat += 1 / d2;
+    this.turn = (this.turn || 0) * Math.exp(-dt * 0.8) + (Math.random() - 0.5) * dt * 2.2;   // 방향을 트는 정도도 부드럽게 변함
+    this.wander += this.turn * dt * 2;
+    // 맵 가장자리에 가까우면 안쪽으로 서서히 방향을 돌림
+    const edge = WORLD_HALF - 10;
+    if (Math.abs(p.x) > edge || Math.abs(p.z) > edge) {
+      const inward = Math.atan2(-p.z, -p.x);
+      const diff = Math.atan2(Math.sin(inward - this.wander), Math.cos(inward - this.wander));
+      this.wander += diff * Math.min(1, dt * 1.5);
     }
-    const edge = WORLD_HALF - 8;
-    if (Math.abs(p.x) > edge) vx -= Math.sign(p.x) * 2;
-    if (Math.abs(p.z) > edge) vz -= Math.sign(p.z) * 2;
-    const keys = this.input.virtual;
-    keys.clear();
-    const up = vx * DIR_UP.x + vz * DIR_UP.z, right = vx * DIR_RIGHT.x + vz * DIR_RIGHT.z;
-    const len = Math.hypot(up, right) || 1;
-    if (up / len > 0.38) keys.add('up'); else if (up / len < -0.38) keys.add('down');
-    if (right / len > 0.38) keys.add('right'); else if (right / len < -0.38) keys.add('left');
-    if (threat > 0.9 && Math.random() < dt * 2) player.tryDash();
+    this.input.virtual.clear();
+    this.input.vdir.set(Math.cos(this.wander), 0, Math.sin(this.wander));
+    if (Math.random() < dt * 0.25) player.tryDash();
   }
 
   update(dt) {

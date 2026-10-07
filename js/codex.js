@@ -21,7 +21,7 @@ export const TEMPLATE_DESC = {
   SSC: '앞 주체의 값만큼 뒤 주체의 값을 바꾸는 문장입니다.',
   ZONE: '적을 처치하면 그 자리에 스킬 속성의 지대를 남깁니다. 지대 위의 적은 해당 상태이상에 걸립니다.',
   INFUSE: '투사체가 속성 지대 위를 지나가면 그 속성의 피해를 추가로 얻습니다.',
-  AMP: '장착된 다른 모든 문장의 효과를 바꿉니다.',
+  AMP: '장착된 다른 모든 문장의 수치 블록의 효과를 바꿉니다. 수치 블록이 없는 주체 - 주체 - 변화 문장에는 적용되지 않습니다.',
 };
 const NUMBERS = [
   { key: 'fixed', name: '고정값', block: () => makeFixed(5), range: '2 ~ 8', desc: '항상 같은 값을 가진 수치입니다.' },
@@ -152,6 +152,7 @@ function item(grid, id, iconHtml, name, opts2 = {}) {
   const tab = state.tab;
   const it = el('div', 'cx-item' + (state.sel[tab] === id ? ' sel' : '') + (opts2.locked ? ' locked' : ''), `<div class="cx-ic">${iconHtml}</div><div class="cx-name">${name}</div>${opts2.badge ? `<span class="cx-badge">${opts2.badge}</span>` : ''}`);
   it.dataset.id = id;
+  if (opts2.ap) it.insertAdjacentHTML('beforeend', `<span class="cx-ap ${opts2.ap}">${opts2.ap === 'a' ? 'A' : 'P'}</span>`);
   if (opts2.color) it.style.setProperty('--c', opts2.color);
   it.addEventListener('click', () => {
     if (state.sel[tab] === id) return;
@@ -171,7 +172,7 @@ function gridSkills(grid) {
   const keys = [...SKILL_ORDER].sort((a, b) => unlockLevel('skills', a) - unlockLevel('skills', b));
   for (const key of keys) {
     const d = SKILL_DEFS[key];
-    item(grid, key, d.icon, d.name, { color: d.color, ...lockBadge(unlockLevel('skills', key)) });
+    item(grid, key, d.icon, d.name, { color: d.color, ap: d.passive ? 'p' : 'a', ...lockBadge(unlockLevel('skills', key)) });
   }
 }
 

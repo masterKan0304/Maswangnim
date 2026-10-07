@@ -109,13 +109,13 @@ export const levelOf = (id) => profile.upgrades[id] || 0;
 export const costOf = (u) => u.cost * 5 * (levelOf(u.id) + 1);   // 레벨마다 비용 증가
 export const isUnlocked = (u) => parentsOf(u).every((p) => levelOf(p) > 0);
 
-export function computeMods() {
+export function computeMods(noUpgrades = false) {
   const m = {
     maxHp: 0, maxHpMul: 1, dmgTakenMinus: 0, baseDmgMul: 1, regenMinus: 0, regenAmount: 0, invuln: 0, speedMul: 1, dashCd: 0, dashDistMul: 1, startBlocks: 0,
     maxMana: 0, manaRegen: 0, dmgMul: 1, statusAdd: 0, manaCostMinus: 0,
     xpMul: 1, dropMul: 1, rerolls: 0, pickupMul: 1, goldMul: 1,
   };
-  for (const u of UPGRADES) { const l = levelOf(u.id); if (l > 0) u.fx(m, l); }
+  if (!noUpgrades) for (const u of UPGRADES) { const l = levelOf(u.id); if (l > 0) u.fx(m, l); }
   return m;
 }
 

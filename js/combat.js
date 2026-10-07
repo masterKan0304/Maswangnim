@@ -88,7 +88,7 @@ export class SkillRuntime {
     if (!e.alive) return;
     const el = sk.def.element;
     const crit = Math.random() * 100 < sample(st.critChance);
-    const cm = crit ? sample(st.critDamage) / 100 : 1;
+    const cm = crit ? 1 + sample(st.critDamage) / 100 : 1;   // 치명타 피해량 100% → 피해 2배
     const pen = { pct: avg(st.penPct), flat: sample(st.penetration) };
     const mul = o.mul ?? 1;
     const main = (o.base ?? sample(st.damage)) * mul;

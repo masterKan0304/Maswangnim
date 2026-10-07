@@ -49,7 +49,10 @@ function markNav() {
 }
 
 export function setView(v) {
-  if (view === v) return;
+  // 다른 화면을 열면 설정 창은 닫음
+  const st = $('#settings');
+  if (v && !st.classList.contains('hidden')) { st.classList.add('hidden'); st.classList.remove('in-menu'); }
+  if (view === v) { markNav(); return; }
   view = v;
   $('#view-stage').classList.toggle('hidden', v !== 'stage');
   $('#view-upgrade').classList.toggle('hidden', v !== 'upgrade');
