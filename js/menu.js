@@ -60,6 +60,7 @@ export function setView(v) {
   $('#view-stage').classList.toggle('hidden', v !== 'stage');
   $('#view-upgrade').classList.toggle('hidden', v !== 'upgrade');
   $('#view-codex').classList.toggle('hidden', v !== 'codex');
+  $('#view-char').classList.toggle('hidden', v !== 'char');
   if (v === 'codex') openCodex();
   else if (v === 'char') renderChar();
   else closeCodex();
