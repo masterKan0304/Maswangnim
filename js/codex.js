@@ -329,7 +329,7 @@ function enemyIcon(type) {
   // 크기를 맞추고 가운데에
   const box = new THREE.Box3().setFromObject(obj);
   const size = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
-  const k = 1.6 / Math.max(size.x, size.y, size.z);
+  const k = 2.05 / Math.max(size.x, size.y, size.z);
   obj.scale.multiplyScalar(k);
   obj.position.set(-c.x * k, -c.y * k, -c.z * k);
   obj.rotation.y = 0.5;
