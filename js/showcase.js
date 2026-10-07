@@ -108,6 +108,12 @@ export class Showcase {
     this.enemyType = type;
   }
 
+  // 미리보기 카메라가 바라볼 곳 (적 미리보기는 적을 따라감)
+  focus() {
+    if (this.cfg && this.cfg.kind === 'enemy' && this.enemy && this.enemy.alive) return { x: this.enemy.x, z: this.enemy.z };
+    return SC_CENTER;
+  }
+
   update(dt) {
     if (!this.cfg) return;
     this.t += dt;

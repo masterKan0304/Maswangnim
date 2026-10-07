@@ -49,6 +49,7 @@ const ENEMY_ABILITY = {
 const state = { tab: 'skill', sel: { skill: 'fireball', block: 's:SNC', enemy: 'green' }, level: 1 };
 let opts = null;
 let renderer = null, camera = null, canvas = null, previewOn = false, viewW = 11;
+const look = new THREE.Vector3();
 
 export function initCodex(o) {
   opts = o;   // { demo, scene, ui }
@@ -69,6 +70,8 @@ function setPreview(cfg) {
   const box = $('#cx-preview');
   if (box) box.classList.toggle('hidden', !cfg);
   if (!cfg) return;
+  const f = opts.demo.showcase.focus();
+  look.set(f.x, 0, f.z);   // 장면이 바뀌면 바로 그 자리로
   viewW = cfg.kind === 'enemy' ? (cfg.type === 'boss' ? 17 : cfg.type === 'elite' ? 13 : 9) : 11.5;
 }
 
@@ -93,8 +96,11 @@ export function renderCodexPreview() {
   camera.left = -viewW / 2; camera.right = viewW / 2;
   camera.top = viewW / a / 2; camera.bottom = -viewW / a / 2;
   camera.updateProjectionMatrix();
-  camera.position.set(30, 27, 30);
-  camera.lookAt(0, 0, 0);
+  // 바라볼 곳을 부드럽게 따라감
+  const f = opts.demo.showcase ? opts.demo.showcase.focus() : { x: 0, z: 0 };
+  look.x += (f.x - look.x) * 0.08; look.z += (f.z - look.z) * 0.08;
+  camera.position.set(look.x + 30, 27, look.z + 30);
+  camera.lookAt(look.x, 0, look.z);
   renderer.render(opts.scene, camera);
 }
 
