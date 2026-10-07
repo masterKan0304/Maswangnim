@@ -47,6 +47,7 @@ export class SkillRuntime {
     this.zones = [];
     this.snowballs = [];
     this.beams = [];
+    this.flames = [];   // 불길을 뿜는 중인 스킬 (목록에서 빠진 스킬의 불길도 끝까지 관리)
 
     // 파이어볼: 울퉁불퉁한 검붉은 돌 + 틈 사이로 비치는 용암 핵 (뜨거운 운석)
     const rockGeo = jitter(new THREE.DodecahedronGeometry(0.5, 0), 0.32, 41);
@@ -232,6 +233,7 @@ export class SkillRuntime {
 
   // ── 화염 방사 ─────────────────────────
   startFlame(sk, st) {
+    if (sk.flame) this.endFlame(sk);   // 이전 불길이 남지 않도록
     const p = this.player.pos;
     const R = sample(st.area) / U;
     const near = this.enemies.nearestN(p.x, p.z, R * 3, 1)[0];
@@ -251,6 +253,7 @@ export class SkillRuntime {
     const glow = makeGlowSprite(0xff8a2a, 1.8, 0.9);
     this.scene.add(mesh, glow);
     sk.flame = { t: sample(st.duration), st, R, half, ang, tick: 0, mesh, geo, mat, core, coreGeo, coreMat, glow };
+    this.flames.push(sk);
   }
 
   // 진행 중인 모든 스킬 연출 제거 (도감 미리보기 장면 초기화)
@@ -262,7 +265,7 @@ export class SkillRuntime {
     while (this.snowballs.length) this.removeSnowball(0);
     while (this.beams.length) this.removeBeam(0);
     while (this.zones.length) this.removeZone(0);
-    for (const sk of game.skills) this.endFlame(sk);
+    while (this.flames.length) this.endFlame(this.flames[0]);
     this.casts.length = 0;
   }
 
@@ -273,10 +276,11 @@ export class SkillRuntime {
     this.scene.remove(f.mesh, f.glow);
     f.geo.dispose(); f.mat.dispose(); f.coreGeo.dispose(); f.coreMat.dispose(); f.glow.material.dispose();
     sk.flame = null;
+    this.flames = this.flames.filter((x) => x !== sk);
   }
 
   updateFlames(dt) {
-    for (const sk of game.skills) {
+    for (const sk of [...this.flames]) {
       const f = sk.flame;
       if (!f) continue;
       const p = this.player.pos;
@@ -573,8 +577,13 @@ export class SkillRuntime {
     const p = this.player.pos;
     const range = sample(st.range) / U;
     const a = Math.random() * Math.PI * 2, r = Math.sqrt(Math.random()) * range;
-    const x = Math.max(-WORLD_HALF, Math.min(WORLD_HALF, p.x + Math.cos(a) * r));
-    const z = Math.max(-WORLD_HALF, Math.min(WORLD_HALF, p.z + Math.sin(a) * r));
+    let x = Math.max(-WORLD_HALF, Math.min(WORLD_HALF, p.x + Math.cos(a) * r));
+    let z = Math.max(-WORLD_HALF, Math.min(WORLD_HALF, p.z + Math.sin(a) * r));
+    // 도감 미리보기: 적 무리 가운데에 고정 (두 번째 아이스볼은 살짝 옆)
+    if (this.iceballAt) {
+      const n = this.iceballs.filter((ib) => ib.t > 0).length % 2;
+      x = this.iceballAt.x + (n ? 0.9 : 0); z = this.iceballAt.z - (n ? 0.9 : 0);
+    }
     const size = sample(st.area) / (sk.def.areaUnit || U);
     const group = new THREE.Group();
     const mat = new THREE.MeshStandardMaterial({ color: 0xb8efff, emissive: 0x2a8fc0, emissiveIntensity: 0.7, roughness: 0.15, flatShading: true, transparent: true, opacity: 0.92 });

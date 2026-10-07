@@ -5,6 +5,7 @@ import { sfx, setVolumes } from './audio.js';
 import { STAGE } from './stage.js';
 import { ic } from './icons.js';
 import { accountNeed, ACCOUNT_UNLOCKS } from './config.js';
+import { KB, KEY_ACTIONS, keyName, keyOf, loadKeys, isAllowedKey, duplicateCodes } from './keys.js';
 
 const SAVE_KEY = 'blockchain-save-v1';
 
@@ -267,53 +268,162 @@ function makeToggle(on, onFlip) {
   return btn;
 }
 
-export function renderSettings(onChange) {
+// ─────────────────────────────────────────────
+//  설정 창: 게임 / 조작 / 사운드
+// ─────────────────────────────────────────────
+let setTab = 'game';
+let capture = null;   // 키 입력을 기다리는 중인 조작 { action, btn }
+
+export function renderSettings(onChange, onKeys) {
   const s = profile.settings;
   const box = document.getElementById('set-body');
   box.innerHTML = '';
-  const sliders = [['master', '전체 사운드'], ['bgm', '배경 사운드'], ['sfx', '전투 사운드'], ['ui', 'UI 사운드']];
-  const sec1 = document.createElement('div');
-  sec1.className = 'set-sec';
-  sec1.innerHTML = `<div class="set-title">${ic('speaker')} 사운드</div>`;
-  for (const [k, label] of sliders) {
-    const row = document.createElement('div');
-    row.className = 'set-row' + (s[k + 'On'] === false ? ' muted' : '');
-    row.innerHTML = `<span class="set-label">${label}</span><input type="range" min="0" max="100" step="1" value="${s[k]}"><span class="set-val">${s[k]}</span>`;
-    const input = row.querySelector('input'), val = row.querySelector('.set-val');
-    input.addEventListener('input', () => {
-      s[k] = +input.value;
-      val.textContent = s[k];
-      applyVolumeSettings();
-    });
-    input.addEventListener('change', () => { saveProfile(); sfx(k === 'sfx' ? 'kill' : 'click'); });
-    const tg = makeToggle(s[k + 'On'] !== false, (on) => {
-      s[k + 'On'] = on;
-      row.classList.toggle('muted', !on);
-      applyVolumeSettings();
-      saveProfile();
-      sfx(on ? 'toggleOn' : 'toggleOff');
-    });
-    tg.classList.add('small');
-    row.appendChild(tg);
-    sec1.appendChild(row);
+  stopCapture();
+  const tabs = document.createElement('div');
+  tabs.className = 'set-tabs';
+  for (const [k, name, icon] of [['game', '게임', 'gamepad'], ['keys', '조작', 'hand'], ['sound', '사운드', 'speaker']]) {
+    const b = document.createElement('button');
+    b.className = 'set-tab' + (setTab === k ? ' on' : '');
+    b.innerHTML = `${ic(icon)} ${name}`;
+    b.addEventListener('click', () => { if (setTab !== k) { setTab = k; sfx('select'); renderSettings(onChange, onKeys); } });
+    tabs.appendChild(b);
   }
-  box.appendChild(sec1);
+  box.appendChild(tabs);
+  const sec = document.createElement('div');
+  sec.className = 'set-sec';
+  box.appendChild(sec);
 
-  const sec2 = document.createElement('div');
-  sec2.className = 'set-sec';
-  sec2.innerHTML = `<div class="set-title">${ic('gamepad')} 게임</div>`;
-  const toggles = [['labels', '아이템 이름표 표시', 'Z'], ['autoPickup', '아이템 자동 획득', 'X']];
-  for (const [k, label, key] of toggles) {
-    const row = document.createElement('div');
-    row.className = 'set-row';
-    row.innerHTML = `<span class="set-label">${label} <kbd>${key}</kbd></span>`;
-    row.appendChild(makeToggle(s[k], (on) => {
-      s[k] = on;
-      sfx(on ? 'toggleOn' : 'toggleOff');
-      saveProfile();
-      if (onChange) onChange();
-    }));
-    sec2.appendChild(row);
+  if (setTab === 'sound') {
+    const sliders = [['master', '전체 사운드'], ['bgm', '배경 사운드'], ['sfx', '전투 사운드'], ['ui', 'UI 사운드']];
+    for (const [k, label] of sliders) {
+      const row = document.createElement('div');
+      row.className = 'set-row' + (s[k + 'On'] === false ? ' muted' : '');
+      row.innerHTML = `<span class="set-label">${label}</span><input type="range" min="0" max="100" step="1" value="${s[k]}"><span class="set-val">${s[k]}</span>`;
+      const input = row.querySelector('input'), val = row.querySelector('.set-val');
+      input.addEventListener('input', () => {
+        s[k] = +input.value;
+        val.textContent = s[k];
+        applyVolumeSettings();
+      });
+      input.addEventListener('change', () => { saveProfile(); sfx(k === 'sfx' ? 'kill' : 'click'); });
+      const tg = makeToggle(s[k + 'On'] !== false, (on) => {
+        s[k + 'On'] = on;
+        row.classList.toggle('muted', !on);
+        applyVolumeSettings();
+        saveProfile();
+        sfx(on ? 'toggleOn' : 'toggleOff');
+      });
+      tg.classList.add('small');
+      row.appendChild(tg);
+      sec.appendChild(row);
+    }
+    return;
   }
-  box.appendChild(sec2);
+
+  if (setTab === 'game') {
+    for (const [k, label, action] of [['labels', '아이템 이름표 표시', 'labels'], ['autoPickup', '아이템 자동 획득', 'pickup']]) {
+      const row = document.createElement('div');
+      row.className = 'set-row';
+      row.innerHTML = `<span class="set-label">${label} <kbd>${keyOf(action)}</kbd></span>`;
+      row.appendChild(makeToggle(s[k], (on) => {
+        s[k] = on;
+        sfx(on ? 'toggleOn' : 'toggleOff');
+        saveProfile();
+        if (onChange) onChange();
+      }));
+      sec.appendChild(row);
+    }
+    return;
+  }
+
+  // 조작: 버튼을 누른 뒤 키를 입력하면 할당
+  const grid = document.createElement('div');
+  grid.className = 'key-grid';
+  const dups = duplicateCodes();
+  for (const [action, label] of KEY_ACTIONS) {
+    const row = document.createElement('div');
+    row.className = 'key-row';
+    row.innerHTML = `<span class="set-label">${label}</span>`;
+    const btn = document.createElement('button');
+    btn.className = 'key-btn' + (dups.has(KB[action]) ? ' dup' : '');
+    btn.textContent = keyName(KB[action]);
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (capture && capture.action === action) { stopCapture(); return; }
+      startCapture(action, btn, () => { saveKeys(); renderSettings(onChange, onKeys); if (onKeys) onKeys(); });
+    });
+    row.appendChild(btn);
+    grid.appendChild(row);
+  }
+  sec.appendChild(grid);
+  const foot = document.createElement('div');
+  foot.className = 'key-foot';
+  foot.innerHTML = `<span class="key-msg">${dups.size ? `${ic('warn')} 빨간 키는 여러 조작에 함께 할당되어 있습니다. 모두 동작합니다.` : '버튼을 누른 뒤 원하는 키를 입력하세요. Esc 로 취소합니다.'}</span>`;
+  const reset = document.createElement('button');
+  reset.className = 'menu-btn key-reset';
+  reset.textContent = '기본값으로';
+  reset.addEventListener('click', () => { loadKeys({}); saveKeys(); sfx('select'); renderSettings(onChange, onKeys); if (onKeys) onKeys(); });
+  foot.appendChild(reset);
+  sec.appendChild(foot);
+}
+
+function saveKeys() {
+  profile.settings.keys = { ...KB };
+  saveProfile();
+}
+
+function stopCapture() {
+  if (!capture) return;
+  capture.btn.classList.remove('listening');
+  capture.btn.textContent = keyName(KB[capture.action]);
+  removeEventListener('keydown', onCaptureKey, true);
+  removeEventListener('pointerdown', onCapturePointer, true);
+  removeEventListener('wheel', onCaptureWheel, true);
+  capture = null;
+}
+
+function startCapture(action, btn, done) {
+  stopCapture();
+  capture = { action, btn, done };
+  btn.classList.add('listening');
+  btn.textContent = '키 입력…';
+  sfx('open');
+  addEventListener('keydown', onCaptureKey, true);
+  addEventListener('pointerdown', onCapturePointer, true);
+  addEventListener('wheel', onCaptureWheel, true);
+}
+
+function rejectCapture(msg) {
+  const c = capture;
+  sfx('error');
+  stopCapture();
+  c.btn.classList.add('reject');
+  const m = document.querySelector('#set-body .key-msg');
+  if (m) { m.textContent = msg; m.classList.add('bad'); }
+  setTimeout(() => c.btn.classList.remove('reject'), 450);
+}
+
+// 키 입력 대기 중에는 게임 단축키로 넘기지 않음
+function onCaptureKey(e) {
+  e.preventDefault();
+  e.stopImmediatePropagation();
+  if (!capture) return;
+  if (e.code === 'Escape') { stopCapture(); sfx('close'); return; }
+  if (!isAllowedKey(e.code)) { rejectCapture(`'${keyName(e.code)}' 키는 할당할 수 없습니다.`); return; }
+  const c = capture;
+  KB[c.action] = e.code;
+  stopCapture();
+  sfx('equip');
+  c.done();
+}
+function onCapturePointer(e) {
+  if (!capture) return;
+  if (e.target === capture.btn) return;   // 같은 버튼을 다시 누르면 취소 (click 에서 처리)
+  e.preventDefault(); e.stopPropagation();
+  rejectCapture('마우스 버튼은 할당할 수 없습니다.');
+}
+function onCaptureWheel(e) {
+  if (!capture) return;
+  e.preventDefault(); e.stopPropagation();
+  rejectCapture('마우스 휠은 할당할 수 없습니다.');
 }

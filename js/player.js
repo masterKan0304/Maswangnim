@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { PLAYER, WORLD_HALF, DASH } from './config.js';
 import { createPlayer } from './models.js';
 import { game } from './state.js';
+import { movePressed } from './keys.js';
 import { getStats, sample } from './skills.js';
 import { makeGlowSprite } from './effects.js';
 import { sfx } from './audio.js';
@@ -74,11 +75,12 @@ export class Player {
   update(dt, input, obstacles) {
     // 이동
     const mv = new THREE.Vector3();
-    const k = input.keys;   // WASD 또는 방향키
-    if (k.has('KeyW') || k.has('ArrowUp')) mv.add(DIR_UP);
-    if (k.has('KeyS') || k.has('ArrowDown')) mv.sub(DIR_UP);
-    if (k.has('KeyD') || k.has('ArrowRight')) mv.add(DIR_RIGHT);
-    if (k.has('KeyA') || k.has('ArrowLeft')) mv.sub(DIR_RIGHT);
+    // 설정된 이동 키 (방향키는 다른 조작에 쓰이지 않으면 함께 동작) / 미리보기 캐릭터는 가상 입력
+    const press = input.virtual ? (d) => input.virtual.has(d) : (d) => movePressed(input.keys, d);
+    if (press('up')) mv.add(DIR_UP);
+    if (press('down')) mv.sub(DIR_UP);
+    if (press('right')) mv.add(DIR_RIGHT);
+    if (press('left')) mv.sub(DIR_RIGHT);
     // 이름표 클릭: 지정한 아이템까지 자동 이동 (직접 이동하면 취소)
     if (mv.lengthSq() > 0) this.moveTarget = null;
     else if (this.moveTarget) {

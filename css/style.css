@@ -927,3 +927,62 @@ body.in-menu #hud, body.in-menu #label-layer, body.in-menu #vignette { display: 
 .cx-pv-label { position: absolute; left: 10px; top: 8px; font-size: 11px; font-weight: 900; color: #fff; background: rgba(10,12,28,0.55); padding: 2px 10px; border-radius: 999px; }
 .cx-slime { display: inline-block; width: 34px; height: 26px; border-radius: 50% 50% 42% 42% / 62% 62% 38% 38%; background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.55), transparent 35%), var(--c); box-shadow: inset 0 -4px 0 rgba(0,0,0,0.18); }
 .cx-slime.big { width: 46px; height: 36px; }
+
+/* 직접 만든 스크롤 */
+.sc-wrap { position: relative; flex: 1; min-width: 0; min-height: 0; display: flex; }
+.sc-inner { flex: 1; min-width: 0; overflow-y: auto; scrollbar-width: none; }
+.sc-inner::-webkit-scrollbar { display: none; }
+.sc-bar { position: absolute; right: 2px; top: 4px; bottom: 4px; width: 6px; border-radius: 999px; background: rgba(255,255,255,0.05); }
+.sc-thumb { width: 100%; border-radius: 999px; background: rgba(255,255,255,0.28); cursor: grab; transition: background 0.15s; }
+.sc-thumb:hover, .sc-thumb.drag { background: rgba(255,212,90,0.75); }
+.cx-grid.sc-inner { padding-right: 14px; }
+.cx-info.sc-inner { padding-right: 20px; }
+
+/* 메인 화면: 가장자리 틈으로 미리보기가 비치지 않도록 */
+#menu { background: linear-gradient(90deg, #11132a 0, #11132a calc(30% + 2px), transparent calc(30% + 2px)); }
+#menu.covered { background: #11132a; }
+#menu-left { margin-right: -1px; }
+.mview { inset: -1px; }
+#settings.in-menu { left: calc(30% - 1px); }
+
+/* 튜토리얼 퀘스트 안내: 창보다 위 / 창 이동 / 스킬 창 높이 */
+#quest { z-index: 45; pointer-events: none; }
+.win-head { cursor: move; }
+.win-head.moving { cursor: grabbing; }
+.win-head button { cursor: pointer; }
+#win-skills { max-height: 500px; }
+
+/* 설정: 탭 / 조작키 */
+.set-panel { width: 760px; }
+.set-tabs { display: flex; gap: 8px; margin-bottom: 14px; }
+.set-tab { display: inline-flex; align-items: center; gap: 8px; padding: 8px 22px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.14); background: rgba(255,255,255,0.05); color: #c9cdf0; font-family: 'Jua', sans-serif; font-size: 18px; }
+.set-tab .ic { width: 20px; height: 20px; }
+.set-tab:hover { background: rgba(255,255,255,0.1); }
+.set-tab.on { background: linear-gradient(180deg, #6f9dff, #4560d8); color: #fff; border-color: transparent; box-shadow: 0 3px 0 #2b3c94; }
+.key-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 18px; }
+.key-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 5px 10px; border-radius: 10px; background: rgba(255,255,255,0.04); }
+.key-row .set-label { font-size: 13.5px; }
+.key-btn {
+  min-width: 92px; padding: 6px 12px; border-radius: 9px; font-weight: 900; font-size: 14px; color: #fff;
+  background: linear-gradient(180deg, #4a5070, #333852); border: 1px solid rgba(255,255,255,0.16); box-shadow: 0 3px 0 #1f2236;
+}
+.key-btn:hover { filter: brightness(1.15); }
+.key-btn.dup { background: linear-gradient(180deg, #e25563, #a8323f); border-color: #ff8a96; box-shadow: 0 3px 0 #6e1d26; }
+.key-btn.listening { background: linear-gradient(180deg, #ffcf5a, #f5a524); color: #3a2400; animation: key-blink 0.8s ease-in-out infinite; }
+@keyframes key-blink { 50% { filter: brightness(1.25); } }
+.key-btn.reject { animation: key-shake 0.35s; }
+@keyframes key-shake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+.key-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; }
+.key-msg { font-size: 12.5px; color: var(--dim); display: inline-flex; align-items: center; gap: 6px; }
+.key-msg .ic { width: 15px; height: 15px; }
+.key-msg.bad { color: var(--bad); font-weight: 700; }
+.key-reset { min-width: 0; font-size: 15px; padding: 8px 18px; }
+
+/* 로딩 화면 */
+#loading { position: absolute; inset: 0; z-index: 900; background: #05060c; display: grid; place-items: center; transition: opacity 0.4s; }
+#loading.done { opacity: 0; pointer-events: none; }
+.ld-box { width: 360px; text-align: center; }
+.ld-text { font-family: 'Jua', sans-serif; font-size: 26px; color: #fff; letter-spacing: 1px; margin-bottom: 14px; animation: ld-pulse 1.2s ease-in-out infinite; }
+@keyframes ld-pulse { 50% { opacity: 0.55; } }
+.ld-bar { height: 10px; border-radius: 999px; background: rgba(255,255,255,0.1); overflow: hidden; border: 1px solid rgba(255,255,255,0.12); }
+#ld-fill { display: block; height: 100%; width: 12%; border-radius: 999px; background: linear-gradient(90deg, #9d6bff, #3d8bff, #17b897); transition: width 0.3s ease-out; }

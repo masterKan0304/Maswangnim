@@ -8,6 +8,7 @@ import { makeSentence, makeWord, makeFixed } from './blocks.js';
 
 export const SC_CENTER = { x: 0, z: 0 };
 const PX = -3.4;   // 플레이어 자리 (공터 왼쪽)
+const PV = 0.9;    // 플레이어를 화면에서 조금 아래로
 // 장면 좌표 (u: 화면 오른쪽, v: 화면 아래쪽) → 월드 좌표 (아이소메트릭 카메라 기준)
 const R2 = Math.SQRT1_2;
 const W = (u, v) => ({ x: (u + v) * R2, z: (v - u) * R2 });
@@ -25,7 +26,7 @@ const RING = (n, r, cx = 0, cz = 0) => Array.from({ length: n }, (_, i) => [cx +
 const SKILL_SCENES = {
   fireball: (lv) => ({ slots: lv >= 5 ? [...CLUSTER, ...BEHIND] : CLUSTER, hp: 2.2 }),
   chainLightning: (lv) => ({ slots: ARC(lv >= 3 ? 7 : 4), hp: 2.5 }),
-  iceball: (lv) => ({ slots: RING(lv >= 5 ? 8 : 6, 2.2, 0.6, 0), hp: 3 }),
+  iceball: (lv) => ({ slots: RING(lv >= 5 ? 8 : 6, 2.2, 0.6, 0), hp: 3, iceballAt: [0.6, 0] }),
   flamethrower: (lv) => ({ slots: lv >= 3 ? [[PX + 1.6, 0], [PX + 2.6, 0.6], [PX + 2.6, -0.6], [PX + 3.8, 0], [PX + 4.6, 0.7]] : [[PX + 1.6, 0], [PX + 2.6, 0.6], [PX + 2.6, -0.6], [PX + 3.5, 0]], hp: 4 }),
   snowfall: () => ({ slots: RING(5, 0.9, 0.8, 0), type: 'yellow', hp: 1.2, pullBack: 0.6 }),
   lightningBeam: (lv) => ({ slots: lv >= 3 ? [[0, 1.6], [1.4, 0.4], [2.6, -1.2], [3.6, 0.8]] : [[-1.2, 0], [0.3, 0], [1.8, 0], [3.3, 0]], hp: 4 }),
@@ -50,6 +51,8 @@ export class Showcase {
     pickups.gems.length = 0;
     skillsRt.clearAll();
     if (enemySkills) enemySkills.clear();
+    skillsRt.iceballAt = null;
+    game.showcase = false;
     game.skills.length = 0;
     game.buffs.length = 0;
   }
@@ -59,6 +62,7 @@ export class Showcase {
     const { player } = this.sys;
     this.cfg = cfg;
     this.clearWorld();
+    game.showcase = true;   // 미리보기에서 처치한 적은 경험치를 떨어뜨리지 않음
     this.t = 0;
     this.slots = [];
     game.debug.god = true;   // 마나 소모 없음
@@ -73,12 +77,13 @@ export class Showcase {
 
   setSkill(key, level) {
     const { player } = this.sys;
-    const p0 = W(PX, 0);
+    const p0 = W(PX, PV);
     player.pos.set(p0.x, 0, p0.z);
     player.aim.set(R2, 0, -R2);   // 화면 오른쪽
     player.facing = Math.atan2(R2, -R2);
     const scn = SKILL_SCENES[key](level);
     this.scn = scn;
+    if (scn.iceballAt) this.sys.skillsRt.iceballAt = W(...scn.iceballAt);   // 아이스볼은 적 무리 가운데에 고정
     if (scn.companion) {
       const c = createSkill(scn.companion);
       game.skills.push(c);
@@ -97,20 +102,21 @@ export class Showcase {
     this.slots = scn.slots.map(([u, v]) => ({ ...W(u, v), e: null, wait: 0.2 + Math.random() * 0.3 }));
   }
 
+  // 적 장면: 플레이어 없이 화면 오른쪽 아래로 계속 이동 (보이지 않는 공격 목표가 그 방향 앞에 있음)
   setEnemy(type) {
     const { player, enemies } = this.sys;
-    // 보이지 않는 플레이어가 원을 그리며 움직이고, 적이 그 뒤를 따라감
-    this.orbit = type === 'boss' ? 5.2 : type === 'elite' ? 4.2 : 3;
-    player.pos.set(this.orbit, 0, 0);
-    const e = enemies.spawn(type, 0, 0, 1);
+    this.enemyType = type;
+    this.lead = type === 'boss' ? 7 : type === 'elite' ? 9 : 3;
+    const e = enemies.spawn(type, -28, 0, 1);
     e.skillRate = 2.2;   // 기술을 더 자주 보여 줌
     this.enemy = e;
-    this.enemyType = type;
+    player.pos.set(e.x + this.lead, 0, 0);
+    this.snap = true;
   }
 
   // 미리보기 카메라가 바라볼 곳 (적 미리보기는 적을 따라감)
   focus() {
-    if (this.cfg && this.cfg.kind === 'enemy' && this.enemy && this.enemy.alive) return { x: this.enemy.x, z: this.enemy.z };
+    if (this.cfg && this.cfg.kind === 'enemy' && this.enemy && this.enemy.alive) return { x: this.enemy.x + 1, z: this.enemy.z };
     return SC_CENTER;
   }
 
@@ -119,15 +125,23 @@ export class Showcase {
     this.t += dt;
     const { player, enemies, pickups, skillsRt } = this.sys;
     if (this.cfg.kind === 'enemy') {
-      const a = this.t * (this.enemyType === 'boss' ? 0.35 : 0.6);
-      player.pos.set(Math.cos(a) * this.orbit, 0, Math.sin(a) * this.orbit);
       const e = this.enemy;
-      if (!e.alive) this.setEnemy(this.enemyType);
-      else e.hp = e.maxHp;
+      if (!e.alive) { this.setEnemy(this.enemyType); return; }
+      e.hp = e.maxHp;
+      // 기술을 쓰는 중이 아니면 목표는 항상 진행 방향(화면 오른쪽 아래) 앞쪽
+      if (!e.hold) player.pos.set(e.x + this.lead, 0, e.z * 0.9);
+      // 맵 끝에 가까워지면 출발점으로 되돌림 (소환된 적도 함께)
+      if (e.x > 26 && !e.hold) {
+        const dx = -54;
+        for (const o of enemies.list) if (o.alive) o.x += dx;
+        player.pos.x += dx;
+        this.sys.enemySkills.clear();
+        this.snap = true;
+      }
       return;
     }
     // 스킬 장면: 고정된 자리의 적이 죽으면 잠시 뒤 같은 자리에 다시 생김
-    const p0 = W(PX, 0);
+    const p0 = W(PX, PV);
     player.pos.set(p0.x, 0, p0.z);
     const scn = this.scn;
     for (const s of this.slots) {

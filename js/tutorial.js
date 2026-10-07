@@ -9,6 +9,7 @@ import { makeSentence, makeWord, makeFixed, isComplete } from './blocks.js';
 import { describe } from './levelup.js';
 import { sfx } from './audio.js';
 import { toStageX, toStageY } from './stage.js';
+import { keyOf } from './keys.js';
 
 const ENEMY_HP = 12 / 10;   // 그린 슬라임 체력 10 → 12
 const $ = (s) => document.querySelector(s);
@@ -35,10 +36,10 @@ export class Tutorial {
     const fireball = () => game.skills.find((s) => s.key === 'fireball');
     const sent = () => this.items && this.items.sentence;
     return [
-      { title: 'WASD 이동해 보기', hint: 'WASD 또는 방향키를 1.5초 동안 계속 눌러 이동하세요.',
+      { title: 'WASD 이동해 보기', hintFn: () => `${['up', 'left', 'down', 'right'].map(keyOf).join('')} 또는 방향키를 1.5초 동안 계속 눌러 이동하세요.`,
         progress: () => `${Math.min(1.5, this.hold).toFixed(1)} / 1.5초`,
         update: (dt) => { this.hold = player.moving ? this.hold + dt : 0; return this.hold >= 1.5; } },
-      { title: 'Space 대시해 보기', hint: 'Space 키를 눌러 이동 방향으로 대시하세요.',
+      { title: 'Space 대시해 보기', hintFn: () => `${keyOf('dash')} 키를 눌러 이동 방향으로 대시하세요.`,
         update: () => player.dashT > 0 },
       { title: '적 처치해 보기', hint: '파이어볼이 가장 가까운 적에게 자동으로 발사됩니다. 지금은 피해를 입지 않습니다.',
         enter: () => this.spawnGroup(3), progress: () => `${this.kills} / 3`,
@@ -46,7 +47,7 @@ export class Tutorial {
       { title: '떨어진 아이템 줍기', hint: '화살표가 가리키는 아이템 3개를 주우세요. 가까이 가거나 이름표를 클릭하면 줍습니다.',
         progress: () => `${3 - this.itemsOnGround().length} / 3`,
         update: () => this.itemsOnGround().length === 0 },
-      { title: '인벤토리 열기', hint: 'E 키를 눌러 인벤토리를 여세요.',
+      { title: '인벤토리 열기', hintFn: () => `${keyOf('inv')} 키를 눌러 인벤토리를 여세요.`,
         focus: () => ['#btn-inv'], update: () => game.invOpen },
       { title: '문장 블록 편집하기', hint: '인벤토리의 문장 블록을 우클릭하세요.',
         focus: () => [this.tileOf(sent())],
@@ -54,7 +55,7 @@ export class Tutorial {
       { title: '빈 칸에 주체:피해량 넣기', hint: "인벤토리의 '피해량' 블록을 문장의 빈 주체 칸으로 끌어다 놓으세요.",
         focus: () => [this.tileOf(this.items.damage), this.slotOf(sent(), 0)],
         update: () => { const s = sent(); return s.slots[0].block && s.slots[0].block.key === 'damage' && isComplete(s); } },
-      { title: '스킬 창 열기', hint: 'Q 키를 눌러 스킬 창을 여세요.',
+      { title: '스킬 창 열기', hintFn: () => `${keyOf('skills')} 키를 눌러 스킬 창을 여세요.`,
         focus: () => ['#btn-skills'], update: () => game.skillsOpen },
       { title: '파이어볼에 문장 장착하기', hint: '완성한 문장 블록을 파이어볼의 빈 문장 칸으로 끌어다 놓으세요.',
         focus: () => [this.tileOf(sent()), this.emptySkillSlot()],
@@ -98,7 +99,7 @@ export class Tutorial {
     const box = document.createElement('div');
     box.id = 'quest';
     box.innerHTML = '<div class="q-head"><span class="q-no"></span><span class="q-prog"></span></div><div class="q-title"></div><div class="q-hint"></div>';
-    $('#hud').appendChild(box);
+    $('#stage').appendChild(box);   // 스킬 / 인벤토리 창보다 위에 보이도록
     this.box = box;
     this.next();
   }
@@ -142,7 +143,7 @@ export class Tutorial {
       this.doneT -= dt;
       if (this.doneT < 0) this.next();
     } else if (q.update(dt)) {
-      this.doneT = 0.9;   // 완료 표시 후 잠시 뒤 다음 퀘스트
+      this.doneT = 2;   // 완료 표시 후 약 2초 뒤 다음 퀘스트
       sfx('select');
       this.box.classList.add('done');
     }

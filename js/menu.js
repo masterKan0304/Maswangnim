@@ -44,6 +44,8 @@ function markNav() {
   for (const b of document.querySelectorAll('.nav-btn')) {
     b.classList.toggle('active', b.dataset.view === 'settings' ? settingsOpen : b.dataset.view === view);
   }
+  // 화면이 하나라도 열려 있으면 메뉴 전체를 불투명하게 받쳐 미리보기가 가장자리로 비치지 않게
+  $('#menu').classList.toggle('covered', settingsOpen || !!view);
 }
 
 export function setView(v) {
@@ -65,7 +67,7 @@ function toggleMenuSettings() {
   const open = s.classList.contains('hidden');
   s.classList.toggle('hidden', !open);
   s.classList.toggle('in-menu', open);
-  if (open) renderSettings(opts.applySettings);
+  if (open) renderSettings(opts.applySettings, opts.keysChanged);
   opts.hideTip();
   sfx(open ? 'open' : 'close');
   markNav();

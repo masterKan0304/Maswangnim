@@ -1,4 +1,5 @@
 import { ic } from './icons.js';
+import { keyOf } from './keys.js';
 import { STAGE, toStageX, toStageY, stageRect } from './stage.js';
 import { sfx } from './audio.js';
 import { game, bump, inventoryAdd } from './state.js';
@@ -115,8 +116,8 @@ export class UI {
   // Z / X 토글 상태 표시
   updateToggles() {
     const a = $('#tg-label'), b = $('#tg-pick');
-    a.innerHTML = `<kbd>Z</kbd> 이름표 ${game.showLabels ? 'ON' : 'OFF'}`;
-    b.innerHTML = `<kbd>X</kbd> 자동 획득 ${game.autoPickup ? 'ON' : 'OFF'}`;
+    a.innerHTML = `<kbd>${keyOf('labels')}</kbd> 이름표 ${game.showLabels ? 'ON' : 'OFF'}`;
+    b.innerHTML = `<kbd>${keyOf('pickup')}</kbd> 자동 획득 ${game.autoPickup ? 'ON' : 'OFF'}`;
     a.classList.toggle('off', !game.showLabels);
     b.classList.toggle('off', !game.autoPickup);
   }
@@ -378,7 +379,7 @@ export class UI {
     if (sk.key === 'frostBarrier') h += `<div class="tip-dim">스택 ${sk.stacks} / ${maxStacks(sk)}</div>`;
     if (sk.key === 'triggerKill') h += `<div class="tip-dim">중첩 ${Math.floor(sk.stacks)} / ${triggerGoal(sk) || '완성된 문장을 장착해야 합니다.'}</div>`;
     if (sk.key === 'enchant') h += `<div class="tip-dim">경험치 ${Math.floor(sk.xpAcc || 0)} / ${enchantReq(sk)}</div>`;
-    if (!d.passive) h += `<div class="tip-dim">클릭하거나 숫자키로 사용합니다. 우클릭하면 자동 사용이 ${sk.auto ? '꺼집니다' : '켜집니다'}.</div>`;
+    if (!d.passive) h += `<div class="tip-dim">클릭하거나 ${keyOf(`skill${game.skills.indexOf(sk) + 1}`)} 키로 사용합니다. 우클릭하면 자동 사용이 ${sk.auto ? '꺼집니다' : '켜집니다'}.</div>`;
     return h;
   }
 
@@ -387,7 +388,7 @@ export class UI {
     this.sbSlots = [];
     for (let i = 0; i < MAX_SKILLS; i++) {
       const s = el('div', 'sb-slot');
-      s.innerHTML = `<span class="sb-icon"></span><span class="sb-cd"></span><span class="sb-key">${(i + 1) % 10}</span><span class="sb-auto">AUTO</span><span class="sb-stack"></span>`;
+      s.innerHTML = `<span class="sb-icon"></span><span class="sb-cd"></span><span class="sb-key">${keyOf(`skill${i + 1}`)}</span><span class="sb-auto">AUTO</span><span class="sb-stack"></span>`;
       this.skillbarEl.appendChild(s);
       this.sbSlots.push(s);
     }

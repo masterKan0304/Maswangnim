@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { isBound } from './keys.js';
 
 export const input = {
   keys: new Set(),
@@ -13,7 +14,7 @@ const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -0.6);
 addEventListener('keydown', (e) => {
   // 입력창(디버그 숫자 입력 등)에 타이핑할 때는 게임 단축키를 무시 (F8/Esc 제외)
   if (e.target && e.target.tagName === 'INPUT' && e.target.type !== 'range' && e.code !== 'F8' && e.code !== 'Escape') return;
-  if (e.code === 'Tab' || e.code === 'Space' || e.code === 'F8' || e.code.startsWith('Arrow')) e.preventDefault();
+  if (e.code === 'Tab' || e.code === 'Space' || e.code === 'F8' || e.code.startsWith('Arrow') || e.code.startsWith('Alt') || isBound(e.code)) e.preventDefault();
   if (!e.repeat && input.onKey) input.onKey(e);
   input.keys.add(e.code);
 });

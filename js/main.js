@@ -18,6 +18,7 @@ import { updateDpsTable } from './dps.js';
 import { input, updateAim } from './input.js';
 import { STAGE, fitStage, onStageResize } from './stage.js';
 import { initAudio, sfx, setSfxMuted } from './audio.js';
+import { loadKeys, actionsFor, keyOf } from './keys.js';
 import { profile, loadProfile, saveProfile, computeMods, renderSettings, addAccountXp } from './meta.js';
 import { Demo } from './demo.js';
 import { Tutorial } from './tutorial.js';
@@ -29,6 +30,9 @@ import { SKILL_DEFS } from './skills.js';
 import { TEMPLATE_INFO } from './blocks.js';
 import { accountNeed } from './config.js';
 
+// 로딩 진행도 (맵 / 시스템 준비 → 첫 화면을 그린 뒤 사라짐)
+const loadingAt = (p) => { const f = document.getElementById('ld-fill'); if (f) f.style.width = `${p}%`; };
+loadingAt(35);
 hydrateIcons();   // HTML 의 아이콘 자리 표시를 SVG 아이콘으로 교체
 initDebug();
 
@@ -75,6 +79,7 @@ addEventListener('wheel', (e) => {
 //  시스템 생성
 // ─────────────────────────────────────────────
 const world = createWorld(scene);
+loadingAt(65);
 const fx = new FX(scene, camera, document.getElementById('dmg-layer'));
 const enemies = new EnemyManager(scene, fx);
 const pickups = new Pickups(scene, fx);
@@ -83,6 +88,7 @@ const skillsRt = new SkillRuntime(scene, fx, enemies, player);
 const enemySkills = new EnemySkills(scene, fx, enemies, player);
 const ui = new UI();
 const labels = new Labels(document.getElementById('label-layer'), camera);
+loadingAt(85);
 
 game.sys = {
   scene, camera, fx, enemies, pickups, player, skillsRt, ui, world, enemySkills,
@@ -110,7 +116,7 @@ enemies.onKill = (e, src, st) => {
   if (game.demo) {   // 메인 화면 미리보기: 경험치 보석만 떨어뜨림 (블록/상자/승리 없음)
     skillsRt.onKill(e, src, st);
     if (e.boss || e.elite) fx.explosion(e.x, e.z, e.boss ? 4 : 2.5, e.boss ? 0xb07cff : 0x3f8cff);
-    pickups.addGem(e.x, e.z, e.T.xp);
+    if (!game.showcase) pickups.addGem(e.x, e.z, e.T.xp);   // 도감 미리보기에서는 경험치 없음
     return;
   }
   game.kills++;
@@ -300,60 +306,60 @@ function rerollBlocks() {
 //  입력 (단축키)
 // ─────────────────────────────────────────────
 input.onKey = (e) => {
+  const acts = actionsFor(e.code);
+  const has = (a) => acts.includes(a);
   // 선택지 고르는 중: 스킬 창 / 인벤토리 창만 열어서 볼 수 있음 (읽기 전용)
   if (game.state === 'levelup') {
-    if (e.code === 'KeyE') ui.setWindows(!game.invOpen, game.skillsOpen);
-    else if (e.code === 'KeyQ') ui.setWindows(game.invOpen, !game.skillsOpen);
-    else if (e.code === 'Tab') { const open = !(game.invOpen && game.skillsOpen); ui.setWindows(open, open); }
+    if (has('both')) { const open = !(game.invOpen && game.skillsOpen); ui.setWindows(open, open); }
+    else if (has('inv')) ui.setWindows(!game.invOpen, game.skillsOpen);
+    else if (has('skills')) ui.setWindows(game.invOpen, !game.skillsOpen);
     else if (e.code === 'Escape' && (game.invOpen || game.skillsOpen)) ui.setWindows(false, false);
     return;
   }
   if (game.state === 'start') { if (e.code === 'Escape') menuBack(); return; }
   if (game.state !== 'playing') return;
-  switch (e.code) {
-    case 'Space':
-      e.preventDefault();
-      if (!isPaused()) player.tryDash();
-      break;
-    case 'KeyE': ui.setWindows(!game.invOpen, game.skillsOpen); break;
-    case 'KeyQ': ui.setWindows(game.invOpen, !game.skillsOpen); break;
-    case 'KeyZ':
+  if (e.code === 'F8') { e.preventDefault(); toggleDebug(); return; }
+  if (e.code === 'Escape') {
+    if (game.debugOpen) toggleDebug(false);
+    else if (game.popups.length) ui.closeTopPopup();
+    else if (game.invOpen || game.skillsOpen) ui.setWindows(false, false);
+    else togglePause();
+    return;
+  }
+  // 같은 키가 여러 조작에 할당되어 있으면 모두 실행
+  for (const a of acts) {
+    if (a === 'dash') { if (!isPaused()) player.tryDash(); }
+    else if (a === 'inv') ui.setWindows(!game.invOpen, game.skillsOpen);
+    else if (a === 'skills') ui.setWindows(game.invOpen, !game.skillsOpen);
+    else if (a === 'both') { const open = !(game.invOpen && game.skillsOpen); ui.setWindows(open, open); }
+    else if (a === 'labels') {
       game.showLabels = !game.showLabels;
       sfx(game.showLabels ? 'toggleOn' : 'toggleOff');
       profile.settings.labels = game.showLabels; saveProfile();
       ui.updateToggles();
       ui.toast(`이름표 ${game.showLabels ? '표시' : '숨김'}`);
-      break;
-    case 'KeyX':
+    } else if (a === 'pickup') {
       game.autoPickup = !game.autoPickup;
       sfx(game.autoPickup ? 'toggleOn' : 'toggleOff');
       profile.settings.autoPickup = game.autoPickup; saveProfile();
       ui.updateToggles();
       ui.toast(game.autoPickup ? '아이템 자동 획득 ON' : '아이템 자동 획득 OFF — 이름표를 클릭해 획득');
-      break;
-    case 'Tab': {
-      const open = !(game.invOpen && game.skillsOpen);
-      ui.setWindows(open, open);
-      break;
+    } else if (/^skill\d+$/.test(a) && !isPaused()) {
+      const sk = game.skills[+a.slice(5) - 1];
+      if (sk && !sk.def.passive) skillsRt.tryCast(sk, true);
     }
-    case 'F8':
-      e.preventDefault();
-      toggleDebug();
-      break;
-    case 'Escape':
-      if (game.debugOpen) toggleDebug(false);
-      else if (game.popups.length) ui.closeTopPopup();
-      else if (game.invOpen || game.skillsOpen) ui.setWindows(false, false);
-      else togglePause();
-      break;
-    default:
-      if (/^Digit\d$/.test(e.code) && !isPaused()) {
-        const d = +e.code.slice(5);
-        const sk = game.skills[(d + 9) % 10];
-        if (sk && !sk.def.passive) skillsRt.tryCast(sk, true);
-      }
   }
 };
+
+// 조작키가 바뀌면 화면의 키 표시도 바꿈
+function refreshKeyLabels() {
+  document.querySelector('#btn-skills kbd').textContent = keyOf('skills');
+  document.querySelector('#btn-inv kbd').textContent = keyOf('inv');
+  document.getElementById('help').textContent = `${['up', 'left', 'down', 'right'].map(keyOf).join('')} 이동 · ${keyOf('dash')} 대시 · ${keyOf('skill1')}~${keyOf('skill10')} 스킬 · ${keyOf('skills')} 스킬 창 · ${keyOf('inv')} 인벤토리 · ${keyOf('labels')} 이름표 · ${keyOf('pickup')} 자동 획득 · 휠 줌`;
+  ui.updateToggles();
+  ui.sbSlots.forEach((s, i) => { s.querySelector('.sb-key').textContent = keyOf(`skill${i + 1}`); });
+  ui.refresh();
+}
 
 function togglePause() {
   game.menuOpen = !game.menuOpen;
@@ -365,7 +371,28 @@ document.addEventListener('click', (e) => { const b = e.target.closest && e.targ
 // 브라우저 정책상 첫 입력 이후에 사운드 시작
 for (const ev of ['pointerdown', 'keydown']) addEventListener(ev, () => initAudio());
 document.getElementById('btn-resume').addEventListener('click', togglePause);
-document.getElementById('btn-recomb').addEventListener('click', () => ui.openRecomb());
+document.getElementById('btn-recomb').addEventListener('click', () => {
+  if (game.tutorial) { ui.toast('튜토리얼에서는 재조합을 사용할 수 없습니다', 'warn'); sfx('error'); return; }
+  ui.openRecomb();
+});
+// 스킬 / 인벤토리 창: 위쪽 머리 부분을 끌어서 옮길 수 있음
+for (const win of [document.getElementById('win-skills'), document.getElementById('win-inv')]) {
+  const head = win.querySelector('.win-head');
+  head.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0 || e.target.closest('button')) return;
+    e.preventDefault();
+    const x0 = e.clientX, y0 = e.clientY, l0 = win.offsetLeft, t0 = win.offsetTop;
+    head.classList.add('moving');
+    const move = (ev) => {
+      const l = Math.max(0, Math.min(STAGE.W - win.offsetWidth, l0 + (ev.clientX - x0) / STAGE.scale));
+      const t = Math.max(0, Math.min(STAGE.H - 60, t0 + (ev.clientY - y0) / STAGE.scale));
+      win.style.left = `${l}px`; win.style.top = `${t}px`; win.style.right = 'auto';
+    };
+    const up = () => { head.classList.remove('moving'); removeEventListener('pointermove', move); removeEventListener('pointerup', up); };
+    addEventListener('pointermove', move);
+    addEventListener('pointerup', up);
+  });
+}
 document.getElementById('btn-inv').addEventListener('click', () => ui.setWindows(!game.invOpen, game.skillsOpen));
 document.getElementById('btn-skills').addEventListener('click', () => ui.setWindows(game.invOpen, !game.skillsOpen));
 document.querySelectorAll('.win-close').forEach((b) => b.addEventListener('click', () => {
@@ -389,7 +416,7 @@ function openOverlay(id) { $id(id).classList.remove('hidden'); sfx('open'); }
 function closeOverlay(id) { $id(id).classList.add('hidden'); ui.hideTip(); sfx('close'); }
 document.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', () => closeOverlay(b.dataset.close)));
 
-function openSettings() { openOverlay('settings'); renderSettings(applySettingsToGame); }
+function openSettings() { openOverlay('settings'); renderSettings(applySettingsToGame, refreshKeyLabels); }
 $id('btn-pause-settings').addEventListener('click', openSettings);
 $id('btn-giveup').addEventListener('click', () => {
   if (game.state !== 'playing') return;
@@ -585,18 +612,20 @@ function tick(dt, draw = true) {
 
 camTarget.copy(player.pos);
 loadProfile();
+loadKeys(profile.settings.keys);
 game.accountLevel = profile.accountLevel;
 game.mods = computeMods();
 applySettingsToGame();
 refreshMenuGold();
 ui.refresh();
+refreshKeyLabels();
 
 const demo = new Demo({
   player, enemies, pickups, skillsRt, scene, fx, enemySkills, cutEl: $id('preview-cut'),
   onTeleport: (p) => camTarget.copy(p),
 });
 initCodex({ demo, scene, ui });
-initMenu({ onStart: requestStart, refreshGold: refreshMenuGold, applySettings: applySettingsToGame, hideTip: () => ui.hideTip() });
+initMenu({ onStart: requestStart, refreshGold: refreshMenuGold, applySettings: applySettingsToGame, keysChanged: refreshKeyLabels, hideTip: () => ui.hideTip() });
 const auto = sessionStorage.getItem(AUTOSTART);
 sessionStorage.removeItem(AUTOSTART);
 if (auto) {
@@ -617,4 +646,13 @@ if (auto) {
 window.__game = game;
 window.__tick = (n = 1, dt = 1 / 60, draw = true) => { for (let i = 0; i < n; i++) tick(dt, draw || i === n - 1); };
 window.__input = input;
+// 첫 화면을 미리 한 번 그려 둔 뒤 로딩 화면을 걷음 (셰이더 준비 시간 포함)
+loadingAt(100);
+renderer.compile(scene, camera);
+renderer.render(scene, camera);
+setTimeout(() => {
+  const ld = document.getElementById('loading');
+  ld.classList.add('done');
+  setTimeout(() => ld.remove(), 450);
+}, 220);
 frame();

@@ -22,7 +22,7 @@ export class Demo {
   // sys: { player, enemies, pickups, skillsRt, scene, fx, onTeleport(pos), onCaption(stage), cutEl }
   constructor(sys) {
     this.sys = sys;
-    this.input = { keys: new Set(), ground: new THREE.Vector3() };
+    this.input = { keys: new Set(), virtual: new Set(), ground: new THREE.Vector3() };
     this.t = 0;
     this.fadeT = 0;
     this.spawnAcc = 0;
@@ -46,7 +46,7 @@ export class Demo {
     if (cfg) {
       if (!this.showcase) this.showcase = new Showcase(this.sys);
       this.mode = 'showcase';
-      this.input.keys.clear();
+      this.input.virtual.clear();
       this.showcase.set(cfg);
       return;
     }
@@ -72,7 +72,7 @@ export class Demo {
     }
     pickups.gems.length = 0;
     if (this.sys.enemySkills) this.sys.enemySkills.clear();
-    for (const sk of game.skills) skillsRt.endFlame(sk);
+    skillsRt.clearAll();   // 이전 장면의 투사체 / 불길 / 대기 중인 시전까지 정리
     game.skills.length = 0;
     game.buffs.length = 0;
     // 위치
@@ -130,12 +130,12 @@ export class Demo {
     const edge = WORLD_HALF - 8;
     if (Math.abs(p.x) > edge) vx -= Math.sign(p.x) * 2;
     if (Math.abs(p.z) > edge) vz -= Math.sign(p.z) * 2;
-    const keys = this.input.keys;
+    const keys = this.input.virtual;
     keys.clear();
     const up = vx * DIR_UP.x + vz * DIR_UP.z, right = vx * DIR_RIGHT.x + vz * DIR_RIGHT.z;
     const len = Math.hypot(up, right) || 1;
-    if (up / len > 0.38) keys.add('KeyW'); else if (up / len < -0.38) keys.add('KeyS');
-    if (right / len > 0.38) keys.add('KeyD'); else if (right / len < -0.38) keys.add('KeyA');
+    if (up / len > 0.38) keys.add('up'); else if (up / len < -0.38) keys.add('down');
+    if (right / len > 0.38) keys.add('right'); else if (right / len < -0.38) keys.add('left');
     if (threat > 0.9 && Math.random() < dt * 2) player.tryDash();
   }
 

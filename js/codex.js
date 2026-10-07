@@ -10,6 +10,7 @@ import { makeSentence, makeWord, makeFixed, makeRange, makePercent, makeOp, TEMP
 import { ic } from './icons.js';
 import { sfx } from './audio.js';
 import { STAGE } from './stage.js';
+import { smoothScroll } from './scroll.js';
 
 const $ = (s) => document.querySelector(s);
 const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
@@ -33,8 +34,8 @@ const OPS = ['+', '-', '*', '/'];
 const ENEMIES = [
   { type: 'green', grade: '일반' },
   { type: 'yellow', grade: '일반' },
-  { type: 'elite', grade: '정예' },
   { type: 'red', grade: '일반' },
+  { type: 'elite', grade: '정예' },
   { type: 'boss', grade: '보스' },
 ];
 const L = ENEMY_SKILLS;
@@ -46,7 +47,8 @@ const ENEMY_ABILITY = {
   ],
 };
 
-const state = { tab: 'skill', sel: { skill: 'fireball', block: 's:SNC', enemy: 'green' }, level: 1 };
+const state = { tab: 'skill', sel: { skill: 'fireball', block: 's:SNC', enemy: 'green' }, level: 1, scroll: { skill: 0, block: 0, enemy: 0 } };
+let gridEl = null, infoEl = null, gridScroll = null, infoScroll = null;
 let opts = null;
 let renderer = null, camera = null, canvas = null, previewOn = false, viewW = 11;
 const look = new THREE.Vector3();
@@ -97,7 +99,9 @@ export function renderCodexPreview() {
   camera.top = viewW / a / 2; camera.bottom = -viewW / a / 2;
   camera.updateProjectionMatrix();
   // 바라볼 곳을 부드럽게 따라감
-  const f = opts.demo.showcase ? opts.demo.showcase.focus() : { x: 0, z: 0 };
+  const sc = opts.demo.showcase;
+  const f = sc ? sc.focus() : { x: 0, z: 0 };
+  if (sc && sc.snap) { look.set(f.x, 0, f.z); sc.snap = false; }   // 출발점으로 되돌아갈 때는 바로 이동
   look.x += (f.x - look.x) * 0.08; look.z += (f.z - look.z) * 0.08;
   camera.position.set(look.x + 30, 27, look.z + 30);
   camera.lookAt(look.x, 0, look.z);
@@ -105,6 +109,9 @@ export function renderCodexPreview() {
 }
 
 // ── 화면 ──
+// 탭을 바꿀 때만 목록을 새로 만들고, 항목 / 레벨을 고를 때는 오른쪽 정보만 바꿈 (목록 스크롤 유지)
+const VIEWS = { skill: [gridSkills, detailSkill], block: [gridBlocks, detailBlock], enemy: [gridEnemies, detailEnemy] };
+
 function renderCodex() {
   const root = $('#codex-body');
   root.innerHTML = '';
@@ -116,43 +123,59 @@ function renderCodex() {
   }
   root.appendChild(tabs);
   const body = el('div', 'cx-body');
-  const grid = el('div', 'cx-grid');
+  gridEl = el('div', 'cx-grid');
   const detail = el('div', 'cx-detail');
-  const info = el('div', 'cx-info');
+  infoEl = el('div', 'cx-info');
   const pv = el('div', 'cx-preview hidden', '<span class="cx-pv-label">미리보기</span>');
   pv.id = 'cx-preview';
   // 미리보기 캔버스는 하나를 계속 재사용 (렌더러를 매번 새로 만들지 않도록)
   if (!canvas) { canvas = document.createElement('canvas'); canvas.id = 'codex-canvas'; }
   pv.prepend(canvas);
-  detail.append(info, pv);
-  body.append(grid, detail);
+  detail.append(infoEl, pv);
+  body.append(gridEl, detail);
   root.appendChild(body);
+  gridScroll = smoothScroll(gridEl);
+  infoScroll = smoothScroll(infoEl);
+  const tab = state.tab;
+  gridEl.addEventListener('scroll', () => { state.scroll[tab] = gridEl.scrollTop; });
+  VIEWS[tab][0](gridEl);
+  gridScroll.setTop(state.scroll[tab]);
+  refreshDetail();
+}
 
-  if (state.tab === 'skill') renderSkills(grid, info);
-  else if (state.tab === 'block') renderBlocks(grid, info);
-  else renderEnemies(grid, info);
+function refreshDetail() {
+  VIEWS[state.tab][1](infoEl);
+  if (infoScroll) infoScroll.setTop(0);
 }
 
 function item(grid, id, iconHtml, name, opts2 = {}) {
   const tab = state.tab;
   const it = el('div', 'cx-item' + (state.sel[tab] === id ? ' sel' : '') + (opts2.locked ? ' locked' : ''), `<div class="cx-ic">${iconHtml}</div><div class="cx-name">${name}</div>${opts2.badge ? `<span class="cx-badge">${opts2.badge}</span>` : ''}`);
+  it.dataset.id = id;
   if (opts2.color) it.style.setProperty('--c', opts2.color);
   it.addEventListener('click', () => {
     if (state.sel[tab] === id) return;
-    state.sel[tab] = id; state.level = 1; sfx('select'); renderCodex();
+    state.sel[tab] = id; state.level = 1; sfx('select');
+    for (const x of grid.querySelectorAll('.cx-item')) x.classList.toggle('sel', x.dataset.id === id);
+    refreshDetail();
   });
   grid.appendChild(it);
 }
 
 function section(grid, title) { grid.appendChild(el('div', 'cx-sec', title)); }
+const lockBadge = (need) => (game.accountLevel < need ? { locked: true, badge: `${ic('lock')} Lv.${need}` } : {});
 
 // 스킬
-function renderSkills(grid, info) {
-  for (const key of SKILL_ORDER) {
+function gridSkills(grid) {
+  // 해금 레벨이 높을수록 뒤에
+  const keys = [...SKILL_ORDER].sort((a, b) => unlockLevel('skills', a) - unlockLevel('skills', b));
+  for (const key of keys) {
     const d = SKILL_DEFS[key];
-    const lv = unlockLevel('skills', key);
-    item(grid, key, d.icon, d.name, { color: d.color, locked: game.accountLevel < lv, badge: game.accountLevel < lv ? `${ic('lock')} Lv.${lv}` : '' });
+    item(grid, key, d.icon, d.name, { color: d.color, ...lockBadge(unlockLevel('skills', key)) });
   }
+}
+
+function detailSkill(info) {
   const d = SKILL_DEFS[state.sel.skill];
   const lv = state.level;
   const st = baseStats({ def: d, key: d.key, level: lv }, lv);
@@ -168,17 +191,18 @@ function renderSkills(grid, info) {
   const levels = info.querySelector('.cx-levels');
   for (let i = 1; i <= MAX_SKILL_LEVEL; i++) {
     const b = el('button', 'cx-lv' + (i === lv ? ' on' : '') + (i === 3 || i === 5 ? ' mile' : ''), `Lv.${i}`);
-    b.addEventListener('click', () => { if (state.level !== i) { state.level = i; sfx('select'); renderCodex(); } });
+    b.addEventListener('click', () => { if (state.level !== i) { state.level = i; sfx('select'); refreshDetail(); } });
     levels.appendChild(b);
   }
   setPreview({ kind: 'skill', key: d.key, level: lv });
 }
 
 // 블록 (문장 > 주체 > 변화 > 수치 > 연산)
-function renderBlocks(grid, info) {
-  const tile = (b) => opts.ui.makeTile(b).outerHTML;
+const tile = (b) => opts.ui.makeTile(b).outerHTML;
+function gridBlocks(grid) {
   section(grid, '문장');
-  for (const t of Object.keys(TEMPLATE_INFO)) item(grid, `s:${t}`, tile(makeSentence(t, false)), TEMPLATE_INFO[t].label + (t === 'SSC' ? ' (주·주)' : t === 'SNC' ? ' (주·수)' : ''));
+  const temps = Object.keys(TEMPLATE_INFO).sort((a, b) => unlockLevel('templates', a) - unlockLevel('templates', b));
+  for (const t of temps) item(grid, `s:${t}`, tile(makeSentence(t, false)), TEMPLATE_INFO[t].label + (t === 'SSC' ? ' (주·주)' : t === 'SNC' ? ' (주·수)' : ''), lockBadge(unlockLevel('templates', t)));
   section(grid, '주체');
   for (const k of SUBJECT_ORDER.filter((k) => !SUBJECTS[k].noWord)) item(grid, `w:${k}`, tile(makeWord(k)), SUBJECTS[k].name);
   section(grid, '변화');
@@ -187,6 +211,9 @@ function renderBlocks(grid, info) {
   for (const n of NUMBERS) item(grid, `n:${n.key}`, tile(n.block()), n.name);
   section(grid, '연산');
   for (const o of OPS) item(grid, `o:${o}`, tile(makeOp(o)), OP_NAME[o]);
+}
+
+function detailBlock(info) {
   setPreview(null);
 
   const [kind, key] = state.sel.block.split(':');
@@ -218,13 +245,16 @@ function renderBlocks(grid, info) {
 }
 
 // 적 (스테이지 등장 순서)
-function renderEnemies(grid, info) {
+function gridEnemies(grid) {
   section(grid, '스테이지 1 · 초원');
   for (const en of ENEMIES) {
     const T = ENEMY_TYPES[en.type];
     const col = '#' + T.color.toString(16).padStart(6, '0');
     item(grid, en.type, `<span class="cx-slime" style="--c:${col}"></span>`, T.name, { color: col, badge: en.grade !== '일반' ? en.grade : '' });
   }
+}
+
+function detailEnemy(info) {
   const en = ENEMIES.find((x) => x.type === state.sel.enemy);
   const T = ENEMY_TYPES[en.type];
   const col = '#' + T.color.toString(16).padStart(6, '0');
