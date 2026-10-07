@@ -37,6 +37,11 @@ const SKILL_SCENES = {
   lightningAura: () => ({ slots: [...CLUSTER, ...BEHIND, [0.5, 2], [0.5, -2]], hp: 0.9, companion: 'fireball', status: 'shock' }),
   enchant: () => ({ slots: [], special: 'enchant' }),
   triggerKill: () => ({ slots: [...CLUSTER, ...BEHIND], hp: 0.9, companion: 'fireball', special: 'trigger' }),
+  // 마솽 전용
+  leafCut: (lv) => ({ slots: lv >= 3 ? [...CLUSTER, ...BEHIND] : CLUSTER, hp: 2 }),
+  nature: () => ({ slots: RING(6, 1.6, PX, PV), hp: 3, pullBack: 1.2 }),
+  fruit: () => ({ slots: [...CLUSTER, ...BEHIND, [2.8, 1.8], [2.8, -1.8]], hp: 2.5, special: 'flowers' }),
+  pineWind: (lv) => ({ slots: lv >= 3 ? [[0, 0], [1.4, 0.9], [1.4, -0.9], [2.8, 0], [3.8, 1], [3.8, -1]] : [[0, 0], [1.5, 0], [3, 0], [4.3, 0.6]], hp: 4, special: 'windFlowers' }),
 };
 
 export class Showcase {
@@ -46,7 +51,8 @@ export class Showcase {
   }
 
   clearWorld() {
-    const { enemies, pickups, skillsRt, scene, enemySkills } = this.sys;
+    const { enemies, pickups, skillsRt, scene, enemySkills, bloom } = this.sys;
+    if (bloom) bloom.clear();
     for (const e of enemies.list) { if (!e.alive) continue; e.alive = false; if (e.model) scene.remove(e.model.group); }
     pickups.gems.length = 0;
     skillsRt.clearAll();
@@ -70,8 +76,10 @@ export class Showcase {
     player.kx = player.kz = 0;
     player.moveTarget = null;
     player.shield = 0;
-    player.hidden = cfg.kind !== 'skill';   // 적 미리보기에는 플레이어 없음
+    player.hidden = cfg.kind === 'enemy';   // 적 미리보기에는 플레이어 없음
+    game.charId = cfg.charId || 'masang';
     if (cfg.kind === 'skill') this.setSkill(cfg.key, cfg.level);
+    else if (cfg.kind === 'character') this.setCharacter(cfg.skills);
     else this.setEnemy(cfg.type);
   }
 
@@ -100,6 +108,20 @@ export class Showcase {
     this.sk = sk;
     bump();
     this.slots = scn.slots.map(([u, v]) => ({ ...W(u, v), e: null, wait: 0.2 + Math.random() * 0.3 }));
+  }
+
+  // 캐릭터 장면: 해금된 전용 스킬들로 고정된 적 무리와 싸움 (개화 / 열매도 함께)
+  setCharacter(keys) {
+    const { player } = this.sys;
+    const p0 = W(PX, PV);
+    player.pos.set(p0.x, 0, p0.z);
+    player.aim.set(R2, 0, -R2);
+    player.facing = Math.atan2(R2, -R2);
+    this.scn = { slots: [...CLUSTER, ...BEHIND, [0.4, 1.9], [0.4, -1.9], [2.6, 1.8], [2.6, -1.8]], hp: 1.6 };
+    for (const k of keys) { const sk = createSkill(k); sk.level = 3; sk.cd = Math.random(); game.skills.push(sk); }
+    this.sk = game.skills[0];
+    bump();
+    this.slots = this.scn.slots.map(([u, v]) => ({ ...W(u, v), e: null, wait: 0.2 + Math.random() * 0.4 }));
   }
 
   // 적 장면: 플레이어 없이 화면 오른쪽 아래로 계속 이동 (보이지 않는 공격 목표가 그 방향 앞에 있음)
@@ -190,6 +212,16 @@ export class Showcase {
         }
         if (scn.special === 'magnet') sk.cd = 0.4;   // 뿌린 직후 끌어당김
       }
+    }
+    // 열매 맺기: 꽃을 자주 피워 열매가 자라는 모습을 보여 줌
+    if (scn.special === 'flowers' && this.sys.bloom) {
+      this.flowerT = (this.flowerT ?? 0.3) - dt;
+      if (this.flowerT <= 0) { this.flowerT = 0.9; const a = Math.random() * Math.PI * 2; this.sys.bloom.spawnFlower(W(PX + 1 + Math.cos(a) * 0.9, PV + Math.sin(a) * 0.9)); }
+    }
+    // 솔바람: 지나가는 길목에 꽃을 놓아 꽃이 터지는 모습을 보여 줌
+    if (scn.special === 'windFlowers' && this.sys.bloom) {
+      this.flowerT = (this.flowerT ?? 0.2) - dt;
+      if (this.flowerT <= 0 && this.sys.bloom.flowers.length < 2) { this.flowerT = 1.2; this.sys.bloom.spawnFlower(W(-1.4 + Math.random() * 2.4, PV * 0.5 + (Math.random() - 0.5) * 1.2)); }
     }
     if (scn.special === 'trigger') {
       // 중첩을 빠르게 채워 발동 장면을 자주 보여 줌

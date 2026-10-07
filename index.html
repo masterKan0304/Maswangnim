@@ -123,9 +123,10 @@
       <div class="title">BLOCK CHAIN</div>
       <div class="gold-line"><i data-ic="coin"></i> 보유 골드 <b id="menu-gold">0</b></div>
       <div class="acct"><div class="acct-head"><span>계정 Lv.<b id="acct-lv">1</b></span><span id="acct-xp" class="acct-xp">0 / 500</span></div><div class="acct-bar"><i id="acct-fill"></i></div></div>
-      <div class="stage-tag" id="menu-stage">스테이지 1 · 초원</div>
+      <div class="menu-tags"><span class="stage-tag" id="menu-char">마솽</span><span class="stage-tag" id="menu-stage">스테이지 1 · 초원</span></div>
       <div class="ml-nav">
         <button class="nav-btn nb-stage" data-view="stage"><i data-ic="flag"></i><span>스테이지 선택</span></button>
+        <button class="nav-btn nb-char" data-view="char"><i data-ic="sprout"></i><span>캐릭터 선택</span></button>
         <button class="nav-btn nb-upgrade" data-view="upgrade"><i data-ic="arrowUp"></i><span>업그레이드</span></button>
         <button class="nav-btn nb-codex" data-view="codex"><i data-ic="book"></i><span>도감</span></button>
         <button class="nav-btn nb-settings" data-view="settings"><i data-ic="gear"></i><span>설정</span></button>
@@ -137,6 +138,11 @@
       <div id="view-stage" class="mview hidden ui-zone">
         <div class="up-head"><span class="up-title"><i data-ic="flag"></i> 스테이지 선택</span><span class="up-hint">앞 스테이지를 클리어하면 다음 스테이지가 열립니다</span><button class="pop-close up-close" data-view-close>✕</button></div>
         <div id="stage-body"></div>
+      </div>
+      <!-- 캐릭터 선택 -->
+      <div id="view-char" class="mview hidden ui-zone">
+        <div class="up-head"><span class="up-title"><i data-ic="sprout"></i> 캐릭터 선택</span><span class="up-hint">전용 스킬은 캐릭터 숙련도가 오르면 해금됩니다 · 스킬에 마우스를 올리면 정보를 볼 수 있습니다</span><button class="pop-close up-close" data-view-close>✕</button></div>
+        <div id="char-body"></div>
       </div>
       <!-- 도감 -->
       <div id="view-codex" class="mview hidden ui-zone">

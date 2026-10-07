@@ -187,8 +187,58 @@ export const SKILL_DEFS = {
     extra: (sk) => [sk.level >= 5 && '불길에 맞은 적은 화염 피해를 최대 50% 더 받습니다.'],
   },
 };
+// ── 마솽 전용 스킬 ──
+Object.assign(SKILL_DEFS, {
+  leafCut: {
+    key: 'leafCut', name: '이파리 베기', icon: ic('leafblade'), color: '#5cc85a', element: null, passive: false, castTime: 0.1, projectile: true, owner: 'masang', basic: true,
+    short: '가까운 적을 향해 이파리를 날려 피해를 줍니다.',
+    desc: '가까운 적을 향해 날카로운 이파리를 발사합니다. 이파리는 적중한 적에게 피해를 줍니다.',
+    keywords: ['투사체', '연쇄', '스킬 쿨타임'],
+    base: { damage: [6, 12], duration: 1, projSize: 6, projSpeed: 8, projCount: 1, manaCost: 3, cooldown: 1.2 },
+    labels: { duration: '투사체 지속 시간' },
+    relevant: ['damage', 'duration', 'pierce', 'projSize', 'projSpeed', 'projCount', 'chains', 'manaCost', 'cooldown'],
+    levelUp(st, lv) { dmgUp40(st, lv); if (lv >= 5) st.projCount = { min: 3, max: 3 }; },
+    levelText: (lv) => ['피해량이 40% 증가합니다.', lv === 3 && '이파리가 적을 따라갑니다. 여러 개면 모두 한 대상을 따라갑니다.', lv === 5 && '기본 투사체 개수가 3개가 됩니다.'],
+    extra: (sk) => [sk.level >= 3 && '이파리가 한 대상을 따라갑니다.'],
+  },
+  nature: {
+    key: 'nature', name: '자연화', icon: ic('nature'), color: '#4fbf4a', element: null, passive: false, castTime: 0.15, owner: 'masang', heal: 1,
+    short: '주위 적의 생기를 흡수해 양분을 얻고, 모은 양분으로 체력을 회복합니다.',
+    desc: '효과 범위 안의 적 하나당 양분을 1 얻습니다. 이 스킬로 얻은 양분 10마다 체력을 1 회복합니다.',
+    keywords: ['양분', '회복', '효과 범위', '스킬 쿨타임'],
+    base: { area: 40, manaCost: 8, cooldown: 6 },
+    relevant: ['area', 'manaCost', 'cooldown'],
+    levelUp(st, lv) { st.cooldown = { min: 6 - 0.5 * (lv - 1), max: 6 - 0.5 * (lv - 1) }; if (lv >= 3) st.area = { min: 60, max: 60 }; },
+    levelText: (lv) => ['기본 스킬 쿨타임이 0.5초 줄어듭니다.', lv === 3 && '기본 효과 범위가 60이 됩니다.', lv === 5 && '적 하나당 양분을 2 얻습니다.'],
+    extra: (sk) => [`적 하나당 양분 ${sk.level >= 5 ? 2 : 1}, 이 스킬로 얻은 양분 10마다 체력 1 회복`],
+  },
+  fruit: {
+    key: 'fruit', name: '열매 맺기', icon: ic('fruit'), color: '#ff5a6e', element: null, passive: true, owner: 'masang',
+    short: '꽃이 일정 수 피어날 때마다 열매가 자라 적이 많은 곳으로 던져집니다.',
+    desc: '매 5번째로 피어난 꽃에서 열매가 자라, 적이 가장 많은 곳(보스가 있으면 보스)으로 던져집니다. 열매는 범위 안의 적에게 피해를 주고 바깥으로 밀쳐냅니다. 투사체가 늘어나면 남은 열매는 목표 주위 20 범위에 떨어집니다.',
+    keywords: ['투사체', '효과 범위', '꽃', '패시브'],
+    base: { damage: [15, 30], area: 25, projSpeed: 5, projCount: 1 },
+    relevant: ['damage', 'area', 'projSpeed', 'projCount'],
+    levelUp: dmgUp40,
+    levelText: (lv) => ['피해량이 40% 증가합니다.', lv === 3 && '열매가 무작위 속성을 띠고, 기본 피해의 40%만큼 그 속성 피해를 더 줍니다.', lv === 5 && '매 3번째 꽃마다 열매가 자랍니다.'],
+    extra: (sk) => [`매 ${sk.level >= 5 ? 3 : 5}번째 꽃마다 열매가 자랍니다.`, sk.level >= 3 && '열매가 무작위 속성을 띱니다.'],
+  },
+  pineWind: {
+    key: 'pineWind', name: '솔바람', icon: ic('wind'), color: '#9fe8c0', element: null, passive: false, castTime: 0.1, projectile: true, owner: 'masang',
+    short: '적을 관통하고 지형에 튕기는 솔바람을 내보냅니다. 꽃에 닿으면 꽃이 강하게 터집니다.',
+    desc: '가까운 적을 향해 솔바람을 내보냅니다. 솔바람은 적을 관통하고 지형에 튕기며, 지나간 적을 다시 지나가면 또 피해를 줍니다. 꽃에 닿으면 꽃이 바로 터지며 효과 범위와 피해가 50% 증가합니다.',
+    keywords: ['투사체', '관통', '연쇄', '꽃', '스킬 쿨타임'],
+    base: { damage: [4, 12], duration: 4, projSize: 30, projSpeed: 8, projCount: 1, manaCost: 5, cooldown: 1.5 },
+    labels: { duration: '투사체 지속 시간' },
+    relevant: ['damage', 'duration', 'projSize', 'projSpeed', 'projCount', 'chains', 'manaCost', 'cooldown'],
+    levelUp(st, lv) { dmgUp40(st, lv); if (lv >= 3) st.projCount = { min: 3, max: 3 }; },
+    levelText: (lv) => ['피해량이 40% 증가합니다.', lv === 3 && '기본 투사체 개수가 3개가 됩니다.', lv === 5 && '꽃에 닿을 때마다 피해량, 크기, 속도가 20%씩 증가합니다. (최대 3회)'],
+    extra: (sk) => [sk.level >= 5 && '꽃에 닿을 때마다 강해지며 꽃잎이 휘날립니다.'],
+  },
+});
+
 export const SKILL_ORDER = ['fireball', 'frostBarrier', 'chainLightning', 'iceball', 'magnet', 'fireAura', 'frostAura', 'lightningAura', 'enchant', 'triggerKill', 'flamethrower', 'snowfall', 'lightningBeam'];
-export const ATTACK_SKILLS = ['fireball', 'chainLightning', 'iceball', 'flamethrower', 'snowfall', 'lightningBeam'];
+export const ATTACK_SKILLS = ['fireball', 'chainLightning', 'iceball', 'flamethrower', 'snowfall', 'lightningBeam', 'leafCut', 'pineWind'];
 // 3레벨 / 5레벨에 추가되는 효과 설명
 export const milestoneText = (d, lv) => d.levelText(lv).slice(1).filter(Boolean)[0] || '';
 export const enchantReq = (sk) => Math.max(1, sk.def.xpReq - (sk.level - 1));

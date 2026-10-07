@@ -5,7 +5,10 @@
 import { profile, saveProfile, renderUpgrades, renderSettings } from './meta.js';
 import { STAGES, stageById, stageLabel, isStageUnlocked, isStartable, lastStartable } from './stages.js';
 import { accountNeed } from './config.js';
-import { openCodex, closeCodex } from './codex.js';
+import { openCodex, closeCodex, attachPreview } from './codex.js';
+import { CHARACTERS, CHARACTER_ORDER, masteryNeed } from './characters.js';
+import { masteryOf } from './meta.js';
+import { SKILL_DEFS } from './skills.js';
 import { ic } from './icons.js';
 import { sfx } from './audio.js';
 
@@ -57,7 +60,9 @@ export function setView(v) {
   $('#view-stage').classList.toggle('hidden', v !== 'stage');
   $('#view-upgrade').classList.toggle('hidden', v !== 'upgrade');
   $('#view-codex').classList.toggle('hidden', v !== 'codex');
-  if (v === 'codex') openCodex(); else closeCodex();
+  if (v === 'codex') openCodex();
+  else if (v === 'char') renderChar();
+  else closeCodex();
   if (v === 'stage') { viewIdx = -1; renderStages(); }
   if (v === 'upgrade') renderUpgrades(opts.refreshGold);
   opts.hideTip();
@@ -85,6 +90,8 @@ export function menuBack() {
 
 function updateStageTag() {
   $('#menu-stage').textContent = stageLabel(stageById(profile.stage));
+  const ch = CHARACTERS[profile.character] || CHARACTERS.masang;
+  $('#menu-char').innerHTML = `${ic(ch.icon)} ${ch.name}`;
 }
 
 export function updateAccount() {
@@ -178,4 +185,81 @@ function selectIdx(i) {
     track.style.transform = prev;
     requestAnimationFrame(() => requestAnimationFrame(() => { track.style.transition = ''; track._center(); }));
   }
+}
+
+// ── 캐릭터 선택 ──
+// 위 왼쪽: 전용 스킬 8칸 (4x2) + 플레이 미리보기 / 위 오른쪽: 설명 · 고유 패시브 · 숙련도 / 아래: 캐릭터 목록
+const CHAR_SLOTS = 3;   // 아래 목록 칸 수 (아직 없는 캐릭터는 '준비 중')
+function renderChar() {
+  const body = $('#char-body');
+  body.innerHTML = '';
+  const id = CHARACTERS[profile.character] ? profile.character : 'masang';
+  const ch = CHARACTERS[id];
+  const m = masteryOf(id);
+  const need = masteryNeed(m.lv);
+
+  const top = document.createElement('div');
+  top.className = 'ch-top';
+  const left = document.createElement('div');
+  left.className = 'ch-left';
+  const grid = document.createElement('div');
+  grid.className = 'ch-skills';
+  ch.skills.forEach((key, i) => {
+    const slot = document.createElement('div');
+    if (!key) {
+      slot.className = 'ch-skill empty';
+      slot.innerHTML = '<span class="ch-q">?</span>';
+      slot._tip = () => '<div class="tip-title">준비 중</div><div class="tip-dim">아직 공개되지 않은 전용 스킬입니다.</div>';
+    } else {
+      const d = SKILL_DEFS[key], lv = ch.unlock[key] || 1, locked = m.lv < lv;
+      slot.className = 'ch-skill' + (locked ? ' locked' : '');
+      slot.style.setProperty('--c', d.color);
+      slot.innerHTML = `${d.icon}<span class="cx-ap ${d.passive ? 'p' : 'a'}">${d.passive ? 'P' : 'A'}</span>${i === 0 ? '<span class="ch-basic">기본</span>' : ''}${locked ? `<span class="ch-lock">${ic('lock')} 숙련 ${lv}</span>` : ''}`;
+      slot._tip = () => `<div class="tip-title">${d.icon} ${d.name} <span class="tip-dim">${d.passive ? '패시브' : '액티브'}</span></div><div>${d.desc}</div>`
+        + `<div class="tip-dim">3레벨 효과 : ${d.levelText(3).slice(1).filter(Boolean)[0] || ''}</div><div class="tip-dim">5레벨 효과 : ${d.levelText(5).slice(1).filter(Boolean)[0] || ''}</div>`
+        + (i === 0 ? '<div class="tip-ok">스테이지를 시작할 때 장착하고 시작합니다.</div>' : '')
+        + (locked ? `<div class="tip-warn">${ic('lock')} 숙련도 ${lv} 레벨에 해금됩니다.</div>` : '');
+    }
+    grid.appendChild(slot);
+  });
+  const pv = document.createElement('div');
+  pv.className = 'ch-preview';
+  pv.innerHTML = '<span class="cx-pv-label">미리보기</span>';
+  left.append(grid, pv);
+
+  const right = document.createElement('div');
+  right.className = 'ch-right';
+  right.innerHTML = `<div class="ch-head"><span class="ch-portrait" style="--c:${ch.color}">${ic(ch.icon)}</span><div><div class="ch-name">${ch.name}</div><div class="ch-sub">기본 캐릭터</div></div></div>
+    <div class="ch-desc">${ch.desc}</div>
+    <div class="ch-passive"><div class="chp-title">${ic(ch.passive.icon)} 고유 패시브 · ${ch.passive.name}</div><div class="chp-desc">${ch.passive.desc}</div></div>
+    <div class="ch-mastery"><div class="chm-head"><span>숙련도 <b>Lv.${m.lv}</b></span><span class="chm-xp">${Math.floor(m.xp).toLocaleString()} / ${need.toLocaleString()}</span></div>
+      <div class="acct-bar"><i style="width:${Math.min(100, (m.xp / need) * 100)}%"></i></div>
+      <div class="chm-note">이 캐릭터로 스테이지에서 얻은 경험치만큼 숙련도가 오릅니다.</div></div>`;
+  top.append(left, right);
+
+  const list = document.createElement('div');
+  list.className = 'ch-list';
+  for (let i = 0; i < CHAR_SLOTS; i++) {
+    const cid = CHARACTER_ORDER[i];
+    const card = document.createElement('div');
+    if (!cid) {
+      card.className = 'ch-card soon';
+      card.innerHTML = '<div class="chc-ic">?</div><div class="chc-name">준비 중</div>';
+    } else {
+      const c = CHARACTERS[cid];
+      card.className = 'ch-card' + (cid === id ? ' sel' : '');
+      card.style.setProperty('--c', c.color);
+      card.innerHTML = `<div class="chc-ic">${ic(c.icon)}</div><div class="chc-name">${c.name}</div><div class="chc-lv">숙련도 Lv.${masteryOf(cid).lv}</div>`;
+      card.addEventListener('click', () => {
+        if (profile.character === cid) return;
+        profile.character = cid; saveProfile(); sfx('select'); updateStageTag(); renderChar();
+      });
+    }
+    list.appendChild(card);
+  }
+  body.append(top, list);
+
+  // 해금된 전용 스킬로 싸우는 미리보기
+  const keys = ch.skills.filter((k) => k && m.lv >= (ch.unlock[k] || 1));
+  attachPreview(pv, { kind: 'character', charId: id, skills: keys });
 }

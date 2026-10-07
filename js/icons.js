@@ -5,6 +5,12 @@
 const S = (d, c, w = 2) => `<path d="${d}" stroke="${c}" stroke-width="${w}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
 
 const ICONS = {
+  // 마솽 전용
+  leafblade: '<path d="M3 20C5 10 12 4 21 3c-1 9-7 16-18 17z" fill="#5cc85a"/><path d="M3 20C8 15 13 10 19 5" stroke="#2f8a3a" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M8 15l-1.5-3M11 12l-0.5-3.5M14 9.5l1-3M9.5 13.5l3 .8M12.5 10.5l3 .3" stroke="#a8ec8f" stroke-width="1.1" stroke-linecap="round"/>',
+  nature: '<circle cx="12" cy="12" r="9.5" fill="#2f8a3a" opacity=".25"/><path d="M12 21c0-6 0-9 0-12" stroke="#6b4a2a" stroke-width="2" stroke-linecap="round"/><path d="M12 11C8 11 5 8 5 4c4 0 7 3 7 7z" fill="#7ed957"/><path d="M12 13c4 0 7-3 7-7-4 0-7 3-7 7z" fill="#4fbf4a"/><circle cx="5" cy="17" r="1.6" fill="#b8f5a0"/><circle cx="19" cy="17" r="1.6" fill="#b8f5a0"/><circle cx="12" cy="3" r="1.3" fill="#b8f5a0"/>',
+  fruit: '<path d="M12 6c-1-2-1-3.5 0-4.5" stroke="#6b4a2a" stroke-width="1.8" stroke-linecap="round" fill="none"/><path d="M12 5.5c2-2.5 5-2.5 7-1-2 2.5-4.5 2.5-7 1z" fill="#5cc85a"/><circle cx="12" cy="14" r="7.5" fill="#ff5a6e"/><circle cx="9.3" cy="11.3" r="2.2" fill="#ffc2ca"/><circle cx="14.5" cy="17" r="1" fill="#c8323f"/>',
+  flower: '<g fill="#ff9ec4"><circle cx="12" cy="6" r="3.6"/><circle cx="17.7" cy="10.2" r="3.6"/><circle cx="15.5" cy="16.9" r="3.6"/><circle cx="8.5" cy="16.9" r="3.6"/><circle cx="6.3" cy="10.2" r="3.6"/></g><circle cx="12" cy="11.8" r="3.2" fill="#ffd45a"/><circle cx="11" cy="10.8" r="1" fill="#fff3b0"/>',
+  sprout: '<path d="M12 22v-9" stroke="#3f8f3a" stroke-width="2.2" stroke-linecap="round"/><path d="M12 13C7 13 3.5 9.5 3.5 5 8.5 5 12 8.5 12 13z" fill="#7ed957"/><path d="M12 11c0-4.5 3.5-8 8.5-8 0 4.5-3.5 8-8.5 8z" fill="#4fbf4a"/><ellipse cx="12" cy="21.5" rx="5" ry="1.5" fill="#6b4a2a" opacity=".5"/>',
   // 스킬
   fire: '<path d="M12 2c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 2-5 3-7 0 3 1 4 2 4 0-3-1-6 1-9z" fill="#ff6a1a"/><path d="M12 11c1 2 3 3 3 6a3 3 0 0 1-6 0c0-2 1-3 2-4 0 1 1 2 1 2 0-2-1-3 0-4z" fill="#ffd34a"/>',
   shield: '<path d="M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5z" fill="#3f8ed6"/><path d="M12 4.2l6 2.3V11c0 3.9-2.6 7-6 8.7z" fill="#8fd8ff"/><path d="M12 8v8M8 12h8" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".85"/>',

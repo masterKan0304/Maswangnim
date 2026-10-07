@@ -5,6 +5,7 @@ import { sfx, setVolumes } from './audio.js';
 import { STAGE } from './stage.js';
 import { ic } from './icons.js';
 import { accountNeed, ACCOUNT_UNLOCKS } from './config.js';
+import { CHARACTERS, masteryNeed } from './characters.js';
 import { KB, KEY_ACTIONS, keyName, keyOf, loadKeys, isAllowedKey, duplicateCodes } from './keys.js';
 
 const SAVE_KEY = 'blockchain-save-v1';
@@ -16,6 +17,8 @@ export const profile = {
   stage: 0,        // 마지막으로 고른 스테이지 (처음 플레이하면 튜토리얼)
   accountLevel: 1, // 계정 레벨
   accountXp: 0,    // 현재 레벨에서 쌓인 계정 경험치
+  character: 'masang',   // 고른 캐릭터
+  mastery: {},           // 캐릭터별 숙련도 { id: { lv, xp } }
   settings: { master: 80, bgm: 50, sfx: 70, ui: 70, masterOn: true, bgmOn: true, sfxOn: true, uiOn: true, labels: true, autoPickup: true },
 };
 
@@ -31,6 +34,8 @@ export function loadProfile() {
       profile.stage = d.stage ?? (d.gold || Object.keys(profile.upgrades).length ? 1 : 0);
       profile.accountLevel = d.accountLevel || 1;
       profile.accountXp = d.accountXp || 0;
+      profile.character = d.character || 'masang';
+      profile.mastery = d.mastery || {};
       // 최대 레벨이 줄어든 업그레이드: 초과한 레벨의 비용을 골드로 돌려줌
       for (const u of UPGRADES) {
         let lv = profile.upgrades[u.id] || 0;
@@ -45,6 +50,18 @@ export function loadProfile() {
 
 export function saveProfile() {
   try { localStorage.setItem(SAVE_KEY, JSON.stringify(profile)); } catch (e) { /* 무시 */ }
+}
+
+// 캐릭터 숙련도
+export const masteryOf = (id) => profile.mastery[id] || (profile.mastery[id] = { lv: 1, xp: 0 });
+export function addMasteryXp(id, v) {
+  const m = masteryOf(id);
+  const from = m.lv;
+  m.xp += Math.floor(v);
+  while (m.xp >= masteryNeed(m.lv)) { m.xp -= masteryNeed(m.lv); m.lv++; }
+  const ch = CHARACTERS[id];
+  const unlocked = ch ? ch.skills.filter((k) => k && ch.unlock[k] > from && ch.unlock[k] <= m.lv) : [];
+  return { from, to: m.lv, unlocked };
 }
 
 // 계정 경험치 추가 → 오른 레벨들과 새로 해금된 항목을 돌려줌

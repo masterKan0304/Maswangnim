@@ -16,6 +16,8 @@ export const game = {
   totalXp: 0,            // 이번 전투에서 얻은 경험치 합계 (= 골드)
   stage: 1,              // 진행 중인 스테이지 (0 = 튜토리얼)
   accountLevel: 1,       // 계정 레벨 (해금된 스킬 / 문장 결정)
+  charId: 'masang',      // 플레이 중인 캐릭터
+  masteryLevel: 1,       // 그 캐릭터의 숙련도 (전용 스킬 해금)
   demo: false,           // 메인 화면 미리보기 중
   tutorial: null,        // 튜토리얼 진행 객체 (튜토리얼 스테이지일 때)
   overkill: 180,         // 오버킬 시간 (보이지 않음)

@@ -48,6 +48,7 @@ export class SkillRuntime {
     this.snowballs = [];
     this.beams = [];
     this.flames = [];   // 불길을 뿜는 중인 스킬 (목록에서 빠진 스킬의 불길도 끝까지 관리)
+    this.winds = [];    // 솔바람
 
     // 파이어볼: 울퉁불퉁한 검붉은 돌 + 틈 사이로 비치는 용암 핵 (뜨거운 운석)
     const rockGeo = jitter(new THREE.DodecahedronGeometry(0.5, 0), 0.32, 41);
@@ -74,6 +75,21 @@ export class SkillRuntime {
       g.add(makeGlowSprite(0x7fdcff, 2.2, 0.6));
       return g;
     });
+    // 이파리: 납작하고 길쭉한 잎사귀
+    const leafGeo = new THREE.OctahedronGeometry(0.5, 0).scale(0.55, 0.14, 1.5);
+    const leafMat = new THREE.MeshStandardMaterial({ color: 0x5cc85a, emissive: 0x1f6a22, emissiveIntensity: 0.5, roughness: 0.5, flatShading: true });
+    this.leafPool = new Pool(scene, () => {
+      const g = new THREE.Group();
+      const m = new THREE.Mesh(leafGeo, leafMat);
+      m.castShadow = true;
+      g.add(m);
+      g.userData.shell = m;
+      g.add(makeGlowSprite(0x8ff07a, 1.4, 0.45));
+      return g;
+    });
+    // 솔바람: 수평으로 도는 바람 고리
+    this.windRingGeo = new THREE.TorusGeometry(1, 0.08, 6, 28);
+    this.windDiscGeo = new THREE.CircleGeometry(1, 24);
     this.iceballGeo = new THREE.IcosahedronGeometry(0.5, 0);
     this.shardGeo = new THREE.OctahedronGeometry(0.09, 0).scale(1, 2, 1);
     this.snowGeo = jitter(new THREE.IcosahedronGeometry(0.5, 1), 0.08, 77);
@@ -132,6 +148,7 @@ export class SkillRuntime {
     this.updateIceballs(dt);
     this.updateSnowballs(dt);
     this.updateBeams(dt);
+    this.updateWinds(dt);
   }
 
   updateBarrier(sk, dt) {
@@ -151,7 +168,7 @@ export class SkillRuntime {
     if (sk.cd > 0) return false;
     let st = getStats(sk);
     const p = this.player.pos;
-    const need = { fireball: manual ? 0 : 20, chainLightning: sample(st.range) / U, snowfall: sample(st.range) / U, flamethrower: manual ? 0 : (sample(st.area) / U) * 1.3, lightningBeam: manual ? 0 : 14 }[sk.key];
+    const need = { leafCut: manual ? 0 : 20, pineWind: manual ? 0 : 20, nature: manual ? 0 : sample(st.area) / U / 2, fireball: manual ? 0 : 20, chainLightning: sample(st.range) / U, snowfall: sample(st.range) / U, flamethrower: manual ? 0 : (sample(st.area) / U) * 1.3, lightningBeam: manual ? 0 : 14 }[sk.key];
     if (need && !this.enemies.anyInRange(p.x, p.z, need)) {
       if (manual) game.sys.ui.toast('사거리 안에 적이 없습니다', 'warn');
       return false;
@@ -191,6 +208,160 @@ export class SkillRuntime {
     else if (sk.key === 'flamethrower') this.startFlame(sk, st);
     else if (sk.key === 'snowfall') this.castSnowfall(sk, st);
     else if (sk.key === 'lightningBeam') this.castBeam(sk, st);
+    else if (sk.key === 'leafCut') this.castLeaf(sk, st);
+    else if (sk.key === 'nature') this.castNature(sk, st);
+    else if (sk.key === 'pineWind') this.castWind(sk, st);
+  }
+
+  // ── 이파리 베기 ──
+  castLeaf(sk, st) {
+    sfx('iceShot');
+    const p = this.player;
+    const near = this.enemies.nearestN(p.pos.x, p.pos.z, 30, 1)[0];
+    const base = near ? Math.atan2(near.z - p.pos.z, near.x - p.pos.x) : Math.atan2(p.aim.z, p.aim.x);
+    const n = sampleInt(st.projCount);
+    const gen = () => ({ size: sample(st.projSize) / PZ, speed: sample(st.projSpeed) * PS, life: sample(st.duration), pierce: sampleInt(st.pierce) });
+    for (let i = 0; i < n; i++) {
+      const a = spreadAngle(base, i);
+      const dx = Math.cos(a), dz = Math.sin(a);
+      this.spawnProj({
+        kind: 'leaf', sk, ...gen(), gen, x: p.pos.x + dx * 0.4, z: p.pos.z + dz * 0.4, y: 0.6, dx, dz, st,
+        chains: sampleInt(st.chains), home: sk.level >= 3, homeTarget: near || null,
+      });
+    }
+  }
+
+  // ── 자연화: 범위 안 적 하나당 양분 (5레벨 2), 이 스킬로 얻은 양분 10마다 체력 회복 ──
+  castNature(sk, st) {
+    const p = this.player.pos;
+    const R = sample(st.area) / U / 2;
+    const per = sk.level >= 5 ? 2 : 1;
+    let gain = 0;
+    for (const e of this.enemies.query(p.x, p.z, R + 2.2)) {
+      if (!e.alive || Math.hypot(e.x - p.x, e.z - p.z) > R + e.r * 0.5) continue;
+      gain += per;
+      // 적에게서 플레이어 쪽으로 빨려 오는 생기
+      for (let k = 0; k < 3; k++) {
+        const dx = p.x - e.x, dz = p.z - e.z;
+        this.fx.particles.emit(e.x + (Math.random() - 0.5) * 0.4, 0.5, e.z + (Math.random() - 0.5) * 0.4, dx * 1.6, 1.2, dz * 1.6, 0.6, 0.1, k % 2 ? 0x7ed957 : 0xc8f5a8, -1);
+      }
+    }
+    this.fx.ring(p.x, p.z, R, 0x7ed957, 0.55);
+    this.fx.ring(p.x, p.z, R * 0.6, 0xc8f5a8, 0.45);
+    sfx('magnet');
+    if (!gain) return;
+    if (game.sys.bloom) game.sys.bloom.addNutrient(gain);
+    sk.natureAcc = (sk.natureAcc || 0) + gain;
+    let heal = 0;
+    while (sk.natureAcc >= 10) { sk.natureAcc -= 10; heal += sk.def.heal; }
+    if (heal > 0 && this.player.hp < this.player.maxHp) {
+      this.player.hp = Math.min(this.player.maxHp, this.player.hp + heal);
+      this.fx.numbers.spawn(p.x, 1.6, p.z, `+${heal}`, 'heal');
+    }
+  }
+
+  // ── 솔바람: 적을 관통하고 지형에 튕김, 꽃에 닿으면 꽃이 강하게 터짐 ──
+  castWind(sk, st) {
+    sfx('dash');
+    const p = this.player;
+    const near = this.enemies.nearestN(p.pos.x, p.pos.z, 30, 1)[0];
+    const base = near ? Math.atan2(near.z - p.pos.z, near.x - p.pos.x) : Math.atan2(p.aim.z, p.aim.x);
+    const n = sampleInt(st.projCount);
+    for (let i = 0; i < n; i++) {
+      const a = spreadAngle(base, i);
+      this.spawnWind(sk, st, p.pos.x + Math.cos(a) * 0.5, p.pos.z + Math.sin(a) * 0.5, Math.cos(a), Math.sin(a), sampleInt(st.chains));
+    }
+  }
+
+  spawnWind(sk, st, x, z, dx, dz, chains) {
+    const ringMat = new THREE.MeshBasicMaterial({ color: 0xd8fff0, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false });
+    const discMat = new THREE.MeshBasicMaterial({ color: 0x9fe8c0, transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+    const g = new THREE.Group();
+    const r1 = new THREE.Mesh(this.windRingGeo, ringMat), r2 = new THREE.Mesh(this.windRingGeo, ringMat);
+    r1.rotation.x = r2.rotation.x = Math.PI / 2;
+    r2.scale.setScalar(0.62);
+    const disc = new THREE.Mesh(this.windDiscGeo, discMat);
+    disc.rotation.x = -Math.PI / 2;
+    g.add(r1, r2, disc);
+    this.scene.add(g);
+    const w = {
+      sk, st, x, z, dx, dz, r: sample(st.projSize) / PZ / 2, speed: sample(st.projSpeed) * PS, life: sample(st.duration), age: 0,
+      mul: 1, boosts: 0, petals: false, chains, inside: new Set(), mesh: g, r1, r2, mats: [ringMat, discMat],
+    };
+    this.winds.push(w);
+    return w;
+  }
+
+  removeWind(i) {
+    const w = this.winds[i];
+    this.scene.remove(w.mesh);
+    w.mats.forEach((m) => m.dispose());
+    this.winds.splice(i, 1);
+  }
+
+  updateWinds(dt) {
+    const obs = game.sys.world && game.sys.world.obstacles;
+    const bloom = game.sys.bloom;
+    for (let i = this.winds.length - 1; i >= 0; i--) {
+      const w = this.winds[i];
+      w.age += dt;
+      w.x += w.dx * w.speed * dt; w.z += w.dz * w.speed * dt;
+      // 맵 끝 / 장애물에 튕김
+      const lim = WORLD_HALF - w.r * 0.5;
+      if (Math.abs(w.x) > lim) { w.dx = -w.dx; w.x = Math.sign(w.x) * lim; }
+      if (Math.abs(w.z) > lim) { w.dz = -w.dz; w.z = Math.sign(w.z) * lim; }
+      if (obs) {
+        for (const o of obs.list) {
+          const ox = w.x - o.x, oz = w.z - o.z, d = Math.hypot(ox, oz), min = o.r + w.r * 0.45;
+          if (d < min && d > 1e-4) {
+            const nx = ox / d, nz = oz / d, dot = w.dx * nx + w.dz * nz;
+            if (dot < 0) { w.dx -= 2 * dot * nx; w.dz -= 2 * dot * nz; }
+            w.x = o.x + nx * min; w.z = o.z + nz * min;
+          }
+        }
+      }
+      // 관통 피해: 겹쳐 있는 동안 한 번, 빠져나갔다가 다시 지나가면 또 피해
+      const now = new Set();
+      for (const e of this.enemies.query(w.x, w.z, w.r + 2.2)) {
+        if (!e.alive || Math.hypot(e.x - w.x, e.z - w.z) > w.r + e.r * 0.8) continue;
+        now.add(e);
+        if (!w.inside.has(e)) this.deal(e, w.sk, w.st, { mul: w.mul, kx: w.dx * 2, kz: w.dz * 2 });
+      }
+      w.inside = now;
+      // 꽃에 닿으면 꽃이 바로 강하게 터짐 (5레벨: 솔바람이 최대 3회까지 강해짐)
+      if (bloom) {
+        for (const f of [...bloom.flowers]) {
+          if (Math.hypot(f.x - w.x, f.z - w.z) > w.r + 0.5) continue;
+          bloom.explode(f, 1.5);
+          if (w.sk.level >= 5 && w.boosts < 3) { w.boosts++; w.mul *= 1.2; w.r *= 1.2; w.speed *= 1.2; w.petals = true; }
+        }
+      }
+      // 모습
+      const fade = Math.min(1, (w.life - w.age) / 0.4) * Math.min(1, w.age / 0.12);
+      w.mats[0].opacity = 0.7 * fade; w.mats[1].opacity = 0.22 * fade;
+      w.mesh.position.set(w.x, 0.45, w.z);
+      w.mesh.scale.setScalar(w.r);
+      w.r1.rotation.z += dt * 9; w.r2.rotation.z -= dt * 13;
+      w.mesh.rotation.y += dt * 4;
+      if (Math.random() < 0.8) {
+        const a = Math.random() * Math.PI * 2;
+        const petal = w.petals && Math.random() < 0.6;
+        this.fx.particles.emit(w.x + Math.cos(a) * w.r, 0.3 + Math.random() * 0.6, w.z + Math.sin(a) * w.r, -Math.sin(a) * 3, 0.6, Math.cos(a) * 3, 0.45,
+          petal ? 0.11 : 0.07, petal ? (Math.random() < 0.5 ? 0xff9ec4 : 0xffd0e4) : (Math.random() < 0.5 ? 0x9fe8c0 : 0xe8fff4), -0.6);
+      }
+      if (w.age >= w.life) {
+        // 연쇄: 사라진 자리에서 가장 가까운 적을 향해 새 솔바람
+        if (w.chains > 0) {
+          const t = this.enemies.nearestN(w.x, w.z, 12, 1)[0];
+          if (t) {
+            const d = Math.hypot(t.x - w.x, t.z - w.z) || 1;
+            this.spawnWind(w.sk, w.st, w.x, w.z, (t.x - w.x) / d, (t.z - w.z) / d, w.chains - 1);
+            this.fx.ring(w.x, w.z, 0.8, 0xd8fff0, 0.3);
+          }
+        }
+        this.removeWind(i);
+      }
+    }
   }
 
   // ── 효과 부여: 경험치 획득 ──────────────
@@ -258,7 +429,8 @@ export class SkillRuntime {
 
   // 진행 중인 모든 스킬 연출 제거 (도감 미리보기 장면 초기화)
   clearAll() {
-    for (const p of this.projs) (p.kind === 'fire' ? this.firePool : this.icePool).put(p.mesh);
+    for (const p of this.projs) this.poolOf(p.kind).put(p.mesh);
+    while (this.winds.length) this.removeWind(0);
     this.projs.length = 0;
     for (const ib of this.iceballs) { this.scene.remove(ib.group, ib.ring); ib.mats.forEach((m) => m.dispose()); }
     this.iceballs.length = 0;
@@ -675,8 +847,10 @@ export class SkillRuntime {
   }
 
   // ── 투사체 공통 ───────────────────────
+  poolOf(kind) { return kind === 'fire' ? this.firePool : kind === 'leaf' ? this.leafPool : this.icePool; }
+
   spawnProj(o) {
-    const mesh = o.kind === 'fire' ? this.firePool.get() : this.icePool.get();
+    const mesh = this.poolOf(o.kind).get();
     Object.assign(o, {
       mesh, age: 0, hit: o.hit || new Set(o.ignore ? [o.ignore] : []), pierceLeft: o.pierce, chainsLeft: o.chains || 0,
       pierceFlash: 0, dead: false, infused: null,
@@ -693,6 +867,16 @@ export class SkillRuntime {
     const lim = WORLD_HALF + 12;
     for (let i = this.projs.length - 1; i >= 0; i--) {
       const p = this.projs[i];
+      if (p.home) {
+        let t = p.homeTarget;
+        if (!t || !t.alive) { t = this.enemies.nearestN(p.x, p.z, 15, 1)[0] || null; p.homeTarget = t; }
+        if (t) {
+          const want = Math.atan2(t.z - p.z, t.x - p.x), cur = Math.atan2(p.dz, p.dx);
+          const diff = Math.atan2(Math.sin(want - cur), Math.cos(want - cur));
+          const a = cur + Math.max(-9 * dt, Math.min(9 * dt, diff));
+          p.dx = Math.cos(a); p.dz = Math.sin(a);
+        }
+      }
       const total = p.speed * dt;
       const subs = Math.max(1, Math.ceil(total / 0.3));
       const step = total / subs;
@@ -709,7 +893,7 @@ export class SkillRuntime {
             if (p.pierceLeft > 0) {
               p.pierceLeft--;
               p.pierceFlash = 0.15;
-              this.fx.ring(p.x, p.z, Math.max(0.4, p.size * 1.2), p.kind === 'fire' ? 0xffe08a : 0xd8f8ff, 0.25, p.y);
+              this.fx.ring(p.x, p.z, Math.max(0.4, p.size * 1.2), p.kind === 'fire' ? 0xffe08a : p.kind === 'leaf' ? 0xb8f5a0 : 0xd8f8ff, 0.25, p.y);
             } else { p.dead = true; break; }
           }
         }
@@ -737,6 +921,12 @@ export class SkillRuntime {
       if (Math.abs(p.x) > lim || Math.abs(p.z) > lim) p.dead = true;
 
       p.mesh.position.set(p.x, p.y, p.z);
+      if (p.kind === 'leaf') {
+        // 진행 방향을 바라보며 빙글빙글
+        p.mesh.rotation.set(0, Math.atan2(p.dx, p.dz), 0);
+        p.mesh.userData.shell.rotation.z += dt * 18;
+        if (Math.random() < 0.4) this.fx.particles.emit(p.x, p.y, p.z, -p.dx * 0.8, 0.3, -p.dz * 0.8, 0.3, 0.07, 0x9fe68a, -0.5);
+      }
       if (p.pierceFlash > 0) { p.pierceFlash -= dt; p.mesh.scale.setScalar(p.size * (1 + p.pierceFlash * 4)); }
       if (p.kind === 'fire') {
         const sh = p.mesh.userData.shell;
@@ -750,7 +940,7 @@ export class SkillRuntime {
         }
       }
       if (p.dead) {
-        (p.kind === 'fire' ? this.firePool : this.icePool).put(p.mesh);
+        this.poolOf(p.kind).put(p.mesh);
         this.projs[i] = this.projs[this.projs.length - 1];
         this.projs.pop();
       }
@@ -769,7 +959,7 @@ export class SkillRuntime {
     const d = Math.sqrt(bd) || 1;
     const fresh = p.gen ? p.gen() : { size: p.size, speed: p.speed, life: p.life, pierce: p.pierce, area: p.area };
     this.spawnProj({
-      kind: p.kind, sk: p.sk, st: p.st, gen: p.gen, y: p.y, dmgMul: p.dmgMul,
+      kind: p.kind, sk: p.sk, st: p.st, gen: p.gen, y: p.y, dmgMul: p.dmgMul, home: p.home,
       split: p.split, areaFactor: p.areaFactor, explodeOnExpire: p.explodeOnExpire,
       ...fresh, x: p.x, z: p.z, dx: (best.x - p.x) / d, dz: (best.z - p.z) / d,
       chains: p.chainsLeft - 1, hit: new Set(p.hit),
@@ -811,7 +1001,8 @@ export class SkillRuntime {
       }
     } else {
       this.deal(e, p.sk, p.st, { mul: p.dmgMul, kx: p.dx * 1.5, kz: p.dz * 1.5, infuse: p.infused });
-      this.fx.particles.burst(p.x, p.y, p.z, 4, [0xd8f8ff, 0x9fe6ff], { speed: 2, size: 0.06, life: 0.25, up: 1.5 });
+      const cols = p.kind === 'leaf' ? [0x8ff07a, 0x4fbf4a] : [0xd8f8ff, 0x9fe6ff];
+      this.fx.particles.burst(p.x, p.y, p.z, 4, cols, { speed: 2, size: 0.06, life: 0.25, up: 1.5 });
     }
   }
 

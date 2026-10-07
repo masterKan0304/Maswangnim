@@ -19,7 +19,9 @@ import { input, updateAim } from './input.js';
 import { STAGE, fitStage, onStageResize } from './stage.js';
 import { initAudio, sfx, setSfxMuted } from './audio.js';
 import { loadKeys, actionsFor, keyOf } from './keys.js';
-import { profile, loadProfile, saveProfile, computeMods, renderSettings, addAccountXp } from './meta.js';
+import { profile, loadProfile, saveProfile, computeMods, renderSettings, addAccountXp, masteryOf, addMasteryXp } from './meta.js';
+import { CHARACTERS, DEFAULT_CHARACTER, masteryNeed } from './characters.js';
+import { Bloom } from './bloom.js';
 import { Demo } from './demo.js';
 import { Tutorial } from './tutorial.js';
 import { EnemySkills } from './bossai.js';
@@ -87,12 +89,13 @@ const pickups = new Pickups(scene, fx);
 const player = new Player(scene, fx);
 const skillsRt = new SkillRuntime(scene, fx, enemies, player);
 const enemySkills = new EnemySkills(scene, fx, enemies, player);
+const bloom = new Bloom(scene, fx, enemies, player, skillsRt);   // 마솽 패시브: 개화 / 열매
 const ui = new UI();
 const labels = new Labels(document.getElementById('label-layer'), camera);
 loadingAt(85);
 
 game.sys = {
-  scene, camera, fx, enemies, pickups, player, skillsRt, ui, world, enemySkills,
+  scene, camera, fx, enemies, pickups, player, skillsRt, ui, world, enemySkills, bloom,
   hpMul: () => hpScale(game.time),
   dropBlocks(blocks, x, z, { requireExit = false, minD = 0.6, maxD = 1.6 } = {}) {
     blocks.forEach((b, i) => {
@@ -116,12 +119,14 @@ game.sys = {
 enemies.onKill = (e, src, st) => {
   if (game.demo) {   // 메인 화면 미리보기: 경험치 보석만 떨어뜨림 (블록/상자/승리 없음)
     skillsRt.onKill(e, src, st);
+    bloom.onKill(e);
     if (e.boss || e.elite) fx.explosion(e.x, e.z, e.boss ? 4 : 2.5, e.boss ? 0xb07cff : 0x3f8cff);
     if (!game.showcase) pickups.addGem(e.x, e.z, e.T.xp);   // 도감 미리보기에서는 경험치 없음
     return;
   }
   game.kills++;
   skillsRt.onKill(e, src, st);
+  bloom.onKill(e);   // 개화: 처치 → 양분
   if (game.tutorial) { game.tutorial.onKill(e); return; }   // 튜토리얼: 드랍 / 경험치는 퀘스트가 정함
   if (e.noDrop) return;   // 보스 기술로 소환된 적: 아이템 / 경험치 없음
   if (e.boss) {
@@ -460,10 +465,13 @@ function startGame(stageId = 1) {
   game.stage = stageId;
   game.accountLevel = profile.accountLevel;
   const tut = stageById(stageId).tutorial;
+  game.charId = tut ? 'masang' : (CHARACTERS[profile.character] ? profile.character : DEFAULT_CHARACTER);   // 튜토리얼은 마솽
+  game.masteryLevel = masteryOf(game.charId).lv;
   game.mods = computeMods(tut);   // 튜토리얼: 업그레이드 효과 없음
   player.applyMods(game.mods);
   game.rerolls = tut ? 1 : START_REROLLS + game.mods.rerolls;   // 튜토리얼: 리롤 1회
-  game.skills.push(createSkill('fireball'));
+  const startSkill = CHARACTERS[game.charId].skills[0];   // 모든 캐릭터는 전용 스킬 1번을 장착하고 시작
+  game.skills.push(createSkill(startSkill));
   bump();
   game.state = 'playing';
   if (game.mods.startBlocks > 0 && !stageById(stageId).tutorial) {
@@ -473,7 +481,7 @@ function startGame(stageId = 1) {
   if (stageById(stageId).tutorial) {
     game.tutorial = new Tutorial({ player, enemies, pickups, scene, fx, ui, onFinish: () => startVictory() });
     game.tutorial.start();
-  } else ui.toast(`${ic('fire')} 파이어볼 획득! 가장 가까운 적에게 자동 발사됩니다`);
+  } else ui.toast(`${SKILL_DEFS[startSkill].icon} ${SKILL_DEFS[startSkill].name} 장착! 가장 가까운 적에게 자동으로 공격합니다`);
 }
 
 // 보스 처치: 남은 적 정리 → 맵의 경험치를 모두 빠르게 끌어와 획득 → 종료 화면
@@ -512,14 +520,21 @@ function showEndScreen(kind) {
   // 계정 경험치 (= 이번 스테이지에서 얻은 경험치)
   const xpGain = Math.floor(game.totalXp);
   const acc = addAccountXp(xpGain);
+  const mas = addMasteryXp(game.charId, xpGain);   // 이 캐릭터의 숙련도도 같은 만큼
   saveProfile();
+  const chName = CHARACTERS[game.charId].name;
+  const mm = masteryOf(game.charId), mneed = masteryNeed(mm.lv);
   const need = accountNeed(profile.accountLevel);
-  const unlockNames = [...acc.unlocked.skills.map((k) => SKILL_DEFS[k].name), ...acc.unlocked.templates.map((k) => `문장:${TEMPLATE_INFO[k].label}`)];
+  const unlockNames = [...mas.unlocked.map((k) => SKILL_DEFS[k].name), ...acc.unlocked.skills.map((k) => SKILL_DEFS[k].name), ...acc.unlocked.templates.map((k) => `문장:${TEMPLATE_INFO[k].label}`)];
   const acctHtml = `<div class="end-acct">
       <div class="ea-head"><span>계정 Lv.<b>${profile.accountLevel}</b></span><span>계정 경험치 <b>+${xpGain.toLocaleString()}</b></span></div>
       <div class="acct-bar"><i style="width:${Math.min(100, (profile.accountXp / need) * 100)}%"></i></div>
       <div class="ea-xp">${Math.floor(profile.accountXp).toLocaleString()} / ${need.toLocaleString()}</div>
       ${acc.to > acc.from ? `<div class="ea-up">계정 레벨 업! Lv.${acc.from} → Lv.${acc.to}</div>` : ''}
+      <div class="ea-head ea-mastery"><span>${chName} 숙련도 Lv.<b>${mm.lv}</b></span><span>숙련도 경험치 <b>+${xpGain.toLocaleString()}</b></span></div>
+      <div class="acct-bar mastery"><i style="width:${Math.min(100, (mm.xp / mneed) * 100)}%"></i></div>
+      <div class="ea-xp">${Math.floor(mm.xp).toLocaleString()} / ${mneed.toLocaleString()}</div>
+      ${mas.to > mas.from ? `<div class="ea-up">${chName} 숙련도 업! Lv.${mas.from} → Lv.${mas.to}</div>` : ''}
       ${unlockNames.length ? '<div class="ea-unlock"><div class="eu-title">새로 해금</div><div class="eu-list"></div></div>' : ''}
     </div>`;
   const T = {
@@ -543,7 +558,7 @@ function showEndScreen(kind) {
   // 새로 해금된 스킬 / 문장: 아이콘을 가로로 나열 (마우스를 올리면 정보)
   const list = s.querySelector('.eu-list');
   if (list) {
-    for (const k of acc.unlocked.skills) {
+    for (const k of [...mas.unlocked, ...acc.unlocked.skills]) {
       const d = SKILL_DEFS[k];
       const it = document.createElement('div');
       it.className = 'eu-item';
@@ -609,6 +624,7 @@ function tick(dt, draw = true) {
     player.update(dt, demo.input, world.obstacles);
     enemies.update(dt, player, world.obstacles);
     enemySkills.update(dt);
+    bloom.update(dt);
     skillsRt.update(dt);
     pickups.update(dt, player, (v) => skillsRt.onXp(v));   // 도감 미리보기(효과 부여)용
     updateTimers(dt);
@@ -622,6 +638,7 @@ function tick(dt, draw = true) {
     player.update(dt, input, world.obstacles);
     enemies.update(dt, player, world.obstacles);
     enemySkills.update(dt);
+    bloom.update(dt);
     skillsRt.update(dt);
     pickups.update(dt, player, addXp);
     updateTimers(dt);
@@ -668,7 +685,7 @@ ui.refresh();
 refreshKeyLabels();
 
 const demo = new Demo({
-  player, enemies, pickups, skillsRt, scene, fx, enemySkills, cutEl: $id('preview-cut'),
+  player, enemies, pickups, skillsRt, scene, fx, enemySkills, bloom, cutEl: $id('preview-cut'),
   onTeleport: (p) => camTarget.copy(p),
 });
 initCodex({ demo, scene, ui });

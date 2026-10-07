@@ -11,6 +11,9 @@ import { ic } from './icons.js';
 import { sfx } from './audio.js';
 import { STAGE } from './stage.js';
 import { smoothScroll } from './scroll.js';
+import { CHARACTERS, CHARACTER_ORDER, masteryUnlock } from './characters.js';
+import { masteryOf } from './meta.js';
+import { slimeBodyGeometry, slimeFaceGeometry, createKingSlime, createEliteSlime } from './models.js';
 
 const $ = (s) => document.querySelector(s);
 const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
@@ -66,15 +69,23 @@ export function closeCodex() {
 
 export const codexPreviewActive = () => previewOn;
 
+let pvBox = null;   // 미리보기 캔버스가 들어 있는 상자 (도감 / 캐릭터 선택)
 function setPreview(cfg) {
   previewOn = !!cfg;
   opts.demo.setShowcase(cfg);
-  const box = $('#cx-preview');
-  if (box) box.classList.toggle('hidden', !cfg);
+  if (pvBox) pvBox.classList.toggle('hidden', !cfg);
   if (!cfg) return;
   const f = opts.demo.showcase.focus();
   look.set(f.x, 0, f.z);   // 장면이 바뀌면 바로 그 자리로
   viewW = cfg.kind === 'enemy' ? (cfg.type === 'boss' ? 17 : cfg.type === 'elite' ? 13 : 9) : 11.5;
+}
+
+// 다른 화면(캐릭터 선택)에서 같은 미리보기를 씀
+export function attachPreview(box, cfg) {
+  if (!canvas) { canvas = document.createElement('canvas'); canvas.id = 'codex-canvas'; }
+  box.prepend(canvas);
+  pvBox = box;
+  setPreview(cfg);
 }
 
 // 매 프레임: 미리보기 영상 그리기 (도감 전용 렌더러)
@@ -131,6 +142,7 @@ function renderCodex() {
   // 미리보기 캔버스는 하나를 계속 재사용 (렌더러를 매번 새로 만들지 않도록)
   if (!canvas) { canvas = document.createElement('canvas'); canvas.id = 'codex-canvas'; }
   pv.prepend(canvas);
+  pvBox = pv;
   detail.append(infoEl, pv);
   body.append(gridEl, detail);
   root.appendChild(body);
@@ -168,7 +180,19 @@ const lockBadge = (need) => (game.accountLevel < need ? { locked: true, badge: `
 
 // 스킬
 function gridSkills(grid) {
-  // 해금 레벨이 높을수록 뒤에
+  // 캐릭터 전용 스킬 (숙련도 해금 순)
+  for (const id of CHARACTER_ORDER) {
+    const ch = CHARACTERS[id];
+    section(grid, `${ch.name} 전용`);
+    const keys = ch.skills.filter(Boolean).sort((a, b) => (ch.unlock[a] || 1) - (ch.unlock[b] || 1));
+    const mlv = masteryOf(id).lv;
+    for (const key of keys) {
+      const d = SKILL_DEFS[key], need = ch.unlock[key] || 1;
+      item(grid, key, d.icon, d.name, { color: d.color, ap: d.passive ? 'p' : 'a', ...(mlv < need ? { locked: true, badge: `${ic('lock')} 숙련 ${need}` } : {}) });
+    }
+  }
+  // 공용 스킬 (해금 레벨이 높을수록 뒤에)
+  section(grid, '공용');
   const keys = [...SKILL_ORDER].sort((a, b) => unlockLevel('skills', a) - unlockLevel('skills', b));
   for (const key of keys) {
     const d = SKILL_DEFS[key];
@@ -180,9 +204,11 @@ function detailSkill(info) {
   const d = SKILL_DEFS[state.sel.skill];
   const lv = state.level;
   const st = baseStats({ def: d, key: d.key, level: lv }, lv);
-  const need = unlockLevel('skills', d.key);
+  const need = d.owner ? masteryUnlock(d.key) : unlockLevel('skills', d.key);
+  const have = d.owner ? masteryOf(d.owner).lv : game.accountLevel;
   const tags = [d.element ? `<span class="elem e-${d.element}">${ELEMENTS[d.element].name}</span>` : '', `<span class="cx-tag">${d.passive ? '패시브' : '액티브'}</span>`,
-    need > 1 ? `<span class="cx-tag ${game.accountLevel >= need ? 'ok' : 'lock'}">계정 Lv.${need} 해금</span>` : ''].join('');
+    d.owner ? `<span class="cx-tag own">${CHARACTERS[d.owner].name} 전용</span>` : '<span class="cx-tag">공용</span>',
+    need > 1 ? `<span class="cx-tag ${have >= need ? 'ok' : 'lock'}">${d.owner ? '숙련도' : '계정'} Lv.${need} 해금</span>` : ''].join('');
   const stats = shownStats(d, st).filter((k) => st[k] && st[k].max !== 0).map((k) => `<div class="cx-stat"><span>${statLabel(d, k)}</span><b>${statText(k, st)}</b></div>`).join('');
   info.innerHTML = `<div class="cx-title"><span class="cx-big" style="--c:${d.color}">${d.icon}</span><div><div class="cx-nm">${d.name}</div><div class="cx-tags">${tags}</div></div></div>
     <div class="cx-desc">${d.desc}</div>
@@ -251,7 +277,7 @@ function gridEnemies(grid) {
   for (const en of ENEMIES) {
     const T = ENEMY_TYPES[en.type];
     const col = '#' + T.color.toString(16).padStart(6, '0');
-    item(grid, en.type, `<span class="cx-slime" style="--c:${col}"></span>`, T.name, { color: col, badge: en.grade !== '일반' ? en.grade : '' });
+    item(grid, en.type, `<img class="cx-enemy" src="${enemyIcon(en.type)}" alt="">`, T.name, { color: col, badge: en.grade !== '일반' ? en.grade : '' });
   }
 }
 
@@ -260,7 +286,7 @@ function detailEnemy(info) {
   const T = ENEMY_TYPES[en.type];
   const col = '#' + T.color.toString(16).padStart(6, '0');
   const ab = ENEMY_ABILITY[en.type] || [];
-  info.innerHTML = `<div class="cx-title"><span class="cx-big"><span class="cx-slime big" style="--c:${col}"></span></span><div><div class="cx-nm">${T.name}</div><div class="cx-tags"><span class="cx-tag grade-${en.grade}">${en.grade}</span></div></div></div>
+  info.innerHTML = `<div class="cx-title"><span class="cx-big" style="--c:${col}"><img class="cx-enemy big" src="${enemyIcon(en.type)}" alt=""></span><div><div class="cx-nm">${T.name}</div><div class="cx-tags"><span class="cx-tag grade-${en.grade}">${en.grade}</span></div></div></div>
     <div class="cx-stats">
       <div class="cx-stat"><span>기본 체력</span><b>${T.hp.toLocaleString()}</b></div>
       <div class="cx-stat"><span>공격력</span><b>${T.dmg}</b></div>
@@ -269,4 +295,49 @@ function detailEnemy(info) {
     </div>
     ${ab.length ? `<div class="cx-sub">기술</div>${ab.map((a) => `<div class="cx-ability">${a}</div>`).join('')}` : '<div class="cx-note">특별한 기술 없이 플레이어에게 다가와 부딪힙니다.</div>'}`;
   setPreview({ kind: 'enemy', type: en.type });
+}
+
+// ── 적 아이콘: 실제 모델을 작은 화면에 한 번 그려 이미지로 씀 ──
+const iconCache = {};
+let iconRenderer = null;
+function enemyIcon(type) {
+  if (iconCache[type]) return iconCache[type];
+  if (!iconRenderer) {
+    iconRenderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true });
+    iconRenderer.setPixelRatio(1);
+    iconRenderer.setSize(160, 160, false);
+    iconRenderer.outputColorSpace = THREE.SRGBColorSpace;
+    iconRenderer.toneMapping = THREE.ACESFilmicToneMapping;
+    iconRenderer.setClearColor(0x000000, 0);
+  }
+  const T = ENEMY_TYPES[type];
+  const sc = new THREE.Scene();
+  sc.add(new THREE.HemisphereLight(0xffffff, 0x4a5a6a, 1.5));
+  const sun = new THREE.DirectionalLight(0xffffff, 1.8);
+  sun.position.set(3, 6, 5);
+  sc.add(sun);
+  let obj;
+  if (type === 'boss' || type === 'elite') {
+    const m = type === 'boss' ? createKingSlime() : createEliteSlime();
+    m.body.material.color.set(T.color);
+    obj = m.group;
+  } else {
+    obj = new THREE.Group();
+    obj.add(new THREE.Mesh(slimeBodyGeometry(), new THREE.MeshStandardMaterial({ color: T.color, roughness: 0.28, flatShading: true })));
+    obj.add(new THREE.Mesh(slimeFaceGeometry(), new THREE.MeshBasicMaterial({ vertexColors: true })));
+  }
+  // 크기를 맞추고 가운데에
+  const box = new THREE.Box3().setFromObject(obj);
+  const size = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
+  const k = 1.6 / Math.max(size.x, size.y, size.z);
+  obj.scale.multiplyScalar(k);
+  obj.position.set(-c.x * k, -c.y * k, -c.z * k);
+  obj.rotation.y = 0.5;
+  sc.add(obj);
+  const cam = new THREE.PerspectiveCamera(30, 1, 0.1, 50);
+  cam.position.set(1.4, 1.5, 3.6);
+  cam.lookAt(0, -0.05, 0);
+  iconRenderer.render(sc, cam);
+  iconCache[type] = iconRenderer.domElement.toDataURL('image/png');
+  return iconCache[type];
 }

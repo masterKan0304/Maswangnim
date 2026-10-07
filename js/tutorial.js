@@ -11,7 +11,7 @@ import { sfx } from './audio.js';
 import { toStageX, toStageY } from './stage.js';
 import { keyOf } from './keys.js';
 
-const ENEMY_HP = 12 / 10;   // 그린 슬라임 체력 10 → 12
+const ENEMY_HP = 11 / 10;   // 그린 슬라임 체력 10 → 11 (문장 장착 후 이파리 베기 6~12 + 5 로 한 번에 처치되도록)
 const $ = (s) => document.querySelector(s);
 
 export class Tutorial {
@@ -33,7 +33,8 @@ export class Tutorial {
   // ── 퀘스트 목록 ──
   buildQuests() {
     const { player, pickups, ui } = this.sys;
-    const fireball = () => game.skills.find((s) => s.key === 'fireball');
+    const fireball = () => game.skills[0];   // 시작 스킬 (마솽: 이파리 베기)
+    const sn = game.skills[0] ? game.skills[0].def.name : '스킬';
     const sent = () => this.items && this.items.sentence;
     return [
       { title: 'WASD 이동해 보기', hintFn: () => `${['up', 'left', 'down', 'right'].map(keyOf).join('')} 또는 방향키를 1.5초 동안 계속 눌러 이동하세요.`,
@@ -41,7 +42,7 @@ export class Tutorial {
         update: (dt) => { this.hold = player.moving ? this.hold + dt : 0; return this.hold >= 1.5; } },
       { title: 'Space 대시해 보기', hintFn: () => `${keyOf('dash')} 키를 눌러 이동 방향으로 대시하세요.`,
         update: () => player.dashT > 0 },
-      { title: '적 처치해 보기', hint: '파이어볼이 가장 가까운 적에게 자동으로 발사됩니다. 지금은 피해를 입지 않습니다.',
+      { title: '적 처치해 보기', hint: `${sn}가 가장 가까운 적에게 자동으로 발사됩니다. 지금은 피해를 입지 않습니다.`,
         enter: () => this.spawnGroup(3), progress: () => `${this.kills} / 3`,
         update: () => this.kills >= 3 },
       { title: '떨어진 아이템 줍기', hint: '화살표가 가리키는 아이템 3개를 주우세요. 가까이 가거나 이름표를 클릭하면 줍습니다.',
@@ -57,17 +58,17 @@ export class Tutorial {
         update: () => { const s = sent(); return s.slots[0].block && s.slots[0].block.key === 'damage' && isComplete(s); } },
       { title: '스킬 창 열기', hintFn: () => `${keyOf('skills')} 키를 눌러 스킬 창을 여세요.`,
         focus: () => ['#btn-skills'], update: () => game.skillsOpen },
-      { title: '파이어볼에 문장 장착하기', hint: '완성한 문장 블록을 파이어볼의 빈 문장 칸으로 끌어다 놓으세요.',
+      { title: `${sn}에 문장 장착하기`, hint: `완성한 문장 블록을 ${sn}의 빈 문장 칸으로 끌어다 놓으세요.`,
         focus: () => [this.tileOf(sent()), this.emptySkillSlot()],
         update: () => fireball().sentences.includes(sent()),
         exit: () => ui.setWindows(false, false, true) },
-      { title: '적 처치해 보기', hint: '강해진 파이어볼은 적을 한 번에 처치합니다.',
+      { title: '적 처치해 보기', hint: `강해진 ${sn}는 적을 한 번에 처치합니다.`,
         enter: () => this.spawnGroup(3), progress: () => `${this.kills} / 3`,
         update: () => this.kills >= 3 },
       { title: '주체 블록 바꿔 보기', hint: '',
         enter: () => { ui.setWindows(true, true, true); this.step = 0; },
         hintFn: () => (this.step === 0
-          ? '스킬 창에서 파이어볼에 장착된 문장 블록을 우클릭하세요.'
+          ? `스킬 창에서 ${sn}에 장착된 문장 블록을 우클릭하세요.`
           : "인벤토리의 '투사체 개수' 블록을 문장의 '피해량' 칸으로 끌어다 놓아 교체하세요."),
         focus: () => (this.step === 0 ? [this.skillTileOf(sent())] : [this.tileOf(this.items.projCount), this.slotOf(sent(), 0)]),
         update: () => {
@@ -76,7 +77,7 @@ export class Tutorial {
           return b && b.key === 'projCount';
         },
         exit: () => ui.setWindows(false, false, true) },
-      { title: '개선된 스킬 체험해 보기', hint: '투사체가 늘어난 파이어볼로 적 5마리를 처치하세요.',
+      { title: '개선된 스킬 체험해 보기', hint: `투사체가 늘어난 ${sn}로 적 5마리를 처치하세요.`,
         enter: () => { ui.setWindows(false, false, true); this.spawnGroup(5); }, progress: () => `${this.kills} / 5`,
         update: () => this.kills >= 5 },
       { title: '경험치를 모아 레벨업하기', hint: '적이 떨어뜨린 경험치를 모아 레벨 2가 되세요.',
@@ -216,7 +217,7 @@ export class Tutorial {
   // ── 퀘스트 14: 레벨업 선택지 ──
   levelChoices() {
     if (this.idx !== 13 || this.lu === 'done') return null;
-    const fb = game.skills.find((s) => s.key === 'fireball');
+    const fb = game.skills[0];
     this.lu = 'locked';
     return [describe({ type: 'level', sk: fb }), describe({ type: 'slot', sk: fb }), describe({ type: 'pickBlock' })];
   }
@@ -244,7 +245,7 @@ export class Tutorial {
   skillTileOf(b) { return b ? `#win-skills [data-bid="${b.id}"]` : null; }
   slotOf(s, i) { return s ? `#popups [data-slot="${s.id}:${i}"]` : null; }
   emptySkillSlot() {
-    const fb = game.skills.find((s) => s.key === 'fireball');
+    const fb = game.skills[0];
     const idx = fb.sentences.findIndex((x, i) => !x && i < fb.maxSlots);
     if (idx < 0) return null;
     const cards = document.querySelectorAll('#win-skills .skill-card');

@@ -2,6 +2,7 @@ import { ic } from './icons.js';
 import { game, bump } from './state.js';
 import { MAX_SKILLS, MAX_SKILL_LEVEL, MAX_SENTENCE_SLOTS, SUBJECTS, ELEMENTS, unlockLevel } from './config.js';
 import { SKILL_DEFS, SKILL_ORDER, createSkill, baseStats, fmtStat } from './skills.js';
+import { CHARACTERS } from './characters.js';
 
 const elemTag = (d) => (d.element ? `<span class="elem e-${d.element}">${ELEMENTS[d.element].name}</span> ` : '');
 const keywordHTML = (d) => `<div class="kw-list">${d.keywords.map((k) => `<span class="kw">${k}</span>`).join('')}</div>`;
@@ -11,7 +12,7 @@ export function describe(c) {
   if (c.type === 'skill') {
     const d = SKILL_DEFS[c.key];
     return {
-      id: `skill:${c.key}`, icon: d.icon, tag: `${elemTag(d)}새 스킬${d.passive ? ' · 패시브' : ''}`, title: `스킬 획득 - ${d.name}`,
+      id: `skill:${c.key}`, icon: d.icon, tag: `${elemTag(d)}${d.owner ? `${CHARACTERS[d.owner].name} 전용` : '새 스킬'}${d.passive ? ' · 패시브' : ''}`, title: `스킬 획득 - ${d.name}`,
       desc: d.short, detail: keywordHTML(d), tip: `<div class="tip-title">${d.icon} ${d.name}</div><div>${d.short}</div>${keywordHTML(d)}`,
       apply() { game.skills.push(createSkill(c.key)); bump(); },
     };
@@ -53,9 +54,17 @@ export function describe(c) {
 // exclude: 직전에 보였던 선택지 id — 가능한 한 다시 나오지 않게 함
 export function rollChoices(exclude = new Set()) {
   const pool = [];
-  for (const key of SKILL_ORDER) {
-    if (game.accountLevel < unlockLevel('skills', key)) continue;   // 계정 레벨로 아직 해금되지 않은 스킬
-    if (!game.skills.some((s) => s.key === key) && game.skills.length < MAX_SKILLS) pool.push({ type: 'skill', key, w: 1.2 });
+  // 새 스킬: 이 캐릭터의 전용 스킬(숙련도로 해금)이 60%, 공용 스킬(계정 레벨로 해금)이 40%
+  const have = (k) => game.skills.some((s) => s.key === k);
+  const ch = CHARACTERS[game.charId];
+  const ex = ch ? ch.skills.filter((k) => k && !have(k) && game.masteryLevel >= (ch.unlock[k] || 1)) : [];
+  const com = SKILL_ORDER.filter((k) => !have(k) && game.accountLevel >= unlockLevel('skills', k));
+  if (game.skills.length < MAX_SKILLS) {
+    const total = 1.2 * (ex.length + com.length);
+    const wEx = ex.length && com.length ? (total * 0.6) / ex.length : 1.2;
+    const wCom = ex.length && com.length ? (total * 0.4) / com.length : 1.2;
+    for (const key of ex) pool.push({ type: 'skill', key, w: wEx });
+    for (const key of com) pool.push({ type: 'skill', key, w: wCom });
   }
   for (const sk of game.skills) {
     if (sk.level < MAX_SKILL_LEVEL) pool.push({ type: 'level', sk, w: 1 });

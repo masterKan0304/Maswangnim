@@ -11,7 +11,7 @@ import { Showcase } from './showcase.js';
 
 const CLIP = 5.5;        // 장면 하나의 길이 (초)
 const FADE = 0.28;       // 장면 전환 암전 시간 (초)
-const POOL = ['fireball', 'chainLightning', 'iceball', 'flamethrower', 'snowfall', 'lightningBeam', 'fireAura', 'frostAura', 'lightningAura'];
+const POOL = ['fireball', 'chainLightning', 'iceball', 'flamethrower', 'snowfall', 'lightningBeam', 'fireAura', 'frostAura', 'lightningAura', 'leafCut', 'pineWind', 'nature', 'fruit'];
 const DIR_UP = new THREE.Vector3(-1, 0, -1).normalize();
 const DIR_RIGHT = new THREE.Vector3(1, 0, -1).normalize();
 
@@ -73,6 +73,8 @@ export class Demo {
     }
     pickups.gems.length = 0;
     if (this.sys.enemySkills) this.sys.enemySkills.clear();
+    if (this.sys.bloom) this.sys.bloom.clear();
+    game.charId = 'masang';
     skillsRt.clearAll();   // 이전 장면의 투사체 / 불길 / 대기 중인 시전까지 정리
     game.skills.length = 0;
     game.buffs.length = 0;
@@ -84,7 +86,7 @@ export class Demo {
     if (this.sys.onTeleport) this.sys.onTeleport(player.pos);
     // 스킬 조합 (2~4개, 레벨 다양하게)
     const keys = [...POOL].sort(() => Math.random() - 0.5).slice(0, 2 + Math.floor(Math.random() * 3));
-    if (!keys.some((k) => !['fireAura', 'frostAura', 'lightningAura'].includes(k))) keys.push('fireball');
+    if (!keys.some((k) => !['fireAura', 'frostAura', 'lightningAura', 'nature', 'fruit'].includes(k))) keys.push('leafCut');
     for (const k of keys) {
       const sk = createSkill(k);
       sk.level = Math.min(5, 1 + Math.floor(Math.random() * 3) + Math.floor(Math.random() * 3));
