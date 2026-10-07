@@ -509,29 +509,33 @@ function showEndScreen(kind) {
   profile.gold += gold;
   // 첫 클리어 보상 (한 번만) + 다음 스테이지 열림
   let rewardHtml = '';
+  let rewardGold = 0;
   if (kind === 'clear') {
     if (!profile.cleared.includes(game.stage)) {
       profile.cleared.push(game.stage);
       profile.gold += st.reward.gold;
+      rewardGold = st.reward.gold;
       rewardHtml = `<div class="end-reward">${ic('crown')} 첫 클리어 보상 · ${ic('coin')} <b>+${st.reward.gold.toLocaleString()}</b> 골드</div>`;
     }
     profile.stage = lastStartable(profile.cleared).id;   // 시작할 수 있는 마지막 스테이지를 자동 선택
   }
-  // 계정 경험치 (= 이번 스테이지에서 얻은 경험치)
   const xpGain = Math.floor(game.totalXp);
-  const acc = addAccountXp(xpGain);
-  const mas = addMasteryXp(game.charId, xpGain);   // 이 캐릭터의 숙련도도 같은 만큼
+  // 계정 경험치 = 이번에 얻은 골드(경험치 환산 + 첫 클리어 보상)의 25%, 숙련도 = 그 계정 경험치의 75%
+  const acctGain = Math.floor((gold + rewardGold) * 0.25);
+  const masteryGain = Math.floor(acctGain * 0.75);
+  const acc = addAccountXp(acctGain);
+  const mas = addMasteryXp(game.charId, masteryGain);
   saveProfile();
   const chName = CHARACTERS[game.charId].name;
   const mm = masteryOf(game.charId), mneed = masteryNeed(mm.lv);
   const need = accountNeed(profile.accountLevel);
   const unlockNames = [...mas.unlocked.map((k) => SKILL_DEFS[k].name), ...acc.unlocked.skills.map((k) => SKILL_DEFS[k].name), ...acc.unlocked.templates.map((k) => `문장:${TEMPLATE_INFO[k].label}`)];
   const acctHtml = `<div class="end-acct">
-      <div class="ea-head"><span>계정 Lv.<b>${profile.accountLevel}</b></span><span>계정 경험치 <b>+${xpGain.toLocaleString()}</b></span></div>
+      <div class="ea-head"><span>계정 Lv.<b>${profile.accountLevel}</b></span><span>계정 경험치 <b>+${acctGain.toLocaleString()}</b></span></div>
       <div class="acct-bar"><i style="width:${Math.min(100, (profile.accountXp / need) * 100)}%"></i></div>
       <div class="ea-xp">${Math.floor(profile.accountXp).toLocaleString()} / ${need.toLocaleString()}</div>
       ${acc.to > acc.from ? `<div class="ea-up">계정 레벨 업! Lv.${acc.from} → Lv.${acc.to}</div>` : ''}
-      <div class="ea-head ea-mastery"><span>${chName} 숙련도 Lv.<b>${mm.lv}</b></span><span>숙련도 경험치 <b>+${xpGain.toLocaleString()}</b></span></div>
+      <div class="ea-head ea-mastery"><span>${chName} 숙련도 Lv.<b>${mm.lv}</b></span><span>숙련도 경험치 <b>+${masteryGain.toLocaleString()}</b></span></div>
       <div class="acct-bar mastery"><i style="width:${Math.min(100, (mm.xp / mneed) * 100)}%"></i></div>
       <div class="ea-xp">${Math.floor(mm.xp).toLocaleString()} / ${mneed.toLocaleString()}</div>
       ${mas.to > mas.from ? `<div class="ea-up">${chName} 숙련도 업! Lv.${mas.from} → Lv.${mas.to}</div>` : ''}

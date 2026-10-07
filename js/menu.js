@@ -235,7 +235,7 @@ function renderChar() {
     <div class="ch-passive"><div class="chp-title">${ic(ch.passive.icon)} 고유 패시브 · ${ch.passive.name}</div><div class="chp-desc">${ch.passive.desc}</div></div>
     <div class="ch-mastery"><div class="chm-head"><span>숙련도 <b>Lv.${m.lv}</b></span><span class="chm-xp">${Math.floor(m.xp).toLocaleString()} / ${need.toLocaleString()}</span></div>
       <div class="acct-bar"><i style="width:${Math.min(100, (m.xp / need) * 100)}%"></i></div>
-      <div class="chm-note">이 캐릭터로 스테이지에서 얻은 경험치만큼 숙련도가 오릅니다.</div></div>`;
+      <div class="chm-note">이 캐릭터로 플레이한 스테이지에서 얻은 계정 경험치의 75%만큼 숙련도가 오릅니다.</div></div>`;
   top.append(left, right);
 
   const list = document.createElement('div');
