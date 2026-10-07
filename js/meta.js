@@ -4,14 +4,17 @@
 import { sfx, setVolumes } from './audio.js';
 import { STAGE } from './stage.js';
 import { ic } from './icons.js';
+import { accountNeed, ACCOUNT_UNLOCKS } from './config.js';
 
 const SAVE_KEY = 'blockchain-save-v1';
 
 export const profile = {
   gold: 0,
   upgrades: {},
-  cleared: [],     // 클리어한 스테이지 번호
-  stage: 1,        // 마지막으로 고른 스테이지
+  cleared: [],     // 클리어한 스테이지 번호 (첫 클리어 보상을 받은 스테이지)
+  stage: 0,        // 마지막으로 고른 스테이지 (처음 플레이하면 튜토리얼)
+  accountLevel: 1, // 계정 레벨
+  accountXp: 0,    // 현재 레벨에서 쌓인 계정 경험치
   settings: { master: 80, bgm: 50, sfx: 70, ui: 70, masterOn: true, bgmOn: true, sfxOn: true, uiOn: true, labels: true, autoPickup: true },
 };
 
@@ -23,7 +26,10 @@ export function loadProfile() {
       profile.gold = d.gold || 0;
       profile.upgrades = d.upgrades || {};
       profile.cleared = Array.isArray(d.cleared) ? d.cleared : [];
-      profile.stage = d.stage || 1;
+      // 이전 저장 데이터: 이미 플레이한 기록이 있으면 스테이지 1 선택
+      profile.stage = d.stage ?? (d.gold || Object.keys(profile.upgrades).length ? 1 : 0);
+      profile.accountLevel = d.accountLevel || 1;
+      profile.accountXp = d.accountXp || 0;
       // 최대 레벨이 줄어든 업그레이드: 초과한 레벨의 비용을 골드로 돌려줌
       for (const u of UPGRADES) {
         let lv = profile.upgrades[u.id] || 0;
@@ -38,6 +44,22 @@ export function loadProfile() {
 
 export function saveProfile() {
   try { localStorage.setItem(SAVE_KEY, JSON.stringify(profile)); } catch (e) { /* 무시 */ }
+}
+
+// 계정 경험치 추가 → 오른 레벨들과 새로 해금된 항목을 돌려줌
+export function addAccountXp(v) {
+  const from = profile.accountLevel;
+  profile.accountXp += Math.floor(v);
+  while (profile.accountXp >= accountNeed(profile.accountLevel)) {
+    profile.accountXp -= accountNeed(profile.accountLevel);
+    profile.accountLevel++;
+  }
+  const unlocked = { skills: [], templates: [] };
+  for (let lv = from + 1; lv <= profile.accountLevel; lv++) {
+    const u = ACCOUNT_UNLOCKS[lv];
+    if (u) { unlocked.skills.push(...u.skills); unlocked.templates.push(...u.templates); }
+  }
+  return { from, to: profile.accountLevel, unlocked };
 }
 
 export function applyVolumeSettings() {

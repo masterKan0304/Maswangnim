@@ -18,10 +18,14 @@ import { updateDpsTable } from './dps.js';
 import { input, updateAim } from './input.js';
 import { STAGE, fitStage, onStageResize } from './stage.js';
 import { initAudio, sfx, setSfxMuted } from './audio.js';
-import { profile, loadProfile, saveProfile, computeMods, renderSettings } from './meta.js';
+import { profile, loadProfile, saveProfile, computeMods, renderSettings, addAccountXp } from './meta.js';
 import { Demo } from './demo.js';
-import { initMenu, showMenu, hideMenu, menuBack } from './menu.js';
-import { stageById } from './stages.js';
+import { Tutorial } from './tutorial.js';
+import { initMenu, showMenu, hideMenu, menuBack, setView } from './menu.js';
+import { stageById, stageLabel, lastStartable } from './stages.js';
+import { SKILL_DEFS } from './skills.js';
+import { TEMPLATE_INFO } from './blocks.js';
+import { accountNeed } from './config.js';
 
 hydrateIcons();   // HTML 의 아이콘 자리 표시를 SVG 아이콘으로 교체
 initDebug();
@@ -108,6 +112,7 @@ enemies.onKill = (e, src, st) => {
   }
   game.kills++;
   skillsRt.onKill(e, src, st);
+  if (game.tutorial) { game.tutorial.onKill(e); return; }   // 튜토리얼: 드랍 / 경험치는 퀘스트가 정함
   if (e.boss) {
     fx.explosion(e.x, e.z, 4, 0xb07cff);
     if (!e.debugSpawn) startVictory();   // 디버그로 만든 보스는 처치해도 게임이 끝나지 않음
@@ -235,7 +240,7 @@ let currentChoices = null;
 function openLevelUp() {
   game.state = 'levelup';
   blockPickMode = 'level';
-  currentChoices = rollChoices();
+  currentChoices = (game.tutorial && game.tutorial.levelChoices()) || rollChoices();
   ui.showLevelUp(currentChoices, pickChoice, reroll);
 }
 function finishLevelUp() {
@@ -245,6 +250,7 @@ function finishLevelUp() {
   ui.refresh();
 }
 function pickChoice(c) {
+  if (game.tutorial && !game.tutorial.onPick(c)) return;   // 튜토리얼: 리롤 전에는 고를 수 없음
   if (c.type === 'pickBlock') { openBlockPick(); return; }
   c.apply();
   finishLevelUp();
@@ -253,7 +259,7 @@ function reroll() {
   if (game.rerolls <= 0) return;
   game.rerolls--;
   sfx('reroll');
-  currentChoices = rollChoices(new Set(currentChoices.map((c) => c.id)));
+  currentChoices = (game.tutorial && game.tutorial.reroll()) || rollChoices(new Set(currentChoices.map((c) => c.id)));
   ui.showLevelUp(currentChoices, pickChoice, reroll);
 }
 
@@ -405,17 +411,21 @@ function startGame(stageId = 1) {
   setSfxMuted(false);
   resize();
   game.stage = stageId;
+  game.accountLevel = profile.accountLevel;
   game.mods = computeMods();
   player.applyMods(game.mods);
   game.rerolls = START_REROLLS + game.mods.rerolls;
   game.skills.push(createSkill('fireball'));
   bump();
   game.state = 'playing';
-  if (game.mods.startBlocks > 0) {
+  if (game.mods.startBlocks > 0 && !stageById(stageId).tutorial) {
     game.sys.dropBlocks(Array.from({ length: game.mods.startBlocks }, () => randomBlock()), player.pos.x, player.pos.z, { minD: 1.8, maxD: 3 });
   }
   ui.refresh();
-  ui.toast(`${ic('fire')} 파이어볼 획득! 가장 가까운 적에게 자동 발사됩니다`);
+  if (stageById(stageId).tutorial) {
+    game.tutorial = new Tutorial({ player, enemies, pickups, scene, fx, ui, onFinish: () => startVictory() });
+    game.tutorial.start();
+  } else ui.toast(`${ic('fire')} 파이어볼 획득! 가장 가까운 적에게 자동 발사됩니다`);
 }
 
 // 보스 처치: 남은 적 정리 → 맵의 경험치를 모두 빠르게 끌어와 획득 → 종료 화면
@@ -430,33 +440,63 @@ function startVictory() {
     if (e.model) scene.remove(e.model.group);
   }
   for (const g of pickups.gems) { g.mag = true; g.sp = 40; }
-  ui.toast(`${ic('crown')} 킹 슬라임 처치! 경험치를 모으는 중...`, 'boss');
+  ui.toast(game.tutorial ? `${ic('crown')} 튜토리얼 완료! 경험치를 모으는 중...` : `${ic('crown')} 킹 슬라임 처치! 경험치를 모으는 중...`, 'boss');
   sfx('victory');
 }
 
+const OPEN_VIEW = 'bc-open-view';
 function showEndScreen(kind) {
   const s = $id('screen');
   const t = game.time;
+  const st = stageById(game.stage);
   const gold = Math.floor(game.totalXp * game.mods.goldMul);
   profile.gold += gold;
-  if (kind === 'clear' && !profile.cleared.includes(game.stage)) profile.cleared.push(game.stage);   // 다음 스테이지 열림
+  // 첫 클리어 보상 (한 번만) + 다음 스테이지 열림
+  let rewardHtml = '';
+  if (kind === 'clear') {
+    if (!profile.cleared.includes(game.stage)) {
+      profile.cleared.push(game.stage);
+      profile.gold += st.reward.gold;
+      rewardHtml = `<div class="end-reward">${ic('crown')} 첫 클리어 보상 · ${ic('coin')} <b>+${st.reward.gold.toLocaleString()}</b> 골드</div>`;
+    }
+    profile.stage = lastStartable(profile.cleared).id;   // 시작할 수 있는 마지막 스테이지를 자동 선택
+  }
+  // 계정 경험치 (= 이번 스테이지에서 얻은 경험치)
+  const xpGain = Math.floor(game.totalXp);
+  const acc = addAccountXp(xpGain);
   saveProfile();
+  const need = accountNeed(profile.accountLevel);
+  const unlockNames = [...acc.unlocked.skills.map((k) => SKILL_DEFS[k].name), ...acc.unlocked.templates.map((k) => `문장:${TEMPLATE_INFO[k].label}`)];
+  const acctHtml = `<div class="end-acct">
+      <div class="ea-head"><span>계정 Lv.<b>${profile.accountLevel}</b></span><span>계정 경험치 <b>+${xpGain.toLocaleString()}</b></span></div>
+      <div class="acct-bar"><i style="width:${Math.min(100, (profile.accountXp / need) * 100)}%"></i></div>
+      <div class="ea-xp">${Math.floor(profile.accountXp).toLocaleString()} / ${need.toLocaleString()}</div>
+      ${acc.to > acc.from ? `<div class="ea-up">계정 레벨 업! Lv.${acc.from} → Lv.${acc.to}</div>` : ''}
+      ${unlockNames.length ? `<div class="ea-unlock">새로 해금: ${unlockNames.map((n) => `<span>${n}</span>`).join('')}</div>` : ''}
+    </div>`;
   const T = {
-    clear:  ['STAGE CLEAR!', 'win', '보스를 쓰러뜨렸습니다!'],
+    clear:  ['STAGE CLEAR!', 'win', st.tutorial ? '튜토리얼을 모두 마쳤습니다!' : '보스를 쓰러뜨렸습니다!'],
     dead:   ['GAME OVER', 'lose', '슬라임에게 당했습니다...'],
     giveup: ['GAME OVER', 'lose', '전투를 포기했습니다.'],
   }[kind];
   if (kind !== 'clear') sfx('defeat');
-  s.innerHTML = `<div class="screen-box ui-zone">
+  const summary = st.tutorial
+    ? `${stageLabel(st)} · 처치 <b>${game.kills}</b>`
+    : `${stageLabel(st)} · 생존 시간 <b>${String(Math.floor(t / 60)).padStart(2, '0')}:${String(Math.floor(t % 60)).padStart(2, '0')}</b> · 레벨 <b>${game.level}</b> · 처치 <b>${game.kills}</b>`;
+  s.innerHTML = `<div class="screen-box ui-zone end-box">
     <div class="title ${T[1]}">${T[0]}</div>
     <div class="sub">${T[2]}</div>
-    <div class="result">생존 시간 <b>${String(Math.floor(t / 60)).padStart(2, '0')}:${String(Math.floor(t % 60)).padStart(2, '0')}</b>
-      · 레벨 <b>${game.level}</b> · 처치 <b>${game.kills}</b></div>
-    <div class="end-gold">획득한 경험치 <b>${Math.floor(game.totalXp).toLocaleString()}</b>${game.mods.goldMul > 1 ? ` (골드 보너스 +${Math.round((game.mods.goldMul - 1) * 100)}%)` : ''}<br>
+    <div class="result">${summary}</div>
+    ${rewardHtml}
+    <div class="end-gold">획득한 경험치 <b>${xpGain.toLocaleString()}</b>${game.mods.goldMul > 1 ? ` (골드 보너스 +${Math.round((game.mods.goldMul - 1) * 100)}%)` : ''}<br>
       → ${ic('coin')} <b>${gold.toLocaleString()}</b> 골드로 환산되었습니다 · 보유 골드 <b>${Math.floor(profile.gold).toLocaleString()}</b></div>
-    <button class="big-btn" id="btn-main">메인으로</button></div>`;
+    ${acctHtml}
+    <button class="big-btn" id="btn-main">${kind === 'clear' ? '스테이지 완료' : '메인으로'}</button></div>`;
   s.classList.remove('hidden');
-  $id('btn-main').addEventListener('click', () => location.reload());
+  $id('btn-main').addEventListener('click', () => {
+    if (kind === 'clear') sessionStorage.setItem(OPEN_VIEW, 'stage');   // 스테이지 선택 화면으로 돌아감
+    location.reload();
+  });
 }
 
 // ─────────────────────────────────────────────
@@ -499,8 +539,7 @@ function tick(dt, draw = true) {
     updateTimers(dt);
     fx.update(dt);
   } else if (!isPaused()) {
-    game.time += dt;
-    director(dt);
+    if (!game.tutorial) { game.time += dt; director(dt); }
     player.update(dt, input, world.obstacles);
     enemies.update(dt, player, world.obstacles);
     skillsRt.update(dt);
@@ -511,8 +550,11 @@ function tick(dt, draw = true) {
     player.update(0, { keys: new Set(), ground: input.ground }, world.obstacles);
   }
 
+  // 튜토리얼 퀘스트 (창을 연 상태에서도 진행)
+  if (game.tutorial && (game.state === 'playing' || game.state === 'levelup')) game.tutorial.update(dt);
+
   if (game.state === 'playing' && !game.invOpen && !game.skillsOpen && !game.menuOpen) {
-    if (game.pendingLevels > 0) openLevelUp();
+    if (game.pendingLevels > 0 && (!game.tutorial || game.tutorial.allowLevelUp())) openLevelUp();
     else if (game.pendingBoxes > 0) openBox();
   }
 
@@ -536,6 +578,7 @@ function tick(dt, draw = true) {
 
 camTarget.copy(player.pos);
 loadProfile();
+game.accountLevel = profile.accountLevel;
 game.mods = computeMods();
 applySettingsToGame();
 refreshMenuGold();
@@ -558,6 +601,9 @@ if (auto) {
   setSfxMuted(true);
   resize();
   demo.start();
+  // 결과 화면에서 '스테이지 완료'로 돌아온 경우: 스테이지 선택 화면을 엶
+  if (sessionStorage.getItem(OPEN_VIEW) === 'stage') setView('stage');
+  sessionStorage.removeItem(OPEN_VIEW);
 }
 // 디버그용 핸들
 window.__game = game;

@@ -189,6 +189,8 @@ export const SKILL_DEFS = {
 };
 export const SKILL_ORDER = ['fireball', 'frostBarrier', 'chainLightning', 'iceball', 'magnet', 'fireAura', 'frostAura', 'lightningAura', 'enchant', 'triggerKill', 'flamethrower', 'snowfall', 'lightningBeam'];
 export const ATTACK_SKILLS = ['fireball', 'chainLightning', 'iceball', 'flamethrower', 'snowfall', 'lightningBeam'];
+// 3레벨 / 5레벨에 추가되는 효과 설명
+export const milestoneText = (d, lv) => d.levelText(lv).slice(1).filter(Boolean)[0] || '';
 export const enchantReq = (sk) => Math.max(1, sk.def.xpReq - (sk.level - 1));
 export const triggerPer = (sk) => Math.max(1, 50 - 3 * (sk.level - 1));
 export const completeSentences = (sk) => sk.sentences.slice(0, sk.maxSlots).filter((s) => s && isComplete(s));

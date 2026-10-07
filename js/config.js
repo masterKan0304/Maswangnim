@@ -115,3 +115,23 @@ export const ELEMENTS = {
 export const STATUS = { duration: 3, burnTick: 0.5, slow: 0.3, shockAmp: 0.2 };
 export const BOX = { baseChance: 0.01, growPer10Hp: 0.01 };   // 블록 상자: 처치마다 확률 × (1 + 체력10당 1%), 드랍 시 초기화
 export const ZONE_BASE_AREA = 20;   // 처치 시 남기는 속성 지대의 기본 범위
+
+// ─────────────────────────────────────────────
+//  계정 레벨: 스테이지에서 얻은 경험치가 계정 경험치로 쌓임
+//  필요 경험치 500 → 750 → 1000 → 1300 → 1650 ... (세 번째부터 증가폭이 50씩 커짐)
+// ─────────────────────────────────────────────
+export function accountNeed(lv) {
+  let need = 500;
+  for (let k = 1; k < lv; k++) need += k <= 2 ? 250 : 250 + 50 * (k - 2);
+  return need;
+}
+// 계정 레벨에 따라 해금되는 스킬 / 문장 (여기 없는 것은 처음부터 사용 가능)
+export const ACCOUNT_UNLOCKS = {
+  2: { skills: ['fireAura', 'frostAura', 'lightningAura'], templates: [] },
+  3: { skills: ['triggerKill', 'magnet'], templates: ['ZONE', 'INFUSE'] },
+  4: { skills: [], templates: ['AMP'] },
+};
+export function unlockLevel(kind, key) {
+  for (const [lv, u] of Object.entries(ACCOUNT_UNLOCKS)) if (u[kind].includes(key)) return +lv;
+  return 1;
+}

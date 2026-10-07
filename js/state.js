@@ -14,6 +14,10 @@ export const game = {
   recomb: [null, null, null],
   buffs: [],
   totalXp: 0,            // 이번 전투에서 얻은 경험치 합계 (= 골드)
+  stage: 1,              // 진행 중인 스테이지 (0 = 튜토리얼)
+  accountLevel: 1,       // 계정 레벨 (해금된 스킬 / 문장 결정)
+  demo: false,           // 메인 화면 미리보기 중
+  tutorial: null,        // 튜토리얼 진행 객체 (튜토리얼 스테이지일 때)
   elite: null,
   eliteIdx: 0,
   victoryT: 0,

@@ -1,4 +1,5 @@
-import { SUBJECTS, SUBJECT_ORDER, CHANGES, DROP } from './config.js';
+import { SUBJECTS, SUBJECT_ORDER, CHANGES, DROP, unlockLevel } from './config.js';
+import { game } from './state.js';
 
 // ─────────────────────────────────────────────
 //  블록 생성
@@ -31,11 +32,11 @@ export const TEMPLATES = {
   AMP: ['number', 'change'],
 };
 export const TEMPLATE_INFO = {
-  SNC: { label: '주·수·변', rarity: 1 },
-  SSC: { label: '주·주·변', rarity: 1 },
-  ZONE: { label: '지대', rarity: 2 },
-  INFUSE: { label: '흡수', rarity: 2 },
-  AMP: { label: '효과', rarity: 3 },
+  SNC: { label: '구현', rarity: 1 },
+  SSC: { label: '구현', rarity: 1 },
+  ZONE: { label: '지대 생성', rarity: 2 },
+  INFUSE: { label: '지대 촉발', rarity: 2 },
+  AMP: { label: '주도', rarity: 3 },
 };
 export const RARITY_NAME = { 1: '일반', 2: '희귀', 3: '전설' };
 
@@ -111,7 +112,13 @@ export function randomNumber() {
   return makePercent(lowBiased(2, 18, 0.88) * 5); // 10% ~ 90%
 }
 export const randomOp = () => makeOp(weighted(DROP.ops));
-export const randomSentence = () => makeSentence(weighted(DROP.templates));
+// 계정 레벨로 아직 해금되지 않은 문장은 나오지 않음
+export const templateUnlocked = (t) => game.accountLevel >= unlockLevel('templates', t);
+export function randomSentence() {
+  const table = {};
+  for (const [t, w] of Object.entries(DROP.templates)) if (templateUnlocked(t)) table[t] = w;
+  return makeSentence(weighted(table));
+}
 
 export function randomBlock() {
   const k = weighted(DROP.kinds);

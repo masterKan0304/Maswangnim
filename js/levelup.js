@@ -1,13 +1,13 @@
 import { ic } from './icons.js';
 import { game, bump } from './state.js';
-import { MAX_SKILLS, MAX_SKILL_LEVEL, MAX_SENTENCE_SLOTS, SUBJECTS, ELEMENTS } from './config.js';
+import { MAX_SKILLS, MAX_SKILL_LEVEL, MAX_SENTENCE_SLOTS, SUBJECTS, ELEMENTS, unlockLevel } from './config.js';
 import { SKILL_DEFS, SKILL_ORDER, createSkill, baseStats, fmtStat } from './skills.js';
 
 const elemTag = (d) => (d.element ? `<span class="elem e-${d.element}">${ELEMENTS[d.element].name}</span> ` : '');
 const keywordHTML = (d) => `<div class="kw-list">${d.keywords.map((k) => `<span class="kw">${k}</span>`).join('')}</div>`;
 
 // 선택지 → 표시용 객체. id 는 리롤 중복 방지용 (같은 유형+대상이면 같은 id)
-function describe(c) {
+export function describe(c) {
   if (c.type === 'skill') {
     const d = SKILL_DEFS[c.key];
     return {
@@ -54,6 +54,7 @@ function describe(c) {
 export function rollChoices(exclude = new Set()) {
   const pool = [];
   for (const key of SKILL_ORDER) {
+    if (game.accountLevel < unlockLevel('skills', key)) continue;   // 계정 레벨로 아직 해금되지 않은 스킬
     if (!game.skills.some((s) => s.key === key) && game.skills.length < MAX_SKILLS) pool.push({ type: 'skill', key, w: 1.2 });
   }
   for (const sk of game.skills) {

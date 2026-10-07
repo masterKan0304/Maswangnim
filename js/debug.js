@@ -9,7 +9,7 @@ import { sfx } from './audio.js';
 
 const $ = (s) => document.querySelector(s);
 const WORDS = SUBJECT_ORDER.filter((k) => !SUBJECTS[k].noWord);
-const TEMPLATE_NAMES = { SNC: '주체 - 수치 - 변화', SSC: '주체 - 주체 - 변화', ZONE: '처치 시 속성 지대', INFUSE: '지대 흡수', AMP: '다른 문장 효과 변화' };
+const TEMPLATE_NAMES = { SNC: '구현 (주체 - 수치 - 변화)', SSC: '구현 (주체 - 주체 - 변화)', ZONE: '지대 생성', INFUSE: '지대 촉발', AMP: '주도' };
 
 // 문장 만들기 작업 상태
 const draft = { tpl: 'SNC', blocks: [null, null, null], sel: -1, ntype: 'fixed', a: 4, b: 8 };

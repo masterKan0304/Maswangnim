@@ -7,7 +7,7 @@ import {
   blockLabel, colorKey, kindName, isComplete, missingCount, sentenceParts, slotChipLabel, PLACEHOLDER,
   evalNumber, fmtValue, slotAccepts, sentenceAccepts, dismantle, OP_SYMBOL, numText, blockSig, randomOfType, TEMPLATE_INFO, RARITY_NAME,
 } from './blocks.js';
-import { getResult, baseStats, fmtStat, statText, statLabel, shownStats, extraLines, maxStacks, getStats, avg, enchantReq, triggerGoal } from './skills.js';
+import { getResult, baseStats, fmtStat, statText, statLabel, shownStats, extraLines, maxStacks, getStats, avg, enchantReq, triggerGoal, milestoneText } from './skills.js';
 
 const $ = (s) => document.querySelector(s);
 function el(tag, cls, html) {
@@ -139,6 +139,7 @@ export class UI {
   makeTile(b) {
     const k = colorKey(b);
     const t = el('div', `tile k-${k}`);
+    t.dataset.bid = b.id;   // 튜토리얼 강조용
     t.appendChild(el('span', 'badge', KIND_BADGE[k]));
     if (b.kind === 'sentence') {
       if (isComplete(b)) t.classList.add('complete');
@@ -168,6 +169,7 @@ export class UI {
       const i = part.slot;
       const slot = s.slots[i];
       const chip = el('span', 'chip');
+      chip.dataset.slot = `${s.id}:${i}`;   // 튜토리얼 강조용
       if (slot.block) {
         chip.classList.add('filled', 'k-' + colorKey(slot.block));
         chip.textContent = slotChipLabel(s, i);
@@ -371,6 +373,8 @@ export class UI {
       if (el2 !== d.element && stats[k] && stats[k].max > 0) h += `<div class="tip-ok">추가 ${ELEMENTS[el2].name} 피해를 얻었습니다.</div>`;
     }
     h += `<div class="tip-stats">${shownStats(d, stats).filter((k) => k === 'penetration' || stats[k].max !== 0).map((k) => { const ec = statElemClass(d, k); return `<span class="${ec ? 'el-' + ec : ''}">${shortName(d, k)}</span> <b>${statText(k, stats)}</b>`; }).join('<br>')}</div>`;
+    // 3레벨 / 5레벨 추가 효과 (도달한 효과는 강조)
+    for (const lv of [3, 5]) h += `<div class="tip-mile${sk.level >= lv ? ' on' : ''}">${lv}레벨 효과 : ${milestoneText(d, lv)}</div>`;
     if (sk.key === 'frostBarrier') h += `<div class="tip-dim">스택 ${sk.stacks} / ${maxStacks(sk)}</div>`;
     if (sk.key === 'triggerKill') h += `<div class="tip-dim">중첩 ${Math.floor(sk.stacks)} / ${triggerGoal(sk) || '완성된 문장을 장착해야 합니다.'}</div>`;
     if (sk.key === 'enchant') h += `<div class="tip-dim">경험치 ${Math.floor(sk.xpAcc || 0)} / ${enchantReq(sk)}</div>`;
@@ -490,7 +494,9 @@ export class UI {
 
   // 문장/연산 블록에 끼워진 블록을 인벤토리 빈칸으로 해제
   releaseToInv(loc) {
-    if (!getAt(loc)) return;
+    const rb = getAt(loc);
+    if (!rb) return;
+    if (game.tutorial && !game.tutorial.canDrag(rb, loc)) { sfx('error'); return; }
     const i = game.inventory.indexOf(null);
     if (i < 0) { this.toast('인벤토리가 가득 찼습니다', 'warn'); sfx('error'); return; }
     this.hideTip();
@@ -714,6 +720,7 @@ export class UI {
       if (n) {
         const b = getAt(n._drag);
         if (!b) return;
+        if (game.tutorial && !game.tutorial.canDrag(b, n._drag)) { sfx('error'); this.toast('지금은 이 블록을 옮길 수 없습니다', 'warn'); e.preventDefault(); return; }
         this.drag = { loc: n._drag, b, sx: e.clientX, sy: e.clientY, started: false };
         e.preventDefault();
         return;
@@ -798,6 +805,7 @@ export class UI {
     const dn = findProp(t, '_drop');
     if (dn) this.move(d.loc, dn._drop);
     else if (t && t.closest('.ui-zone')) { /* UI 위에서 놓음 → 취소 */ }
+    else if (game.tutorial) { this.toast('튜토리얼에서는 블록을 버릴 수 없습니다', 'warn'); sfx('error'); }
     else this.discard(d.loc);
   }
 
@@ -827,7 +835,8 @@ export class UI {
   }
 
   // ── 창 열기/닫기 ──────────────────────
-  setWindows(inv, skills) {
+  setWindows(inv, skills, force = false) {
+    if (game.tutorial && !force) [inv, skills] = game.tutorial.filterWindows(inv, skills);
     if (inv !== game.invOpen || skills !== game.skillsOpen) sfx((inv && !game.invOpen) || (skills && !game.skillsOpen) ? 'open' : 'close');
     game.invOpen = inv;
     game.skillsOpen = skills;
@@ -958,6 +967,7 @@ export class UI {
     $('#lvl').textContent = `Lv.${game.level}`;
     $('#xptext').textContent = `${Math.floor(game.xp)} / ${need}`;
     if (game.state === 'victory' || game.state === 'clear') $('#timer').textContent = 'CLEAR';
+    else if (game.tutorial) $('#timer').textContent = 'TUTORIAL';
     else if (game.bossSpawned) $('#timer').textContent = 'BOSS';
     else {
       const r = Math.max(0, STAGE_TIME - game.time);
