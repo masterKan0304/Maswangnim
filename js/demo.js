@@ -127,24 +127,24 @@ export class Demo {
     if (this.legT <= 0) {
       // 다음 구간: 새 목표 방향 / 회전 속도 / 길이 (가끔은 크게 돌아 원을 그리거나 잠깐 멈춤)
       const r = Math.random();
-      this.mode = r < 0.12 ? 'stop' : r < 0.32 ? 'circle' : 'go';
-      this.legT = this.mode === 'stop' ? 0.25 + Math.random() * 0.4 : this.mode === 'circle' ? 1.2 + Math.random() * 1.2 : 0.7 + Math.random() * 1.3;
+      this.moveMode = r < 0.12 ? 'stop' : r < 0.32 ? 'circle' : 'go';
+      this.legT = this.moveMode === 'stop' ? 0.25 + Math.random() * 0.4 : this.moveMode === 'circle' ? 1.2 + Math.random() * 1.2 : 0.7 + Math.random() * 1.3;
       this.target = this.wander + (Math.random() < 0.5 ? -1 : 1) * (0.6 + Math.random() * 2.2);   // 35° ~ 160° 꺾기
       this.turnRate = 2.5 + Math.random() * 2.5;
       this.circleDir = Math.random() < 0.5 ? -1 : 1;
     }
     // 맵 가장자리에 가까우면 안쪽을 목표로
     const edge = WORLD_HALF - 10;
-    if (Math.abs(p.x) > edge || Math.abs(p.z) > edge) { this.target = Math.atan2(-p.z, -p.x); if (this.mode === 'stop') this.mode = 'go'; }
-    if (this.mode === 'circle') this.wander += this.circleDir * 1.6 * dt;
+    if (Math.abs(p.x) > edge || Math.abs(p.z) > edge) { this.target = Math.atan2(-p.z, -p.x); if (this.moveMode === 'stop') this.moveMode = 'go'; }
+    if (this.moveMode === 'circle') this.wander += this.circleDir * 1.6 * dt;
     else {
       const diff = Math.atan2(Math.sin(this.target - this.wander), Math.cos(this.target - this.wander));
       this.wander += Math.sign(diff) * Math.min(Math.abs(diff), this.turnRate * dt);
     }
     this.input.virtual.clear();
-    if (this.mode === 'stop') this.input.vdir.set(0, 0, 0);
+    if (this.moveMode === 'stop') this.input.vdir.set(0, 0, 0);
     else this.input.vdir.set(Math.cos(this.wander), 0, Math.sin(this.wander));
-    if (this.mode !== 'stop' && Math.random() < dt * 0.3) player.tryDash();
+    if (this.moveMode !== 'stop' && Math.random() < dt * 0.3) player.tryDash();
   }
 
   update(dt) {
