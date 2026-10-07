@@ -53,7 +53,7 @@ export class Demo {
     if (this.mode !== 'showcase') return;
     this.mode = 'demo';
     game.debug.god = false;
-    this.sys.player.model.group.visible = true;
+    this.sys.player.hidden = false;
     this.showcase.clearWorld();
     this.cut();
   }

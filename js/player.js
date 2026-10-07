@@ -243,7 +243,8 @@ export class Player {
       else if (this.castT > 0) mat.emissive.copy(this.castColor).multiplyScalar(0.15 * (this.castT / 0.25));
       else mat.emissive.setRGB(0, 0, 0);
     }
-    g.visible = !(this.invuln > 0 && this.hurtT <= 0 && Math.floor(time * 20) % 2 === 0 && this.invuln < PLAYER.invuln - 0.25);
+    this.arrow.visible = !this.hidden;
+    g.visible = !this.hidden && !(this.invuln > 0 && this.hurtT <= 0 && Math.floor(time * 20) % 2 === 0 && this.invuln < PLAYER.invuln - 0.25);
 
     // 보호막
     this.bubble.visible = this.shield > 0;

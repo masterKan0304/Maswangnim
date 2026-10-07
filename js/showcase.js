@@ -70,7 +70,7 @@ export class Showcase {
     player.kx = player.kz = 0;
     player.moveTarget = null;
     player.shield = 0;
-    player.model.group.visible = cfg.kind === 'skill';
+    player.hidden = cfg.kind !== 'skill';   // 적 미리보기에는 플레이어 없음
     if (cfg.kind === 'skill') this.setSkill(cfg.key, cfg.level);
     else this.setEnemy(cfg.type);
   }
