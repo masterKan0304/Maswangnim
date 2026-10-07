@@ -53,6 +53,7 @@ export class Demo {
       if (e.model) scene.remove(e.model.group);
     }
     pickups.gems.length = 0;
+    if (this.sys.enemySkills) this.sys.enemySkills.clear();
     for (const sk of game.skills) skillsRt.endFlame(sk);
     game.skills.length = 0;
     game.buffs.length = 0;

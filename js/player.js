@@ -23,6 +23,7 @@ export class Player {
     this.mana = PLAYER.maxMana;
     this.shield = 0; this.shieldMax = 1; this.shieldT = 0;
     this.invuln = 0;
+    this.kx = 0; this.kz = 0;   // 밀려나는 속도 (보스 기술)
     this.regenT = 0;
     this.aim = new THREE.Vector3(0, 0, 1);
     this.facing = 0;
@@ -102,6 +103,13 @@ export class Player {
       this.ghostT -= dt;
       if (this.ghostT <= 0) { this.ghostT = 0.028; this.spawnGhost(); }
     }
+    // 밀려남 (빠르게 줄어듦)
+    if (this.kx || this.kz) {
+      this.pos.x += this.kx * dt; this.pos.z += this.kz * dt;
+      const k = Math.exp(-6 * dt);
+      this.kx *= k; this.kz *= k;
+      if (Math.abs(this.kx) + Math.abs(this.kz) < 0.05) { this.kx = 0; this.kz = 0; }
+    }
     obstacles.resolve(this.pos, 0.4);
     this.pos.x = Math.max(-WORLD_HALF, Math.min(WORLD_HALF, this.pos.x));
     this.pos.z = Math.max(-WORLD_HALF, Math.min(WORLD_HALF, this.pos.z));
@@ -159,6 +167,9 @@ export class Player {
     this.shieldT = Math.max(this.shieldT, duration);
     this.shieldMax = Math.max(this.shieldMax, this.shield);
   }
+
+  // 바깥으로 밀어냄 (속도 단위)
+  push(vx, vz) { this.kx += vx; this.kz += vz; }
 
   dashCooldown() { return Math.max(0.5, DASH.cooldown + game.mods.dashCd); }
 

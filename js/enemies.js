@@ -174,6 +174,15 @@ export class EnemyManager {
     const lim = WORLD_HALF;
     for (const e of this.list) {
       e.spawnT += dt;
+      // 미리보기에서 소환된 적: 잠시 뒤 스르륵 사라짐
+      if (e.ttl != null) { e.ttl -= dt; if (e.ttl <= 0) { e.alive = false; continue; } }
+      // 보스 기술 중 (힘 모으기 / 도약 / 점프): 위치와 모양은 기술이 직접 정함
+      if (e.hold) {
+        if (e.flash > 0) e.flash -= dt;
+        e.kx = 0; e.kz = 0;
+        this.updateStatus(e, dt);
+        continue;
+      }
       let dx = px - e.x, dz = pz - e.z;
       const dist = Math.hypot(dx, dz) || 1;
       dx /= dist; dz /= dist;
@@ -234,18 +243,6 @@ export class EnemyManager {
       // 접촉 피해
       if (Math.hypot(px - e.x, pz - e.z) < e.r * 0.9 + player.radius) player.takeDamage(e.dmg);
 
-      // 보스: 주기적으로 슬라임 소환
-      if (e.boss) {
-        e.summonT -= dt;
-        if (e.summonT <= 0) {
-          e.summonT = 6;
-          for (let i = 0; i < 5; i++) {
-            const a = Math.random() * Math.PI * 2;
-            this.spawn(Math.random() < 0.3 ? 'yellow' : 'green', e.x + Math.cos(a) * 3, e.z + Math.sin(a) * 3, game.sys.hpMul());
-          }
-          this.fx.ring(e.x, e.z, 4, 0xb07cff, 0.6);
-        }
-      }
     }
   }
 
@@ -262,7 +259,7 @@ export class EnemyManager {
     let n = 0;
     for (const e of this.list) {
       if (!e.alive) continue;
-      const grow = Math.min(1, e.spawnT / 0.25);
+      const grow = Math.min(1, e.spawnT / 0.25) * (e.ttl != null ? Math.min(1, e.ttl / 0.5) : 1);
       const s = e.r * 2 * grow;
       if (e.model) {
         const g = e.model.group;

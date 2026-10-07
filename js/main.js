@@ -21,6 +21,7 @@ import { initAudio, sfx, setSfxMuted } from './audio.js';
 import { profile, loadProfile, saveProfile, computeMods, renderSettings, addAccountXp } from './meta.js';
 import { Demo } from './demo.js';
 import { Tutorial } from './tutorial.js';
+import { EnemySkills } from './bossai.js';
 import { initMenu, showMenu, hideMenu, menuBack, setView } from './menu.js';
 import { stageById, stageLabel, lastStartable } from './stages.js';
 import { SKILL_DEFS } from './skills.js';
@@ -78,11 +79,12 @@ const enemies = new EnemyManager(scene, fx);
 const pickups = new Pickups(scene, fx);
 const player = new Player(scene, fx);
 const skillsRt = new SkillRuntime(scene, fx, enemies, player);
+const enemySkills = new EnemySkills(scene, fx, enemies, player);
 const ui = new UI();
 const labels = new Labels(document.getElementById('label-layer'), camera);
 
 game.sys = {
-  scene, camera, fx, enemies, pickups, player, skillsRt, ui, world,
+  scene, camera, fx, enemies, pickups, player, skillsRt, ui, world, enemySkills,
   hpMul: () => hpScale(game.time),
   dropBlocks(blocks, x, z, { requireExit = false, minD = 0.6, maxD = 1.6 } = {}) {
     blocks.forEach((b, i) => {
@@ -113,6 +115,7 @@ enemies.onKill = (e, src, st) => {
   game.kills++;
   skillsRt.onKill(e, src, st);
   if (game.tutorial) { game.tutorial.onKill(e); return; }   // 튜토리얼: 드랍 / 경험치는 퀘스트가 정함
+  if (e.noDrop) return;   // 보스 기술로 소환된 적: 아이템 / 경험치 없음
   if (e.boss) {
     fx.explosion(e.x, e.z, 4, 0xb07cff);
     if (!e.debugSpawn) startVictory();   // 디버그로 만든 보스는 처치해도 게임이 끝나지 않음
@@ -534,6 +537,7 @@ function tick(dt, draw = true) {
     demo.update(dt);
     player.update(dt, demo.input, world.obstacles);
     enemies.update(dt, player, world.obstacles);
+    enemySkills.update(dt);
     skillsRt.update(dt);
     pickups.update(dt, player, () => {});
     updateTimers(dt);
@@ -542,6 +546,7 @@ function tick(dt, draw = true) {
     if (!game.tutorial) { game.time += dt; director(dt); }
     player.update(dt, input, world.obstacles);
     enemies.update(dt, player, world.obstacles);
+    enemySkills.update(dt);
     skillsRt.update(dt);
     pickups.update(dt, player, addXp);
     updateTimers(dt);
@@ -585,7 +590,7 @@ refreshMenuGold();
 ui.refresh();
 
 const demo = new Demo({
-  player, enemies, pickups, skillsRt, scene, fx, cutEl: $id('preview-cut'),
+  player, enemies, pickups, skillsRt, scene, fx, enemySkills, cutEl: $id('preview-cut'),
   onTeleport: (p) => camTarget.copy(p),
 });
 initMenu({ onStart: requestStart, refreshGold: refreshMenuGold, applySettings: applySettingsToGame, hideTip: () => ui.hideTip() });

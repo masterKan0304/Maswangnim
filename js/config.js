@@ -135,3 +135,15 @@ export function unlockLevel(kind, key) {
   for (const [lv, u] of Object.entries(ACCOUNT_UNLOCKS)) if (u[kind].includes(key)) return +lv;
   return 1;
 }
+
+// ─────────────────────────────────────────────
+//  스테이지 1 정예 / 최종 보스 기술 (거리·범위는 스탯 단위: 실제 거리 = 값 / 5, 범위는 지름)
+// ─────────────────────────────────────────────
+export const ENEMY_SKILLS = {
+  // 정예: 10초마다 2초간 힘을 모은 뒤 플레이어 위치로 2초에 걸쳐 도약 (최대 60), 착지 범위 30 안이면 공격력 150% 피해 + 밀려남
+  eliteLeap: { every: 10, charge: 2, leap: 2, range: 60, area: 30, dmgMul: 1.5 },
+  // 보스: 8초마다 1초간 힘을 모은 뒤 플레이어 쪽으로 최대 3번 튕기는 점액 (한 번에 1초 동안 12 이동, 튕길 때 범위 20 피해 + 밀어냄 + 소환)
+  bossSpit: { every: 8, charge: 1, bounces: 3, hop: 12, hopTime: 1, area: 20, spawn: { green: 2, yellow: 1 }, lastMul: 3 },
+  // 보스: 14초마다 3초간 제자리에서 3번 점프, 착지마다 주위 피해 + 밀어냄 + 일반 몬스터 6마리를 바깥으로 튀어나오게 소환
+  bossStomp: { every: 14, jumps: 3, time: 3, area: 40, spawn: 6 },
+};
