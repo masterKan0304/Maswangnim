@@ -189,6 +189,14 @@ export class Player {
   castPulse(color) { this.castT = 0.25; this.castColor.set(color); }
 
   takeDamage(amount) {
+    // 미리보기: 실제로 맞은 것처럼 보이기만 함 (체력은 그대로, 죽지 않음)
+    if (game.demo && game.state === 'start') {
+      if (this.invuln > 0 || this.hidden) return;
+      this.invuln = PLAYER.invuln;
+      this.hurtT = 0.25;
+      this.fx.numbers.spawn(this.pos.x, 1.7, this.pos.z, Math.floor(amount), 'hurt');
+      return;
+    }
     if (this.invuln > 0 || game.state !== 'playing' || game.debug.god || game.tutorial) return;   // 튜토리얼: 피해 없음
     this.invuln = PLAYER.invuln + game.mods.invuln;
     const bar = game.skills.find((s) => s.key === 'frostBarrier');

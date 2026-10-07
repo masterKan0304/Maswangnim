@@ -591,7 +591,7 @@ export class SkillRuntime {
         const p = this.player.pos;
         this.fx.ring(p.x, p.z, 1.6, 0xc07cff, 0.5, 0.6);
         game.sys.ui.toast(`${ic('skull')} 발동 : 처치 — 다음 공격 스킬 강화!`, 'pick');
-        sfx('levelup');
+        if (!game.demo) sfx('levelup');   // 미리보기에서는 소리 없음
       }
     }
     if (e.burnT > 0) {

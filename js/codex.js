@@ -278,7 +278,7 @@ function gridEnemies(grid) {
   for (const en of ENEMIES) {
     const T = ENEMY_TYPES[en.type];
     const col = '#' + T.color.toString(16).padStart(6, '0');
-    item(grid, en.type, `<img class="cx-enemy" src="${enemyIcon(en.type)}" alt="">`, T.name, { color: col, badge: en.grade !== '일반' ? en.grade : '', nameFirst: true });
+    item(grid, en.type, `<img class="cx-enemy" src="${enemyIcon(en.type)}" alt="">`, T.name, { color: col, badge: en.grade !== '일반' ? en.grade : '' });
   }
 }
 

@@ -136,15 +136,31 @@ export class Demo {
     // 맵 가장자리에 가까우면 안쪽을 목표로
     const edge = WORLD_HALF - 10;
     if (Math.abs(p.x) > edge || Math.abs(p.z) > edge) { this.target = Math.atan2(-p.z, -p.x); if (this.moveMode === 'stop') this.moveMode = 'go'; }
-    if (this.moveMode === 'circle') this.wander += this.circleDir * 1.6 * dt;
-    else {
-      const diff = Math.atan2(Math.sin(this.target - this.wander), Math.cos(this.target - this.wander));
-      this.wander += Math.sign(diff) * Math.min(Math.abs(diff), this.turnRate * dt);
+    if (this.moveMode === 'circle') this.target = this.wander + this.circleDir * 0.8;
+    // 가까운 적을 피함: 가는 방향에 적이 있으면 옆으로 비켜 감 (부드럽게 방향을 트는 것만으로)
+    let ax = 0, az = 0, near = 0;
+    const hx = Math.cos(this.wander), hz = Math.sin(this.wander);
+    for (const e of this.sys.enemies.query(p.x, p.z, 4)) {
+      const dx = p.x - e.x, dz = p.z - e.z, d = Math.hypot(dx, dz) || 0.01;
+      if (d > 3.6) continue;
+      const w = (3.6 - d) / 3.6;
+      const ahead = Math.max(0, -(dx * hx + dz * hz) / d);   // 진행 방향 앞에 있는 적일수록 크게
+      ax += (dx / d) * w * (0.6 + ahead * 1.4); az += (dz / d) * w * (0.6 + ahead * 1.4);
+      if (d < 1.4) near++;
     }
+    let want = this.target;
+    if (ax || az) {
+      const tx = Math.cos(this.target) + ax * 1.8, tz = Math.sin(this.target) + az * 1.8;
+      want = Math.atan2(tz, tx);
+      if (this.moveMode === 'stop') this.moveMode = 'go';   // 적이 다가오면 멈춰 있지 않음
+    }
+    const diff = Math.atan2(Math.sin(want - this.wander), Math.cos(want - this.wander));
+    const rate = (ax || az) ? Math.max(this.turnRate, 5.5) : this.turnRate;
+    this.wander += Math.sign(diff) * Math.min(Math.abs(diff), rate * dt);
+    if (near >= 3 && player.dashCd <= 0 && Math.random() < dt * 3) player.tryDash();   // 둘러싸이면 대시로 빠져나감
     this.input.virtual.clear();
     if (this.moveMode === 'stop') this.input.vdir.set(0, 0, 0);
     else this.input.vdir.set(Math.cos(this.wander), 0, Math.sin(this.wander));
-    if (this.moveMode !== 'stop' && Math.random() < dt * 0.3) player.tryDash();
   }
 
   update(dt) {

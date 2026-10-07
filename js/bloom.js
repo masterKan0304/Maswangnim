@@ -178,7 +178,7 @@ export class Bloom {
       let s = grow * (1 + 0.15 * Math.sin(Math.min(1, f.age / 0.35) * Math.PI));
       if (f.armT < 0) {
         for (const e of this.enemies.query(f.x, f.z, 1.6)) {
-          if (e.alive && Math.hypot(e.x - f.x, e.z - f.z) < e.r + 0.35) { f.armT = 1; sfx('select'); break; }
+          if (e.alive && Math.hypot(e.x - f.x, e.z - f.z) < e.r + 0.35) { f.armT = 1; if (!game.demo) sfx('select'); break; }
         }
       } else {
         f.armT -= dt;
