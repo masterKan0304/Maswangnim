@@ -116,22 +116,32 @@ export class Demo {
     enemies.spawn(type, x, z, hpMul);
   }
 
-  // 플레이어 자동 조작: 천천히 방향을 틀며 돌아다님 (적은 피하지 않고 뚫고 지나감)
+  // 플레이어 자동 조작: 실제로 플레이하듯 여러 방향으로 방향을 바꾸며 돌아다님 (적은 피하지 않고 뚫고 지나감)
   steer(dt) {
     const { player } = this.sys;
     const p = player.pos;
-    this.turn = (this.turn || 0) * Math.exp(-dt * 0.8) + (Math.random() - 0.5) * dt * 2.2;   // 방향을 트는 정도도 부드럽게 변함
-    this.wander += this.turn * dt * 2;
-    // 맵 가장자리에 가까우면 안쪽으로 서서히 방향을 돌림
+    this.legT = (this.legT ?? 0) - dt;
+    if (this.legT <= 0) {
+      // 다음 구간: 새 목표 방향 / 회전 속도 / 길이 (가끔은 크게 돌아 원을 그리거나 잠깐 멈춤)
+      const r = Math.random();
+      this.mode = r < 0.12 ? 'stop' : r < 0.32 ? 'circle' : 'go';
+      this.legT = this.mode === 'stop' ? 0.25 + Math.random() * 0.4 : this.mode === 'circle' ? 1.2 + Math.random() * 1.2 : 0.7 + Math.random() * 1.3;
+      this.target = this.wander + (Math.random() < 0.5 ? -1 : 1) * (0.6 + Math.random() * 2.2);   // 35° ~ 160° 꺾기
+      this.turnRate = 2.5 + Math.random() * 2.5;
+      this.circleDir = Math.random() < 0.5 ? -1 : 1;
+    }
+    // 맵 가장자리에 가까우면 안쪽을 목표로
     const edge = WORLD_HALF - 10;
-    if (Math.abs(p.x) > edge || Math.abs(p.z) > edge) {
-      const inward = Math.atan2(-p.z, -p.x);
-      const diff = Math.atan2(Math.sin(inward - this.wander), Math.cos(inward - this.wander));
-      this.wander += diff * Math.min(1, dt * 1.5);
+    if (Math.abs(p.x) > edge || Math.abs(p.z) > edge) { this.target = Math.atan2(-p.z, -p.x); if (this.mode === 'stop') this.mode = 'go'; }
+    if (this.mode === 'circle') this.wander += this.circleDir * 1.6 * dt;
+    else {
+      const diff = Math.atan2(Math.sin(this.target - this.wander), Math.cos(this.target - this.wander));
+      this.wander += Math.sign(diff) * Math.min(Math.abs(diff), this.turnRate * dt);
     }
     this.input.virtual.clear();
-    this.input.vdir.set(Math.cos(this.wander), 0, Math.sin(this.wander));
-    if (Math.random() < dt * 0.25) player.tryDash();
+    if (this.mode === 'stop') this.input.vdir.set(0, 0, 0);
+    else this.input.vdir.set(Math.cos(this.wander), 0, Math.sin(this.wander));
+    if (this.mode !== 'stop' && Math.random() < dt * 0.3) player.tryDash();
   }
 
   update(dt) {

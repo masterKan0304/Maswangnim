@@ -54,7 +54,7 @@ export const SUBJECTS = {
   projCount: { name: '투사체 개수',  min: 1, max: 40, int: true, desc: '한 번에 발사되는 투사체 수입니다.' },
   chains:    { name: '연쇄 횟수',    min: 0, max: 50, int: true, desc: '적중 후 다른 적에게 다시 이어지는 횟수입니다.' },
   critChance: { name: '치명타 확률', min: 0, max: 100, unit: '%', pctOnly: true, pctType: true, desc: '공격이 치명타가 될 확률입니다. 백분율만 넣을 수 있습니다.' },
-  critDamage: { name: '치명타 피해량', min: 0, unit: '%', pctType: true, desc: '치명타가 터지면 피해가 이 비율만큼 증가합니다. 백분율은 비율에, 고정값은 추가 피해에 더해집니다.' },
+  critDamage: { name: '치명타 피해량', min: 0, unit: '%', pctType: true, pctAdd: true, desc: '치명타가 터지면 피해가 이 비율만큼 증가합니다. 백분율은 비율에, 고정값은 추가 피해에 더해집니다.' },
   critFlat:  { name: '치명타 추가 피해', min: 0, noWord: true, hidden: true, desc: '' },
   penetration: { name: '저항 무시',  min: 0,               desc: '적의 속성 저항을 무시합니다. 백분율이 먼저 적용됩니다.' },
   penPct:    { name: '저항 무시(%)', min: 0, max: 1, noWord: true, hidden: true, desc: '' },

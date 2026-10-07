@@ -263,12 +263,12 @@ function clampStat(key, x) {
 export function applyEffect(stats, subj, val, change) {
   // 저항 무시: 백분율은 % 저항 무시, 고정/랜덤은 고정 저항 무시로 따로 쌓임
   if (subj === 'penetration' && val.pct) { subj = 'penPct'; val = { ...val, pct: false }; }
-  // 치명타 피해: 백분율은 배율(200%)에, 고정/랜덤은 치명타 때 더해지는 추가 피해에 적용
+  // 치명타 피해: 백분율은 기본 100% 에 %p 로 합연산, 고정/랜덤은 치명타 때 더해지는 추가 피해에 적용
   if (subj === 'critDamage' && !val.pct) subj = 'critFlat';
   const s = stats[subj];
   let lo, hi;
-  if (SUBJECTS[subj].pctOnly) {
-    // 확률 스탯: %p 단위로 더하기/빼기/고정 (40% + 20% 증가 = 60%)
+  if (SUBJECTS[subj].pctOnly || SUBJECTS[subj].pctAdd) {
+    // 확률 / 치명타 피해량: %p 단위로 더하기/빼기/고정 (40% + 20% 증가 = 60%)
     const k = val.pct ? 100 : 1;
     const a = val.min * k, b = val.max * k;
     if (change === 'inc') { lo = s.min + a; hi = s.max + b; }
@@ -434,7 +434,7 @@ export function fmtStat(key, v) {
 export function statText(k, stats) {
   if (k === 'critDamage') {
     const f = stats.critFlat;
-    return fmtStat('critDamage', stats.critDamage) + (f && f.max > 0 ? ` + ${fmtStat('critFlat', f)}` : '');
+    return (f && f.max > 0 ? `${fmtStat('critFlat', f)} + ` : '') + fmtStat('critDamage', stats.critDamage);   // 예: 5 + 150%
   }
   if (k === 'penetration') {
     const p = Math.round(((stats.penPct.min + stats.penPct.max) / 2) * 100);
