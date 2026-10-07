@@ -253,6 +253,19 @@ export class SkillRuntime {
     sk.flame = { t: sample(st.duration), st, R, half, ang, tick: 0, mesh, geo, mat, core, coreGeo, coreMat, glow };
   }
 
+  // 진행 중인 모든 스킬 연출 제거 (도감 미리보기 장면 초기화)
+  clearAll() {
+    for (const p of this.projs) (p.kind === 'fire' ? this.firePool : this.icePool).put(p.mesh);
+    this.projs.length = 0;
+    for (const ib of this.iceballs) { this.scene.remove(ib.group, ib.ring); ib.mats.forEach((m) => m.dispose()); }
+    this.iceballs.length = 0;
+    while (this.snowballs.length) this.removeSnowball(0);
+    while (this.beams.length) this.removeBeam(0);
+    while (this.zones.length) this.removeZone(0);
+    for (const sk of game.skills) this.endFlame(sk);
+    this.casts.length = 0;
+  }
+
   // 화염 방사 불길 제거
   endFlame(sk) {
     const f = sk.flame;

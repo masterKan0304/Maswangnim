@@ -5,6 +5,7 @@
 import { profile, saveProfile, renderUpgrades, renderSettings } from './meta.js';
 import { STAGES, stageById, stageLabel, isStageUnlocked, isStartable, lastStartable } from './stages.js';
 import { accountNeed } from './config.js';
+import { openCodex, closeCodex } from './codex.js';
 import { ic } from './icons.js';
 import { sfx } from './audio.js';
 
@@ -50,6 +51,8 @@ export function setView(v) {
   view = v;
   $('#view-stage').classList.toggle('hidden', v !== 'stage');
   $('#view-upgrade').classList.toggle('hidden', v !== 'upgrade');
+  $('#view-codex').classList.toggle('hidden', v !== 'codex');
+  if (v === 'codex') openCodex(); else closeCodex();
   if (v === 'stage') { viewIdx = -1; renderStages(); }
   if (v === 'upgrade') renderUpgrades(opts.refreshGold);
   opts.hideTip();

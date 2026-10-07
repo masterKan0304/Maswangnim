@@ -22,6 +22,7 @@ import { profile, loadProfile, saveProfile, computeMods, renderSettings, addAcco
 import { Demo } from './demo.js';
 import { Tutorial } from './tutorial.js';
 import { EnemySkills } from './bossai.js';
+import { initCodex, renderCodexPreview, codexPreviewActive } from './codex.js';
 import { initMenu, showMenu, hideMenu, menuBack, setView } from './menu.js';
 import { stageById, stageLabel, lastStartable } from './stages.js';
 import { SKILL_DEFS } from './skills.js';
@@ -539,7 +540,7 @@ function tick(dt, draw = true) {
     enemies.update(dt, player, world.obstacles);
     enemySkills.update(dt);
     skillsRt.update(dt);
-    pickups.update(dt, player, () => {});
+    pickups.update(dt, player, (v) => skillsRt.onXp(v));   // 도감 미리보기(효과 부여)용
     updateTimers(dt);
     fx.update(dt);
   } else if (!isPaused()) {
@@ -578,7 +579,8 @@ function tick(dt, draw = true) {
   if (game.state !== 'start') { ui.updateHUD(); updateDpsTable(adt); }
   ui.setPausedView(game.state === 'playing' && isPaused());
   document.body.classList.toggle('ui-readonly', game.state === 'levelup');
-  renderer.render(scene, camera);
+  if (!codexPreviewActive()) renderer.render(scene, camera);   // 도감 미리보기 중에는 가려진 메인 화면을 그리지 않음
+  renderCodexPreview();   // 도감 미리보기 영상 (같은 장면을 도감 전용 카메라로)
 }
 
 camTarget.copy(player.pos);
@@ -593,6 +595,7 @@ const demo = new Demo({
   player, enemies, pickups, skillsRt, scene, fx, enemySkills, cutEl: $id('preview-cut'),
   onTeleport: (p) => camTarget.copy(p),
 });
+initCodex({ demo, scene, ui });
 initMenu({ onStart: requestStart, refreshGold: refreshMenuGold, applySettings: applySettingsToGame, hideTip: () => ui.hideTip() });
 const auto = sessionStorage.getItem(AUTOSTART);
 sessionStorage.removeItem(AUTOSTART);

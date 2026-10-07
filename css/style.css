@@ -867,3 +867,63 @@ body.in-menu #hud, body.in-menu #label-layer, body.in-menu #vignette { display: 
 @keyframes tut-bob { to { margin-top: -8px; } }
 #lu-hint { margin: 18px auto -4px; max-width: 640px; font-size: 15px; font-weight: 700; color: #ffe39a; background: rgba(255,212,90,0.12); border: 1px solid rgba(255,212,90,0.4); padding: 8px 16px; border-radius: 12px; }
 #lu-reroll.tut-focus { outline-offset: 4px; border-radius: 999px; }
+
+/* 도감 */
+.nb-codex { --c1: #b98aff; --c2: #7b4fe0; --sh: #4f2f9e; }
+#view-codex { background: linear-gradient(180deg, #181a31, #11132a); }
+#codex-body { flex: 1; display: flex; flex-direction: column; min-height: 0; padding: 12px 18px 16px; gap: 12px; }
+.cx-tabs { display: flex; gap: 8px; }
+.cx-tab { display: inline-flex; align-items: center; gap: 8px; padding: 8px 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.14); background: rgba(255,255,255,0.05); color: #c9cdf0; font-family: 'Jua', sans-serif; font-size: 18px; }
+.cx-tab .ic { width: 20px; height: 20px; }
+.cx-tab:hover { background: rgba(255,255,255,0.1); }
+.cx-tab.on { background: linear-gradient(180deg, #b98aff, #7b4fe0); color: #fff; border-color: transparent; box-shadow: 0 3px 0 #4f2f9e; }
+.cx-body { flex: 1; display: flex; gap: 14px; min-height: 0; }
+.cx-grid { flex: 1; min-width: 0; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; align-content: start; padding: 4px 6px 4px 2px; }
+.cx-sec { grid-column: 1 / -1; font-size: 12px; font-weight: 900; color: #b8a4ff; letter-spacing: 1px; margin-top: 6px; padding-bottom: 2px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+.cx-item { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 4px 8px; border-radius: 12px; cursor: pointer; background: rgba(255,255,255,0.05); border: 2px solid transparent; transition: background 0.12s, border-color 0.12s, transform 0.12s; }
+.cx-item:hover { background: rgba(255,255,255,0.1); transform: translateY(-2px); }
+.cx-item.sel { border-color: var(--gold); background: rgba(255,212,90,0.1); }
+.cx-item.locked .cx-ic { filter: grayscale(1) brightness(0.6); }
+.cx-ic { height: 44px; display: grid; place-items: center; }
+.cx-ic .ic { width: 36px; height: 36px; }
+.cx-ic .tile { transform: scale(0.78); pointer-events: none; }
+.cx-name { font-size: 12px; font-weight: 700; text-align: center; line-height: 1.2; word-break: keep-all; }
+.cx-badge { position: absolute; top: 4px; right: 4px; font-size: 10px; font-weight: 900; padding: 1px 6px; border-radius: 999px; background: rgba(0,0,0,0.45); color: #ffe39a; display: inline-flex; align-items: center; gap: 2px; }
+.cx-badge .ic { width: 10px; height: 10px; }
+.cx-detail { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+.cx-info { flex: 1; min-height: 0; overflow-y: auto; background: rgba(0,0,0,0.22); border-radius: 14px; padding: 14px 16px; }
+.cx-title { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.cx-big { width: 62px; height: 62px; flex: none; display: grid; place-items: center; border-radius: 14px; background: color-mix(in srgb, var(--c, #6f7aa8) 25%, rgba(0,0,0,0.3)); }
+.cx-big .ic { width: 44px; height: 44px; }
+.cx-big.tilebox { background: rgba(0,0,0,0.25); }
+.cx-big.tilebox .tile { pointer-events: none; }
+.cx-nm { font-family: 'Jua', sans-serif; font-size: 26px; }
+.cx-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 2px; }
+.cx-tag { font-size: 11px; font-weight: 900; padding: 2px 8px; border-radius: 999px; background: rgba(255,255,255,0.1); color: #d6d9f5; }
+.cx-tag.ok { background: rgba(95,227,154,0.18); color: #9ff0c0; }
+.cx-tag.lock { background: rgba(255,122,138,0.18); color: #ffb0ba; }
+.cx-tag.rar2 { background: rgba(80,170,255,0.2); color: #a8d4ff; }
+.cx-tag.rar3 { background: rgba(255,180,60,0.2); color: #ffd890; }
+.cx-tag.grade-정예 { background: rgba(63,140,255,0.25); color: #a8ccff; }
+.cx-tag.grade-보스 { background: rgba(176,124,255,0.28); color: #d8c0ff; }
+.cx-desc { font-size: 13.5px; color: #d6d9f5; line-height: 1.6; margin-bottom: 10px; }
+.cx-sub { font-size: 12px; font-weight: 900; color: #b8a4ff; margin: 10px 0 6px; }
+.cx-note { font-size: 12.5px; color: var(--dim); margin-top: 4px; }
+.cx-levels { display: flex; gap: 6px; margin-bottom: 10px; }
+.cx-lv { flex: 1; padding: 6px 0; border-radius: 10px; border: 1px solid rgba(255,255,255,0.14); background: rgba(255,255,255,0.05); color: #c9cdf0; font-weight: 900; font-size: 13px; }
+.cx-lv.mile { color: #ffe39a; }
+.cx-lv:hover { background: rgba(255,255,255,0.12); }
+.cx-lv.on { background: linear-gradient(180deg, #ffcf5a, #f5a524); color: #3a2400; border-color: transparent; }
+.cx-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 14px; margin-bottom: 8px; }
+.cx-stat { display: flex; justify-content: space-between; gap: 8px; font-size: 12.5px; color: var(--dim); padding: 3px 0; border-bottom: 1px dashed rgba(255,255,255,0.07); }
+.cx-stat b { color: #fff; }
+.cx-stat.range { margin: 6px 0; font-size: 14px; }
+.cx-mile { font-size: 12.5px; color: var(--dim); margin-top: 4px; padding: 5px 10px; border-radius: 8px; background: rgba(255,255,255,0.04); }
+.cx-mile.on { color: var(--gold); background: rgba(255,212,90,0.1); }
+.cx-ability { font-size: 13px; color: #d6d9f5; line-height: 1.55; padding: 6px 10px; margin-bottom: 6px; border-radius: 8px; background: rgba(176,124,255,0.1); border-left: 3px solid #b07cff; }
+.cx-line { font-size: 15px; }
+.cx-preview { position: relative; height: 210px; flex: none; border-radius: 14px; overflow: hidden; background: #a6dcf5; border: 1px solid rgba(255,255,255,0.12); }
+#codex-canvas { width: 100%; height: 100%; display: block; }
+.cx-pv-label { position: absolute; left: 10px; top: 8px; font-size: 11px; font-weight: 900; color: #fff; background: rgba(10,12,28,0.55); padding: 2px 10px; border-radius: 999px; }
+.cx-slime { display: inline-block; width: 34px; height: 26px; border-radius: 50% 50% 42% 42% / 62% 62% 38% 38%; background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.55), transparent 35%), var(--c); box-shadow: inset 0 -4px 0 rgba(0,0,0,0.18); }
+.cx-slime.big { width: 46px; height: 36px; }

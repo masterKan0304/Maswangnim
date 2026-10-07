@@ -127,6 +127,7 @@
       <div class="ml-nav">
         <button class="nav-btn nb-stage" data-view="stage"><i data-ic="flag"></i><span>스테이지 선택</span></button>
         <button class="nav-btn nb-upgrade" data-view="upgrade"><i data-ic="arrowUp"></i><span>업그레이드</span></button>
+        <button class="nav-btn nb-codex" data-view="codex"><i data-ic="book"></i><span>도감</span></button>
         <button class="nav-btn nb-settings" data-view="settings"><i data-ic="gear"></i><span>설정</span></button>
       </div>
     </div>
@@ -136,6 +137,11 @@
       <div id="view-stage" class="mview hidden ui-zone">
         <div class="up-head"><span class="up-title"><i data-ic="flag"></i> 스테이지 선택</span><span class="up-hint">앞 스테이지를 클리어하면 다음 스테이지가 열립니다</span><button class="pop-close up-close" data-view-close>✕</button></div>
         <div id="stage-body"></div>
+      </div>
+      <!-- 도감 -->
+      <div id="view-codex" class="mview hidden ui-zone">
+        <div class="up-head"><span class="up-title"><i data-ic="book"></i> 도감</span><span class="up-hint">항목을 클릭하면 자세한 정보와 미리보기를 볼 수 있습니다</span><button class="pop-close up-close" data-view-close>✕</button></div>
+        <div id="codex-body"></div>
       </div>
       <!-- 업그레이드 -->
       <div id="view-upgrade" class="mview hidden ui-zone">

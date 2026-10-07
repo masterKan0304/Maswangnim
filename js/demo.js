@@ -7,6 +7,7 @@ import { game, bump } from './state.js';
 import { WORLD_HALF } from './config.js';
 import { createSkill } from './skills.js';
 import { previewStages } from './stages.js';
+import { Showcase } from './showcase.js';
 
 const CLIP = 5.5;        // 장면 하나의 길이 (초)
 const FADE = 0.28;       // 장면 전환 암전 시간 (초)
@@ -38,6 +39,23 @@ export class Demo {
   stop() {
     this.active = false;
     game.demo = false;
+  }
+
+  // 도감 미리보기: cfg 가 있으면 고정 장면, null 이면 다시 교차 편집 미리보기로
+  setShowcase(cfg) {
+    if (cfg) {
+      if (!this.showcase) this.showcase = new Showcase(this.sys);
+      this.mode = 'showcase';
+      this.input.keys.clear();
+      this.showcase.set(cfg);
+      return;
+    }
+    if (this.mode !== 'showcase') return;
+    this.mode = 'demo';
+    game.debug.god = false;
+    this.sys.player.model.group.visible = true;
+    this.showcase.clearWorld();
+    this.cut();
   }
 
   // 새 장면: 맵 / 위치 / 스킬 조합 / 적 무리를 새로 정함
@@ -123,6 +141,7 @@ export class Demo {
 
   update(dt) {
     if (!this.active) return;
+    if (this.mode === 'showcase') { this.showcase.update(dt); return; }
     this.t += dt;
     this.steer(dt);
     // 적이 계속 몰려옴
