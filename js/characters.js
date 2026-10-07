@@ -13,8 +13,8 @@ export const CHARACTERS = {
       desc: '적을 처치하면 양분을 1 얻습니다. 양분이 5가 되면 주위(30 거리)의 무작위 위치에 꽃을 피웁니다. 적이 꽃에 닿으면 1초 뒤 주위(효과 범위 20)에 12~16의 피해를 줍니다.',
     },
     // 전용 스킬 8칸 (null = 아직 정해지지 않은 스킬)
-    skills: ['leafCut', 'nature', 'fruit', 'pineWind', null, null, null, null],
-    unlock: { leafCut: 1, nature: 1, fruit: 1, pineWind: 2 },   // 숙련도 해금 레벨
+    skills: ['leafCut', 'nature', 'fruit', 'pineWind', 'roots', 'strawDoll', 'honeyBomb', 'worldSeed'],
+    unlock: { leafCut: 1, nature: 1, fruit: 1, pineWind: 2, roots: 3, strawDoll: 4, honeyBomb: 5, worldSeed: 6 },   // 숙련도 해금 레벨
   },
 };
 export const CHARACTER_ORDER = ['masang'];

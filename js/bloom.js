@@ -41,10 +41,43 @@ export class Bloom {
 
   onKill() { if (this.active()) this.addNutrient(1); }
 
-  addNutrient(n) {
+  // fromSeed: 세계수의 씨앗으로 얻은 양분 (중첩을 쌓지 않음)
+  addNutrient(n, fromSeed = false) {
     if (!this.active()) return;
     this.nutrients += n;
     while (this.nutrients >= NEED) { this.nutrients -= NEED; this.spawnFlower(); }
+    const seed = !fromSeed && game.skills.find((s) => s.key === 'worldSeed');
+    if (seed) {
+      seed.stacks += n;
+      const goal = seed.level >= 3 ? 70 : 100;
+      if (seed.stacks >= goal) { seed.stacks -= goal; this.seedBurst(seed); }
+    }
+  }
+
+  // 세계수의 씨앗: 범위 안 모든 적에게 피해, 맞은 적 하나당 양분 2 (5레벨: 그 자리에 꽃)
+  seedBurst(sk) {
+    const st = getStats(sk);
+    const p = this.player.pos;
+    const R = sample(st.area) / U / 2;
+    const hit = [];
+    for (const e of this.enemies.query(p.x, p.z, R + 2.2)) {
+      if (!e.alive || Math.hypot(e.x - p.x, e.z - p.z) > R + e.r * 0.5) continue;
+      this.skillsRt.deal(e, sk, st);
+      hit.push({ x: e.x, z: e.z });
+      this.fx.particles.burst(e.x, 0.5, e.z, 6, [0xffe680, 0x7ed957], { speed: 2, size: 0.1, life: 0.5, up: 3 });
+    }
+    // 세계수 연출: 플레이어 자리에서 솟는 빛 기둥 + 퍼지는 고리
+    for (let k = 0; k < 40; k++) {
+      const a = Math.random() * Math.PI * 2, d = Math.random() * 0.8;
+      this.fx.particles.emit(p.x + Math.cos(a) * d, 0.2 + Math.random(), p.z + Math.sin(a) * d, Math.cos(a) * 0.6, 5 + Math.random() * 4, Math.sin(a) * 0.6, 1, 0.16, Math.random() < 0.5 ? 0xffe680 : 0x7ed957, -2);
+    }
+    this.fx.ring(p.x, p.z, R, 0xffe680, 0.8);
+    this.fx.ring(p.x, p.z, R * 0.66, 0x7ed957, 0.65);
+    this.fx.ring(p.x, p.z, R * 0.33, 0xffffff, 0.5);
+    sfx('explode');
+    if (!game.demo) sfx('levelup');
+    if (hit.length) this.addNutrient(hit.length * 2, true);
+    if (sk.level >= 5) for (const h of hit.slice(0, 12)) this.spawnFlower(h);
   }
 
   // ── 꽃 ──
@@ -161,7 +194,7 @@ export class Bloom {
       const d = Math.hypot(e.x - fr.tx, e.z - fr.tz);
       if (d > r + e.r * 0.6) continue;
       const push = (r - d + 1) * 6;   // 중심에서 바깥으로 밀쳐냄
-      this.skillsRt.deal(e, fr.sk, fr.st, { kx: ((e.x - fr.tx) / (d || 1)) * push, kz: ((e.z - fr.tz) / (d || 1)) * push, infuse });
+      this.skillsRt.deal(e, fr.sk, fr.st, { kx: ((e.x - fr.tx) / (d || 1)) * push, kz: ((e.z - fr.tz) / (d || 1)) * push, infuse, infuseStatus: 0.5 });
     }
     const col = fr.mat.color.getHex();
     this.fx.ring(fr.tx, fr.tz, r, col, 0.5);

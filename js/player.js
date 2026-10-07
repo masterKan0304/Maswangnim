@@ -95,7 +95,7 @@ export class Player {
     if (this.moving) {
       mv.normalize();
       this.moveDir.copy(mv);
-      mv.multiplyScalar(PLAYER.speed * game.mods.speedMul * dt);
+      mv.multiplyScalar(PLAYER.speed * game.mods.speedMul * (1 - (this.slow || 0)) * dt);   // slow: 꿀열매 폭탄 등
       this.pos.x += mv.x; this.pos.z += mv.z;
     }
     // 대시
@@ -151,6 +151,7 @@ export class Player {
     this.dashT = DASH.duration;
     this.dashCd = this.dashCooldown();
     sfx('dash');
+    if (game.sys.skillsRt && game.sys.skillsRt.onDash) game.sys.skillsRt.onDash();   // 꿀열매 폭탄: 대시하면 바로 터짐
     this.ghostT = 0;
     this.fx.particles.burst(this.pos.x, 0.15, this.pos.z, 10, [0xffffff, 0xd9f2ff, 0xb9c7a0], { speed: 2.2, size: 0.1, life: 0.35, up: 1.2 });
     return true;

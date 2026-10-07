@@ -10,7 +10,7 @@ const CELL = 2;
 const _m = new THREE.Matrix4(), _q = new THREE.Quaternion(), _s = new THREE.Vector3(), _p = new THREE.Vector3(), _c = new THREE.Color();
 const UP = new THREE.Vector3(0, 1, 0);
 const WHITE = new THREE.Color(0xffffff);
-const TINT = { burn: new THREE.Color(0xff5a14), chill: new THREE.Color(0x9fe6ff), shock: new THREE.Color(0xfff06a) };
+const TINT = { burn: new THREE.Color(0xff5a14), chill: new THREE.Color(0x9fe6ff), shock: new THREE.Color(0xfff06a), root: new THREE.Color(0x6a8a2a) };
 const ELEM_NUM = { fire: 'fire', ice: 'ice', lightning: 'elec' };
 const key = (cx, cz) => (cx + 1000) * 4096 + (cz + 1000);
 
@@ -19,6 +19,7 @@ export class EnemyManager {
     this.scene = scene;
     this.fx = fx;
     this.list = [];
+    this.lures = [];   // 적을 끌어들이는 대상 (짚 인형) { x, z, r, radius, dead, hit(e) }
     this.grid = new Map();
     this.onKill = null;
 
@@ -43,7 +44,7 @@ export class EnemyManager {
       phase: Math.random(), flash: 0, rot: 0, kx: 0, kz: 0,
       alive: true, boss: type === 'boss', color: new THREE.Color(T.color),
       y: 0, sy: 1, sxz: 1, spawnT: 0,
-      burnT: 0, burnDmg: 0, burnTick: 0, chillT: 0, shockT: 0,
+      burnT: 0, burnDmg: 0, burnTick: 0, chillT: 0, shockT: 0, rootT: 0,
     };
     e.elite = type === 'elite';
     if (e.boss || e.elite) {
@@ -144,6 +145,7 @@ export class EnemyManager {
   }
 
   updateStatus(e, dt) {
+    if (e.rootT > 0) e.rootT -= dt;
     if (e.burnT > 0) {
       e.burnT -= dt;
       e.burnTick -= dt;
@@ -183,7 +185,14 @@ export class EnemyManager {
         this.updateStatus(e, dt);
         continue;
       }
-      let dx = px - e.x, dz = pz - e.z;
+      // 유인 (짚 인형): 범위 안에 있으면 인형을 쫓음
+      let tx = px, tz = pz, lure = null;
+      for (const l of this.lures) {
+        if (l.dead || Math.hypot(l.x - e.x, l.z - e.z) > l.r) continue;
+        if (!lure || Math.hypot(l.x - e.x, l.z - e.z) < Math.hypot(lure.x - e.x, lure.z - e.z)) lure = l;
+      }
+      if (lure) { tx = lure.x; tz = lure.z; }
+      let dx = tx - e.x, dz = tz - e.z;
       const dist = Math.hypot(dx, dz) || 1;
       dx /= dist; dz /= dist;
 
@@ -191,7 +200,7 @@ export class EnemyManager {
       e.phase += dt * (e.boss ? 0.75 : 1.6);
       const p = e.phase % 1;
       const air = p < 0.6;
-      const mv = e.speed * (air ? 1.4 : 0.3) * (e.chillT > 0 ? 1 - STATUS.slow : 1);
+      const mv = e.rootT > 0 ? 0 : e.speed * (air ? 1.4 : 0.3) * (e.chillT > 0 ? 1 - STATUS.slow : 1);   // 속박: 움직이지 못함
       let vx = dx * mv, vz = dz * mv;
 
       // 분리 (겹침 방지)
@@ -241,7 +250,8 @@ export class EnemyManager {
       if (!e.alive) continue;
 
       // 접촉 피해
-      if (Math.hypot(px - e.x, pz - e.z) < e.r * 0.9 + player.radius) player.takeDamage(e.dmg);
+      if (lure) { if (Math.hypot(lure.x - e.x, lure.z - e.z) < e.r * 0.9 + lure.radius) lure.hit(e); }   // 인형이 공격을 대신 받음
+      else if (Math.hypot(px - e.x, pz - e.z) < e.r * 0.9 + player.radius) player.takeDamage(e.dmg);
 
     }
   }
@@ -252,6 +262,7 @@ export class EnemyManager {
     if (e.chillT > 0) out.lerp(TINT.chill, 0.5);
     if (e.burnT > 0) out.lerp(TINT.burn, 0.3 + 0.15 * Math.sin(t * 20 + e.phase * 10));
     if (e.shockT > 0 && Math.sin(t * 30 + e.phase * 20) > 0.3) out.lerp(TINT.shock, 0.5);
+    if (e.rootT > 0) out.lerp(TINT.root, 0.45);
     return out;
   }
 

@@ -521,7 +521,8 @@ function showEndScreen(kind) {
   }
   const xpGain = Math.floor(game.totalXp);
   // 계정 경험치 = 이번에 얻은 골드(경험치 환산 + 첫 클리어 보상)의 25%, 숙련도 = 그 계정 경험치의 75%
-  const acctGain = Math.floor((gold + rewardGold) * 0.25);
+  const clearBonus = kind === 'clear' ? 1.5 : 1;   // 클리어 시 계정 경험치 / 숙련도 +50%
+  const acctGain = Math.floor((gold + rewardGold) * 0.25 * clearBonus);
   const masteryGain = Math.floor(acctGain * 0.75);
   const acc = addAccountXp(acctGain);
   const mas = addMasteryXp(game.charId, masteryGain);
@@ -531,7 +532,7 @@ function showEndScreen(kind) {
   const need = accountNeed(profile.accountLevel);
   const unlockNames = [...mas.unlocked.map((k) => SKILL_DEFS[k].name), ...acc.unlocked.skills.map((k) => SKILL_DEFS[k].name), ...acc.unlocked.templates.map((k) => `문장:${TEMPLATE_INFO[k].label}`)];
   const acctHtml = `<div class="end-acct">
-      <div class="ea-head"><span>계정 Lv.<b>${profile.accountLevel}</b></span><span>계정 경험치 <b>+${acctGain.toLocaleString()}</b></span></div>
+      <div class="ea-head"><span>계정 Lv.<b>${profile.accountLevel}</b></span><span>계정 경험치 <b>+${acctGain.toLocaleString()}</b>${clearBonus > 1 ? ' <i class="ea-bonus">클리어 보너스 +50%</i>' : ''}</span></div>
       <div class="acct-bar"><i style="width:${Math.min(100, (profile.accountXp / need) * 100)}%"></i></div>
       <div class="ea-xp">${Math.floor(profile.accountXp).toLocaleString()} / ${need.toLocaleString()}</div>
       ${acc.to > acc.from ? `<div class="ea-up">계정 레벨 업! Lv.${acc.from} → Lv.${acc.to}</div>` : ''}

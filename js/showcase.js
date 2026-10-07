@@ -3,7 +3,7 @@
 //  (맵 가운데의 장애물 없는 공터에서 진행)
 // ─────────────────────────────────────────────
 import { game, bump } from './state.js';
-import { createSkill, getStats, triggerGoal, sample } from './skills.js';
+import { createSkill, getStats, triggerGoal, sample, SKILL_DEFS } from './skills.js';
 import { makeSentence, makeWord, makeFixed } from './blocks.js';
 
 export const SC_CENTER = { x: 0, z: 0 };
@@ -41,6 +41,10 @@ const SKILL_SCENES = {
   leafCut: (lv) => ({ slots: lv >= 3 ? [...CLUSTER, ...BEHIND] : CLUSTER, hp: 2 }),
   nature: () => ({ slots: RING(6, 1.6, PX, PV), hp: 3, pullBack: 1.2 }),
   fruit: () => ({ slots: [...CLUSTER, ...BEHIND, [2.8, 1.8], [2.8, -1.8]], hp: 2.5, special: 'flowers' }),
+  roots: (lv) => ({ slots: lv >= 5 ? [...CLUSTER, ...BEHIND, [2.6, 1.8], [2.6, -1.8]] : [...CLUSTER, [3.4, 0], [4.2, 0.6]], hp: 3 }),
+  strawDoll: () => ({ slots: RING(8, 4.2, PX + 2, PV), hp: 3, moving: true }),
+  honeyBomb: () => ({ slots: RING(7, 1.5, PX, PV), hp: 4, pullBack: 1.2 }),
+  worldSeed: () => ({ slots: [...RING(8, 2.4, 0.6, 0), ...RING(6, 4, 0.6, 0)], hp: 1.4, companion: 'leafCut', special: 'seed' }),
   pineWind: (lv) => ({ slots: lv >= 3 ? [[0, 0], [1.4, 0.9], [1.4, -0.9], [2.8, 0], [3.8, 1], [3.8, -1]] : [[0, 0], [1.5, 0], [3, 0], [4.3, 0.6]], hp: 4, special: 'windFlowers' }),
 };
 
@@ -78,7 +82,8 @@ export class Showcase {
     player.moveTarget = null;
     player.shield = 0;
     player.hidden = cfg.kind === 'enemy';   // 적 미리보기에는 플레이어 없음
-    game.charId = cfg.charId || 'masang';
+    // 캐릭터 패시브는 그 캐릭터의 전용 스킬 / 캐릭터 미리보기에서만 (공용 스킬 · 적 미리보기에서는 꺼 둠)
+    game.charId = cfg.charId || (cfg.kind === 'skill' && SKILL_DEFS[cfg.key].owner) || null;
     if (cfg.kind === 'skill') this.setSkill(cfg.key, cfg.level);
     else if (cfg.kind === 'character') this.setCharacter(cfg.skills);
     else this.setEnemy(cfg.type);
@@ -176,6 +181,7 @@ export class Showcase {
     for (const s of this.slots) {
       if (s.e && s.e.alive) {
         const e = s.e;
+        if (scn.moving) continue;   // 짚 인형: 적이 실제로 움직여 인형에게 끌려감
         e.speed = 0;
         // 밀려난 적은 천천히 제자리로
         const back = scn.pullBack || 0.4;
@@ -190,7 +196,7 @@ export class Showcase {
       s.wait -= dt;
       if (s.wait <= 0) {
         const e = enemies.spawn(scn.type || 'green', s.x, s.z, scn.hp || 2);
-        e.speed = 0;
+        if (!scn.moving) e.speed = 0;
         s.e = e;
       }
     }
@@ -229,6 +235,11 @@ export class Showcase {
     if (scn.special === 'windFlowers' && this.sys.bloom) {
       this.flowerT = (this.flowerT ?? 0.2) - dt;
       if (this.flowerT <= 0 && this.sys.bloom.flowers.length < 2) { this.flowerT = 1.2; this.sys.bloom.spawnFlower(W(-1.4 + Math.random() * 2.4, PV * 0.5 + (Math.random() - 0.5) * 1.2)); }
+    }
+    // 세계수의 씨앗: 중첩을 거의 채워 두어 자주 터지는 모습을 보여 줌
+    if (scn.special === 'seed') {
+      const goal = sk.level >= 3 ? 70 : 100;
+      if (sk.stacks < goal - 4) sk.stacks = goal - 4;
     }
     if (scn.special === 'trigger') {
       // 중첩을 빠르게 채워 발동 장면을 자주 보여 줌

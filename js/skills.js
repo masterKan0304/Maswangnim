@@ -235,10 +235,58 @@ Object.assign(SKILL_DEFS, {
     levelText: (lv) => ['피해량이 40% 증가합니다.', lv === 3 && '기본 투사체 개수가 3개가 됩니다.', lv === 5 && '꽃에 닿을 때마다 피해량, 크기, 속도가 20%씩 증가합니다. (최대 3회)'],
     extra: (sk) => [sk.level >= 5 && '꽃에 닿을 때마다 강해지며 꽃잎이 휘날립니다.'],
   },
+  roots: {
+    key: 'roots', name: '옭아매는 뿌리', icon: ic('roots'), color: '#8ab84a', element: null, passive: false, castTime: 0.15, projectile: true, owner: 'masang', rootTime: 1.5,
+    short: '적을 향해 덩굴 뿌리를 뻗어 피해를 주고 1.5초간 속박합니다.',
+    desc: '가까운 적을 향해 땅을 타고 나아가는 덩굴 뿌리를 내보냅니다. 뿌리에 닿은 적은 피해를 입고 1.5초간 움직이지 못합니다. 정예와 보스는 속박되지 않습니다.',
+    keywords: ['투사체', '관통', '연쇄', '속박', '스킬 쿨타임'],
+    base: { damage: [8, 16], duration: 2.5, projSize: 12, projSpeed: 4, projCount: 1, pierce: 3, manaCost: 8, cooldown: 5 },
+    labels: { duration: '투사체 지속 시간' },
+    relevant: ['damage', 'duration', 'pierce', 'projSize', 'projSpeed', 'projCount', 'chains', 'manaCost', 'cooldown'],
+    levelUp: dmgUp40,
+    levelText: (lv) => ['피해량이 40% 증가합니다.', lv === 3 && '뿌리가 가장 가까운 적을 따라가며, 관통할 때마다 새 대상을 찾습니다.', lv === 5 && '뿌리가 처음 적을 관통할 때 뿌리 3개가 더 뻗어 나갑니다.'],
+    extra: (sk) => ['닿은 적을 1.5초간 속박합니다. (정예 · 보스 면역)', sk.level >= 3 && '가장 가까운 적을 따라갑니다.', sk.level >= 5 && '처음 관통할 때 뿌리 3개가 더 뻗어 나갑니다.'],
+  },
+  strawDoll: {
+    key: 'strawDoll', name: '짚 인형', icon: ic('doll'), color: '#e6c26a', element: null, passive: false, castTime: 0.15, owner: 'masang', lureArea: 50, hpRatio: 0.4,
+    short: '마솽을 닮은 짚 인형을 세워 적을 끌어들이고, 시간이 지나거나 부서지면 폭발합니다.',
+    desc: '사거리 안 무작위 위치에 마솽을 본뜬 짚 인형을 세웁니다. 인형은 주위(효과 범위 50)의 적을 끌어들여 공격을 대신 받습니다. 지속 시간이 끝나거나 체력(플레이어 최대 체력의 40%)을 모두 잃으면 폭발해 주위 적에게 피해를 줍니다.',
+    keywords: ['유인', '효과 범위', '지속 시간', '스킬 쿨타임'],
+    base: { damage: [15, 25], area: 30, range: 60, duration: 3, manaCost: 20, cooldown: 20 },
+    labels: { area: '폭발 범위' },
+    relevant: ['damage', 'area', 'duration', 'manaCost', 'cooldown'],
+    hiddenUses: ['range'],
+    levelUp: dmgUp40,
+    levelText: (lv) => ['피해량이 40% 증가합니다.', lv === 3 && '인형이 적들로부터 도망칩니다.', lv === 5 && '인형을 하나 더 세웁니다.'],
+    extra: (sk) => [`인형 체력: 플레이어 최대 체력의 40%`, sk.level >= 3 && '인형이 적들로부터 도망칩니다.', sk.level >= 5 && '인형을 2개 세웁니다.'],
+  },
+  honeyBomb: {
+    key: 'honeyBomb', name: '꿀열매 폭탄', icon: ic('honey'), color: '#ffb52e', element: null, passive: false, castTime: 0.1, owner: 'masang',
+    heal: 1, tickDmg: [2, 4], tickArea: 4, tickHeal: 0.2,
+    short: '머리에 열매를 이고 꿀을 모은 뒤 터뜨려 주위 적을 밀쳐내고 체력을 회복합니다.',
+    desc: '지속 시간 동안 머리에 열매를 이고 꿀을 모읍니다. 모으는 동안 이동 속도가 느려지지만 0.25초마다 열매가 커지며 피해량(+2~4), 효과 범위(+4), 체력 회복량(+0.2)이 늘어납니다. 지속 시간이 끝나거나 대시하면 열매를 터뜨려 주위 적에게 피해를 주고 밀쳐내며 체력을 회복합니다. 터뜨린 뒤 쿨타임이 시작됩니다.',
+    keywords: ['효과 범위', '회복', '지속 시간', '스킬 쿨타임'],
+    base: { damage: [4, 8], area: 10, duration: 2.5, manaCost: 15, cooldown: 8 },
+    relevant: ['damage', 'area', 'duration', 'manaCost', 'cooldown'],
+    levelUp: dmgUp40,
+    levelText: (lv) => ['피해량이 40% 증가합니다.', lv === 3 && '꿀을 모으는 동안 느려지는 정도가 절반이 됩니다. (10%~25%)', lv === 5 && '모은 시간 1초마다 피해와 체력 회복량이 10%씩 더 늘어납니다. (최대 100%)'],
+    extra: (sk) => [`꿀을 모으는 동안 이동 속도 ${sk.level >= 3 ? '10%~25%' : '20%~50%'} 감소`, sk.level >= 5 && '모은 시간 1초마다 피해 · 회복 10% 증가'],
+  },
+  worldSeed: {
+    key: 'worldSeed', name: '세계수의 씨앗', icon: ic('worldtree'), color: '#ffe680', element: null, passive: true, owner: 'masang',
+    short: '양분을 얻을 때마다 중첩을 쌓고, 가득 차면 주위의 모든 적에게 피해를 주며 양분을 얻습니다.',
+    desc: '양분을 얻을 때마다 중첩을 1 얻습니다. 중첩이 100에 도달하면 효과 범위 안의 모든 적에게 피해를 주고, 피해를 준 적 하나당 양분을 2 얻습니다. 이 스킬로 얻은 양분으로는 중첩을 얻지 않습니다.',
+    keywords: ['양분', '중첩', '효과 범위', '패시브'],
+    base: { damage: [50, 80], area: 120 },
+    relevant: ['damage', 'area'],
+    levelUp: dmgUp40,
+    levelText: (lv) => ['피해량이 40% 증가합니다.', lv === 3 && '필요한 중첩이 70이 됩니다.', lv === 5 && '피해를 준 적의 자리에 꽃이 핍니다.'],
+    extra: (sk) => [`중첩 ${Math.floor(sk.stacks)} / ${sk.level >= 3 ? 70 : 100}`, sk.level >= 5 && '피해를 준 적의 자리에 꽃이 핍니다.'],
+  },
 });
 
 export const SKILL_ORDER = ['fireball', 'frostBarrier', 'chainLightning', 'iceball', 'magnet', 'fireAura', 'frostAura', 'lightningAura', 'enchant', 'triggerKill', 'flamethrower', 'snowfall', 'lightningBeam'];
-export const ATTACK_SKILLS = ['fireball', 'chainLightning', 'iceball', 'flamethrower', 'snowfall', 'lightningBeam', 'leafCut', 'pineWind'];
+export const ATTACK_SKILLS = ['fireball', 'chainLightning', 'iceball', 'flamethrower', 'snowfall', 'lightningBeam', 'leafCut', 'pineWind', 'roots', 'strawDoll', 'honeyBomb'];
 // 3레벨 / 5레벨에 추가되는 효과 설명
 export const milestoneText = (d, lv) => d.levelText(lv).slice(1).filter(Boolean)[0] || '';
 export const enchantReq = (sk) => Math.max(1, sk.def.xpReq - (sk.level - 1));

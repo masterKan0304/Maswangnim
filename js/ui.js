@@ -1,5 +1,6 @@
 import { ic } from './icons.js';
 import { keyOf } from './keys.js';
+import { CHARACTERS } from './characters.js';
 import { STAGE, toStageX, toStageY, stageRect } from './stage.js';
 import { sfx } from './audio.js';
 import { game, bump, inventoryAdd } from './state.js';
@@ -386,6 +387,15 @@ export class UI {
   // ── 스킬 바 ───────────────────────────
   buildSkillbar() {
     this.sbSlots = [];
+    // 캐릭터 고유 패시브 칸 (스킬 바 왼쪽)
+    const ps = el('div', 'sb-slot sb-passive');
+    ps.innerHTML = '<span class="sb-icon"></span><span class="sb-stack"></span><span class="sb-ptag">패시브</span>';
+    ps._tip = () => {
+      const ch = CHARACTERS[game.charId];
+      return ch ? `<div class="tip-title">${ic(ch.passive.icon)} ${ch.passive.name} <span class="tip-dim">고유 패시브</span></div><div>${ch.passive.desc}</div><div class="tip-dim">양분 ${game.sys.bloom ? game.sys.bloom.nutrients : 0} / 5</div>` : '';
+    };
+    this.skillbarEl.appendChild(ps);
+    this.sbPassive = ps;
     for (let i = 0; i < MAX_SKILLS; i++) {
       const s = el('div', 'sb-slot');
       s.innerHTML = `<span class="sb-icon"></span><span class="sb-cd"></span><span class="sb-key">${keyOf(`skill${i + 1}`)}</span><span class="sb-auto">AUTO</span><span class="sb-stack"></span>`;
@@ -401,7 +411,7 @@ export class UI {
       s.querySelector('.sb-icon').innerHTML = sk ? sk.def.icon : '';
       s.classList.toggle('auto', !!(sk && sk.auto && !sk.def.passive));
       s.classList.toggle('passive', !!(sk && sk.def.passive));
-      s.classList.toggle('stacked', !!(sk && (sk.key === 'frostBarrier' || sk.key === 'triggerKill' || sk.key === 'enchant')));
+      s.classList.toggle('stacked', !!(sk && (sk.key === 'frostBarrier' || sk.key === 'triggerKill' || sk.key === 'enchant' || sk.key === 'worldSeed')));
       if (sk) s.style.setProperty('--sc', sk.def.color);
       s._tip = sk ? () => this.skillTip(sk) : null;
       s._click = sk && !sk.def.passive ? () => { game.sys.skillsRt.tryCast(sk, true); } : null;
@@ -988,6 +998,15 @@ export class UI {
     db.style.setProperty('--cd', dcd / pl.dashCooldown());
     db.querySelector('.dcd').textContent = dcd > 0 ? (dcd >= 1 ? Math.ceil(dcd) : dcd.toFixed(1)) : '';
 
+    // 고유 패시브: 양분 수치
+    const ch = CHARACTERS[game.charId];
+    if (this.sbPassive) {
+      this.sbPassive.classList.toggle('hidden', !ch);
+      if (ch) {
+        if (this.sbPassive._ch !== ch.id) { this.sbPassive._ch = ch.id; this.sbPassive.querySelector('.sb-icon').innerHTML = ic(ch.passive.icon); }
+        this.sbPassive.querySelector('.sb-stack').textContent = game.sys.bloom ? game.sys.bloom.nutrients : 0;
+      }
+    }
     this.sbSlots.forEach((s, i) => {
       const sk = game.skills[i];
       if (!sk) return;
@@ -1002,18 +1021,20 @@ export class UI {
       } else if (sk.key === 'enchant') {
         // 목표 경험치까지의 진행률 (%)
         s.querySelector('.sb-stack').textContent = `${Math.floor(Math.min(1, (sk.xpAcc || 0) / enchantReq(sk)) * 100)}%`;
+      } else if (sk.key === 'worldSeed') {
+        s.querySelector('.sb-stack').textContent = Math.floor(sk.stacks);
       } else if (sk.def.passive) {
         frac = 0;
-      } else if (sk.flame) {
+      } else if (sk.flame || sk.honey) {
         frac = 0;
-        label = sk.flame.t.toFixed(1);
+        label = (sk.flame || sk.honey).t.toFixed(1);
       } else if (sk.cd > 0) {
         frac = sk.cd / (sk.cdMax || 1);
         label = sk.cd >= 1 ? Math.ceil(sk.cd) : sk.cd.toFixed(1);
       }
       s.style.setProperty('--cd', frac);
       s.querySelector('.sb-cd').textContent = label;
-      s.classList.toggle('active-skill', !!sk.flame);
+      s.classList.toggle('active-skill', !!(sk.flame || sk.honey));
       s.classList.toggle('nomana', !sk.def.passive && pl.mana < avg(getStats(sk).manaCost));
     });
   }

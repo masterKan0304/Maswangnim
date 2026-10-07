@@ -4,7 +4,7 @@ import { WORLD_HALF, STAT_UNIT as U, PROJ_SPEED_UNIT as PS, PROJ_SIZE_UNIT as PZ
 import { game, schedule } from './state.js';
 import { getStats, computeStats, sample, sampleInt, avg, statusProb, maxStacks, areaFactor, ATTACK_SKILLS, enchantReq, triggerGoal, completeSentences } from './skills.js';
 import { makeGlowSprite } from './effects.js';
-import { jitter } from './models.js';
+import { jitter, createPlayer } from './models.js';
 import { sfx } from './audio.js';
 
 const DEG = Math.PI / 180;
@@ -49,6 +49,9 @@ export class SkillRuntime {
     this.beams = [];
     this.flames = [];   // 불길을 뿜는 중인 스킬 (목록에서 빠진 스킬의 불길도 끝까지 관리)
     this.winds = [];    // 솔바람
+    this.vines = [];    // 속박된 적을 감싼 덩굴
+    this.dolls = [];    // 짚 인형
+    this.honeys = [];   // 꿀을 모으는 중인 스킬
 
     // 파이어볼: 울퉁불퉁한 검붉은 돌 + 틈 사이로 비치는 용암 핵 (뜨거운 운석)
     const rockGeo = jitter(new THREE.DodecahedronGeometry(0.5, 0), 0.32, 41);
@@ -87,6 +90,28 @@ export class SkillRuntime {
       g.add(makeGlowSprite(0x8ff07a, 1.4, 0.45));
       return g;
     });
+    // 뿌리: 땅을 타고 나아가는 덩굴 (갈색 줄기 + 잎)
+    const rootGeo = new THREE.ConeGeometry(0.22, 1.5, 5).rotateX(Math.PI / 2);
+    const rootMat = new THREE.MeshStandardMaterial({ color: 0x7a5a2a, roughness: 0.8, flatShading: true });
+    const vineLeafGeo = new THREE.SphereGeometry(0.16, 5, 3).scale(1.6, 0.3, 0.8);
+    const vineLeafMat = new THREE.MeshStandardMaterial({ color: 0x7ed957, roughness: 0.7, flatShading: true });
+    this.rootPool = new Pool(scene, () => {
+      const g = new THREE.Group();
+      const body = new THREE.Group();
+      const stem = new THREE.Mesh(rootGeo, rootMat);
+      stem.castShadow = true;
+      body.add(stem);
+      for (const s of [-1, 1]) {
+        const lf = new THREE.Mesh(vineLeafGeo, vineLeafMat);
+        lf.position.set(s * 0.22, 0.05, -0.2 * s); lf.rotation.y = s * 0.6;
+        body.add(lf);
+      }
+      g.add(body);
+      g.userData.shell = body;
+      return g;
+    });
+    this.vineGeo = new THREE.TorusGeometry(1, 0.12, 5, 14);
+    this.vineMat = new THREE.MeshStandardMaterial({ color: 0x6a8a2a, roughness: 0.8, flatShading: true });
     // 솔바람: 수평으로 도는 바람 고리
     this.windRingGeo = new THREE.TorusGeometry(1, 0.08, 6, 28);
     this.windDiscGeo = new THREE.CircleGeometry(1, 24);
@@ -119,8 +144,9 @@ export class SkillRuntime {
       if (x !== el && st[k].max > 0) v += sample(st[k]) * mul;
       const inf = o.infuse && o.infuse[x];
       if (inf) v += inf.pct ? main * sample(inf) : sample(inf) * mul;
-      // 다른 속성의 추가 피해: 상태이상 발생율 절반
-      if (v > 0 && e.alive) this.enemies.damage(e, v * cm, { ...common, element: x, status: x === el ? 0 : sp * 0.5 });
+      // 다른 속성의 추가 피해: 상태이상 발생율 절반 (o.infuseStatus 가 있으면 그 확률)
+      const stat = x === el ? 0 : inf && o.infuseStatus != null ? o.infuseStatus : sp * 0.5;
+      if (v > 0 && e.alive) this.enemies.damage(e, v * cm, { ...common, element: x, status: stat });
     }
   }
 
@@ -128,7 +154,7 @@ export class SkillRuntime {
   update(dt) {
     for (const sk of game.skills) {
       if (sk.def.passive) { if (sk.key === 'frostBarrier') this.updateBarrier(sk, dt); continue; }
-      if (sk.flame) continue;                       // 화염 방사 중: 끝난 뒤에 쿨타임 시작
+      if (sk.flame || sk.honey) continue;           // 화염 방사 / 꿀 모으는 중: 끝난 뒤에 쿨타임 시작
       if (sk.cd > 0) sk.cd -= dt;
       if (sk.cd <= 0 && sk.auto) this.tryCast(sk, false);
     }
@@ -150,6 +176,9 @@ export class SkillRuntime {
     this.updateSnowballs(dt);
     this.updateBeams(dt);
     this.updateWinds(dt);
+    this.updateVines(dt);
+    this.updateDolls(dt);
+    this.updateHoneys(dt);
   }
 
   updateBarrier(sk, dt) {
@@ -165,11 +194,11 @@ export class SkillRuntime {
   }
 
   tryCast(sk, manual) {
-    if (sk.def.passive || sk.flame) return false;
+    if (sk.def.passive || sk.flame || sk.honey) return false;
     if (sk.cd > 0) return false;
     let st = getStats(sk);
     const p = this.player.pos;
-    const need = { leafCut: manual ? 0 : 20, pineWind: manual ? 0 : 20, nature: manual ? 0 : sample(st.area) / U / 2, fireball: manual ? 0 : 20, chainLightning: sample(st.range) / U, snowfall: sample(st.range) / U, flamethrower: manual ? 0 : (sample(st.area) / U) * 1.3, lightningBeam: manual ? 0 : 14 }[sk.key];
+    const need = { roots: manual ? 0 : 20, strawDoll: manual ? 0 : 10, honeyBomb: manual ? 0 : 3, leafCut: manual ? 0 : 20, pineWind: manual ? 0 : 20, nature: manual ? 0 : sample(st.area) / U / 2, fireball: manual ? 0 : 20, chainLightning: sample(st.range) / U, snowfall: sample(st.range) / U, flamethrower: manual ? 0 : (sample(st.area) / U) * 1.3, lightningBeam: manual ? 0 : 14 }[sk.key];
     if (need && !this.enemies.anyInRange(p.x, p.z, need)) {
       if (manual) game.sys.ui.toast('사거리 안에 적이 없습니다', 'warn');
       return false;
@@ -212,6 +241,257 @@ export class SkillRuntime {
     else if (sk.key === 'leafCut') this.castLeaf(sk, st);
     else if (sk.key === 'nature') this.castNature(sk, st);
     else if (sk.key === 'pineWind') this.castWind(sk, st);
+    else if (sk.key === 'roots') this.castRoots(sk, st);
+    else if (sk.key === 'strawDoll') this.castDolls(sk, st);
+    else if (sk.key === 'honeyBomb') this.startHoney(sk, st);
+  }
+
+  // ── 옭아매는 뿌리 ──
+  castRoots(sk, st) {
+    sfx('magnet');
+    const p = this.player;
+    const near = this.enemies.nearestN(p.pos.x, p.pos.z, 30, 1)[0];
+    const base = near ? Math.atan2(near.z - p.pos.z, near.x - p.pos.x) : Math.atan2(p.aim.z, p.aim.x);
+    const n = sampleInt(st.projCount);
+    const gen = () => ({ size: sample(st.projSize) / PZ, speed: sample(st.projSpeed) * PS, life: sample(st.duration), pierce: sampleInt(st.pierce) });
+    for (let i = 0; i < n; i++) {
+      const a = spreadAngle(base, i);
+      this.spawnRoot(sk, st, gen, p.pos.x + Math.cos(a) * 0.4, p.pos.z + Math.sin(a) * 0.4, Math.cos(a), Math.sin(a), { chains: sampleInt(st.chains), primary: true, homeTarget: near || null });
+    }
+  }
+
+  spawnRoot(sk, st, gen, x, z, dx, dz, o = {}) {
+    return this.spawnProj({
+      kind: 'root', sk, ...gen(), gen, x, z, y: 0.22, dx, dz, st, root: true,
+      home: sk.level >= 3, tracking: sk.level >= 3, ...o,
+    });
+  }
+
+  // 관통할 때: 뿌리 5레벨 — 처음 발사된 뿌리가 처음 관통하면 뿌리 3개가 더 뻗어 나감 (관통 횟수 물려받음)
+  onPierce(p, e) {
+    if (p.kind !== 'root' || !p.primary || p.split5 || p.sk.level < 5) return;
+    p.split5 = true;
+    const base = Math.atan2(p.dz, p.dx);
+    for (const off of [-50, 50, 180]) {
+      const a = base + off * DEG;
+      this.spawnRoot(p.sk, p.st, () => ({ ...p.gen(), pierce: p.pierce }), p.x, p.z, Math.cos(a), Math.sin(a), { hit: new Set([e]), primary: false, homeTarget: null });
+    }
+    this.fx.ring(p.x, p.z, 0.9, 0x7ed957, 0.3);
+  }
+
+  // 속박: 덩굴이 적을 감쌈
+  bind(e, t) {
+    e.rootT = Math.max(e.rootT, t);
+    let v = this.vines.find((x) => x.e === e);
+    if (!v) {
+      const mesh = new THREE.Mesh(this.vineGeo, this.vineMat);
+      mesh.rotation.x = Math.PI / 2;
+      this.scene.add(mesh);
+      v = { e, mesh };
+      this.vines.push(v);
+    }
+  }
+
+  updateVines(dt) {
+    for (let i = this.vines.length - 1; i >= 0; i--) {
+      const v = this.vines[i], e = v.e;
+      if (!e.alive || e.rootT <= 0) { this.scene.remove(v.mesh); this.vines.splice(i, 1); continue; }
+      const k = Math.min(1, e.rootT / 0.3);
+      v.mesh.position.set(e.x, 0.15 + e.r * 0.3, e.z);
+      v.mesh.scale.set(e.r * 1.05, e.r * 1.05, e.r * 1.05 * k);
+      v.mesh.rotation.z += dt * 1.5;
+    }
+  }
+
+  // ── 짚 인형: 적을 끌어들여 대신 맞고, 시간이 지나거나 부서지면 폭발 ──
+  castDolls(sk, st) {
+    sfx('block');
+    const n = sk.level >= 5 ? 2 : 1;
+    const p = this.player.pos;
+    const obs = game.sys.world && game.sys.world.obstacles;
+    const range = sample(st.range) / U;
+    for (let i = 0; i < n; i++) {
+      let x = p.x, z = p.z;
+      for (let k = 0; k < 12; k++) {
+        const a = Math.random() * Math.PI * 2, d = 1.5 + Math.random() * (range - 1.5);
+        x = Math.max(-WORLD_HALF + 1, Math.min(WORLD_HALF - 1, p.x + Math.cos(a) * d));
+        z = Math.max(-WORLD_HALF + 1, Math.min(WORLD_HALF - 1, p.z + Math.sin(a) * d));
+        if (!obs || !obs.blocked(x, z, 0.5)) break;
+      }
+      this.spawnDoll(sk, st, x, z);
+    }
+  }
+
+  spawnDoll(sk, st, x, z) {
+    // 마솽 모양을 지푸라기 색으로 칠한 인형 (크기 75%)
+    const model = createPlayer();
+    model.group.traverse((m) => {
+      if (!m.isMesh || !m.material || m.material.map) return;
+      m.material = m.material.clone();
+      m.material.vertexColors = false;
+      m.material.color = new THREE.Color(Math.random() < 0.5 ? 0xd9b25a : 0xc9a048);
+      m.material.needsUpdate = true;
+    });
+    model.group.position.set(x, 0, z);
+    model.group.scale.setScalar(0.01);
+    this.scene.add(model.group);
+    const pl = this.player;
+    const doll = {
+      sk, st, x, z, model, t: sample(st.duration), age: 0, maxHp: pl.maxHp * sk.def.hpRatio, hp: pl.maxHp * sk.def.hpRatio,
+      r: sk.def.lureArea / U / 2, radius: 0.35, dead: false, flash: 0, hitCd: new Map(), flee: sk.level >= 3,
+      hit: (e) => {
+        if (doll.dead || (doll.hitCd.get(e) || 0) > doll.age) return;
+        doll.hitCd.set(e, doll.age + 0.5);
+        doll.hp -= e.dmg;
+        doll.flash = 0.15;
+        this.fx.particles.burst(doll.x, 0.6, doll.z, 5, [0xe6c26a, 0xc9a048], { speed: 2, size: 0.07, life: 0.35, up: 2 });
+        this.fx.numbers.spawn(doll.x, 1.3, doll.z, Math.floor(e.dmg), 'hurt');
+      },
+    };
+    this.dolls.push(doll);
+    this.enemies.lures.push(doll);
+    this.fx.particles.burst(x, 0.4, z, 14, [0xe6c26a, 0xffe7a8, 0x7ed957], { speed: 2.5, size: 0.1, life: 0.5, up: 3 });
+    this.fx.ring(x, z, doll.r, 0xe6c26a, 0.5);
+  }
+
+  updateDolls(dt) {
+    const obs = game.sys.world && game.sys.world.obstacles;
+    for (let i = this.dolls.length - 1; i >= 0; i--) {
+      const d = this.dolls[i];
+      d.age += dt; d.t -= dt;
+      // 3레벨: 적들로부터 도망 (이동 속도 2)
+      if (d.flee) {
+        let ax = 0, az = 0;
+        for (const e of this.enemies.query(d.x, d.z, 4)) {
+          const dx = d.x - e.x, dz = d.z - e.z, dd = Math.hypot(dx, dz) || 0.01;
+          ax += dx / dd / dd; az += dz / dd / dd;
+        }
+        const l = Math.hypot(ax, az);
+        if (l > 0.01) {
+          d.x += (ax / l) * 2 * dt; d.z += (az / l) * 2 * dt;
+          if (obs) obs.resolve(d, 0.35);
+          d.x = Math.max(-WORLD_HALF + 1, Math.min(WORLD_HALF - 1, d.x));
+          d.z = Math.max(-WORLD_HALF + 1, Math.min(WORLD_HALF - 1, d.z));
+          d.model.group.rotation.y = Math.atan2(ax, az);
+        }
+      }
+      const g = d.model.group;
+      const grow = Math.min(1, d.age / 0.25);
+      const wob = d.flash > 0 ? 1 + d.flash * 1.2 : 1;
+      g.scale.setScalar(0.75 * grow * wob);
+      g.position.set(d.x, Math.abs(Math.sin(d.age * (d.flee ? 12 : 3))) * (d.flee ? 0.12 : 0.03), d.z);
+      if (d.flash > 0) d.flash -= dt;
+      if (d.t <= 0 || d.hp <= 0) this.explodeDoll(i);
+    }
+  }
+
+  explodeDoll(i) {
+    const d = this.dolls[i];
+    d.dead = true;
+    this.enemies.lures = this.enemies.lures.filter((l) => l !== d);
+    this.scene.remove(d.model.group);
+    this.dolls.splice(i, 1);
+    const R = sample(d.st.area) / U / 2;
+    for (const e of this.enemies.query(d.x, d.z, R + 2.2)) {
+      if (!e.alive) continue;
+      const dist = Math.hypot(e.x - d.x, e.z - d.z);
+      if (dist > R + e.r * 0.6) continue;
+      const push = (R - dist + 1) * 5;
+      this.deal(e, d.sk, d.st, { kx: ((e.x - d.x) / (dist || 1)) * push, kz: ((e.z - d.z) / (dist || 1)) * push });
+    }
+    this.fx.ring(d.x, d.z, R, 0xffd27a, 0.5);
+    this.fx.explosion(d.x, d.z, R * 0.8, 0xffb347);
+    this.fx.particles.burst(d.x, 0.6, d.z, 34, [0xe6c26a, 0xc9a048, 0xffe7a8, 0x7ed957], { speed: 5 + R, size: 0.12, life: 0.7, up: 5 });
+    sfx('explode');
+  }
+
+  // ── 꿀열매 폭탄: 지속 시간 동안 머리 위 열매에 꿀을 모은 뒤 터뜨림 ──
+  startHoney(sk, st) {
+    if (sk.honey) this.endHoney(sk, false);
+    const mat = new THREE.MeshStandardMaterial({ color: 0xffb52e, emissive: 0x8a4a00, emissiveIntensity: 0.35, roughness: 0.3, flatShading: true });
+    const fruit = new THREE.Mesh(new THREE.IcosahedronGeometry(0.3, 1), mat);
+    fruit.castShadow = true;
+    const ringMat = new THREE.MeshBasicMaterial({ color: 0xffc94a, transparent: true, opacity: 0.6, side: THREE.DoubleSide, depthWrite: false });
+    const ring = new THREE.Mesh(this.fx.ringGeo, ringMat);
+    ring.rotation.x = -Math.PI / 2;
+    const discMat = new THREE.MeshBasicMaterial({ color: 0xffc94a, transparent: true, opacity: 0.1, depthWrite: false });
+    const disc = new THREE.Mesh(this.fx.circleGeo, discMat);
+    disc.rotation.x = -Math.PI / 2;
+    this.scene.add(fruit, ring, disc);
+    sk.honey = {
+      st, t: sample(st.duration), dur: 0, ticks: 0, tick: 0.25, max: sample(st.duration) / 0.25,
+      dmg: sample(st.damage), area: sample(st.area), heal: sk.def.heal, fruit, ring, disc, mats: [mat, ringMat, discMat],
+    };
+    this.honeys.push(sk);
+    sfx('gem');
+  }
+
+  updateHoneys(dt) {
+    const p = this.player;
+    let slow = 0;
+    for (const sk of [...this.honeys]) {
+      const h = sk.honey;
+      if (!h) { this.honeys = this.honeys.filter((x) => x !== sk); continue; }
+      h.t -= dt; h.dur += dt; h.tick -= dt;
+      while (h.tick <= 0) {
+        h.tick += 0.25;
+        h.ticks++;
+        const d = sk.def;
+        h.dmg += d.tickDmg[0] + Math.random() * (d.tickDmg[1] - d.tickDmg[0]);
+        h.area += d.tickArea;
+        h.heal += d.tickHeal;
+        if (Math.random() < 0.8) this.fx.particles.emit(p.pos.x, 1.7, p.pos.z, (Math.random() - 0.5) * 1.5, 1, (Math.random() - 0.5) * 1.5, 0.5, 0.08, 0xffd27a, -2);
+      }
+      const k = Math.min(1, h.ticks / Math.max(1, h.max));   // 열매 크기 (0~1)
+      slow = Math.max(slow, (0.2 + 0.3 * k) * (sk.level >= 3 ? 0.5 : 1));   // 커질수록 느려짐 (3레벨: 절반)
+      h.fruit.position.set(p.pos.x, 1.45 + k * 0.45, p.pos.z);
+      h.fruit.scale.setScalar(0.6 + k * 1.6 + Math.sin(h.dur * 14) * 0.04);
+      h.fruit.rotation.y += dt * 2;
+      const R = h.area / U / 2;   // 터질 때의 범위 미리 보기
+      h.ring.position.set(p.pos.x, 0.05, p.pos.z); h.ring.scale.setScalar(R);
+      h.disc.position.set(p.pos.x, 0.04, p.pos.z); h.disc.scale.setScalar(R);
+      h.mats[1].opacity = 0.45 + 0.25 * Math.sin(h.dur * 10);
+      if (h.t <= 0) this.endHoney(sk, true);
+    }
+    p.slow = slow;
+  }
+
+  // 대시하면 모으던 열매를 바로 터뜨림
+  onDash() {
+    for (const sk of [...this.honeys]) if (sk.honey) this.endHoney(sk, true);
+  }
+
+  endHoney(sk, burst) {
+    const h = sk.honey;
+    if (!h) return;
+    sk.honey = null;
+    this.honeys = this.honeys.filter((x) => x !== sk);
+    this.scene.remove(h.fruit, h.ring, h.disc);
+    h.mats.forEach((m) => m.dispose());
+    h.fruit.geometry.dispose();
+    this.player.slow = 0;
+    sk.cd = sample(h.st.cooldown);   // 터뜨린 뒤 쿨타임 시작
+    sk.cdMax = sk.cd;
+    if (!burst) return;
+    const p = this.player.pos;
+    const bonus = sk.level >= 5 ? 1 + Math.min(1, 0.1 * h.dur) : 1;   // 5레벨: 모은 시간 1초마다 +10% (최대 100%)
+    const R = h.area / U / 2;
+    for (const e of this.enemies.query(p.x, p.z, R + 2.2)) {
+      if (!e.alive) continue;
+      const d = Math.hypot(e.x - p.x, e.z - p.z);
+      if (d > R + e.r * 0.6) continue;
+      const push = (R - d + 1) * 6;
+      this.deal(e, sk, h.st, { base: h.dmg * bonus, kx: ((e.x - p.x) / (d || 1)) * push, kz: ((e.z - p.z) / (d || 1)) * push });
+    }
+    const heal = Math.round(h.heal * bonus * 10) / 10;
+    if (this.player.hp < this.player.maxHp) {
+      this.player.hp = Math.min(this.player.maxHp, this.player.hp + heal);
+      this.fx.numbers.spawn(p.x, 1.8, p.z, `+${heal}`, 'heal');
+    }
+    this.fx.ring(p.x, p.z, R, 0xffc94a, 0.55);
+    this.fx.ring(p.x, p.z, R * 0.6, 0xffffff, 0.4);
+    this.fx.particles.burst(p.x, 1.2, p.z, 40, [0xffb52e, 0xffd27a, 0xfff0c0], { speed: 4 + R * 1.2, size: 0.13, life: 0.7, up: 4 });
+    sfx('explode');
   }
 
   // ── 이파리 베기 ──
@@ -451,6 +731,12 @@ export class SkillRuntime {
   clearAll() {
     for (const p of this.projs) this.poolOf(p.kind).put(p.mesh);
     while (this.winds.length) this.removeWind(0);
+    for (const v of this.vines) this.scene.remove(v.mesh);
+    this.vines.length = 0;
+    for (const d of this.dolls) { d.dead = true; this.scene.remove(d.model.group); }
+    this.dolls.length = 0;
+    this.enemies.lures.length = 0;
+    for (const sk of [...this.honeys]) this.endHoney(sk, false);
     this.projs.length = 0;
     for (const ib of this.iceballs) { this.scene.remove(ib.group, ib.ring); ib.mats.forEach((m) => m.dispose()); }
     this.iceballs.length = 0;
@@ -867,7 +1153,7 @@ export class SkillRuntime {
   }
 
   // ── 투사체 공통 ───────────────────────
-  poolOf(kind) { return kind === 'fire' ? this.firePool : kind === 'leaf' ? this.leafPool : this.icePool; }
+  poolOf(kind) { return kind === 'fire' ? this.firePool : kind === 'leaf' ? this.leafPool : kind === 'root' ? this.rootPool : this.icePool; }
 
   spawnProj(o) {
     const mesh = this.poolOf(o.kind).get();
@@ -889,7 +1175,16 @@ export class SkillRuntime {
       const p = this.projs[i];
       if (p.home) {
         let t = p.homeTarget;
-        if (!t || !t.alive) { t = this.enemies.nearestN(p.x, p.z, 15, 1)[0] || null; p.homeTarget = t; }
+        if (!t || !t.alive || p.hit.has(t)) {
+          t = null;
+          let bd = 15 * 15;
+          for (const c of this.enemies.query(p.x, p.z, 15)) {
+            if (!c.alive || p.hit.has(c)) continue;
+            const d2 = (c.x - p.x) ** 2 + (c.z - p.z) ** 2;
+            if (d2 < bd) { bd = d2; t = c; }
+          }
+          p.homeTarget = t;
+        }
         if (t) {
           const want = Math.atan2(t.z - p.z, t.x - p.x), cur = Math.atan2(p.dz, p.dx);
           const diff = Math.atan2(Math.sin(want - cur), Math.cos(want - cur));
@@ -908,13 +1203,18 @@ export class SkillRuntime {
           if (Math.hypot(e.x - p.x, e.z - p.z) < p.size / 2 + e.r) {
             p.hit.add(e);
             this.onProjHit(p, e);
-            // 연쇄: 1회 소모해 가장 가까운 다른 적을 향해 투사체를 새로 생성 (유도 아님)
-            if (p.chainsLeft > 0 && this.chainProj(p)) { p.dead = true; break; }
             if (p.pierceLeft > 0) {
+              // 관통: 연쇄가 남아 있으면 1회 써서 다른 적을 향하는 투사체 1개를 새로 만듦 (연쇄 0, 관통은 그대로)
+              if (p.chainsLeft > 0 && this.chainProj(p, true)) p.chainsLeft--;
               p.pierceLeft--;
+              if (this.onPierce) this.onPierce(p, e);
               p.pierceFlash = 0.15;
               this.fx.ring(p.x, p.z, Math.max(0.4, p.size * 1.2), p.kind === 'fire' ? 0xffe08a : p.kind === 'leaf' ? 0xb8f5a0 : 0xd8f8ff, 0.25, p.y);
-            } else { p.dead = true; break; }
+            } else {
+              // 관통이 끝난 마지막 적중: 연쇄가 남아 있으면 그 자리에서 다음 적을 향해 이어짐
+              if (p.chainsLeft > 0) this.chainProj(p);
+              p.dead = true; break;
+            }
           }
         }
       }
@@ -941,6 +1241,11 @@ export class SkillRuntime {
       if (Math.abs(p.x) > lim || Math.abs(p.z) > lim) p.dead = true;
 
       p.mesh.position.set(p.x, p.y, p.z);
+      if (p.kind === 'root') {
+        p.mesh.rotation.set(0, Math.atan2(p.dx, p.dz), 0);
+        p.mesh.userData.shell.rotation.z = Math.sin(p.age * 18) * 0.35;   // 꿈틀꿈틀
+        if (Math.random() < 0.7) this.fx.particles.emit(p.x, 0.1, p.z, (Math.random() - 0.5), 0.6, (Math.random() - 0.5), 0.5, 0.09, Math.random() < 0.5 ? 0x8a6a3a : 0x7ed957, -1);
+      }
       if (p.kind === 'leaf') {
         // 진행 방향을 바라보며 빙글빙글
         p.mesh.rotation.set(0, Math.atan2(p.dx, p.dz), 0);
@@ -968,7 +1273,8 @@ export class SkillRuntime {
   }
 
   // 연쇄: 그 스킬의 투사체를 맞은 자리에서 새로 생성 (크기/속도/지속 시간/관통을 새로 적용, 개수는 1개)
-  chainProj(p) {
+  // fromPierce: 관통하며 만든 투사체 (연쇄 0, 관통 횟수 그대로 물려받음)
+  chainProj(p, fromPierce = false) {
     let best = null, bd = 12 * 12;
     for (const t of this.enemies.query(p.x, p.z, 12)) {
       if (!t.alive || p.hit.has(t)) continue;
@@ -982,7 +1288,8 @@ export class SkillRuntime {
       kind: p.kind, sk: p.sk, st: p.st, gen: p.gen, y: p.y, dmgMul: p.dmgMul, home: p.home,
       split: p.split, areaFactor: p.areaFactor, explodeOnExpire: p.explodeOnExpire,
       ...fresh, x: p.x, z: p.z, dx: (best.x - p.x) / d, dz: (best.z - p.z) / d,
-      chains: p.chainsLeft - 1, hit: new Set(p.hit),
+      ...(fromPierce ? { pierce: p.pierce } : {}),
+      chains: fromPierce ? 0 : p.chainsLeft - 1, hit: new Set(p.hit), root: p.root, tracking: p.tracking,
     });
     this.fx.ring(p.x, p.z, Math.max(0.4, p.size * 1.3), 0xfff06a, 0.25, p.y);
     return true;
@@ -1020,8 +1327,9 @@ export class SkillRuntime {
         }
       }
     } else {
-      this.deal(e, p.sk, p.st, { mul: p.dmgMul, kx: p.dx * 1.5, kz: p.dz * 1.5, infuse: p.infused });
-      const cols = p.kind === 'leaf' ? [0x8ff07a, 0x4fbf4a] : [0xd8f8ff, 0x9fe6ff];
+      this.deal(e, p.sk, p.st, { mul: p.dmgMul, kx: p.kind === 'root' ? 0 : p.dx * 1.5, kz: p.kind === 'root' ? 0 : p.dz * 1.5, infuse: p.infused });
+      if (p.kind === 'root' && e.alive && !e.elite && !e.boss) this.bind(e, p.sk.def.rootTime);
+      const cols = p.kind === 'leaf' ? [0x8ff07a, 0x4fbf4a] : p.kind === 'root' ? [0x8a6a3a, 0x7ed957] : [0xd8f8ff, 0x9fe6ff];
       this.fx.particles.burst(p.x, p.y, p.z, 4, cols, { speed: 2, size: 0.06, life: 0.25, up: 1.5 });
     }
   }

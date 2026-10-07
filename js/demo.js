@@ -11,7 +11,7 @@ import { Showcase } from './showcase.js';
 
 const CLIP = 5.5;        // 장면 하나의 길이 (초)
 const FADE = 0.28;       // 장면 전환 암전 시간 (초)
-const POOL = ['fireball', 'chainLightning', 'iceball', 'flamethrower', 'snowfall', 'lightningBeam', 'fireAura', 'frostAura', 'lightningAura', 'leafCut', 'pineWind', 'nature', 'fruit'];
+const POOL = ['fireball', 'chainLightning', 'iceball', 'flamethrower', 'snowfall', 'lightningBeam', 'fireAura', 'frostAura', 'lightningAura', 'leafCut', 'pineWind', 'nature', 'fruit', 'roots', 'strawDoll', 'honeyBomb', 'worldSeed'];
 const DIR_UP = new THREE.Vector3(-1, 0, -1).normalize();
 const DIR_RIGHT = new THREE.Vector3(1, 0, -1).normalize();
 
@@ -56,6 +56,7 @@ export class Demo {
     this.mode = 'demo';
     game.debug.god = false;
     this.sys.player.hidden = false;
+    game.charId = 'masang';
     this.showcase.clearWorld();
     this.cut();
   }
