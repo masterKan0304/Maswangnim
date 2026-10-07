@@ -96,27 +96,22 @@ export class SkillRuntime {
     const vineLeafGeo = new THREE.SphereGeometry(0.22, 5, 3).scale(1.6, 0.3, 0.8);
     const vineLeafMat = new THREE.MeshStandardMaterial({ color: 0x7ed957, roughness: 0.7, flatShading: true });
     this.rootPool = new Pool(scene, () => {
-      const g = new THREE.Group();
-      const body = new THREE.Group();
-      const rings = [];
-      for (let i = 0; i < 5; i++) {
-        const r = new THREE.Mesh(rootRingGeo, rootMats[i % 3]);
-        r.rotation.y = Math.PI / 2;           // 고리 면이 진행 방향을 따라 세로로
-        r.position.z = -i * 0.75;             // 머리부터 꼬리까지 일렬
-        r.castShadow = true;
-        if (i % 2 === 0) {
-          const lf = new THREE.Mesh(vineLeafGeo, vineLeafMat);
-          lf.position.set(0, 0.7, 0); lf.rotation.z = 0.5;
-          r.add(lf);
-        }
-        rings.push(r);
-        body.add(r);
-      }
-      g.add(body);
-      g.userData.shell = body;
-      g.userData.rings = rings;
+      const g = new THREE.Group();   // 보이지 않는 머리 (뿌리 모습은 트레일로)
+      g.userData.shell = g;
       return g;
     });
+    // 뿌리 트레일 고리 (재사용)
+    this.trailPool = new Pool(scene, () => {
+      const r = new THREE.Mesh(rootRingGeo, rootMats[Math.floor(Math.random() * 3)]);
+      r.castShadow = true;
+      if (Math.random() < 0.5) {
+        const lf = new THREE.Mesh(vineLeafGeo, vineLeafMat);
+        lf.position.set(0, 0.7, 0); lf.rotation.z = 0.5;
+        r.add(lf);
+      }
+      return r;
+    });
+    this.rootTrail = [];
     this.vineGeo = new THREE.TorusGeometry(1, 0.12, 5, 14);
     this.vineMat = new THREE.MeshStandardMaterial({ color: 0x6a8a2a, roughness: 0.8, flatShading: true });
     // 솔바람: 수평으로 도는 바람 고리
@@ -184,6 +179,7 @@ export class SkillRuntime {
     this.updateBeams(dt);
     this.updateWinds(dt);
     this.updateVines(dt);
+    this.updateRootTrail(dt);
     this.updateDolls(dt);
     this.updateHoneys(dt);
   }
@@ -284,6 +280,18 @@ export class SkillRuntime {
       this.spawnRoot(p.sk, p.st, () => ({ ...p.gen(), pierce: p.pierce }), p.x, p.z, Math.cos(a), Math.sin(a), { hit: new Set([e]), primary: false, homeTarget: null });
     }
     this.fx.ring(p.x, p.z, 0.9, 0x7ed957, 0.3);
+  }
+
+  updateRootTrail(dt) {
+    for (let i = this.rootTrail.length - 1; i >= 0; i--) {
+      const tr = this.rootTrail[i];
+      tr.t += dt;
+      const k = tr.t / tr.life;
+      if (k >= 1) { this.trailPool.put(tr.mesh); this.rootTrail.splice(i, 1); continue; }
+      const up = Math.sin(k * Math.PI);   // 솟았다가 들어감
+      tr.mesh.position.y = -0.32 + up * 0.32;
+      tr.mesh.scale.setScalar(tr.s * (0.7 + 0.35 * up));
+    }
   }
 
   // 속박: 덩굴이 적을 감쌈
@@ -758,6 +766,8 @@ export class SkillRuntime {
   clearAll() {
     for (const p of this.projs) this.poolOf(p.kind).put(p.mesh);
     while (this.winds.length) this.removeWind(0);
+    for (const tr of this.rootTrail) this.trailPool.put(tr.mesh);
+    this.rootTrail.length = 0;
     for (const v of this.vines) this.scene.remove(v.mesh);
     this.vines.length = 0;
     for (const d of this.dolls) { d.dead = true; this.scene.remove(d.model.group); }
@@ -1270,14 +1280,15 @@ export class SkillRuntime {
 
       p.mesh.position.set(p.x, p.y, p.z);
       if (p.kind === 'root') {
-        p.mesh.position.y = 0;
-        p.mesh.rotation.set(0, Math.atan2(p.dx, p.dz), 0);
-        // 고리가 차례로 땅에서 솟았다가 들어감 (뿌리가 땅을 뚫고 나아가는 모습)
-        p.mesh.userData.rings.forEach((r, i) => {
-          const w = Math.sin(p.age * 14 - i * 1.25);
-          r.position.y = -0.25 + w * 0.4;
-          r.scale.setScalar(0.85 + 0.25 * Math.max(0, w));
-        });
+        // 지나간 자리마다 뿌리 고리가 땅에서 솟았다가 다시 들어감 (진행 방향을 따라 세로로)
+        p.trailAcc = (p.trailAcc || 0) + p.speed * dt;
+        while (p.trailAcc >= 0.42) {
+          p.trailAcc -= 0.42;
+          const r = this.trailPool.get();
+          r.position.set(p.x, -0.3, p.z);
+          r.rotation.set(0, Math.atan2(p.dx, p.dz) + Math.PI / 2, (Math.random() - 0.5) * 0.3);
+          this.rootTrail.push({ mesh: r, t: 0, life: 0.6, s: Math.max(0.45, p.size) });
+        }
         if (Math.random() < 0.8) this.fx.particles.emit(p.x, 0.05, p.z, (Math.random() - 0.5) * 1.5, 1, (Math.random() - 0.5) * 1.5, 0.45, 0.08, Math.random() < 0.6 ? 0x8a6a3a : 0x5a4020, -3);
       }
       if (p.kind === 'leaf') {

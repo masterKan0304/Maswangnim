@@ -73,6 +73,7 @@ export class Showcase {
     const { player } = this.sys;
     this.cfg = cfg;
     this.clearWorld();
+    this.seedT = 1;
     game.showcase = true;   // 미리보기에서 처치한 적은 경험치를 떨어뜨리지 않음
     this.t = 0;
     this.slots = [];
@@ -239,9 +240,10 @@ export class Showcase {
       if (this.flowerT <= 0 && this.sys.bloom.flowers.length < 2) { this.flowerT = 1.2; this.sys.bloom.spawnFlower(W(-1.4 + Math.random() * 2.4, PV * 0.5 + (Math.random() - 0.5) * 1.2)); }
     }
     // 세계수의 씨앗: 중첩을 거의 채워 두어 자주 터지는 모습을 보여 줌
-    if (scn.special === 'seed') {
-      const goal = sk.level >= 3 ? 70 : 100;
-      if (sk.stacks < goal - 4) sk.stacks = goal - 4;
+    if (scn.special === 'seed' && this.sys.bloom) {
+      sk.stacks = 0;   // 중첩으로는 발동하지 않음
+      this.seedT = (this.seedT ?? 1) - dt;
+      if (this.seedT <= 0) { this.seedT = 6; this.sys.bloom.seedBurst(sk); }
     }
     if (scn.special === 'trigger') {
       // 중첩을 빠르게 채워 발동 장면을 자주 보여 줌
