@@ -865,5 +865,5 @@ body.in-menu #hud, body.in-menu #label-layer, body.in-menu #vignette { display: 
 @keyframes tut-pulse { 50% { outline-color: rgba(255,212,90,0.35); box-shadow: 0 0 18px rgba(255,212,90,0.7); } }
 .tut-arrow { position: absolute; z-index: 400; pointer-events: none; transform: translate(-50%, -100%); color: var(--gold); font-size: 22px; text-shadow: 0 2px 4px rgba(0,0,0,0.6); animation: tut-bob 0.6s ease-in-out infinite alternate; }
 @keyframes tut-bob { to { margin-top: -8px; } }
-#lu-hint { margin: -4px auto 14px; max-width: 640px; font-size: 15px; font-weight: 700; color: #ffe39a; background: rgba(255,212,90,0.12); border: 1px solid rgba(255,212,90,0.4); padding: 8px 16px; border-radius: 12px; }
+#lu-hint { margin: 18px auto -4px; max-width: 640px; font-size: 15px; font-weight: 700; color: #ffe39a; background: rgba(255,212,90,0.12); border: 1px solid rgba(255,212,90,0.4); padding: 8px 16px; border-radius: 12px; }
 #lu-reroll.tut-focus { outline-offset: 4px; border-radius: 999px; }

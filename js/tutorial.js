@@ -289,9 +289,10 @@ export class Tutorial {
     this.uiArrows.forEach((a) => { a.style.display = 'none'; });
   }
 
-  // 퀘스트 4: 떨어진 아이템 위에 3D 화살표
+  // 줍기 대상 위에 3D 화살표
   updateArrows(dt) {
-    const show = this.idx === 3 && this.doneT < 0 ? this.itemsOnGround() : [];
+    // 퀘스트 4: 떨어진 아이템 / 퀘스트 13: 경험치 보석
+    const show = this.doneT >= 0 ? [] : this.idx === 3 ? this.itemsOnGround() : this.idx === 12 ? this.sys.pickups.gems.slice(0, 6) : [];
     const { scene } = this.sys;
     while (this.arrows.length < show.length) {
       const m = new THREE.Mesh(new THREE.ConeGeometry(0.28, 0.6, 4), new THREE.MeshBasicMaterial({ color: 0xffd45a }));
