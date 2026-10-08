@@ -74,6 +74,12 @@ export function setView(v) {
 function toggleMenuSettings() {
   const s = $('#settings');
   const open = s.classList.contains('hidden');
+  // 설정을 열면 열려 있던 다른 화면은 닫음 (메뉴 버튼은 하나만 선택)
+  if (open && view) {
+    view = null;
+    for (const id of ['#view-stage', '#view-upgrade', '#view-codex', '#view-char']) $(id).classList.add('hidden');
+    closeCodex();
+  }
   s.classList.toggle('hidden', !open);
   s.classList.toggle('in-menu', open);
   if (open) renderSettings(opts.applySettings, opts.keysChanged);

@@ -309,7 +309,7 @@ export function statLabel(def, k) {
   if (k === 'damage' && def.element) return `${ELEMENTS[def.element].name} 피해`;
   return (def.labels && def.labels[k]) || SUBJECTS[k].name;
 }
-export const skillUses = (def, k) => def.relevant.includes(k) || (def.hiddenUses || []).includes(k) || (isDamaging(def) && DAMAGE_EXTRA.includes(k));
+export const skillUses = (def, k) => def.relevant.includes(k) || (def.hiddenUses || []).includes(k) || (isDamaging(def) && DAMAGE_EXTRA.includes(k)) || (k === 'haste' && !def.passive);
 export const extraLines = (sk) => (typeof sk.def.extra === 'function' ? sk.def.extra(sk) : sk.def.extra || []).filter(Boolean);
 
 // 스킬 창에 보일 스탯 목록: 속성 피해(주 속성 먼저) → 기존 스탯 → 치명타/저항 무시
@@ -322,6 +322,7 @@ export function shownStats(def, stats) {
     out.push('critChance', 'critDamage');
     if (!stats || stats.penetration.max > 0 || stats.penPct.max > 0) out.push('penetration');
   }
+  if (!def.passive && (!stats || (stats.hasteTotal ? stats.hasteTotal.max : stats.haste.max) > 0)) out.push('haste');
   return out;
 }
 
@@ -503,7 +504,27 @@ export function computeStats(skill, extra = [], scale = 1) {
     log = runSentences(skill, stats, extra, scale);
   }
   finishZone(stats, base);
+  applyUpgradeStats(skill, stats);
   return { stats, log };
+}
+
+// 업그레이드 효과 (효과 범위 / 사거리 / 투사체 속도 · 지속 · 관통) + 스킬 가속 → 최종 쿨타임
+function applyUpgradeStats(skill, st) {
+  const m = game.mods || {}, d = skill.def;
+  const mul = (k, f) => { if (f && f !== 1 && st[k]) st[k] = { min: st[k].min * f, max: st[k].max * f }; };
+  mul('area', m.areaMul);
+  mul('range', m.rangeMul);
+  if (d.projectile || d.relevant.includes('projSpeed')) {
+    mul('projSpeed', m.projSpeedMul);
+    mul('projDuration', m.projLifeMul);
+    if (d.labels && d.labels.duration === '투사체 지속 시간') mul('duration', m.projLifeMul);
+    if (m.pierceAdd && d.relevant.includes('pierce')) st.pierce = { min: st.pierce.min + m.pierceAdd, max: st.pierce.max + m.pierceAdd };
+  }
+  if (!d.passive) {
+    const hMin = st.haste.min + (m.haste || 0), hMax = st.haste.max + (m.haste || 0);
+    st.hasteTotal = { min: hMin, max: hMax };
+    st.cooldown = { min: Math.max(0.1, (st.cooldown.min * 100) / (100 + hMax)), max: Math.max(0.1, (st.cooldown.max * 100) / (100 + hMin)) };
+  }
 }
 
 export function getResult(skill) {
@@ -530,6 +551,11 @@ export function fmtStat(key, v) {
 }
 // 스탯 표시 (저항 무시는 % + 고정값을 함께)
 export function statText(k, stats) {
+  if (k === 'haste') {
+    const h = stats.hasteTotal || stats.haste;
+    const pct = Math.round((h.max / (100 + h.max)) * 100);
+    return `${fmtStat('haste', h)} (쿨타임 -${pct}%)`;
+  }
   if (k === 'critDamage') {
     const f = stats.critFlat;
     return (f && f.max > 0 ? `${fmtStat('critFlat', f)} + ` : '') + fmtStat('critDamage', stats.critDamage);   // 예: 5 + 150%

@@ -1,7 +1,7 @@
 import { ic, hydrateIcons } from './icons.js';
 import { toggleDebug, initDebug } from './debug.js';
 import * as THREE from 'three';
-import { game, isPaused, updateTimers, bump, inventoryAdd } from './state.js';
+import { game, isPaused, updateTimers, bump, inventoryAdd, xpNeed } from './state.js';
 import { OVERKILL, STAGE_TIME, WORLD_HALF, MAX_ENEMIES, DROP, ENEMY_TYPES, BOX, START_REROLLS, ELITE_TIMES, xpToNext, hpScale } from './config.js';
 import { createWorld } from './world.js';
 import { FX } from './effects.js';
@@ -10,7 +10,7 @@ import { Pickups } from './pickups.js';
 import { Player } from './player.js';
 import { SkillRuntime } from './combat.js';
 import { createSkill } from './skills.js';
-import { randomBlock, randomDistinctBlocks, blockSig } from './blocks.js';
+import { randomBlock, randomDistinctBlocks, blockSig, randomCompleteSentence } from './blocks.js';
 import { UI } from './ui.js';
 import { Labels } from './labels.js';
 import { rollChoices } from './levelup.js';
@@ -127,6 +127,14 @@ enemies.onKill = (e, src, st) => {
   game.kills++;
   skillsRt.onKill(e, src, st);
   bloom.onKill(e);   // 개화: 처치 → 양분
+  // 생존력 증가: 적 10마리 처치마다 체력 회복
+  if (game.mods.killHeal) {
+    game.killHealAcc = (game.killHealAcc || 0) + 1;
+    if (game.killHealAcc >= 10) {
+      game.killHealAcc = 0;
+      if (player.hp < player.maxHp) { player.hp = Math.min(player.maxHp, player.hp + game.mods.killHeal); fx.numbers.spawn(player.pos.x, 1.6, player.pos.z, `+${game.mods.killHeal}`, 'heal'); }
+    }
+  }
   if (game.tutorial) { game.tutorial.onKill(e); return; }   // 튜토리얼: 드랍 / 경험치는 퀘스트가 정함
   if (e.noDrop) return;   // 보스 기술로 소환된 적: 아이템 / 경험치 없음
   if (e.boss) {
@@ -138,7 +146,7 @@ enemies.onKill = (e, src, st) => {
     // 중간 보스: 블록 상자 1개 + 무작위 블록 2~4개 + 경험치 2배
     pickups.addGem(e.x, e.z, e.T.xp * 2);
     pickups.addChest(e.x, e.z);
-    game.sys.dropBlocks(Array.from({ length: 2 + Math.floor(Math.random() * 3) }, () => randomBlock()), e.x, e.z, { minD: 1.2, maxD: 2.6 });
+    game.sys.dropBlocks(Array.from({ length: 2 + Math.floor(Math.random() * 3) + game.mods.eliteDrops }, () => randomBlock()), e.x, e.z, { minD: 1.2, maxD: 2.6 });   // 보상 증폭
     fx.explosion(e.x, e.z, 2.5, 0x3f8cff);
     sfx('bigkill');
     return;
@@ -160,9 +168,9 @@ function addXp(v) {
   if (game.state === 'victory') return;   // 보스 처치 후에는 레벨업 없이 골드용으로만 집계
   skillsRt.onXp(v);
   game.xp += v;
-  if (game.debug.noLevelUp) { game.xp = Math.min(game.xp, xpToNext(game.level) - 0.01); return; }   // 디버그: 레벨업 막기
-  while (game.xp >= xpToNext(game.level)) {
-    game.xp -= xpToNext(game.level);
+  if (game.debug.noLevelUp) { game.xp = Math.min(game.xp, xpNeed(game.level) - 0.01); return; }   // 디버그: 레벨업 막기
+  while (game.xp >= xpNeed(game.level)) {
+    game.xp -= xpNeed(game.level);
     game.level++;
     game.pendingLevels++;
   }
@@ -421,7 +429,10 @@ document.querySelectorAll('.win-close').forEach((b) => b.addEventListener('click
 //  메인 메뉴 / 업그레이드 / 설정 / 종료 화면
 // ─────────────────────────────────────────────
 const $id = (id) => document.getElementById(id);
-function refreshMenuGold() { $id('menu-gold').textContent = Math.floor(profile.gold).toLocaleString(); }
+function refreshMenuGold() {
+  $id('menu-gold').textContent = Math.floor(profile.gold).toLocaleString();
+  $id('menu-crystal').textContent = profile.crystals || 0;
+}
 
 function applySettingsToGame() {
   game.showLabels = profile.settings.labels;
@@ -474,6 +485,11 @@ function startGame(stageId = 1) {
   game.skills.push(createSkill(startSkill));
   bump();
   game.state = 'playing';
+  if (!tut) {
+    // 빠른 출발: 시작하자마자 레벨 업 / 빠른 시작: 완성된 문장 블록
+    if (game.mods.startLevels > 0) { game.level += game.mods.startLevels; game.pendingLevels += game.mods.startLevels; }
+    for (let i = 0; i < game.mods.startSentences; i++) { const sb = randomCompleteSentence(); if (!inventoryAdd(sb)) game.sys.dropBlocks([sb], player.pos.x, player.pos.z, { minD: 1.5, maxD: 2.5 }); }
+  }
   if (game.mods.startBlocks > 0 && !stageById(stageId).tutorial) {
     game.sys.dropBlocks(Array.from({ length: game.mods.startBlocks }, () => randomBlock()), player.pos.x, player.pos.z, { minD: 1.8, maxD: 3 });
   }
@@ -518,6 +534,10 @@ function showEndScreen(kind) {
       rewardHtml = `<div class="end-reward">${ic('crown')} 첫 클리어 보상 · ${ic('coin')} <b>+${st.reward.gold.toLocaleString()}</b> 골드</div>`;
     }
     profile.stage = lastStartable(profile.cleared).id;   // 시작할 수 있는 마지막 스테이지를 자동 선택
+    if (!st.tutorial) {
+      profile.crystals = (profile.crystals || 0) + 1;
+      rewardHtml += `<div class="end-reward crystal">${ic('gem')} 클리어 보상 · 크리스탈 <b>+1</b> <span class="tip-dim">(보유 ${profile.crystals})</span></div>`;
+    }
   }
   const xpGain = Math.floor(game.totalXp);
   // 계정 경험치 = 이번에 얻은 골드(경험치 환산 + 첫 클리어 보상)의 25%, 숙련도 = 그 계정 경험치의 75%

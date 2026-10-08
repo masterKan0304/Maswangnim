@@ -353,3 +353,21 @@ export function randomDistinctBlocks(n, exclude = new Set()) {
   }
   return out;
 }
+
+// 모든 칸이 채워진(완성된) 무작위 문장 블록 — 업그레이드 '빠른 시작'
+export function randomCompleteSentence() {
+  for (let tries = 0; tries < 40; tries++) {
+    const s = randomSentence();
+    let ok = true;
+    s.slots.forEach((sl, i) => {
+      if (!ok || sl.block) return;
+      for (let k = 0; k < 30; k++) {
+        const b = sl.type === 'subject' ? randomSubject() : sl.type === 'change' ? randomChange() : randomNumber();
+        if (sentenceAccepts(s, i, b)) { sl.block = b; return; }
+      }
+      ok = false;
+    });
+    if (ok && isComplete(s)) return s;
+  }
+  return randomSentence();
+}

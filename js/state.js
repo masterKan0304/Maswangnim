@@ -1,4 +1,4 @@
-import { INV_W, INV_H, START_REROLLS, PAUSE_ON_MENU } from './config.js';
+import { INV_W, INV_H, START_REROLLS, PAUSE_ON_MENU, xpToNext } from './config.js';
 
 // 전역 게임 상태 (모든 시스템이 공유)
 export const game = {
@@ -46,6 +46,9 @@ export const game = {
 };
 
 export function bump() { game.version++; }
+
+// 레벨 업에 필요한 경험치 (업그레이드 '빠른 경험'으로 감소)
+export const xpNeed = (lv) => xpToNext(lv) * (1 - (game.mods.xpNeedMinus || 0));
 
 export function isPaused() {
   if (game.state === 'victory') return false;

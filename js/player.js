@@ -139,7 +139,8 @@ export class Player {
         this.fx.numbers.spawn(this.pos.x, 1.6, this.pos.z, `+${regenAmt}`, 'heal');
       }
     }
-    this.mana = Math.min(this.maxMana, this.mana + (PLAYER.manaRegen + game.mods.manaRegen) * dt);
+    this.mana = Math.min(this.maxMana, this.mana + (PLAYER.manaRegen + game.mods.manaRegen) * (1 + (game.mods.manaRegenMul || 0)) * dt);
+    if (game.mods.regenPerSec && this.hp > 0 && this.hp < this.maxHp) this.hp = Math.min(this.maxHp, this.hp + game.mods.regenPerSec * dt);   // 초당 체력 재생
     if (this.hurtT > 0) this.hurtT -= dt;
     if (this.castT > 0) this.castT -= dt;
     if (this.moving) this.walk += dt * 11;
@@ -177,13 +178,13 @@ export class Player {
   // 바깥으로 밀어냄 (속도 단위)
   push(vx, vz) { this.kx += vx; this.kz += vz; }
 
-  dashCooldown() { return Math.max(0.5, DASH.cooldown + game.mods.dashCd); }
+  dashCooldown() { return Math.max(0.3, ((DASH.cooldown + game.mods.dashCd) * 100) / (100 + (game.mods.dashHaste || 0))); }   // 대시 스킬 가속
 
   // 업그레이드 적용 (게임 시작 시)
   applyMods(m) {
-    this.maxHp = Math.round((PLAYER.maxHp + m.maxHp) * m.maxHpMul);
+    this.maxHp = Math.round((PLAYER.maxHp + m.maxHp) * (1 + (m.maxHpPct || 0)) * m.maxHpMul);
     this.hp = this.maxHp;
-    this.maxMana = PLAYER.maxMana + m.maxMana;
+    this.maxMana = Math.round((PLAYER.maxMana + m.maxMana) * (1 + (m.maxManaPct || 0)));
     this.mana = this.maxMana;
   }
 
@@ -199,7 +200,8 @@ export class Player {
       return;
     }
     if (this.invuln > 0 || game.state !== 'playing' || game.debug.god || game.tutorial) return;   // 튜토리얼: 피해 없음
-    this.invuln = PLAYER.invuln + game.mods.invuln;
+    if (game.mods.dashInvuln && this.dashT > 0) return;   // 재빠른 움직임: 대시 중 무적
+    this.invuln = PLAYER.invuln * (1 + (game.mods.invulnMul || 0)) + game.mods.invuln;
     const bar = game.skills.find((s) => s.key === 'frostBarrier');
     if (bar && this.shield <= 0 && bar.stacks > 0) {
       bar.stacks--;

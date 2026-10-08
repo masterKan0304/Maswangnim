@@ -36,7 +36,7 @@ export const PLAYER = {
 // noWord: 단어 블록으로 나오지 않는 내부 스탯 / hidden: 스킬 창에 표시하지 않음
 // pctOnly: 수치는 백분율만, %p 단위로 계산 / pctType: 다른 문장의 '만큼' 값으로 쓰일 때 백분율로 취급
 export const SUBJECT_ORDER = ['damage', 'fireDmg', 'iceDmg', 'lightningDmg', 'area', 'range', 'duration', 'projDuration', 'castSpeed', 'shield',
-  'pierce', 'projSize', 'projSpeed', 'projCount', 'chains', 'critChance', 'critDamage', 'critFlat', 'penetration', 'penPct', 'statusChance', 'manaCost', 'cooldown'];
+  'pierce', 'projSize', 'projSpeed', 'projCount', 'chains', 'critChance', 'critDamage', 'critFlat', 'penetration', 'penPct', 'statusChance', 'manaCost', 'cooldown', 'haste'];
 export const SUBJECTS = {
   damage:    { name: '피해량',       min: 1,               desc: '스킬이 주는 피해량입니다. 이미 추가된 속성 피해에도 함께 적용됩니다.' },
   fireDmg:   { name: '화염 피해',    min: 0, element: 'fire',      desc: '추가 화염 피해를 얻습니다. 스킬의 속성은 바뀌지 않습니다.' },
@@ -60,7 +60,9 @@ export const SUBJECTS = {
   penPct:    { name: '저항 무시(%)', min: 0, max: 1, noWord: true, hidden: true, desc: '' },
   statusChance: { name: '상태이상 발생율', min: 0, max: 100, unit: '%', pctOnly: true, pctType: true, desc: '속성 상태이상을 부여할 확률입니다. 백분율만 넣을 수 있습니다.' },
   manaCost:  { name: '마나 소모량',  min: 0,               desc: '스킬을 사용할 때 소모하는 마나입니다.' },
-  cooldown:  { name: '스킬 쿨타임',  min: 0.1, unit: '초', sentenceUnit: '초', desc: '스킬을 다시 사용하기까지의 시간입니다.' },
+  cooldown:  { name: '스킬 쿨타임',  min: 0.1, unit: '초', sentenceUnit: '초', noWord: true, desc: '스킬을 다시 사용하기까지의 시간입니다.' },
+  // 스킬 가속: 최종 쿨타임 = 기본 쿨타임 × 100 ÷ (100 + 스킬 가속) — 액티브 스킬에만 적용, 높을수록 효과가 점점 줄어듦
+  haste:     { name: '스킬 가속',    min: 0, pctAdd: true, desc: '스킬 쿨타임이 줄어듭니다. 쿨타임 = 기본 × 100 ÷ (100 + 스킬 가속). 액티브 스킬에만 적용됩니다.' },
 };
 // 공격 스킬이면 공통으로 사용하는 스탯
 export const DAMAGE_EXTRA = ['fireDmg', 'iceDmg', 'lightningDmg', 'critChance', 'critDamage', 'critFlat', 'penetration', 'penPct'];

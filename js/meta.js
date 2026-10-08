@@ -6,6 +6,7 @@ import { STAGE } from './stage.js';
 import { ic } from './icons.js';
 import { accountNeed, ACCOUNT_UNLOCKS } from './config.js';
 import { CHARACTERS, masteryNeed } from './characters.js';
+import { NODES, NODE, EDGES, CLUSTERS, ROOT, neighborsOf, emptyMods, OLD_COST } from './upgrades.js';
 import { KB, KEY_ACTIONS, keyName, keyOf, loadKeys, isAllowedKey, duplicateCodes } from './keys.js';
 
 const SAVE_KEY = 'blockchain-save-v1';
@@ -19,6 +20,8 @@ export const profile = {
   accountXp: 0,    // 현재 레벨에서 쌓인 계정 경험치
   character: 'masang',   // 고른 캐릭터
   mastery: {},           // 캐릭터별 숙련도 { id: { lv, xp } }
+  crystals: 0,           // 크리스탈 (스테이지 클리어마다 1개, 빨간 업그레이드에 씀)
+  upgVer: 2,             // 업그레이드 트리 버전
   settings: { master: 80, bgm: 50, sfx: 70, ui: 70, masterOn: true, bgmOn: true, sfxOn: true, uiOn: true, labels: true, autoPickup: true },
 };
 
@@ -36,11 +39,15 @@ export function loadProfile() {
       profile.accountXp = d.accountXp || 0;
       profile.character = d.character || 'masang';
       profile.mastery = d.mastery || {};
-      // 최대 레벨이 줄어든 업그레이드: 초과한 레벨의 비용을 골드로 돌려줌
-      for (const u of UPGRADES) {
-        let lv = profile.upgrades[u.id] || 0;
-        while (lv > u.max) { lv--; profile.gold += u.cost * 5 * (lv + 1); }
-        if (profile.upgrades[u.id]) profile.upgrades[u.id] = lv;
+      profile.crystals = d.crystals || 0;
+      // 이전 업그레이드 트리: 쓴 골드를 모두 돌려주고 새 트리로
+      if (d.upgVer !== 2) {
+        for (const [id, lv] of Object.entries(profile.upgrades)) {
+          const c = OLD_COST[id];
+          if (c) for (let l = 0; l < lv; l++) profile.gold += c * 5 * (l + 1);
+        }
+        profile.upgrades = {};
+        profile.upgVer = 2;
       }
       Object.assign(profile.settings, d.settings || {});
     }
@@ -88,72 +95,38 @@ export function applyVolumeSettings() {
 }
 
 // ─────────────────────────────────────────────
-//  업그레이드 트리 (중앙에서 문어발처럼 사방으로 뻗음)
-//  pos: 트리 좌표 (1 = 칸 간격), parent: 선행 업그레이드 (1레벨 이상 필요)
+//  업그레이드 트리 (upgrades.js) — 연결된 업그레이드를 하나라도 얻으면 살 수 있음
+//  빨간 노드는 같은 묶음의 파란 노드를 모두 얻어야 하고, 크리스탈로 삼
 // ─────────────────────────────────────────────
-export const UPGRADES = [
-  { id: 'core',      name: '기초 훈련',   icon: ic('dumbbell'), pos: [0, 0],       max: 3, cost: 20, desc: '스킬 기본 피해량이 10% 증가합니다.',        fx: (m, l) => { m.baseDmgMul += 0.1 * l; } },
-  // 생존 (왼쪽 · 붉은색)
-  { id: 'vital',     name: '체력 증가',   icon: ic('heart'), pos: [-1.5, 0],    max: 5, cost: 25, parent: 'core',   desc: '최대 체력이 5 증가합니다.',               fx: (m, l) => { m.maxHp += 5 * l; } },
-  { id: 'regen',     name: '재생',        icon: ic('leaf'), pos: [-2.8, -0.8], max: 3, cost: 40, parent: 'vital',  desc: '체력 재생 주기가 1초 줄어듭니다.',        fx: (m, l) => { m.regenMinus += 1 * l; } },
-  { id: 'guard',     name: '피해 감소',   icon: ic('shield'), pos: [-2.8, 0.8],  max: 3, cost: 35, parent: 'vital',  desc: '받는 피해가 2% 줄어듭니다.',             fx: (m, l) => { m.dmgTakenMinus += 0.02 * l; } },
-  { id: 'heal',      name: '재생량 증가', icon: ic('bandage'), pos: [-4.1, -0.8], max: 1, cost: 360, parent: 'regen',  desc: '체력 재생량이 1 증가합니다.',             fx: (m, l) => { m.regenAmount += l; } },
-  { id: 'iframe',    name: '무적 지속',   icon: ic('lock'), pos: [-4.1, 0.8],  max: 1, cost: 360, parent: 'guard',  desc: '피격 후 무적 시간이 0.25초 늘어납니다.',   fx: (m, l) => { m.invuln += 0.25 * l; } },
-  { id: 'vigor',     name: '활력',        icon: ic('heart'), pos: [-5.4, 0],    max: 1, cost: 480, parents: ['heal', 'iframe'], desc: '최대 체력이 20% 증가합니다.', fx: (m, l) => { m.maxHpMul += 0.2 * l; } },
-  // 기동성 (위 · 초록색)
-  { id: 'swift',     name: '이동 속도',   icon: ic('boot'), pos: [0, -1.5],    max: 5, cost: 25, parent: 'core',   desc: '이동 속도가 4% 증가합니다.',              fx: (m, l) => { m.speedMul += 0.04 * l; } },
-  { id: 'blink',     name: '대시 쿨타임', icon: ic('wind'), pos: [-0.9, -2.7], max: 3, cost: 40, parent: 'swift',  desc: '대시 쿨타임이 0.5초 줄어듭니다.',         fx: (m, l) => { m.dashCd -= 0.5 * l; } },
-  { id: 'leap',      name: '대시 거리',   icon: ic('leap'), pos: [0.9, -2.7],  max: 3, cost: 35, parent: 'swift',  desc: '대시 거리가 12% 늘어납니다.',             fx: (m, l) => { m.dashDistMul += 0.12 * l; } },
-  { id: 'prepared',  name: '시작 블록',   icon: ic('bag'), pos: [0, -3.6],    max: 3, cost: 70, parent: 'blink',  desc: '게임을 시작할 때 무작위 블록을 1개 더 얻습니다.', fx: (m, l) => { m.startBlocks += l; } },
-  // 스킬 (오른쪽 · 파란색)
-  { id: 'vessel',    name: '최대 마나',   icon: ic('crystal'), pos: [1.5, 0],     max: 5, cost: 25, parent: 'core',   desc: '최대 마나가 10 증가합니다.',              fx: (m, l) => { m.maxMana += 10 * l; } },
-  { id: 'flow',      name: '마나 재생',   icon: ic('swirl'), pos: [2.8, -0.8],  max: 5, cost: 35, parent: 'vessel', desc: '초당 마나 재생이 1 증가합니다.',            fx: (m, l) => { m.manaRegen += l; } },
-  { id: 'power',     name: '피해 증가',   icon: ic('orb'), pos: [2.8, 0.8],   max: 5, cost: 40, parent: 'vessel', desc: '적에게 주는 모든 피해가 5% 증가합니다.',  fx: (m, l) => { m.dmgMul += 0.05 * l; } },
-  { id: 'element',   name: '상태이상 증가', icon: ic('prism'), pos: [4.0, 0.8],   max: 3, cost: 60, parent: 'power',  desc: '상태이상 발생율이 3% 증가합니다.',       fx: (m, l) => { m.statusAdd += 3 * l; } },
-  { id: 'focus',     name: '마나 소모 감소', icon: ic('lotus'), pos: [4.0, -0.8],  max: 3, cost: 60, parent: 'flow',   desc: '모든 스킬의 마나 소모가 0.5 줄어듭니다.',   fx: (m, l) => { m.manaCostMinus += 0.5 * l; } },
-  // 기능 (아래 · 노란색)
-  { id: 'study',     name: '경험치 증가', icon: ic('book'), pos: [0, 1.5],     max: 5, cost: 25, parent: 'core',   desc: '경험치 획득량이 5% 증가합니다.',            fx: (m, l) => { m.xpMul += 0.05 * l; } },
-  { id: 'collector', name: '드랍률 증가', icon: ic('magnet'), pos: [-0.9, 2.7],  max: 5, cost: 35, parent: 'study',  desc: '블록 드랍률이 10% 증가합니다.',           fx: (m, l) => { m.dropMul += 0.1 * l; } },
-  { id: 'foresight', name: '리롤 증가',   icon: ic('dice'), pos: [0.9, 2.7],   max: 3, cost: 45, parent: 'study',  desc: '시작 리롤이 1 증가합니다.',               fx: (m, l) => { m.rerolls += l; } },
-  { id: 'reach',     name: '획득 범위',   icon: ic('hand'), pos: [-1.8, 3.6],  max: 3, cost: 40, parent: 'collector', desc: '아이템 획득 범위가 15% 넓어집니다.',   fx: (m, l) => { m.pickupMul += 0.15 * l; } },
-  { id: 'greed',     name: '골드 증가',   icon: ic('coin'), pos: [1.8, 3.6],   max: 3, cost: 60, parent: 'foresight', desc: '골드 획득량이 10% 증가합니다.',          fx: (m, l) => { m.goldMul += 0.1 * l; } },
-];
-// 선행 업그레이드 목록 (여러 개면 모두 1레벨 이상 필요)
-const parentsOf = (u) => u.parents || (u.parent ? [u.parent] : []);
-const UP = Object.fromEntries(UPGRADES.map((u) => [u.id, u]));
-
 export const levelOf = (id) => profile.upgrades[id] || 0;
-export const costOf = (u) => u.cost * 5 * (levelOf(u.id) + 1);   // 레벨마다 비용 증가
-export const isUnlocked = (u) => parentsOf(u).every((p) => levelOf(p) > 0);
+export const costOf = (u) => (u.crystal ? u.crystal : u.costs[Math.min(levelOf(u.id), u.costs.length - 1)]);
+export function isUnlocked(u) {
+  if (u.id === ROOT) return true;
+  if (CLUSTERS[u.id]) return CLUSTERS[u.id].every((b) => levelOf(b) > 0);
+  return neighborsOf(u.id).some((n) => levelOf(n) > 0);
+}
+const lockReason = (u) => (CLUSTERS[u.id]
+  ? `${CLUSTERS[u.id].map((b) => `"${NODE[b].name}"`).join(', ')}을(를) 모두 얻어야 합니다.`
+  : '연결된 업그레이드를 하나 이상 얻어야 합니다.');
 
 export function computeMods(noUpgrades = false) {
-  const m = {
-    maxHp: 0, maxHpMul: 1, dmgTakenMinus: 0, baseDmgMul: 1, regenMinus: 0, regenAmount: 0, invuln: 0, speedMul: 1, dashCd: 0, dashDistMul: 1, startBlocks: 0,
-    maxMana: 0, manaRegen: 0, dmgMul: 1, statusAdd: 0, manaCostMinus: 0,
-    xpMul: 1, dropMul: 1, rerolls: 0, pickupMul: 1, goldMul: 1,
-  };
-  if (!noUpgrades) for (const u of UPGRADES) { const l = levelOf(u.id); if (l > 0) u.fx(m, l); }
+  const m = emptyMods();
+  if (!noUpgrades) for (const u of NODES) { const l = levelOf(u.id); if (l > 0) u.fx(m, l); }
   return m;
 }
 
 // ─────────────────────────────────────────────
-//  업그레이드 창
+//  업그레이드 창 (배경 드래그로 이동, 휠로 확대/축소)
 // ─────────────────────────────────────────────
-const CELL_X = 132, CELL_Y = 98;
-// 트리 보기 상태: 배경 드래그로 이동, 휠로 확대/축소 (창을 닫았다 열어도 유지)
-const view = { x: null, y: null, z: 1 };
+const view = { x: null, y: null, z: 0.62 };
 let bound = false;
 
 function treeBounds() {
   let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-  for (const u of UPGRADES) {
-    minX = Math.min(minX, u.pos[0] * CELL_X); maxX = Math.max(maxX, u.pos[0] * CELL_X);
-    minY = Math.min(minY, u.pos[1] * CELL_Y); maxY = Math.max(maxY, u.pos[1] * CELL_Y);
-  }
+  for (const u of NODES) { minX = Math.min(minX, u.x); maxX = Math.max(maxX, u.x); minY = Math.min(minY, u.y); maxY = Math.max(maxY, u.y); }
   return { minX: minX - 80, maxX: maxX + 80, minY: minY - 60, maxY: maxY + 90 };
 }
 
-// 트리가 화면 밖으로 너무 멀리 나가지 않도록: 화면 중앙이 항상 트리의 가장 바깥 노드들 안쪽에 있게 제한
 function clampView(W, H) {
   const b = treeBounds();
   const z = view.z;
@@ -192,7 +165,7 @@ function bindTreeControls() {
     e.preventDefault();
     const r = box.getBoundingClientRect();
     const mx = (e.clientX - r.left) / STAGE.scale, my = (e.clientY - r.top) / STAGE.scale;
-    const z2 = Math.max(0.6, Math.min(1.8, view.z * (e.deltaY > 0 ? 0.9 : 1.1)));
+    const z2 = Math.max(0.4, Math.min(1.6, view.z * (e.deltaY > 0 ? 0.9 : 1.1)));
     view.x = mx - (mx - view.x) * (z2 / view.z);
     view.y = my - (my - view.y) * (z2 / view.z);
     view.z = z2;
@@ -205,59 +178,60 @@ export function renderUpgrades(onGold) {
   const box = document.getElementById('up-tree');
   box.innerHTML = '';
   document.getElementById('up-gold').textContent = profile.gold.toLocaleString();
-  if (view.x == null) { view.x = box.clientWidth / 2; view.y = box.clientHeight / 2 - 10; }
+  const cr = document.getElementById('up-crystal');
+  if (cr) cr.textContent = profile.crystals;
+  // 처음 열면 트리 전체가 보이도록 (기초 훈련이 아래 가운데)
+  if (view.x == null) { view.x = box.clientWidth / 2; view.y = box.clientHeight - 70; }
   const layer = document.createElement('div');
   layer.id = 'up-canvas';
   box.appendChild(layer);
-  const P = (u) => [u.pos[0] * CELL_X, u.pos[1] * CELL_Y];
 
-  // 배경: 기초 훈련을 중심으로 X자 4구역 (왼쪽 생존 / 위 기동성 / 아래 기능 / 오른쪽 스킬)
-  const sectors = document.createElement('div');
-  sectors.className = 'up-sectors';
-  sectors.innerHTML = ['left', 'top', 'bottom', 'right'].map((k) => `<i class="sec-${k}"></i>`).join('')
-    + [['left', '생존'], ['top', '기동성'], ['bottom', '기능'], ['right', '스킬']].map(([k, n]) => `<b class="sec-name sn-${k}">${n}</b>`).join('');
-  layer.appendChild(sectors);
-
-  // 연결선
+  // 연결선 (빨간 노드 ↔ 묶음 파란 노드는 붉은 선)
   const svgNS = 'http://www.w3.org/2000/svg';
   const svg = document.createElementNS(svgNS, 'svg');
   svg.setAttribute('width', 1); svg.setAttribute('height', 1);
   svg.classList.add('up-lines');
-  for (const u of UPGRADES) for (const pid of parentsOf(u)) {
-    const [x1, y1] = P(UP[pid]), [x2, y2] = P(u);
-    const line = document.createElementNS(svgNS, 'path');
-    const mx = (x1 + x2) / 2;
-    line.setAttribute('d', `M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`);
-    line.setAttribute('class', levelOf(u.id) > 0 ? 'on' : levelOf(pid) > 0 ? 'open' : '');
-    svg.appendChild(line);
+  const line = (a, b, cls) => {
+    const l = document.createElementNS(svgNS, 'line');
+    l.setAttribute('x1', a.x); l.setAttribute('y1', a.y); l.setAttribute('x2', b.x); l.setAttribute('y2', b.y);
+    l.setAttribute('class', cls);
+    svg.appendChild(l);
+  };
+  for (const [ia, ib] of EDGES) {
+    const a = NODE[ia], b = NODE[ib];
+    const la = levelOf(ia) > 0, lb = levelOf(ib) > 0;
+    line(a, b, la && lb ? 'on' : la || lb ? 'open' : '');
   }
+  for (const [rid, blues] of Object.entries(CLUSTERS)) for (const bid of blues) line(NODE[rid], NODE[bid], 'red' + (levelOf(bid) > 0 ? ' on' : ''));
   layer.appendChild(svg);
 
   // 노드
-  for (const u of UPGRADES) {
-    const [x, y] = P(u);
+  for (const u of NODES) {
     const lv = levelOf(u.id);
     const maxed = lv >= u.max;
     const unlocked = isUnlocked(u);
     const cost = costOf(u);
-    const poor = !maxed && profile.gold < cost;
+    const have = u.crystal ? profile.crystals : profile.gold;
+    const poor = !maxed && have < cost;
     const node = document.createElement('div');
-    node.className = 'up-node' + (lv > 0 ? ' owned' : '') + (maxed ? ' maxed' : '') + (!unlocked ? ' locked' : '') + (unlocked && !maxed && !poor ? ' affordable' : '');
-    node.style.left = x + 'px';
-    node.style.top = y + 'px';
-    node.innerHTML = `<div class="un-circle"><span class="un-icon">${u.icon}</span><span class="un-lv">${lv}/${u.max}</span></div>
+    node.className = `up-node k-${u.kind}` + (lv > 0 ? ' owned' : '') + (maxed ? ' maxed' : '') + (!unlocked ? ' locked' : '') + (unlocked && !maxed && !poor ? ' affordable' : '');
+    node.style.left = u.x + 'px';
+    node.style.top = u.y + 'px';
+    const costHtml = maxed ? 'MAX' : `${unlocked ? '' : ic('lock') + ' '}${u.crystal ? ic('gem') : ic('coin')} ${cost.toLocaleString()}`;
+    node.innerHTML = `<div class="un-circle"><span class="un-icon">${u.iconHtml}</span>${u.max > 1 ? `<span class="un-lv">${lv}/${u.max}</span>` : ''}</div>
       <div class="un-name">${u.name}</div>
-      <div class="un-cost${poor ? ' poor' : ''}">${maxed ? 'MAX' : `${unlocked ? '' : ic('lock') + ' '}${ic('coin')} ${cost}`}</div>`;
+      <div class="un-cost${poor ? ' poor' : ''}">${costHtml}</div>`;
     node._tip = () => {
-      let h = `<div class="tip-title">${u.icon} ${u.name} <span class="tip-dim">Lv.${lv}/${u.max}</span></div><div>레벨마다 ${u.desc}</div>`;
-      if (!unlocked) h += `<div class="tip-warn">${ic('lock')} ${parentsOf(u).map((p) => `"${UP[p].name}"`).join(', ')}을(를) 먼저 1레벨 이상 올려야 합니다.</div>`;
+      let h = `<div class="tip-title">${u.iconHtml} ${u.name} <span class="tip-dim">${u.max > 1 ? `Lv.${lv}/${u.max}` : lv ? '획득' : ''}</span></div><div>${u.max > 1 ? '레벨마다 ' : ''}${u.desc}</div>`;
+      if (u.kind === 'r') h += '<div class="tip-dim">크리스탈은 스테이지를 클리어할 때마다 1개 얻습니다.</div>';
+      if (!unlocked) h += `<div class="tip-warn">${ic('lock')} ${lockReason(u)}</div>`;
       else if (maxed) h += '<div class="tip-ok">최대 레벨입니다.</div>';
-      else h += `<div class="${poor ? 'tip-warn' : 'tip-ok'}">강화 비용은 ${ic('coin')} ${cost}입니다. (보유 ${profile.gold})</div>`;
+      else h += `<div class="${poor ? 'tip-warn' : 'tip-ok'}">비용은 ${u.crystal ? `${ic('gem')} 크리스탈 ${cost}개` : `${ic('coin')} ${cost.toLocaleString()}`}입니다. (보유 ${u.crystal ? profile.crystals : profile.gold.toLocaleString()})</div>`;
       return h;
     };
     node.addEventListener('click', () => {
       if (!unlocked || maxed || poor) { sfx('error'); return; }
-      profile.gold -= cost;
+      if (u.crystal) profile.crystals -= cost; else profile.gold -= cost;
       profile.upgrades[u.id] = lv + 1;
       saveProfile();
       sfx('buy');

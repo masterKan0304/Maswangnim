@@ -133,9 +133,14 @@ export class SkillRuntime {
     const el = sk.def.element;
     const crit = Math.random() * 100 < sample(st.critChance);
     const cm = crit ? 1 + sample(st.critDamage) / 100 : 1;   // 치명타 피해량 100% → 피해 2배
-    const pen = { pct: avg(st.penPct), flat: sample(st.penetration) };
-    const mul = o.mul ?? 1;
-    const main = (o.base ?? sample(st.damage)) * mul;
+    const m = game.mods;
+    const pen = { pct: avg(st.penPct) + (m.penPct || 0), flat: sample(st.penetration) };
+    let mul = o.mul ?? 1;
+    if (sk.def.projectile && m.projDmg) mul *= 1 + m.projDmg;                                         // 투사체 스킬 피해
+    if (m.manaPower) mul *= 1 + m.manaPower * Math.floor(this.player.mana / 5);                    // 마나 비전: 현재 마나 5당
+    if (st.manaDmg) mul *= st.manaDmg;                                                               // 마나 전환: 이번 시전에 쓴 마나만큼
+    const extraFlat = sk.def.projectile && m.projSpeedDmg ? avg(st.projSpeed) * m.projSpeedDmg : 0;   // 비장의 한 발: 투사체 속도의 25%
+    const main = ((o.base ?? sample(st.damage)) + extraFlat) * mul;
     const sp = statusProb(st, o.statusRatio ?? 1);
     const common = { pen, crit, src: sk, st };
     const critAdd = crit && st.critFlat ? sample(st.critFlat) : 0;   // 치명타: 피해 × 배율 + 추가 피해
@@ -213,6 +218,8 @@ export class SkillRuntime {
       return false;
     }
     this.player.mana -= cost;
+    if (cost > 0 && game.mods.manaRefund) this.player.mana = Math.min(this.player.maxMana, this.player.mana + cost * game.mods.manaRefund);   // 마나 효율
+    if (cost > 0 && game.mods.manaToDmg) st = { ...st, manaDmg: 1 + game.mods.manaToDmg * cost };    // 마나 전환: 쓴 마나 1당 +3%
     // 발동 : 처치 버프 — 다음 공격 스킬에 문장 효과 추가 적용
     if (ATTACK_SKILLS.includes(sk.key)) {
       const bi = game.buffs.findIndex((b) => b.key === 'triggerKill');

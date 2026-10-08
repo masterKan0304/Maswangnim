@@ -1102,3 +1102,22 @@ body.in-menu #hud, body.in-menu #label-layer, body.in-menu #vignette { display: 
 .sb-passive { border-color: rgba(255,158,196,0.55) !important; background: rgba(255,158,196,0.08) !important; margin-right: 6px; }
 .sb-passive .sb-stack { display: block !important; }
 .sb-ptag { position: absolute; left: 50%; top: -9px; transform: translateX(-50%); font-size: 9px; font-weight: 900; color: #ffd0e4; background: rgba(90,30,60,0.9); padding: 0 5px; border-radius: 5px; white-space: nowrap; }
+
+/* 업그레이드 트리 (새 구조) */
+.up-lines line { stroke: rgba(255,255,255,0.14); stroke-width: 4; stroke-dasharray: 8 8; }
+.up-lines line.open { stroke: rgba(255,255,255,0.4); stroke-dasharray: none; }
+.up-lines line.on { stroke: #ffd45a; stroke-dasharray: none; filter: drop-shadow(0 0 6px rgba(255,212,90,0.7)); }
+.up-lines line.red { stroke: rgba(255,90,100,0.35); stroke-width: 3; stroke-dasharray: 6 6; }
+.up-lines line.red.on { stroke: #ff5a66; stroke-dasharray: none; filter: drop-shadow(0 0 5px rgba(255,90,100,0.7)); }
+.up-node.k-n { width: 96px; transform: translate(-50%, -26px); }
+.up-node.k-n .un-circle { width: 52px; height: 52px; }
+.up-node.k-n .un-icon .ic { width: 26px; height: 26px; }
+.up-node.k-n .un-name { font-size: 12px; margin-top: 5px; }
+.up-node.k-b .un-circle { border-color: #4f8cff; box-shadow: 0 0 14px rgba(79,140,255,0.45); background: radial-gradient(circle at 35% 30%, #2c4a8a, #182545); }
+.up-node.k-b .un-name { color: #a8ccff; }
+.up-node.k-r .un-circle { border-color: #ff5a66; box-shadow: 0 0 18px rgba(255,90,102,0.55); background: radial-gradient(circle at 35% 30%, #7a2a36, #3a1520); }
+.up-node.k-r .un-name { color: #ffb0b8; }
+.up-node.k-b.owned .un-circle, .up-node.k-r.owned .un-circle { border-color: #ffd45a; }
+.up-goldbox.crystal { color: #ffb0c8; background: rgba(255,90,140,0.1); }
+.crystal-line { margin-left: 10px; color: #ffb0c8; }
+.end-reward.crystal { color: #ffc2d6; background: rgba(255,90,140,0.12); border-color: rgba(255,120,160,0.45); }

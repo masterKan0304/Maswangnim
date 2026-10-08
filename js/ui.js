@@ -3,7 +3,7 @@ import { keyOf } from './keys.js';
 import { CHARACTERS } from './characters.js';
 import { STAGE, toStageX, toStageY, stageRect } from './stage.js';
 import { sfx } from './audio.js';
-import { game, bump, inventoryAdd } from './state.js';
+import { game, bump, inventoryAdd, xpNeed } from './state.js';
 import { INV_W, INV_H, MAX_SKILLS, MAX_SENTENCE_SLOTS, SUBJECTS, CHANGES, STAGE_TIME, DASH, ELEMENTS, xpToNext } from './config.js';
 import {
   blockLabel, colorKey, kindName, isComplete, missingCount, sentenceParts, slotChipLabel, PLACEHOLDER,
@@ -542,8 +542,10 @@ export class UI {
     for (const b of items) extras.push(...dismantle(b).slice(1));
     game.recomb = [null, null, null];
     const result = randomOfType(type, exclude);
+    const bonus = Math.random() < (game.mods.recombBonus || 0) ? [randomOfType(type)] : [];   // 재조합 활용
+    if (bonus.length) this.toast('재조합 활용! 블록을 하나 더 얻었습니다', 'pick');
     const left = [];
-    for (const b of [result, ...extras]) if (!inventoryAdd(b)) left.push(b);
+    for (const b of [result, ...bonus, ...extras]) if (!inventoryAdd(b)) left.push(b);
     if (left.length) {
       const p = game.sys.player.pos;
       game.sys.dropBlocks(left, p.x, p.z, { minD: 1.5, maxD: 2.5 });
@@ -974,7 +976,7 @@ export class UI {
     $('#mptext').textContent = `${Math.floor(pl.mana)} / ${pl.maxMana}`;
     this.renderBuffs();
     $('#hptext').textContent = `${Math.floor(pl.hp)} / ${pl.maxHp}${pl.shield > 0 ? `  (+${Math.floor(pl.shield)})` : ''}`;
-    const need = xpToNext(game.level);
+    const need = xpNeed(game.level);
     $('#xpfill').style.width = `${(game.xp / need) * 100}%`;
     $('#lvl').textContent = `Lv.${game.level}`;
     $('#xptext').textContent = `${Math.floor(game.xp)} / ${need}`;
