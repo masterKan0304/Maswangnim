@@ -118,7 +118,7 @@ export function computeMods(noUpgrades = false) {
 // ─────────────────────────────────────────────
 //  업그레이드 창 (배경 드래그로 이동, 휠로 확대/축소)
 // ─────────────────────────────────────────────
-const view = { x: null, y: null, z: 0.46 };
+const view = { x: null, y: null, z: 0.42 };
 let bound = false;
 
 function treeBounds() {
