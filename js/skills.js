@@ -547,7 +547,7 @@ export const getStats = (skill) => getResult(skill).stats;
 //  표시 / 샘플링
 // ─────────────────────────────────────────────
 export function fmtNum(key, x) {
-  if (key === 'damage' || SUBJECTS[key].element) return Math.floor(x);   // UI 에서는 소수점 버림
+  if (key === 'damage' || SUBJECTS[key].element) return Math.round(x);   // 피해량: 소수점 반올림 (실제 피해도 반올림)
   if (SUBJECTS[key].int) return Math.floor(x + 1e-9);   // 정수 스탯(관통/개수/연쇄)은 소수점 버림
   return Math.round(x * 100) / 100;
 }

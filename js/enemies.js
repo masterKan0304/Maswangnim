@@ -113,12 +113,13 @@ export class EnemyManager {
     if (element === 'fire' && e.fireVuln) amount *= 1 + e.fireVuln;   // 화염 방사 5레벨 취약
     if (!color && element) color = ELEM_NUM[element];
     if (!src) amount *= game.mods.dmgMul;   // 스킬이 아닌 피해(꽃 등)만 여기서 — 스킬 피해는 능력치에 이미 반영
+    amount = amount > 0 ? Math.max(1, Math.round(amount)) : 0;   // 실제 피해는 소수점 반올림 (최소 1)
     recordDamage(src, amount);    // DPS 표 기록
     e.hp -= amount;
     e.flash = 0.12;
     const kb = e.boss ? 0.1 : e.elite ? 0.3 : 1;
     e.kx += kx * kb; e.kz += kz * kb;
-    this.fx.numbers.spawn(e.x, 0.9 + e.r * 1.4, e.z, crit ? `${Math.floor(amount)}!` : Math.floor(amount), (color || '') + (crit ? ' crit' : ''));
+    this.fx.numbers.spawn(e.x, 0.9 + e.r * 1.4, e.z, crit ? `${amount}!` : amount, (color || '') + (crit ? ' crit' : ''));
     if (!dot) sfx('hit');
     if (e.hp <= 0) {
       e.alive = false;
