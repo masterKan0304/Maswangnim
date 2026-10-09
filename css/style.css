@@ -554,8 +554,21 @@ body.game-paused #bossbar { top: 104px; }
 .up-node.owned .un-circle { border-color: #ffd45a; box-shadow: 0 0 18px rgba(255,212,90,0.45); }
 .up-node.maxed .un-circle { border-color: #5fe39a; box-shadow: 0 0 18px rgba(95,227,154,0.5); }
 .up-node.maxed .un-cost { color: #5fe39a; }
-.up-node.affordable .un-circle { animation: afford 1.4s ease-in-out infinite; }
-@keyframes afford { 50% { box-shadow: 0 0 0 4px rgba(255,212,90,0.35), 0 0 22px rgba(255,212,90,0.6); } }
+/* 구매 가능: 은은하게 숨 쉬는 금빛 테두리 + 퍼져 나가는 고리 하나 (고리는 완전히 사라진 뒤 다음 고리 시작) */
+.up-node.affordable .un-circle { border-color: #ffd45a; }
+.up-node.affordable .un-circle::before,
+.up-node.affordable .un-circle::after {
+  content: ''; position: absolute; inset: -4px; border-radius: 50%; pointer-events: none;
+}
+.up-node.affordable .un-circle::before { box-shadow: 0 0 16px 2px rgba(255,212,90,0.45); animation: afford-breathe 2.4s ease-in-out infinite; }
+.up-node.affordable .un-circle::after { border: 2px solid rgba(255,212,90,0.9); animation: afford-ripple 2.4s cubic-bezier(.2,.6,.35,1) infinite; }
+@keyframes afford-breathe { 0%, 100% { opacity: 0.45; } 50% { opacity: 1; } }
+@keyframes afford-ripple {
+  0% { transform: scale(1); opacity: 0; }
+  12% { opacity: 0.85; }
+  70% { transform: scale(1.55); opacity: 0; }
+  100% { transform: scale(1.55); opacity: 0; }
+}
 .up-node.locked { cursor: not-allowed; }
 
 #set-body { padding: 18px 26px 24px; display: flex; flex-direction: column; gap: 18px; }
