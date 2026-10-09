@@ -118,7 +118,7 @@ export function computeMods(noUpgrades = false) {
 // ─────────────────────────────────────────────
 //  업그레이드 창 (배경 드래그로 이동, 휠로 확대/축소)
 // ─────────────────────────────────────────────
-const view = { x: null, y: null, z: 0.62 };
+const view = { x: null, y: null, z: 0.46 };
 let bound = false;
 
 function treeBounds() {
@@ -165,7 +165,7 @@ function bindTreeControls() {
     e.preventDefault();
     const r = box.getBoundingClientRect();
     const mx = (e.clientX - r.left) / STAGE.scale, my = (e.clientY - r.top) / STAGE.scale;
-    const z2 = Math.max(0.4, Math.min(1.6, view.z * (e.deltaY > 0 ? 0.9 : 1.1)));
+    const z2 = Math.max(0.35, Math.min(1.6, view.z * (e.deltaY > 0 ? 0.9 : 1.1)));
     view.x = mx - (mx - view.x) * (z2 / view.z);
     view.y = my - (my - view.y) * (z2 / view.z);
     view.z = z2;

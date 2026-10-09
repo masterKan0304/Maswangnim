@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────
 //  업그레이드 트리 (번호는 기획 그림의 순번)
 //  kind: 'n' 일반 / 'b' 파란 노드 (비싼 업그레이드) / 'r' 빨간 노드 (같은 묶음의 파란 노드를 모두 얻으면 크리스탈 1개로 구매)
-//  pos: 그림 기준 좌표 (1번이 가운데 아래) / costs: 레벨별 골드 / crystal: 크리스탈 비용
+//  위치는 layout() 이 반듯한 도형으로 계산 / costs: 레벨별 골드 / crystal: 크리스탈 비용
 // ─────────────────────────────────────────────
 import { ic } from './icons.js';
 
@@ -47,7 +47,7 @@ const FX = {
 };
 
 const G3a = [300, 350, 400], G3b = [400, 500, 600], G3c = [500, 650, 800], G1 = [1500];
-// [번호, 이름, 효과, 종류, 비용, x, y]
+// [번호, 이름, 효과, 종류, 비용, (그림 좌표 — 참고용)]
 const RAW = [
   [1, '기초 훈련', 'train', 'n', [200, 300, 400], 484, 545],
   [2, '경험치 증가', 'xp5', 'n', G3a, 383, 545], [3, '경험치 증가', 'xp5', 'n', G3a, 295, 545],
@@ -76,11 +76,52 @@ const RAW = [
   [61, '생존력 증가', 'survive', 'n', G3c, 222, 64], [62, '생존력 증가', 'survive', 'n', G3c, 104, 180],
   [63, '빠른 경험', 'xpFast', 'n', G3c, 40, 302], [64, '빠른 경험', 'xpFast', 'n', G3c, 26, 437],
 ];
-const SCALE = 1.7;
-export const NODES = RAW.map(([no, name, eff, kind, cost, x, y]) => ({
+// ── 배치: 그림의 구조를 반듯한 도형으로 다시 계산 (1번이 원점, 위쪽이 -y) ──
+// 왼쪽부터 삼각형 > 사각형(마름모) > 원 > 사각형 > 삼각형, 바깥은 반원
+function layout() {
+  const P = {};
+  const mid = (a, b) => ({ x: (P[a].x + P[b].x) / 2, y: (P[a].y + P[b].y) / 2 });
+  const path = (from, to, ids) => ids.forEach((id, i) => {
+    const t = (i + 1) / (ids.length + 1);
+    P[id] = { x: P[from].x + (P[to].x - P[from].x) * t, y: P[from].y + (P[to].y - P[from].y) * t };
+  });
+  P[1] = { x: 0, y: 0 };
+  // 삼각형 (밑변이 바닥에 놓인 정삼각형) — 왼쪽: 4 오른쪽 아래, 6 왼쪽 아래, 8 위 / 오른쪽은 대칭
+  const S = 430, H = S * Math.sqrt(3) / 2, TX = 600;
+  P[4] = { x: -TX, y: 0 }; P[6] = { x: -TX - S, y: 0 }; P[8] = { x: -TX - S / 2, y: -H };
+  P[47] = { x: TX, y: 0 }; P[51] = { x: TX + S, y: 0 }; P[49] = { x: TX + S / 2, y: -H };
+  P[10] = { x: -TX - S / 2, y: -H / 3 }; P[53] = { x: TX + S / 2, y: -H / 3 };
+  Object.assign(P, { 5: mid(4, 6), 7: mid(6, 8), 9: mid(8, 4), 52: mid(51, 47), 48: mid(47, 49), 50: mid(49, 51) });
+  // 마름모 (꼭짓점이 위/아래/좌/우) — 아래 꼭짓점이 1번에서 140° / 40° 방향, 거리 600
+  const RD = 205;
+  const dia = (cx, cy, [b, l, t, r], red, [bl, tl, tr, br]) => {
+    P[b] = { x: cx, y: cy + RD }; P[l] = { x: cx - RD, y: cy }; P[t] = { x: cx, y: cy - RD }; P[r] = { x: cx + RD, y: cy };
+    P[red] = { x: cx, y: cy };
+    P[bl] = mid(b, l); P[tl] = mid(l, t); P[tr] = mid(t, r); P[br] = mid(r, b);
+  };
+  const ex = 600 * Math.cos(40 * Math.PI / 180), ey = 600 * Math.sin(40 * Math.PI / 180);
+  dia(-ex, -ey - RD, [13, 15, 17, 19], 21, [14, 16, 18, 20]);
+  dia(ex, -ey - RD, [35, 37, 39, 41], 43, [36, 38, 40, 42]);
+  // 원 (위쪽 가운데)
+  const DC = 810, RC = 205, cy = -DC;
+  P[24] = { x: 0, y: cy + RC }; P[26] = { x: -RC, y: cy }; P[28] = { x: 0, y: cy - RC }; P[30] = { x: RC, y: cy }; P[32] = { x: 0, y: cy };
+  const d45 = RC * Math.SQRT1_2;
+  P[25] = { x: -d45, y: cy + d45 }; P[27] = { x: -d45, y: cy - d45 }; P[29] = { x: d45, y: cy - d45 }; P[31] = { x: d45, y: cy + d45 };
+  // 1번에서 각 묶음으로 가는 길 (노드 2개씩 같은 간격)
+  path(1, 4, [2, 3]); path(1, 13, [11, 12]); path(1, 24, [22, 23]); path(1, 35, [33, 34]); path(1, 47, [45, 46]);
+  // 바깥 반원: 64(왼쪽) → 54(오른쪽), 같은 각도 간격
+  const RA = 1150, arc = [64, 63, 62, 61, 60, 59, 58, 57, 56, 55, 54];
+  arc.forEach((id, i) => {
+    const ang = (170 - i * 16) * Math.PI / 180;
+    P[id] = { x: Math.cos(ang) * RA, y: -Math.sin(ang) * RA };
+  });
+  return P;
+}
+const POS = layout();
+export const NODES = RAW.map(([no, name, eff, kind, cost]) => ({
   id: `u${no}`, no, name, eff, kind, ...FX[eff], iconHtml: ic(FX[eff].icon),
   costs: cost === 'c' ? null : cost, crystal: cost === 'c' ? 1 : 0, max: cost === 'c' ? 1 : cost.length,
-  x: (x - 484) * SCALE, y: (y - 545) * SCALE,
+  x: Math.round(POS[no].x), y: Math.round(POS[no].y),
 }));
 export const NODE = Object.fromEntries(NODES.map((n) => [n.id, n]));
 

@@ -556,7 +556,7 @@ body.game-paused #bossbar { top: 104px; }
 .up-node.maxed .un-cost { color: #5fe39a; }
 .up-node.affordable .un-circle { animation: afford 1.4s ease-in-out infinite; }
 @keyframes afford { 50% { box-shadow: 0 0 0 4px rgba(255,212,90,0.35), 0 0 22px rgba(255,212,90,0.6); } }
-.up-node.locked { opacity: 0.4; cursor: not-allowed; }
+.up-node.locked { cursor: not-allowed; }
 
 #set-body { padding: 18px 26px 24px; display: flex; flex-direction: column; gap: 18px; }
 .set-sec { display: flex; flex-direction: column; gap: 10px; }
@@ -1121,3 +1121,9 @@ body.in-menu #hud, body.in-menu #label-layer, body.in-menu #vignette { display: 
 .up-goldbox.crystal { color: #ffb0c8; background: rgba(255,90,140,0.1); }
 .crystal-line { margin-left: 10px; color: #ffb0c8; }
 .end-reward.crystal { color: #ffc2d6; background: rgba(255,90,140,0.12); border-color: rgba(255,120,160,0.45); }
+
+/* 아직 못 사는 업그레이드: 투명하게 하지 않고 어둡게 칠해 뒤의 연결선이 비치지 않게 */
+.up-node.locked .un-circle { filter: grayscale(0.85) brightness(0.45); }
+.up-node.locked .un-name { color: #6e7290 !important; }
+.up-node.locked .un-cost { color: #6e7290; }
+.up-node .un-name, .up-node .un-cost { position: relative; z-index: 1; padding: 0 4px; border-radius: 6px; background: rgba(17,19,42,0.85); }
