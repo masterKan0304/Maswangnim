@@ -105,6 +105,41 @@ export function isUnlocked(u) {
   if (CLUSTERS[u.id]) return CLUSTERS[u.id].every((b) => levelOf(b) > 0);
   return neighborsOf(u.id).some((n) => levelOf(n) > 0);
 }
+// 반환: 한 레벨을 돌려받을 때의 값 / 반환해도 다른 업그레이드가 끊기지 않는지
+const refundOf = (u, lv) => (u.crystal ? { crystal: u.crystal, gold: 0 } : { gold: u.costs[Math.min(lv - 1, u.costs.length - 1)], crystal: 0 });
+function canRefund(u) {
+  const lv = levelOf(u.id);
+  if (lv <= 0) return false;
+  if (lv > 1) return true;   // 레벨만 내려가면 연결은 그대로
+  // 0레벨이 되어도 남은 업그레이드가 모두 1번에서 이어지고, 빨간 노드의 조건도 지켜지는지
+  const owned = new Set(NODES.filter((n) => n.id !== u.id && levelOf(n.id) > 0).map((n) => n.id));
+  if (!owned.size) return true;
+  if (!owned.has(ROOT)) return false;
+  const seen = new Set([ROOT]), queue = [ROOT];
+  while (queue.length) {
+    const id = queue.shift();
+    for (const nb of neighborsOf(id)) if (owned.has(nb) && !seen.has(nb)) { seen.add(nb); queue.push(nb); }
+  }
+  for (const id of owned) {
+    if (CLUSTERS[id]) { if (!CLUSTERS[id].every((b) => owned.has(b))) return false; }
+    else if (!seen.has(id)) return false;
+  }
+  return true;
+}
+// 전체 반환 시 돌려받는 골드 / 크리스탈
+export function refundTotal() {
+  let gold = 0, crystal = 0;
+  for (const u of NODES) for (let l = levelOf(u.id); l > 0; l--) { const r = refundOf(u, l); gold += r.gold; crystal += r.crystal; }
+  return { gold, crystal };
+}
+export function refundAll() {
+  const t = refundTotal();
+  profile.gold += t.gold; profile.crystals += t.crystal;
+  profile.upgrades = {};
+  saveProfile();
+  return t;
+}
+
 const lockReason = (u) => (CLUSTERS[u.id]
   ? `${CLUSTERS[u.id].map((b) => `"${NODE[b].name}"`).join(', ')}을(를) 모두 얻어야 합니다.`
   : '연결된 업그레이드를 하나 이상 얻어야 합니다.');
@@ -182,6 +217,18 @@ export function renderUpgrades(onGold) {
   if (cr) cr.textContent = profile.crystals;
   // 처음 열면 트리 전체가 보이도록 (기초 훈련이 아래 가운데)
   if (view.x == null) { view.x = box.clientWidth / 2; view.y = box.clientHeight - 70; }
+  // 전체 반환 버튼 (오른쪽 아래) → 확인 창
+  const all = document.getElementById('up-refund-all');
+  all.disabled = !NODES.some((n) => levelOf(n.id) > 0);
+  all.onclick = () => {
+    const t = refundTotal();
+    const pop = document.getElementById('up-confirm');
+    pop.querySelector('.uc-msg').innerHTML = `구매한 업그레이드를 모두 반환할까요?<br>${ic('coin')} <b>${t.gold.toLocaleString()}</b> 골드${t.crystal ? `와 ${ic('gem')} 크리스탈 <b>${t.crystal}</b>개` : ''}를 돌려받습니다.`;
+    pop.classList.remove('hidden');
+    sfx('open');
+    pop.querySelector('.uc-ok').onclick = () => { refundAll(); pop.classList.add('hidden'); sfx('discard'); renderUpgrades(onGold); if (onGold) onGold(); };
+    pop.querySelector('.uc-cancel').onclick = () => { pop.classList.add('hidden'); sfx('close'); };
+  };
   const layer = document.createElement('div');
   layer.id = 'up-canvas';
   box.appendChild(layer);
@@ -223,11 +270,29 @@ export function renderUpgrades(onGold) {
       <div class="un-cost${poor ? ' poor' : ''}">${costHtml}</div>`;
     node._tip = () => {
       let h = `<div class="tip-title">${u.iconHtml} ${u.name} <span class="tip-dim">${u.max > 1 ? `Lv.${lv}/${u.max}` : lv ? '획득' : ''}</span></div><div>${u.max > 1 ? '레벨마다 ' : ''}${u.desc}</div>`;
-      if (u.kind === 'r') h += '<div class="tip-dim">크리스탈은 스테이지를 클리어할 때마다 1개 얻습니다.</div>';
+      if (u.kind === 'r') h += '<div class="tip-dim">크리스탈은 스테이지를 처음 클리어하면 얻습니다.</div>';
       if (!unlocked) h += `<div class="tip-warn">${ic('lock')} ${lockReason(u)}</div>`;
       else if (maxed) h += '<div class="tip-ok">최대 레벨입니다.</div>';
       else h += `<div class="${poor ? 'tip-warn' : 'tip-ok'}">비용은 ${u.crystal ? `${ic('gem')} 크리스탈 ${cost}개` : `${ic('coin')} ${cost.toLocaleString()}`}입니다. (보유 ${u.crystal ? profile.crystals : profile.gold.toLocaleString()})</div>`;
+      if (lv > 0) {
+        const r = refundOf(u, lv);
+        h += canRefund(u)
+          ? `<div class="tip-dim">우클릭하면 ${u.max > 1 ? '1레벨을 ' : ''}반환하고 ${r.crystal ? `${ic('gem')} 크리스탈 ${r.crystal}개` : `${ic('coin')} ${r.gold.toLocaleString()}`}를 돌려받습니다.</div>`
+          : '<div class="tip-dim">이 업그레이드를 거쳐 얻은 다른 업그레이드가 있어 반환할 수 없습니다.</div>';
+      }
       return h;
+    };
+    // 우클릭: 한 레벨 반환 (다른 업그레이드가 끊기지 않을 때만)
+    node._rclick = () => {
+      if (!canRefund(u)) { sfx('error'); return; }
+      const r = refundOf(u, lv);
+      profile.gold += r.gold; profile.crystals += r.crystal;
+      profile.upgrades[u.id] = lv - 1;
+      if (!profile.upgrades[u.id]) delete profile.upgrades[u.id];
+      saveProfile();
+      sfx('discard');
+      renderUpgrades(onGold);
+      if (onGold) onGold();
     };
     node.addEventListener('click', () => {
       if (!unlocked || maxed || poor) { sfx('error'); return; }

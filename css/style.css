@@ -1163,3 +1163,16 @@ body.in-menu #hud, body.in-menu #label-layer, body.in-menu #vignette { display: 
 #timer-fast.strong { color: #ffd27a; font-size: 14px; animation-duration: 0.45s; }
 #timer-fast .ic { width: 15px; height: 15px; }
 @keyframes fast-blink { 50% { opacity: 0.55; } }
+
+/* 업그레이드: 전체 반환 버튼 / 확인 창 */
+#view-upgrade { position: absolute; }
+#up-refund-all { position: absolute; right: 18px; bottom: 16px; z-index: 3; min-width: 0; padding: 9px 20px; font-size: 16px; background: rgba(40,30,50,0.92); border-color: rgba(255,140,160,0.45); color: #ffc2cc; }
+#up-refund-all:hover:not(:disabled) { background: rgba(80,40,60,0.95); }
+#up-refund-all:disabled { opacity: 0.35; cursor: default; }
+#up-confirm { position: absolute; inset: 0; z-index: 10; display: grid; place-items: center; background: rgba(8,9,20,0.6); }
+.uc-box { width: 380px; padding: 20px 22px 18px; border-radius: 18px; text-align: center; background: var(--panel); border: 1px solid var(--line); box-shadow: 0 20px 50px rgba(0,0,0,0.55); animation: card-in 0.18s ease-out; }
+.uc-title { font-family: 'Jua', sans-serif; font-size: 24px; margin-bottom: 8px; }
+.uc-msg { font-size: 14px; color: #d6d9f5; line-height: 1.7; margin-bottom: 16px; }
+.uc-msg .ic { width: 16px; height: 16px; vertical-align: -0.2em; }
+.uc-btns { display: flex; gap: 10px; justify-content: center; }
+.uc-btns .menu-btn { min-width: 120px; }
