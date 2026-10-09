@@ -20,7 +20,7 @@ export const game = {
   masteryLevel: 1,       // 그 캐릭터의 숙련도 (전용 스킬 해금)
   demo: false,           // 메인 화면 미리보기 중
   tutorial: null,        // 튜토리얼 진행 객체 (튜토리얼 스테이지일 때)
-  overkill: 180,         // 오버킬 시간 (보이지 않음)
+  overkill: 120,         // 오버킬 시간 (보이지 않음, 시작 2분 · 최대 3분)
   timeMul: 1,            // 스테이지 시간 가속 배율 (오버킬)
   elite: null,
   eliteIdx: 0,

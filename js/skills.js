@@ -512,6 +512,13 @@ export function computeStats(skill, extra = [], scale = 1) {
 function applyUpgradeStats(skill, st) {
   const m = game.mods || {}, d = skill.def;
   const mul = (k, f) => { if (f && f !== 1 && st[k]) st[k] = { min: st[k].min * f, max: st[k].max * f }; };
+  // 피해량: 투사체 속도 비례 추가 피해(비장의 한 발) → 스킬 피해 % · 투사체 스킬 피해 % (문장으로 얻은 속성 피해에도)
+  if (d.projectile && m.projSpeedDmg && st.damage.max > 0) {
+    const add = ((st.projSpeed.min + st.projSpeed.max) / 2) * (m.projSpeedMul || 1) * m.projSpeedDmg;
+    st.damage = { min: st.damage.min + add, max: st.damage.max + add };
+  }
+  const dmgF = (m.dmgMul || 1) * (d.projectile && m.projDmg ? 1 + m.projDmg : 1);
+  for (const k of ['damage', 'fireDmg', 'iceDmg', 'lightningDmg']) mul(k, dmgF);
   mul('area', m.areaMul);
   mul('range', m.rangeMul);
   if (d.projectile || d.relevant.includes('projSpeed')) {

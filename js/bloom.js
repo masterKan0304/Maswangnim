@@ -272,9 +272,14 @@ export class Bloom {
         fr.mesh.position.y = 0.6 + k * 0.35;
         fr.mesh.rotation.y += dt * 3;
         if (k < 1) continue;
+        // 다 자란 열매: 범위 안에 적이 없으면 꽃 위에서 기다림 (살랑살랑 흔들리며)
+        fr.mesh.position.y = 0.95 + Math.sin(fr.t * 3) * 0.06;
+        fr.waitT = (fr.waitT || 0) - dt;
+        if (fr.waitT > 0) continue;
+        fr.waitT = 0.2;
         const tgt = this.pickTarget(fr.x, fr.z);
+        if (!tgt) continue;
         this.fruits = this.fruits.filter((x) => x !== fr);
-        if (!tgt) { this.scene.remove(fr.mesh); fr.mat.dispose(); continue; }
         this.fruits.push(this.throwFruit(fr, tgt.x, tgt.z, fr.mesh));
         // 투사체 개수가 늘어나면 나머지는 목표 주위 20 범위 안 무작위 위치로
         for (let i = 0; i < fr.extra; i++) {

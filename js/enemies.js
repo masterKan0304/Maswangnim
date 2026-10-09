@@ -112,7 +112,7 @@ export class EnemyManager {
     if (e.shockT > 0) amount *= 1 + STATUS.shockAmp;
     if (element === 'fire' && e.fireVuln) amount *= 1 + e.fireVuln;   // 화염 방사 5레벨 취약
     if (!color && element) color = ELEM_NUM[element];
-    amount *= game.mods.dmgMul;   // 업그레이드: 모든 피해 증가
+    if (!src) amount *= game.mods.dmgMul;   // 스킬이 아닌 피해(꽃 등)만 여기서 — 스킬 피해는 능력치에 이미 반영
     recordDamage(src, amount);    // DPS 표 기록
     e.hp -= amount;
     e.flash = 0.12;

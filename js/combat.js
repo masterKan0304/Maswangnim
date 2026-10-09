@@ -136,11 +136,9 @@ export class SkillRuntime {
     const m = game.mods;
     const pen = { pct: avg(st.penPct) + (m.penPct || 0), flat: sample(st.penetration) };
     let mul = o.mul ?? 1;
-    if (sk.def.projectile && m.projDmg) mul *= 1 + m.projDmg;                                         // 투사체 스킬 피해
     if (m.manaPower) mul *= 1 + m.manaPower * Math.floor(this.player.mana / 5);                    // 마나 비전: 현재 마나 5당
     if (st.manaDmg) mul *= st.manaDmg;                                                               // 마나 전환: 이번 시전에 쓴 마나만큼
-    const extraFlat = sk.def.projectile && m.projSpeedDmg ? avg(st.projSpeed) * m.projSpeedDmg : 0;   // 비장의 한 발: 투사체 속도의 25%
-    const main = ((o.base ?? sample(st.damage)) + extraFlat) * mul;
+    const main = (o.base ?? sample(st.damage)) * mul;   // 스킬 피해 업그레이드는 능력치(st.damage)에 이미 들어 있음
     const sp = statusProb(st, o.statusRatio ?? 1);
     const common = { pen, crit, src: sk, st };
     const critAdd = crit && st.critFlat ? sample(st.critFlat) : 0;   // 치명타: 피해 × 배율 + 추가 피해
@@ -545,7 +543,8 @@ export class SkillRuntime {
     const n = sampleInt(st.projCount);
     const gen = () => ({ size: sample(st.projSize) / PZ, speed: sample(st.projSpeed) * PS, life: sample(st.duration), pierce: sampleInt(st.pierce) });
     for (let i = 0; i < n; i++) {
-      const a = spreadAngle(base, i);
+      // 여러 개면 처음에는 부채꼴로 벌어져 나감 (유도는 날아가며 점점 대상 쪽으로 휨)
+      const a = n > 1 ? base + (i - (n - 1) / 2) * 32 * DEG : base;
       const dx = Math.cos(a), dz = Math.sin(a);
       this.spawnProj({
         kind: 'leaf', sk, ...gen(), gen, x: p.pos.x + dx * 0.4, z: p.pos.z + dz * 0.4, y: 0.6, dx, dz, st,
@@ -1151,7 +1150,7 @@ export class SkillRuntime {
         ib.tick += ib.sk.def.tick;
         for (const e of this.enemies.query(ib.x, ib.z, radius + 2.2)) {
           if (e.alive && Math.hypot(e.x - ib.x, e.z - ib.z) < radius + e.r) {
-            this.deal(e, ib.sk, st, { base: sample(ib.contact), statusRatio: ib.sk.def.contactChanceRatio });
+            this.deal(e, ib.sk, st, { base: sample(ib.contact) * (game.mods.dmgMul || 1), statusRatio: ib.sk.def.contactChanceRatio });
           }
         }
       }
@@ -1232,7 +1231,10 @@ export class SkillRuntime {
         if (t) {
           const want = Math.atan2(t.z - p.z, t.x - p.x), cur = Math.atan2(p.dz, p.dx);
           const diff = Math.atan2(Math.sin(want - cur), Math.cos(want - cur));
-          const turn = (p.kind === 'root' ? 60 : 9) * dt;   // 뿌리 추적: 매우 빠르게 방향을 바꿔 바로 닿음
+          // 뿌리: 매우 빠르게 바로 꺾임 / 이파리: 멀 때는 천천히, 가까워질수록 급격히 빠르게 회전
+          const dist = Math.hypot(t.x - p.x, t.z - p.z);
+          const near = Math.max(0, 1 - dist / 9);
+          const turn = (p.kind === 'root' ? 60 : 1.2 + 26 * near * near * near) * dt;
           const a = cur + Math.max(-turn, Math.min(turn, diff));
           p.dx = Math.cos(a); p.dz = Math.sin(a);
         }

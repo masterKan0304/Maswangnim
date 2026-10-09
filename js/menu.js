@@ -163,8 +163,8 @@ function renderStages() {
   detail.className = 'stage-detail';
   detail.innerHTML = `<div class="sd-name">${stageLabel(cur)}</div><div class="sd-desc">${cur.desc}</div>
     <div class="sd-info"><span>${ic('swirl')} 진행 시간 : ${cur.time}</span><span>${ic('flag')} ${cur.clear}</span></div>
-    <div class="sd-reward${got ? ' got' : ''}"><span class="sdr-label">첫 클리어 보상</span><span class="sdr-item">${ic('coin')} ${cur.reward.gold.toLocaleString()}</span>${got ? `<span class="sdr-check">✔</span>` : ''}</div>`;
-  detail.querySelector('.sd-reward')._tip = () => `<div class="tip-title">첫 클리어 보상</div><div>처음 클리어하면 ${ic('coin')} <b>${cur.reward.gold.toLocaleString()}</b> 골드를 받습니다.</div>`
+    <div class="sd-reward${got ? ' got' : ''}"><span class="sdr-label">첫 클리어 보상</span><span class="sdr-item">${ic('coin')} ${cur.reward.gold.toLocaleString()}</span>${cur.reward.crystal ? `<span class="sdr-item crystal">${ic('gem')} ${cur.reward.crystal}</span>` : ''}${got ? `<span class="sdr-check">✔</span>` : ''}</div>`;
+  detail.querySelector('.sd-reward')._tip = () => `<div class="tip-title">첫 클리어 보상</div><div>처음 클리어하면 ${ic('coin')} <b>${cur.reward.gold.toLocaleString()}</b> 골드${cur.reward.crystal ? `와 ${ic('gem')} 크리스탈 <b>${cur.reward.crystal}</b>개` : ''}를 받습니다.</div>`
     + (got ? '<div class="tip-ok">이미 받은 보상입니다.</div>' : '<div class="tip-dim">보상은 한 번만 받을 수 있습니다.</div>');
   const start = document.createElement('button');
   start.className = 'big-btn';

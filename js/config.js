@@ -2,8 +2,8 @@
 //  게임 전역 설정값
 // ─────────────────────────────────────────────
 export const STAGE_TIME = 600;
-// 오버킬: 맵의 적이 적으면 줄고(30 이하), 많으면 늘어남(90 이상, 최대 3분). 1분 이하면 스테이지 시간 1.5배, 0이면 2배
-export const OVERKILL = { max: 180, low: 30, high: 90, fast: 60, mul1: 1.5, mul2: 2 };          // 보스 등장까지 (초)
+// 오버킬: 2분에서 시작, 맵의 적이 적으면 줄고(30 이하), 많으면 늘어남(90 이상, 최대 3분). 1분 이하면 스테이지 시간 1.5배, 0이면 2배
+export const OVERKILL = { start: 120, max: 180, low: 30, high: 90, fast: 60, mul1: 1.5, mul2: 2 };          // 보스 등장까지 (초)
 export const WORLD_HALF = 58;           // 플레이 가능 영역 반경 (정사각형 half size)
 export const PAUSE_ON_MENU = true;      // 인벤토리/스킬 창을 열면 게임 일시정지
 export const INV_W = 10;
@@ -62,7 +62,7 @@ export const SUBJECTS = {
   manaCost:  { name: '마나 소모량',  min: 0,               desc: '스킬을 사용할 때 소모하는 마나입니다.' },
   cooldown:  { name: '스킬 쿨타임',  min: 0.1, unit: '초', sentenceUnit: '초', noWord: true, desc: '스킬을 다시 사용하기까지의 시간입니다.' },
   // 스킬 가속: 최종 쿨타임 = 기본 쿨타임 × 100 ÷ (100 + 스킬 가속) — 액티브 스킬에만 적용, 높을수록 효과가 점점 줄어듦
-  haste:     { name: '스킬 가속',    min: 0, pctAdd: true, desc: '스킬 쿨타임이 줄어듭니다. 쿨타임 = 기본 × 100 ÷ (100 + 스킬 가속). 액티브 스킬에만 적용됩니다.' },
+  haste:     { name: '스킬 가속',    min: 0, pctAdd: true, desc: '스킬 쿨타임이 줄어듭니다. 값이 높을수록 줄어드는 정도가 점점 작아지며, 액티브 스킬에만 적용됩니다.' },
 };
 // 공격 스킬이면 공통으로 사용하는 스탯
 export const DAMAGE_EXTRA = ['fireDmg', 'iceDmg', 'lightningDmg', 'critChance', 'critDamage', 'critFlat', 'penetration', 'penPct'];

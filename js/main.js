@@ -476,6 +476,7 @@ function startGame(stageId = 1) {
   game.stage = stageId;
   game.accountLevel = profile.accountLevel;
   const tut = stageById(stageId).tutorial;
+  game.overkill = OVERKILL.start;   // 오버킬 시간: 2분에서 시작
   game.charId = tut ? 'masang' : (CHARACTERS[profile.character] ? profile.character : DEFAULT_CHARACTER);   // 튜토리얼은 마솽
   game.masteryLevel = masteryOf(game.charId).lv;
   game.mods = computeMods(tut);   // 튜토리얼: 업그레이드 효과 없음
@@ -531,13 +532,10 @@ function showEndScreen(kind) {
       profile.cleared.push(game.stage);
       profile.gold += st.reward.gold;
       rewardGold = st.reward.gold;
-      rewardHtml = `<div class="end-reward">${ic('crown')} 첫 클리어 보상 · ${ic('coin')} <b>+${st.reward.gold.toLocaleString()}</b> 골드</div>`;
+      if (st.reward.crystal) profile.crystals = (profile.crystals || 0) + st.reward.crystal;   // 크리스탈도 첫 클리어 때만
+      rewardHtml = `<div class="end-reward">${ic('crown')} 첫 클리어 보상 · ${ic('coin')} <b>+${st.reward.gold.toLocaleString()}</b> 골드${st.reward.crystal ? ` · ${ic('gem')} 크리스탈 <b>+${st.reward.crystal}</b>` : ''}</div>`;
     }
     profile.stage = lastStartable(profile.cleared).id;   // 시작할 수 있는 마지막 스테이지를 자동 선택
-    if (!st.tutorial) {
-      profile.crystals = (profile.crystals || 0) + 1;
-      rewardHtml += `<div class="end-reward crystal">${ic('gem')} 클리어 보상 · 크리스탈 <b>+1</b> <span class="tip-dim">(보유 ${profile.crystals})</span></div>`;
-    }
   }
   const xpGain = Math.floor(game.totalXp);
   // 계정 경험치 = 이번에 얻은 골드(경험치 환산 + 첫 클리어 보상)의 25%, 숙련도 = 그 계정 경험치의 75%

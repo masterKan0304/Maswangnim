@@ -384,6 +384,38 @@ export class UI {
     return h;
   }
 
+  // 오버킬 가속: 타이머 아래 '시간 가속 중!!' + 뒤에서 피어오르는 불꽃 (1.5배는 살살, 2배는 확 타오름)
+  updateTimerFire() {
+    const lvl = game.bossSpawned || game.state !== 'playing' ? 0 : game.timeMul >= 2 ? 2 : game.timeMul > 1 ? 1 : 0;
+    const tag = $('#timer-fast'), fire = $('#timer-fire');
+    if (this._fireLvl !== lvl) {
+      this._fireLvl = lvl;
+      tag.classList.toggle('hidden', !lvl);
+      tag.classList.toggle('strong', lvl === 2);
+      tag.innerHTML = `${ic('fire')} 시간 가속 중!!`;
+      fire.className = lvl ? `lv${lvl}` : '';
+    }
+    if (!lvl) return;
+    const now = performance.now();
+    const gap = lvl === 2 ? 22 : 90;   // 불씨가 피어오르는 간격 (ms)
+    if (now - (this._emberT || 0) < gap) return;
+    this._emberT = now;
+    const n = lvl === 2 ? 2 : 1;
+    for (let i = 0; i < n; i++) {
+      const e = document.createElement('i');
+      const big = lvl === 2 ? 1 : 0.6;
+      const size = (6 + Math.random() * 10) * big;
+      e.style.left = `${8 + Math.random() * 84}%`;
+      e.style.width = e.style.height = `${size}px`;
+      e.style.setProperty('--dx', `${(Math.random() - 0.5) * 30}px`);
+      e.style.setProperty('--rise', `${(lvl === 2 ? 40 : 22) + Math.random() * (lvl === 2 ? 30 : 14)}px`);
+      e.style.animationDuration = `${0.6 + Math.random() * 0.6}s`;
+      e.style.background = ['#ffd27a', '#ff9a3a', '#ff5a1a', '#fff0b0'][Math.floor(Math.random() * 4)];
+      e.addEventListener('animationend', () => e.remove());
+      fire.appendChild(e);
+    }
+  }
+
   // ── 스킬 바 ───────────────────────────
   buildSkillbar() {
     this.sbSlots = [];
@@ -991,6 +1023,7 @@ export class UI {
     // 오버킬 가속: 1.5배는 조금 붉게, 2배는 강하게 붉게 + 불타는 효과
     $('#timer').classList.toggle('fast1', !game.bossSpawned && game.timeMul > 1 && game.timeMul < 2);
     $('#timer').classList.toggle('fast2', !game.bossSpawned && game.timeMul >= 2);
+    this.updateTimerFire();
     $('#killnum').textContent = game.kills;
     this.updateBossBars();
 

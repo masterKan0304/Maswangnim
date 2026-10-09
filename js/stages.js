@@ -9,13 +9,13 @@ export const STAGES = [
     time: '제한 없음', clear: '모든 퀘스트 완료 시 클리어', reward: { gold: 2000 } },
   { id: 1, name: '초원', no: 'STAGE 1', map: 'meadow', icon: 'leaf', ready: true, colors: ['#8fd35c', '#3f8f3a'],
     desc: '푸른 초원에서 몰려오는 슬라임을 버티고 킹 슬라임을 쓰러뜨리세요.',
-    time: '10분', clear: '보스 처치 시 클리어', reward: { gold: 5000 } },
+    time: '10분', clear: '보스 처치 시 클리어', reward: { gold: 5000, crystal: 1 } },
   { id: 2, name: '설원', no: 'STAGE 2', map: 'snowfield', icon: 'snowflake', ready: false, colors: ['#d8f2ff', '#6fa8d8'],
     desc: '얼어붙은 설원입니다. 준비 중인 스테이지입니다.',
-    time: '10분', clear: '보스 처치 시 클리어', reward: { gold: 8000 } },
+    time: '10분', clear: '보스 처치 시 클리어', reward: { gold: 8000, crystal: 1 } },
   { id: 3, name: '화산', no: 'STAGE 3', map: 'volcano', icon: 'fire', ready: false, colors: ['#ff9a5a', '#a8321e'],
     desc: '용암이 흐르는 화산입니다. 준비 중인 스테이지입니다.',
-    time: '10분', clear: '보스 처치 시 클리어', reward: { gold: 12000 } },
+    time: '10분', clear: '보스 처치 시 클리어', reward: { gold: 12000, crystal: 1 } },
 ];
 
 // 맵 (미리보기 화면에서 맵들을 오가며 보여 줌)
