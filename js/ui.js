@@ -9,7 +9,7 @@ import {
   blockLabel, colorKey, kindName, isComplete, missingCount, sentenceParts, slotChipLabel, PLACEHOLDER,
   evalNumber, fmtValue, slotAccepts, sentenceAccepts, dismantle, OP_SYMBOL, numText, blockSig, randomOfType, TEMPLATE_INFO, RARITY_NAME,
 } from './blocks.js';
-import { getResult, baseStats, fmtStat, statText, statLabel, shownStats, extraLines, maxStacks, getStats, avg, enchantReq, triggerGoal, milestoneText } from './skills.js';
+import { getResult, baseStats, fmtStat, statText, statLabel, shownStats, extraLines, maxStacks, getStats, avg, enchantReq, triggerGoal, milestoneText, fruitNeed } from './skills.js';
 
 const $ = (s) => document.querySelector(s);
 function el(tag, cls, html) {
@@ -443,7 +443,7 @@ export class UI {
       s.querySelector('.sb-icon').innerHTML = sk ? sk.def.icon : '';
       s.classList.toggle('auto', !!(sk && sk.auto && !sk.def.passive));
       s.classList.toggle('passive', !!(sk && sk.def.passive));
-      s.classList.toggle('stacked', !!(sk && (sk.key === 'frostBarrier' || sk.key === 'triggerKill' || sk.key === 'enchant' || sk.key === 'worldSeed')));
+      s.classList.toggle('stacked', !!(sk && (sk.key === 'frostBarrier' || sk.key === 'triggerKill' || sk.key === 'enchant' || sk.key === 'worldSeed' || sk.key === 'fruit')));
       if (sk) s.style.setProperty('--sc', sk.def.color);
       s._tip = sk ? () => this.skillTip(sk) : null;
       s._click = sk && !sk.def.passive ? () => { game.sys.skillsRt.tryCast(sk, true); } : null;
@@ -996,6 +996,7 @@ export class UI {
       if (e.stunT > 0) st.push([ic('stun'), '기절', 'earth', e.stunT]);
       if (e.fearT > 0) st.push([ic('moon'), '공포', 'dark', e.fearT]);
       if (e.consT > 0) st.push([ic('sun'), '축성', 'radiant', e.consT]);
+      if (e.resDownT > 0 && e.resDown > 0) st.push([ic('rock'), `모든 저항 -${e.resDown}`, 'earth', 0]);
       if (e.fireVuln > 0) st.push([ic('flamewave'), `화염 취약 +${Math.round(e.fireVuln * 100)}%`, 'fire', 0]);
       const key = st.map((x) => x[1]).join('|');
       const sd = d.querySelector('.bb-status');
@@ -1065,6 +1066,8 @@ export class UI {
         s.querySelector('.sb-stack').textContent = `${Math.floor(Math.min(1, (sk.xpAcc || 0) / enchantReq(sk)) * 100)}%`;
       } else if (sk.key === 'worldSeed') {
         s.querySelector('.sb-stack').textContent = Math.floor(sk.stacks);
+      } else if (sk.key === 'fruit') {
+        s.querySelector('.sb-stack').textContent = `${sk.stacks}/${fruitNeed(sk)}`;   // 꽃 중첩 / 필요한 꽃 수
       } else if (sk.def.passive) {
         frac = 0;
       } else if (sk.flame || sk.honey) {

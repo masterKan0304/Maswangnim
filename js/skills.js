@@ -176,13 +176,13 @@ Object.assign(SKILL_DEFS, {
   fruit: {
     key: 'fruit', name: '열매 맺기', icon: ic('fruit'), color: '#ff5a6e', element: null, passive: true, owner: 'masang',
     short: '꽃이 일정 수 피어날 때마다 열매가 자라 적이 많은 곳으로 던져집니다.',
-    desc: '매 5번째로 피어난 꽃에서 열매가 자라, 열매 기준 가장 가까운 적에게 던져집니다. 열매는 범위 안의 적에게 피해를 주고 바깥으로 밀쳐냅니다. 투사체가 늘어나면 남은 열매는 목표 주위 20 범위에 떨어집니다.',
+    desc: '꽃이 피어날 때마다 중첩을 1 얻고, 중첩이 필요한 꽃 수(5)에 도달하면 그만큼 소모해 그 꽃에서 열매가 자랍니다. 열매가 자랄 때마다 3초간 필요한 꽃 수가 2 늘어납니다. (중첩됨) 열매는 가장 가까운 적에게 던져져 범위 안의 적에게 피해를 주고 바깥으로 밀쳐냅니다. 투사체가 늘어나면 남은 열매는 목표 주위 20 범위에 떨어집니다.',
     keywords: ['투사체', '효과 범위', '꽃', '패시브'],
     base: { damage: [15, 30], area: 25, projSpeed: 5, projCount: 1 },
     relevant: ['damage', 'area', 'projSpeed', 'projCount'],
     levelUp: dmgUp40,
-    levelText: (lv) => ['피해량이 40% 증가합니다.', lv === 3 && '열매가 무작위 속성(7가지 중 하나)을 띠고, 기본 피해의 40%만큼 그 속성 피해를 더 줍니다.', lv === 5 && '매 3번째 꽃마다 열매가 자랍니다.'],
-    extra: (sk) => [`매 ${sk.level >= 5 ? 3 : 5}번째 꽃마다 열매가 자랍니다.`, sk.level >= 3 && '열매가 화염 · 냉기 · 자연 · 해양 · 대지 · 칠흑 · 광휘 중 무작위 속성을 띱니다.'],
+    levelText: (lv) => ['피해량이 40% 증가합니다.', lv === 3 && '열매가 무작위 속성(7가지 중 하나)을 띠고, 기본 피해의 40%만큼 그 속성 피해를 더 줍니다.', lv === 5 && '기본 필요한 꽃 수가 3이 됩니다.'],
+    extra: (sk) => [`꽃 중첩 ${sk.stacks} / ${fruitNeed(sk)} (열매가 자랄 때마다 3초간 필요한 꽃 +2)`, sk.level >= 3 && '열매가 화염 · 냉기 · 자연 · 해양 · 대지 · 칠흑 · 광휘 중 무작위 속성을 띱니다.'],
   },
   pineWind: {
     key: 'pineWind', name: '솔바람', icon: ic('wind'), color: '#9fe8c0', element: null, passive: false, castTime: 0.1, projectile: true, owner: 'masang',
@@ -266,6 +266,10 @@ for (const k of ['leafCut', 'nature', 'fruit', 'pineWind', 'roots', 'strawDoll',
 // 꿀열매 폭탄은 광휘 속성
 SKILL_DEFS.honeyBomb.element = 'radiant';
 SKILL_DEFS.honeyBomb.keywords = SKILL_DEFS.honeyBomb.keywords.map((w) => (w === '자연' ? '광휘' : w));
+
+// 열매 맺기: 다음 열매에 필요한 꽃 수 (기본 5, 5레벨 3 / 열매가 자랄 때마다 3초간 +2, 중첩)
+export const FRUIT_PEN_TIME = 3;
+export const fruitNeed = (sk) => (sk.level >= 5 ? 3 : 5) + 2 * ((sk.fruitPen && sk.fruitPen.length) || 0);
 
 // 세계수의 씨앗: 피어나는 꽃 수 (기본 50, 레벨마다 +10, 3레벨: 늘어난 효과 범위 5당 +1)
 export function seedFlowerCount(sk) {

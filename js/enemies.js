@@ -112,6 +112,7 @@ export class EnemyManager {
     // 속성 저항: 피해 × 100 / (100 + 저항). 저항 무시로 음수가 되면 그만큼 더 받음
     if (element) {
       let res = e.T.res || 0;
+      if (e.resDownT > 0) res -= e.resDown;   // 대지 지대: 모든 저항 감소
       if (pen) res = res * (1 - Math.min(1, pen.pct)) - pen.flat;
       amount *= res >= 0 ? 100 / (100 + res) : 2 - 100 / (100 - res);
     }
@@ -173,9 +174,14 @@ export class EnemyManager {
     }
   }
 
-  // 지대 안에 있는 동안 상태이상 유지 (대지: 계속 기절 / 칠흑: 공포 + 지대 안에 갇힘 / 광휘: 축성 유지)
+  // 지대 안에 있는 동안 상태이상 유지 (대지: 모든 저항 감소 / 칠흑: 공포 + 지대 안에 갇힘 / 광휘: 축성 유지)
   holdStatus(e, zn) {
-    if (zn.el === 'earth') e.stunT = Math.max(e.stunT, 0.4);
+    if (zn.el === 'earth') {
+      // 대지 지대: 기절 대신 모든 저항 감소 (지대를 만든 공격 피해의 50%, 여러 지대가 겹치면 가장 큰 값)
+      const v = Math.round((zn.burnBase || 0) * 0.5);
+      if (e.resDownT <= 0 || v > e.resDown) e.resDown = v;
+      e.resDownT = 0.45;
+    }
     else if (zn.el === 'dark') {
       e.fearT = Math.max(e.fearT, 0.5); e.fearImmune = 0;
       if (!e.elite && !e.boss) { e.fearZone = zn; e.fearZoneT = 0.45; }   // 정예 · 보스는 지대를 벗어날 수 있음
@@ -200,6 +206,7 @@ export class EnemyManager {
     if (e.rootT > 0) e.rootT -= dt;
     if (e.fearZoneT > 0) { e.fearZoneT -= dt; if (e.fearZoneT <= 0) e.fearZone = null; }
     if (e.consZoneT > 0) e.consZoneT -= dt;
+    if (e.resDownT > 0) { e.resDownT -= dt; if (e.resDownT <= 0) e.resDown = 0; }
     if (e.poisonT > 0) {
       e.poisonT -= dt; e.poisonTick -= dt;
       if (Math.random() < dt * 6) this.fx.particles.emit(e.x + (Math.random() - 0.5) * e.r, 0.4 + Math.random() * e.r, e.z + (Math.random() - 0.5) * e.r, 0, 0.9, 0, 0.5, 0.08, Math.random() < 0.5 ? 0x6fd36a : 0xb8f5a0, -0.5);

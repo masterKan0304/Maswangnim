@@ -125,7 +125,7 @@ export const ELEMENTS = {
   ice:       { name: '냉기', icon: 'snowflake', color: '#7fd8ff', status: '둔화', desc: '3초간 이동 속도가 30% 감소합니다.' },
   nature:    { name: '자연', icon: 'leaf', color: '#6fd36a', status: '중독', desc: '3초간 1초마다 최대 체력의 5%(정예 2%, 보스 0.5%)만큼 자연 피해를 입힙니다.' },
   ocean:     { name: '해양', icon: 'wave', color: '#3fa8ff', status: '탈진', desc: '3초간 기술을 쓰는 속도와 기술 쿨타임이 30% 느려집니다.' },
-  earth:     { name: '대지', icon: 'rock', color: '#c8925a', status: '기절', desc: '1초간 움직이지도, 기술을 쓰지도, 부딪혀 피해를 주지도 못합니다. (정예 30%, 보스 70% 짧게)' },
+  earth:     { name: '대지', icon: 'rock', color: '#c8925a', status: '기절', desc: '1초간 움직이지도, 기술을 쓰지도, 부딪혀 피해를 주지도 못합니다. (정예 30%, 보스 70% 짧게) 대지 지대 위에서는 기절 대신 모든 저항이 지대를 만든 공격 피해의 50%만큼 감소합니다.' },
   dark:      { name: '칠흑', icon: 'moon', color: '#9a6bff', status: '공포', desc: '3초간 플레이어에게서 달아나며 이동 속도가 30% 느려지고, 받는 모든 피해의 20%를 칠흑 피해로 더 받습니다. (정예·보스 66% 짧게, 풀린 뒤 3초간 면역)' },
   radiant:   { name: '광휘', icon: 'sun', color: '#ffe680', status: '축성', desc: '3초간 받은 피해를 쌓아 두었다가 끝날 때 그 50%를 광휘 피해로 줍니다. 축성 중 다시 걸리면 쌓인 피해의 100%를 바로 주고 새로 축성합니다.' },
 };

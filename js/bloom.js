@@ -6,7 +6,7 @@ import * as THREE from 'three';
 import { RingMesh } from './effects.js';
 import { game } from './state.js';
 import { STAT_UNIT as U, PROJ_SPEED_UNIT as PS, WORLD_HALF } from './config.js';
-import { getStats, sample, sampleInt, seedFlowerCount } from './skills.js';
+import { getStats, sample, sampleInt, seedFlowerCount, fruitNeed, FRUIT_PEN_TIME } from './skills.js';
 import { sfx } from './audio.js';
 import { ic } from './icons.js';
 import { CHARACTERS } from './characters.js';
@@ -21,7 +21,7 @@ const FRUIT_COLORS = {
   none: [0xff5a6e, 0xffc2ca], fire: [0xff7a2e, 0xffd27a], ice: [0x7fd8ff, 0xe0f8ff], nature: [0x5fd34a, 0xc8f5b0],
   ocean: [0x3fa8ff, 0xc0e4ff], earth: [0xb07a40, 0xe8c89a], dark: [0x7a4ad0, 0xc8a8ff], radiant: [0xffe066, 0xfffae0],
 };
-const FRUIT_ZONE_TIME = 3;   // 속성 열매가 남기는 지대 지속 시간
+const FRUIT_ZONE_TIME = 3;   // 속성 열매가 터진 뒤 남는 이펙트(덩굴 · 안개 · 돌) 시간
 const FRUIT_ELEMS = ['fire', 'ice', 'nature', 'ocean', 'earth', 'dark', 'radiant'];   // 열매 맺기 3레벨: 7가지 속성 중 무작위
 
 export class Bloom {
@@ -190,9 +190,18 @@ export class Bloom {
       sfx('gem');
     }
     this.count++;
-    // 열매 맺기: 매 5번째 꽃 (5레벨: 3번째)
+    // 열매 맺기: 꽃이 필 때마다 중첩 +1, 필요한 꽃 수에 도달하면 그만큼 소모해 열매
+    // (열매가 자랄 때마다 3초간 필요한 꽃 수 +2, 중첩됨 — 세계수의 씨앗으로 열매가 너무 많이 생기지 않게)
     const fs = game.skills.find((s) => s.key === 'fruit');
-    if (fs && this.count % (fs.level >= 5 ? 3 : 5) === 0) this.growFruit(f, fs);
+    if (fs) {
+      fs.stacks++;
+      const need = fruitNeed(fs);
+      if (fs.stacks >= need) {
+        fs.stacks -= need;
+        (fs.fruitPen || (fs.fruitPen = [])).push(FRUIT_PEN_TIME);
+        this.growFruit(f, fs);
+      }
+    }
     return f;
   }
 
@@ -270,9 +279,7 @@ export class Bloom {
       this.fx.ring(fr.tx, fr.tz, r, col, 0.5);
       this.fx.particles.burst(fr.tx, 0.4, fr.tz, 24, [col, fr.c2, 0xffffff], { speed: 4 + r, size: 0.13, life: 0.55, up: 4 });
     } else {
-      // 속성 열매: 터진 자리에 그 속성의 지대 (3초)
-      burstFruit(fr.el, fr.tx, fr.tz, r, this.fx, FRUIT_ZONE_TIME);
-      this.skillsRt.addZone(fr.tx, fr.tz, fr.el, FRUIT_ZONE_TIME, r, (fr.st.damage.min + fr.st.damage.max) / 2, fr.sk, fr.st);
+      burstFruit(fr.el, fr.tx, fr.tz, r, this.fx, FRUIT_ZONE_TIME);   // 속성 폭발 이펙트 (덩굴 · 안개 등이 잠시 남음)
     }
     this.scene.remove(fr.mesh); fr.mat.dispose();
     fr.mesh.traverse((c) => { if (c.isSprite && c !== fr.mesh) c.material.dispose(); });
@@ -281,6 +288,11 @@ export class Bloom {
 
   update(dt) {
     this.updateWaves(dt);
+    // 열매 맺기: 필요한 꽃 수 증가가 3초 뒤 하나씩 풀림
+    const fs = game.skills.find((s) => s.key === 'fruit');
+    if (fs && fs.fruitPen && fs.fruitPen.length) {
+      for (let i = fs.fruitPen.length - 1; i >= 0; i--) { fs.fruitPen[i] -= dt; if (fs.fruitPen[i] <= 0) fs.fruitPen.splice(i, 1); }
+    }
     // 꽃: 자라남 / 적이 닿으면 1초 뒤 폭발
     for (const f of [...this.flowers]) {
       f.age += dt;
