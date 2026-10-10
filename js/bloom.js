@@ -3,6 +3,7 @@
 //  꽃에 적이 닿으면 1초 뒤 터짐 / "열매 맺기": 매 N번째 꽃에서 열매가 자라 적이 많은 곳으로 던져짐
 // ─────────────────────────────────────────────
 import * as THREE from 'three';
+import { RingMesh } from './effects.js';
 import { game } from './state.js';
 import { STAT_UNIT as U, PROJ_SPEED_UNIT as PS, WORLD_HALF } from './config.js';
 import { getStats, sample, sampleInt } from './skills.js';
@@ -61,7 +62,8 @@ export class Bloom {
     const p = this.player.pos;
     const R = sample(st.area) / U / 2;
     const mk = (color, opacity, geo = this.fx.ringGeo) => {
-      const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color, transparent: true, opacity, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+      const mat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+      const m = geo === this.fx.ringGeo ? new RingMesh(mat) : new THREE.Mesh(geo, mat);
       m.rotation.x = -Math.PI / 2;
       m.position.set(p.x, 0.07, p.z);
       this.scene.add(m);

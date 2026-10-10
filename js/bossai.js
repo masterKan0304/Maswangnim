@@ -4,6 +4,7 @@
 //  킹 슬라임: 튕기는 점액 (튕길 때마다 소환) / 제자리 3번 점프 (주위 밀쳐내기 + 소환)
 // ─────────────────────────────────────────────
 import * as THREE from 'three';
+import { RingMesh } from './effects.js';
 import { game } from './state.js';
 import { ENEMY_SKILLS, STAT_UNIT as U, WORLD_HALF, STATUS } from './config.js';
 import { sfx } from './audio.js';
@@ -38,7 +39,7 @@ export class EnemySkills {
     const fill = new THREE.MeshBasicMaterial({ color: 0xff3b4a, transparent: true, opacity: 0.18, depthWrite: false });
     const edge = new THREE.MeshBasicMaterial({ color: 0xff5a66, transparent: true, opacity: 0.85, side: THREE.DoubleSide, depthWrite: false });
     const disc = new THREE.Mesh(this.fx.circleGeo, fill);
-    const ring = new THREE.Mesh(this.fx.ringGeo, edge);
+    const ring = new RingMesh(edge);
     const grow = new THREE.Mesh(this.fx.circleGeo, fill.clone());
     grow.material.opacity = 0.3;
     for (const m of [disc, ring, grow]) { m.rotation.x = -Math.PI / 2; m.position.set(x, 0.05, z); }

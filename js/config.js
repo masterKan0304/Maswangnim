@@ -147,17 +147,20 @@ export const isResist = (defEl, atkEl) => !!(defEl && atkEl && ELEMENT_RESIST[de
 export const elemMul = (defEl, atkEl) => (isWeak(defEl, atkEl) ? WEAK_MUL : isResist(defEl, atkEl) ? RESIST_MUL : 1);
 // 속성 키워드 툴팁
 const elName = (k) => `<b style="color:${ELEMENTS[k].color}">${ELEMENTS[k].name}</b>`;
-export function elemTipHTML(el) {
+// mode: 'atk' 피해를 줄 때만 / 'def' 피해를 받을 때만 / 그 외 둘 다
+export function elemTipHTML(el, mode) {
   const E = ELEMENTS[el];
   if (!E) return '';
   let h = `<div class="tip-title" style="color:${E.color}">${E.name} 속성</div>`;
-  if (ELEMENT_WEAK[el]) h += `<div class="tip-warn">약점: ${ELEMENT_WEAK[el].map(elName).join(', ')} 속성에게 받는 피해가 25% 증가합니다.</div>`;
-  if (ELEMENT_RESIST[el]) h += `<div class="tip-ok">저항: ${ELEMENT_RESIST[el].map(elName).join(', ')} 속성에게 받는 피해가 25% 감소합니다.</div>`;
+  const atk = mode !== 'def', def = mode !== 'atk';
+  if (def && ELEMENT_WEAK[el]) h += `<div class="tip-warn">약점: ${ELEMENT_WEAK[el].map(elName).join(', ')} 속성에게 받는 피해가 25% 증가합니다.</div>`;
+  if (def && ELEMENT_RESIST[el]) h += `<div class="tip-ok">저항: ${ELEMENT_RESIST[el].map(elName).join(', ')} 속성에게 받는 피해가 25% 감소합니다.</div>`;
   const strong = Object.keys(ELEMENT_WEAK).filter((k) => ELEMENT_WEAK[k].includes(el));
-  if (strong.length) h += `<div>${strong.map(elName).join(', ')} 속성에게 25% 더 큰 피해를 줍니다.</div>`;
+  if (atk && strong.length) h += `<div>${strong.map(elName).join(', ')} 속성에게 25% 더 큰 피해를 줍니다.</div>`;
   const weakAtk = Object.keys(ELEMENT_RESIST).filter((k) => ELEMENT_RESIST[k].includes(el));
-  if (weakAtk.length) h += `<div>${weakAtk.map(elName).join(', ')} 속성에게는 25% 작은 피해를 줍니다.</div>`;
-  h += `<div class="tip-dim">${E.status}: ${E.desc}</div><div class="tip-dim">같은 속성끼리는 상태이상을 걸 수 없습니다.</div>`;
+  if (atk && weakAtk.length) h += `<div>${weakAtk.map(elName).join(', ')} 속성에게는 25% 작은 피해를 줍니다.</div>`;
+  if (atk) h += `<div class="tip-dim">${E.status}: ${E.desc}</div>`;
+  h += `<div class="tip-dim">${mode === 'def' ? `${E.name} 속성의 공격으로는 상태이상에 걸리지 않습니다.` : '같은 속성끼리는 상태이상을 걸 수 없습니다.'}</div>`;
   return h;
 }
 export const BOX = { baseChance: 0.01, growPer10Hp: 0.01 };   // 블록 상자: 처치마다 확률 × (1 + 체력10당 1%), 드랍 시 초기화

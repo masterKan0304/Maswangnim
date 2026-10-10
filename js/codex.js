@@ -207,7 +207,7 @@ function detailSkill(info) {
   const st = baseStats({ def: d, key: d.key, level: lv }, lv);
   const need = d.owner ? masteryUnlock(d.key) : unlockLevel('skills', d.key);
   const have = d.owner ? masteryOf(d.owner).lv : game.accountLevel;
-  const tags = [d.element ? `<span class="elem e-${d.element}" data-el="${d.element}">${ELEMENTS[d.element].name}</span>` : '', `<span class="cx-tag">${d.passive ? '패시브' : '액티브'}</span>`,
+  const tags = [d.element ? `<span class="elem e-${d.element}" data-el="${d.element}" data-elmode="atk">${ELEMENTS[d.element].name}</span>` : '', `<span class="cx-tag">${d.passive ? '패시브' : '액티브'}</span>`,
     d.owner ? `<span class="cx-tag own">${CHARACTERS[d.owner].name} 전용</span>` : '<span class="cx-tag">공용</span>',
     need > 1 ? `<span class="cx-tag ${have >= need ? 'ok' : 'lock'}">${d.owner ? '숙련도' : '계정'} Lv.${need} 해금</span>` : ''].join('');
   const stats = shownStats(d, st).filter((k) => st[k] && st[k].max !== 0).map((k) => `<div class="cx-stat"><span>${statLabel(d, k)}</span><b>${statText(k, st)}</b></div>`).join('');
@@ -287,7 +287,7 @@ function detailEnemy(info) {
   const T = ENEMY_TYPES[en.type];
   const col = '#' + T.color.toString(16).padStart(6, '0');
   const ab = ENEMY_ABILITY[en.type] || [];
-  info.innerHTML = `<div class="cx-title"><span class="cx-big" style="--c:${col}"><img class="cx-enemy big" src="${enemyIcon(en.type)}" alt=""></span><div><div class="cx-nm">${T.name}</div><div class="cx-tags">${T.element ? `<span class="elem e-${T.element}" data-el="${T.element}">${ELEMENTS[T.element].name}</span>` : ''}<span class="cx-tag grade-${en.grade}">${en.grade}</span></div></div></div>
+  info.innerHTML = `<div class="cx-title"><span class="cx-big" style="--c:${col}"><img class="cx-enemy big" src="${enemyIcon(en.type)}" alt=""></span><div><div class="cx-nm">${T.name}</div><div class="cx-tags">${T.element ? `<span class="elem e-${T.element}" data-el="${T.element}" data-elmode="def">${ELEMENTS[T.element].name}</span>` : ''}<span class="cx-tag grade-${en.grade}">${en.grade}</span></div></div></div>
     <div class="cx-stats">
       <div class="cx-stat"><span>기본 체력</span><b>${T.hp.toLocaleString()}</b></div>
       <div class="cx-stat"><span>공격력</span><b>${T.dmg}</b></div>

@@ -813,7 +813,7 @@ export class UI {
   updateTip(target) {
     // 속성 키워드(data-el): 상성 / 역상성 설명
     const elNode = target && target.closest && target.closest('[data-el]');
-    if (elNode && !elNode._tip) elNode._tip = () => elemTipHTML(elNode.dataset.el);
+    if (elNode && !elNode._tip) elNode._tip = () => elemTipHTML(elNode.dataset.el, elNode.dataset.elmode);
     const n = elNode || findProp(target, '_tip');
     if (n !== this.tipNode) {
       this.tipNode = n;

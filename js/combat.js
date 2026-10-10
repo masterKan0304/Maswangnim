@@ -3,11 +3,19 @@ import * as THREE from 'three';
 import { WORLD_HALF, STAT_UNIT as U, PROJ_SPEED_UNIT as PS, PROJ_SIZE_UNIT as PZ, STATUS, ELEMENT_DMG } from './config.js';
 import { game, schedule } from './state.js';
 import { getStats, computeStats, sample, sampleInt, avg, statusProb, maxStacks, areaFactor, ATTACK_SKILLS, enchantReq, triggerGoal, completeSentences } from './skills.js';
-import { makeGlowSprite } from './effects.js';
+import { makeGlowSprite, RingMesh } from './effects.js';
 import { jitter, createPlayer } from './models.js';
 import { sfx } from './audio.js';
 
 const DEG = Math.PI / 180;
+// 꿀열매 크기: t초 동안 자란 정도 (2.5초 = 1, 5초를 넘길 때마다 자라는 속도 절반)
+function honeyGrowth(t) {
+  let g = 0, rate = 1 / 2.5;
+  for (let s = 0; t > s; s += 5, rate /= 2) g += Math.min(5, t - s) * rate;
+  return g;
+}
+const _hm = new THREE.Object3D();
+const _hc = new THREE.Color();
 const ELEMS = ['fire', 'ice', 'nature', 'ocean', 'earth', 'dark', 'radiant'];
 const ZONE_COLOR = { fire: 0xff6a1a, ice: 0x7fd8ff, nature: 0x6fd36a, ocean: 0x3fa8ff, earth: 0xc8925a, dark: 0x9a6bff, radiant: 0xffe680 };
 
@@ -440,13 +448,20 @@ export class SkillRuntime {
     const fruit = new THREE.Mesh(new THREE.IcosahedronGeometry(0.3, 1), mat);
     fruit.castShadow = true;
     const ringMat = new THREE.MeshBasicMaterial({ color: 0xffc94a, transparent: true, opacity: 0.6, side: THREE.DoubleSide, depthWrite: false });
-    const ring = new THREE.Mesh(this.fx.ringGeo, ringMat);
+    const ring = new RingMesh(ringMat);
     ring.rotation.x = -Math.PI / 2;
     const discMat = new THREE.MeshBasicMaterial({ color: 0xffc94a, transparent: true, opacity: 0.1, depthWrite: false });
     const disc = new THREE.Mesh(this.fx.circleGeo, discMat);
     disc.rotation.x = -Math.PI / 2;
-    this.scene.add(fruit, ring, disc);
+    // 열매로 빨려 드는 꿀 방울 (열매 기준 좌표)
+    const dropMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const drops = new THREE.InstancedMesh(this.fx.sphereGeo, dropMat, 80);
+    drops.frustumCulled = false;
+    drops.setColorAt(0, _hc.setHex(0xffb52e));   // 색 버퍼를 미리 만들어 둠
+    drops.count = 0;
+    this.scene.add(fruit, ring, disc, drops);
     sk.honey = {
+      drops, list: [], dropMat,
       st, t: sample(st.duration), dur: 0, ticks: 0, tick: 0.25, max: sample(st.duration) / 0.25,
       dmg: sample(st.damage), area: sample(st.area), heal: sk.def.heal, fruit, ring, disc, mats: [mat, ringMat, discMat],
     };
@@ -470,20 +485,44 @@ export class SkillRuntime {
         h.heal += d.tickHeal;
         if (Math.random() < 0.8) this.fx.particles.emit(p.pos.x, 1.7, p.pos.z, (Math.random() - 0.5) * 1.5, 1, (Math.random() - 0.5) * 1.5, 0.5, 0.08, 0xffd27a, -2);
       }
-      const k = Math.min(1, h.ticks / Math.max(1, h.max));   // 열매 크기 (0~1)
+      const k = Math.min(1, h.ticks / Math.max(1, h.max));   // 모은 정도 (0~1)
       h.k = k;
-      // 주위에서 꿀 방울이 열매로 빨려 들어감
-      for (let q = 0; q < 2; q++) {
-        if (Math.random() > 0.75) continue;
-        const a = Math.random() * Math.PI * 2, d = 1.4 + Math.random() * (1.2 + k * 2);
-        const sx = p.pos.x + Math.cos(a) * d, sz = p.pos.z + Math.sin(a) * d, sy = 0.3 + Math.random() * 1.2;
-        const ty = 1.5 + k * 0.45, life = 0.45;
-        this.fx.particles.emit(sx, sy, sz, (p.pos.x - sx) / life, (ty - sy) / life, (p.pos.z - sz) / life, life, 0.07 + k * 0.05, Math.random() < 0.6 ? 0xffb52e : 0xffd98a, 0);
-      }
-      slow = Math.max(slow, (0.2 + 0.3 * k) * (sk.level >= 3 ? 0.5 : 1));   // 커질수록 느려짐 (3레벨: 절반)
-      h.fruit.position.set(p.pos.x, 1.45 + k * 0.45, p.pos.z);
-      h.fruit.scale.setScalar(0.6 + k * 1.6 + Math.sin(h.dur * 14) * 0.04);
+      // 열매 크기: 2.5초 동안 기본 크기만큼 자라고, 5초를 넘길 때마다 자라는 속도가 절반
+      const g = honeyGrowth(Math.min(h.dur, h.max * 0.25));
+      h.g = g;
+      const scale = 0.6 + g * 1.6 + Math.sin(h.dur * 14) * 0.04;
+      const fr = 0.3 * scale;                 // 열매 반지름
+      const fy = 1.15 + fr;                   // 머리 위에 얹힌 높이
+      h.fruit.position.set(p.pos.x, fy, p.pos.z);
+      h.fruit.scale.setScalar(scale);
       h.fruit.rotation.y += dt * 2;
+      // 주위에서 꿀 방울이 열매로 빨려 들어감 (열매가 클수록 더 멀리서, 더 크게)
+      const spawn = (2 + g) * dt * 14;
+      for (let q = 0; q < spawn; q++) {
+        if (Math.random() > spawn - q || h.list.length >= 80) continue;
+        const a = Math.random() * Math.PI * 2, el = (Math.random() - 0.35) * 1.2;
+        const d = fr + 1.0 + Math.random() * (1.0 + fr * 1.6);
+        h.list.push({ ox: Math.cos(a) * Math.cos(el) * d, oy: Math.sin(el) * d - fr * 0.3, oz: Math.sin(a) * Math.cos(el) * d, t: 0, life: 0.45 + Math.random() * 0.15,
+          size: Math.min(0.35, 0.05 + 0.035 * scale) * (0.7 + Math.random() * 0.6), col: Math.random() < 0.6 ? 0xffb52e : 0xffd98a });
+      }
+      let n = 0;
+      for (let q = h.list.length - 1; q >= 0; q--) {
+        const o = h.list[q];
+        o.t += dt;
+        if (o.t >= o.life) { h.list.splice(q, 1); continue; }
+        const e = (o.t / o.life) ** 2;                       // 점점 빨라지며 빨려 듦
+        const m = 1 - e * (1 - fr * 0.6 / Math.hypot(o.ox, o.oy, o.oz));
+        _hm.position.set(p.pos.x + o.ox * m, fy + o.oy * m, p.pos.z + o.oz * m);
+        _hm.scale.setScalar(o.size * (1 - 0.5 * e));
+        _hm.updateMatrix();
+        h.drops.setMatrixAt(n, _hm.matrix);
+        h.drops.setColorAt(n, _hc.setHex(o.col));
+        n++;
+      }
+      h.drops.count = n;
+      h.drops.instanceMatrix.needsUpdate = true;
+      if (h.drops.instanceColor) h.drops.instanceColor.needsUpdate = true;
+      slow = Math.max(slow, (0.2 + 0.3 * k) * (sk.level >= 3 ? 0.5 : 1));   // 커질수록 느려짐 (3레벨: 절반)
       const R = h.area / U / 2;   // 터질 때의 범위 미리 보기
       h.ring.position.set(p.pos.x, 0.05, p.pos.z); h.ring.scale.setScalar(R);
       h.disc.position.set(p.pos.x, 0.04, p.pos.z); h.disc.scale.setScalar(R);
@@ -503,8 +542,9 @@ export class SkillRuntime {
     if (!h) return;
     sk.honey = null;
     this.honeys = this.honeys.filter((x) => x !== sk);
-    this.scene.remove(h.fruit, h.ring, h.disc);
+    this.scene.remove(h.fruit, h.ring, h.disc, h.drops);
     h.mats.forEach((m) => m.dispose());
+    h.dropMat.dispose(); h.drops.dispose();
     h.fruit.geometry.dispose();
     this.player.slow = 0;
     sk.cd = sample(h.st.cooldown);   // 터뜨린 뒤 쿨타임 시작
@@ -528,9 +568,9 @@ export class SkillRuntime {
     this.fx.ring(p.x, p.z, R, 0xffc94a, 0.55);
     this.fx.ring(p.x, p.z, R * 0.6, 0xffffff, 0.4);
     // 열매 크기에 비례해 꿀이 더 많이, 더 크게, 더 멀리 튐
-    const k = h.k || 0;
-    this.fx.particles.burst(p.x, 1.6, p.z, Math.round(24 + k * 70), [0xffb52e, 0xffd27a, 0xfff0c0, 0xe8901a], { speed: 3 + R * 1.4 + k * 4, size: 0.1 + k * 0.16, life: 0.7 + k * 0.4, up: 4 + k * 3, grav: 10 });
-    this.fx.particles.burst(p.x, 0.3, p.z, Math.round(10 + k * 30), [0xffb52e, 0xe8901a], { speed: 2 + R + k * 2, size: 0.14 + k * 0.12, life: 1 + k * 0.5, up: 1 });
+    const k = Math.min(3, h.g || 0);
+    this.fx.particles.burst(p.x, 1.4 + k * 0.5, p.z, Math.round(24 + k * 60), [0xffb52e, 0xffd27a, 0xfff0c0, 0xe8901a], { speed: 3 + R * 1.4 + k * 4, size: 0.1 + k * 0.16, life: 0.7 + k * 0.4, up: 4 + k * 3, grav: 10 });
+    this.fx.particles.burst(p.x, 0.3, p.z, Math.round(10 + k * 25), [0xffb52e, 0xe8901a], { speed: 2 + R + k * 2, size: 0.14 + k * 0.12, life: 1 + k * 0.5, up: 1 });
     sfx('explode');
   }
 
@@ -994,7 +1034,7 @@ export class SkillRuntime {
     disc.position.set(x, 0.04, z);
     disc.scale.setScalar(r);
     const ringMat = new THREE.MeshBasicMaterial({ color: ZONE_COLOR[el], transparent: true, opacity: 0.7, side: THREE.DoubleSide, depthWrite: false });
-    const ring = new THREE.Mesh(this.fx.ringGeo, ringMat);
+    const ring = new RingMesh(ringMat);
     ring.rotation.x = -Math.PI / 2;
     ring.position.set(x, 0.05, z);
     ring.scale.setScalar(r);
@@ -1124,7 +1164,7 @@ export class SkillRuntime {
     const shards = [];
     for (let i = 0; i < 4; i++) { const s = new THREE.Mesh(this.shardGeo, shardMat); group.add(s); shards.push(s); }
     const ringMat = new THREE.MeshBasicMaterial({ color: 0x9fe6ff, transparent: true, opacity: 0.35, side: THREE.DoubleSide, depthWrite: false });
-    const ring = new THREE.Mesh(this.fx.ringGeo, ringMat);
+    const ring = new RingMesh(ringMat);
     ring.rotation.x = -Math.PI / 2;
     ring.position.set(x, 0.05, z);
     this.scene.add(group, ring);
@@ -1416,7 +1456,7 @@ export class SkillRuntime {
     const size = radius * 0.9;   // 효과 범위에 비례하는 눈덩이 크기
     ball.scale.setScalar(size);
     const markMat = new THREE.MeshBasicMaterial({ color: 0x9fe6ff, transparent: true, opacity: 0.0, side: THREE.DoubleSide, depthWrite: false });
-    const mark = new THREE.Mesh(this.fx.ringGeo, markMat);
+    const mark = new RingMesh(markMat);
     mark.rotation.x = -Math.PI / 2;
     mark.position.set(x, 0.05, z);
     mark.scale.setScalar(radius);

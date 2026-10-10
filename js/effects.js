@@ -163,6 +163,25 @@ class DamageNumbers {
 // ─────────────────────────────────────────────
 //  이펙트 매니저
 // ─────────────────────────────────────────────
+// 범위 고리: 크기(월드 배율)에 맞춰 안쪽 반지름을 바꿔 둘레 두께가 거의 일정하게 유지됨
+const ringCache = new Map();
+function ringGeoFor(ratio) {
+  const key = Math.max(1, Math.min(56, Math.round(ratio * 400)));
+  let g = ringCache.get(key);
+  if (!g) { g = new THREE.RingGeometry(1 - key / 400, 1, 56); ringCache.set(key, g); }
+  return g;
+}
+export class RingMesh extends THREE.Mesh {
+  constructor(mat) { super(ringGeoFor(0.14), mat); }
+  updateMatrixWorld(force) {
+    super.updateMatrixWorld(force);
+    const e = this.matrixWorld.elements;
+    const s = Math.hypot(e[0], e[1], e[2]);
+    const t = Math.min(0.24, 0.14 + 0.01 * Math.max(0, s - 1));   // 둘레 두께 (월드 단위)
+    this.geometry = ringGeoFor(s > 1 ? t / s : 0.14);
+  }
+}
+
 export class FX {
   constructor(scene, camera, layer) {
     this.scene = scene;
@@ -206,7 +225,7 @@ export class FX {
     const ringMat = new THREE.MeshBasicMaterial({ color: 0xffc56b, transparent: true, opacity: 0.9, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite: false });
     const m = new THREE.Mesh(this.sphereGeo, mat); m.position.set(x, 0.35, z);
     const c = new THREE.Mesh(this.sphereGeo, core); c.position.set(x, 0.35, z);
-    const ring = new THREE.Mesh(this.ringGeo, ringMat); ring.rotation.x = -Math.PI / 2; ring.position.set(x, 0.06, z);
+    const ring = new RingMesh(ringMat); ring.rotation.x = -Math.PI / 2; ring.position.set(x, 0.06, z);
     const scorch = new THREE.MeshBasicMaterial({ color: 0x3a2a1a, transparent: true, opacity: 0.35, depthWrite: false });
     const sc = new THREE.Mesh(this.circleGeo, scorch); sc.rotation.x = -Math.PI / 2; sc.position.set(x, 0.03, z); sc.scale.setScalar(radius * 0.8);
     this.add([m, c, ring, sc], 0.4, (k) => {
@@ -265,8 +284,17 @@ export class FX {
 
   ring(x, z, radius, color, life = 0.5, y = 0.06) {
     const mat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.8, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite: false });
-    const r = new THREE.Mesh(this.ringGeo, mat);
+    const r = new RingMesh(mat);
     r.rotation.x = -Math.PI / 2; r.position.set(x, y, z);
+    // 범위가 크면 둘레만으로는 알아보기 어려워 안쪽을 옅게 채움
+    const fillA = Math.min(0.22, Math.max(0, (radius - 2.5) * 0.035));
+    if (fillA > 0) {
+      const fm = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: fillA, blending: THREE.AdditiveBlending, depthWrite: false });
+      const f = new THREE.Mesh(this.circleGeo, fm);
+      f.rotation.x = -Math.PI / 2; f.position.set(x, y - 0.01, z);
+      this.add([r, f], life, (k) => { const s = radius * (0.3 + 0.7 * k); r.scale.setScalar(s); f.scale.setScalar(s); mat.opacity = 0.8 * (1 - k); fm.opacity = fillA * (1 - k); }, [mat, fm]);
+      return;
+    }
     this.add([r], life, (k) => { r.scale.setScalar(radius * (0.3 + 0.7 * k)); mat.opacity = 0.8 * (1 - k); }, [mat]);
   }
 
