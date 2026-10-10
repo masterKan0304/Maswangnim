@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { ENEMY_TYPES, WORLD_HALF, STATUS, isWeak, WEAK_MUL } from './config.js';
+import { ENEMY_TYPES, WORLD_HALF, STATUS, elemMul } from './config.js';
 import { slimeBodyGeometry, slimeFaceGeometry, createKingSlime, createEliteSlime } from './models.js';
 import { game } from './state.js';
 import { recordDamage } from './dps.js';
@@ -115,7 +115,7 @@ export class EnemyManager {
       if (pen) res = res * (1 - Math.min(1, pen.pct)) - pen.flat;
       amount *= res >= 0 ? 100 / (100 + res) : 2 - 100 / (100 - res);
     }
-    if (isWeak(e.element, element)) amount *= WEAK_MUL;                 // 속성 상성: 약한 속성에 25% 더
+    amount *= elemMul(e.element, element);   // 속성 상성: 약점 25% 더 / 저항 25% 덜
     if (element === 'fire' && e.fireVuln) amount *= 1 + e.fireVuln;   // 화염 방사 5레벨 취약
     if (!color && element) color = ELEM_NUM[element];
     if (!src) amount *= game.mods.dmgMul;   // 스킬이 아닌 피해(꽃 등)만 여기서 — 스킬 피해는 능력치에 이미 반영

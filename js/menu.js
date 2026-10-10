@@ -4,7 +4,7 @@
 // ─────────────────────────────────────────────
 import { profile, saveProfile, renderUpgrades, renderSettings } from './meta.js';
 import { STAGES, stageById, stageLabel, isStageUnlocked, isStartable, lastStartable } from './stages.js';
-import { accountNeed } from './config.js';
+import { accountNeed, ELEMENTS } from './config.js';
 import { openCodex, closeCodex, attachPreview } from './codex.js';
 import { CHARACTERS, CHARACTER_ORDER, masteryNeed } from './characters.js';
 import { masteryOf } from './meta.js';
@@ -236,7 +236,7 @@ function renderChar() {
 
   const right = document.createElement('div');
   right.className = 'ch-right';
-  right.innerHTML = `<div class="ch-head"><span class="ch-portrait" style="--c:${ch.color}">${ic(ch.icon)}</span><div><div class="ch-name">${ch.name}</div><div class="ch-sub">기본 캐릭터</div></div></div>
+  right.innerHTML = `<div class="ch-head"><span class="ch-portrait" style="--c:${ch.color}">${ic(ch.icon)}</span><div><div class="ch-name">${ch.name}</div><div class="ch-sub">기본 캐릭터${ch.element ? ` <span class="elem e-${ch.element}" data-el="${ch.element}">${ELEMENTS[ch.element].name}</span>` : ''}</div></div></div>
     <div class="ch-desc">${ch.desc}</div>
     <div class="ch-passive"><div class="chp-title">${ic(ch.passive.icon)} 고유 패시브 · ${ch.passive.name}</div><div class="chp-desc">${ch.passive.desc}</div></div>
     <div class="ch-mastery"><div class="chm-head"><span>숙련도 <b>Lv.${m.lv}</b></span><span class="chm-xp">${Math.floor(m.xp).toLocaleString()} / ${need.toLocaleString()}</span></div>

@@ -39,13 +39,13 @@ export const SUBJECT_ORDER = ['damage', 'fireDmg', 'iceDmg', 'natureDmg', 'ocean
   'pierce', 'projSize', 'projSpeed', 'projCount', 'chains', 'critChance', 'critDamage', 'critFlat', 'penetration', 'penPct', 'statusChance', 'manaCost', 'cooldown', 'haste'];
 export const SUBJECTS = {
   damage:    { name: '피해량',       min: 1,               desc: '스킬이 주는 피해량입니다. 이미 추가된 속성 피해에도 함께 적용됩니다.' },
-  fireDmg:   { name: '화염 피해',    min: 0, element: 'fire',      desc: '추가 화염 피해를 얻습니다. 스킬의 속성은 바뀌지 않습니다.' },
-  iceDmg:    { name: '냉기 피해',    min: 0, element: 'ice',       desc: '추가 냉기 피해를 얻습니다. 스킬의 속성은 바뀌지 않습니다.' },
-  natureDmg: { name: '자연 피해',   min: 0, element: 'nature',    desc: '추가 자연 피해를 얻습니다. 스킬의 속성은 바뀌지 않습니다.' },
-  oceanDmg:  { name: '해양 피해',    min: 0, element: 'ocean',     desc: '추가 해양 피해를 얻습니다. 스킬의 속성은 바뀌지 않습니다.' },
-  earthDmg:  { name: '대지 피해',    min: 0, element: 'earth',     desc: '추가 대지 피해를 얻습니다. 스킬의 속성은 바뀌지 않습니다.' },
-  darkDmg:   { name: '칠흑 피해',    min: 0, element: 'dark',      desc: '추가 칠흑 피해를 얻습니다. 스킬의 속성은 바뀌지 않습니다.' },
-  radiantDmg: { name: '광휘 피해',   min: 0, element: 'radiant',   desc: '추가 광휘 피해를 얻습니다. 스킬의 속성은 바뀌지 않습니다.' },
+  fireDmg:   { name: '화염 피해',    min: 0, element: 'fire',      desc: '추가 화염 피해를 얻습니다. 스킬의 속성은 바뀌지 않습니다. 계산에 사용될 때는 스킬의 최종 피해가 아닌 기본 피해를 기준으로 계산합니다.' },
+  iceDmg:    { name: '냉기 피해',    min: 0, element: 'ice',       desc: '추가 냉기 피해를 얻습니다. 스킬의 속성은 바뀌지 않습니다. 계산에 사용될 때는 스킬의 최종 피해가 아닌 기본 피해를 기준으로 계산합니다.' },
+  natureDmg: { name: '자연 피해',   min: 0, element: 'nature',    desc: '추가 자연 피해를 얻습니다. 스킬의 속성은 바뀌지 않습니다. 계산에 사용될 때는 스킬의 최종 피해가 아닌 기본 피해를 기준으로 계산합니다.' },
+  oceanDmg:  { name: '해양 피해',    min: 0, element: 'ocean',     desc: '추가 해양 피해를 얻습니다. 스킬의 속성은 바뀌지 않습니다. 계산에 사용될 때는 스킬의 최종 피해가 아닌 기본 피해를 기준으로 계산합니다.' },
+  earthDmg:  { name: '대지 피해',    min: 0, element: 'earth',     desc: '추가 대지 피해를 얻습니다. 스킬의 속성은 바뀌지 않습니다. 계산에 사용될 때는 스킬의 최종 피해가 아닌 기본 피해를 기준으로 계산합니다.' },
+  darkDmg:   { name: '칠흑 피해',    min: 0, element: 'dark',      desc: '추가 칠흑 피해를 얻습니다. 스킬의 속성은 바뀌지 않습니다. 계산에 사용될 때는 스킬의 최종 피해가 아닌 기본 피해를 기준으로 계산합니다.' },
+  radiantDmg: { name: '광휘 피해',   min: 0, element: 'radiant',   desc: '추가 광휘 피해를 얻습니다. 스킬의 속성은 바뀌지 않습니다. 계산에 사용될 때는 스킬의 최종 피해가 아닌 기본 피해를 기준으로 계산합니다.' },
   area:      { name: '효과 범위',    min: 0.5,             desc: '스킬이 닿는 범위입니다.' },
   range:     { name: '사거리',       min: 0.5, noWord: true, hidden: true, desc: '스킬의 사거리입니다.' },
   duration:  { name: '지속 시간',    min: 0.1, max: 60, unit: '초', desc: '스킬 효과가 유지되는 시간입니다.' },
@@ -139,6 +139,27 @@ export const ELEMENT_WEAK = {
 };
 export const WEAK_MUL = 1.25;
 export const isWeak = (defEl, atkEl) => !!(defEl && atkEl && ELEMENT_WEAK[defEl] && ELEMENT_WEAK[defEl].includes(atkEl));
+// 역상성: 이 속성에게 공격받으면 25% 덜 받음
+export const ELEMENT_RESIST = { fire: ['nature', 'ice'], ocean: ['fire', 'earth'], nature: ['ocean', 'earth'], ice: ['ocean', 'nature'], earth: ['fire', 'ice'] };
+export const RESIST_MUL = 0.75;
+export const isResist = (defEl, atkEl) => !!(defEl && atkEl && ELEMENT_RESIST[defEl] && ELEMENT_RESIST[defEl].includes(atkEl));
+// 받는 피해 배율 (상성 1.25 / 역상성 0.75 / 그 외 1)
+export const elemMul = (defEl, atkEl) => (isWeak(defEl, atkEl) ? WEAK_MUL : isResist(defEl, atkEl) ? RESIST_MUL : 1);
+// 속성 키워드 툴팁
+const elName = (k) => `<b style="color:${ELEMENTS[k].color}">${ELEMENTS[k].name}</b>`;
+export function elemTipHTML(el) {
+  const E = ELEMENTS[el];
+  if (!E) return '';
+  let h = `<div class="tip-title" style="color:${E.color}">${E.name} 속성</div>`;
+  if (ELEMENT_WEAK[el]) h += `<div class="tip-warn">약점: ${ELEMENT_WEAK[el].map(elName).join(', ')} 속성에게 받는 피해가 25% 증가합니다.</div>`;
+  if (ELEMENT_RESIST[el]) h += `<div class="tip-ok">저항: ${ELEMENT_RESIST[el].map(elName).join(', ')} 속성에게 받는 피해가 25% 감소합니다.</div>`;
+  const strong = Object.keys(ELEMENT_WEAK).filter((k) => ELEMENT_WEAK[k].includes(el));
+  if (strong.length) h += `<div>${strong.map(elName).join(', ')} 속성에게 25% 더 큰 피해를 줍니다.</div>`;
+  const weakAtk = Object.keys(ELEMENT_RESIST).filter((k) => ELEMENT_RESIST[k].includes(el));
+  if (weakAtk.length) h += `<div>${weakAtk.map(elName).join(', ')} 속성에게는 25% 작은 피해를 줍니다.</div>`;
+  h += `<div class="tip-dim">${E.status}: ${E.desc}</div><div class="tip-dim">같은 속성끼리는 상태이상을 걸 수 없습니다.</div>`;
+  return h;
+}
 export const BOX = { baseChance: 0.01, growPer10Hp: 0.01 };   // 블록 상자: 처치마다 확률 × (1 + 체력10당 1%), 드랍 시 초기화
 export const ZONE_BASE_AREA = 20;   // 처치 시 남기는 속성 지대의 기본 범위
 

@@ -660,8 +660,8 @@ body.game-paused #bossbar { top: 104px; }
 .tip-rar.rar3 { color: #ffd45a; }
 
 .bb-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.bb-status { display: flex; gap: 4px; justify-content: center; margin-top: 4px; min-height: 22px; }
-.bs { position: relative; font-size: 15px; width: 24px; height: 22px; border-radius: 6px; display: flex; align-items: center; justify-content: center;
+.bb-status { display: flex; gap: 6px; justify-content: center; margin-top: 5px; min-height: 33px; }
+.bs { position: relative; font-size: 22px; width: 36px; height: 33px; border-radius: 9px; display: flex; align-items: center; justify-content: center;
   background: rgba(20,22,40,0.8); border: 1.5px solid rgba(255,255,255,0.25); }
 .bs.e-fire { border-color: #ff8a4a; } .bs.e-ice { border-color: #8fe3ff; } .bs.e-nature { border-color: #6fd36a; } .bs.e-ocean { border-color: #5fb4ff; } .bs.e-earth { border-color: #c8925a; } .bs.e-dark { border-color: #9a6bff; } .bs.e-radiant { border-color: #ffe680; }
 .bs i { position: absolute; right: -4px; bottom: -5px; font-style: normal; font-size: 10px; font-weight: 900; text-shadow: 0 0 3px #000; }
@@ -679,7 +679,7 @@ body.ui-readonly #popups { display: none; }
 .lu-icon .ic { width: 58px; height: 58px; vertical-align: middle; }
 .un-icon .ic { width: 38px; height: 38px; vertical-align: middle; }
 .buff .ic { width: 24px; height: 24px; position: relative; z-index: 1; }
-.bs .ic { width: 16px; height: 16px; vertical-align: middle; }
+.bs .ic { width: 24px; height: 24px; vertical-align: middle; }
 #dashbox .ic { width: 26px; height: 26px; }
 #kills .ic { color: #fff; }
 .toast .ic { vertical-align: -0.25em; }
@@ -1189,3 +1189,7 @@ body.in-menu #hud, body.in-menu #label-layer, body.in-menu #vignette { display: 
 .uc-msg .ic { width: 16px; height: 16px; vertical-align: -0.2em; }
 .uc-btns { display: flex; gap: 10px; justify-content: center; }
 .uc-btns .menu-btn { min-width: 120px; }
+
+/* 속성 키워드: 커서를 올리면 상성 설명 */
+[data-el] { cursor: help; }
+.ch-sub .elem { margin-left: 4px; }

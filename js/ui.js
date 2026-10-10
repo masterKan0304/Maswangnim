@@ -4,7 +4,7 @@ import { CHARACTERS } from './characters.js';
 import { STAGE, toStageX, toStageY, stageRect } from './stage.js';
 import { sfx } from './audio.js';
 import { game, bump, inventoryAdd, xpNeed } from './state.js';
-import { INV_W, INV_H, MAX_SKILLS, MAX_SENTENCE_SLOTS, SUBJECTS, CHANGES, STAGE_TIME, DASH, ELEMENTS, xpToNext } from './config.js';
+import { INV_W, INV_H, MAX_SKILLS, MAX_SENTENCE_SLOTS, SUBJECTS, CHANGES, STAGE_TIME, DASH, ELEMENTS, xpToNext, elemTipHTML } from './config.js';
 import {
   blockLabel, colorKey, kindName, isComplete, missingCount, sentenceParts, slotChipLabel, PLACEHOLDER,
   evalNumber, fmtValue, slotAccepts, sentenceAccepts, dismantle, OP_SYMBOL, numText, blockSig, randomOfType, TEMPLATE_INFO, RARITY_NAME,
@@ -811,7 +811,10 @@ export class UI {
   }
 
   updateTip(target) {
-    const n = findProp(target, '_tip');
+    // 속성 키워드(data-el): 상성 / 역상성 설명
+    const elNode = target && target.closest && target.closest('[data-el]');
+    if (elNode && !elNode._tip) elNode._tip = () => elemTipHTML(elNode.dataset.el);
+    const n = elNode || findProp(target, '_tip');
     if (n !== this.tipNode) {
       this.tipNode = n;
       if (n) { this.tipEl.innerHTML = n._tip(); this.tipEl.classList.remove('hidden'); }
@@ -994,11 +997,11 @@ export class UI {
       if (e.fearT > 0) st.push([ic('moon'), '공포', 'dark', e.fearT]);
       if (e.consT > 0) st.push([ic('sun'), '축성', 'radiant', e.consT]);
       if (e.fireVuln > 0) st.push([ic('flamewave'), `화염 취약 +${Math.round(e.fireVuln * 100)}%`, 'fire', 0]);
-      const key = st.map((x) => x[1] + (x[3] > 0 ? Math.ceil(x[3]) : '')).join('|');
+      const key = st.map((x) => x[1]).join('|');
       const sd = d.querySelector('.bb-status');
       if (sd._key !== key) {
         sd._key = key;
-        sd.innerHTML = st.map(([ic, name, cls, t]) => `<span class="bs e-${cls}" title="${name}">${ic}${t > 0 ? `<i>${Math.ceil(t)}</i>` : ''}</span>`).join('');
+        sd.innerHTML = st.map(([ic, name, cls, t]) => `<span class="bs e-${cls}" title="${name}">${ic}</span>`).join('');
       }
     });
   }
