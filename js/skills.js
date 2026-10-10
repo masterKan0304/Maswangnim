@@ -211,7 +211,7 @@ Object.assign(SKILL_DEFS, {
   strawDoll: {
     key: 'strawDoll', name: '짚 인형', icon: ic('doll'), color: '#e6c26a', element: null, passive: false, castTime: 0.15, owner: 'masang', lureArea: 50, hpRatio: 0.4,
     short: '마솽을 닮은 짚 인형을 세워 적을 끌어들이고, 시간이 지나거나 부서지면 폭발합니다.',
-    desc: '사거리 안 무작위 위치에 마솽을 본뜬 짚 인형을 세웁니다. 인형은 주위(효과 범위 50)의 적을 끌어들여 공격을 대신 받습니다. 지속 시간이 끝나거나 체력(플레이어 최대 체력의 40%)을 모두 잃으면 폭발해 주위 적에게 피해를 줍니다.',
+    desc: '사거리 안에서 적이 가장 많이 뭉쳐 있는 곳에 마솽을 본뜬 짚 인형을 세웁니다. 인형은 주위(효과 범위 50)의 적을 끌어들여 공격을 대신 받습니다. 지속 시간이 끝나거나 체력(플레이어 최대 체력의 40%)을 모두 잃으면 폭발해 주위 적에게 피해를 줍니다.',
     keywords: ['유인', '효과 범위', '지속 시간', '스킬 쿨타임'],
     base: { damage: [15, 25], area: 30, range: 60, duration: 3, manaCost: 20, cooldown: 20 },
     labels: { area: '폭발 범위' },
@@ -223,12 +223,12 @@ Object.assign(SKILL_DEFS, {
   },
   honeyBomb: {
     key: 'honeyBomb', name: '꿀열매 폭탄', icon: ic('honey'), color: '#ffb52e', element: null, passive: false, castTime: 0.1, owner: 'masang',
-    heal: 1, tickDmg: [2, 4], tickArea: 4, tickHeal: 0.2,
+    heal: 1,
     short: '머리에 열매를 이고 꿀을 모은 뒤 터뜨려 주위 적을 밀쳐내고 체력을 회복합니다.',
-    desc: '지속 시간 동안 머리에 열매를 이고 꿀을 모읍니다. 모으는 동안 이동 속도가 느려지지만 0.25초마다 열매가 커지며 피해량(+2~4), 효과 범위(+4), 체력 회복량(+0.2)이 늘어납니다. 지속 시간이 끝나거나 대시하면 열매를 터뜨려 주위 적에게 피해를 주고 밀쳐내며 체력을 회복합니다. 터뜨린 뒤 쿨타임이 시작됩니다.',
+    desc: '지속 시간 동안 머리에 열매를 이고 꿀을 모읍니다. 모으는 동안 이동 속도가 느려지지만 0.25초마다 열매가 커지며 피해량, 효과 범위, 체력 회복량이 각각의 증가량만큼 늘어납니다. 지속 시간이 끝나거나 대시하면 열매를 터뜨려 주위 적에게 피해를 주고 밀쳐내며 체력을 회복합니다. 터뜨린 뒤 쿨타임이 시작됩니다.',
     keywords: ['효과 범위', '회복', '지속 시간', '스킬 쿨타임'],
-    base: { damage: [4, 8], area: 10, duration: 2.5, manaCost: 15, cooldown: 8 },
-    relevant: ['damage', 'area', 'duration', 'manaCost', 'cooldown'],
+    base: { damage: [4, 8], area: 10, duration: 2.5, honeyDmgGrow: 15, honeyAreaGrow: 20, honeyHealGrow: 0.2, manaCost: 15, cooldown: 8 },
+    relevant: ['damage', 'honeyDmgGrow', 'area', 'honeyAreaGrow', 'honeyHealGrow', 'duration', 'manaCost', 'cooldown'],
     levelUp: dmgUp40,
     levelText: (lv) => ['피해량이 40% 증가합니다.', lv === 3 && '꿀을 모으는 동안 느려지는 정도가 절반이 됩니다. (10%~25%)', lv === 5 && '모은 시간 1초마다 피해와 체력 회복량이 10%씩 더 늘어납니다. (최대 100%)'],
     extra: (sk) => [`꿀을 모으는 동안 이동 속도 ${sk.level >= 3 ? '10%~25%' : '20%~50%'} 감소`, sk.level >= 5 && '모은 시간 1초마다 피해 · 회복 10% 증가'],
@@ -238,10 +238,17 @@ Object.assign(SKILL_DEFS, {
     short: '양분을 얻을 때마다 중첩을 쌓고, 가득 차면 퍼져 나가는 고리를 따라 꽃이 만개합니다.',
     desc: '양분을 얻을 때마다 중첩을 1 얻습니다. 중첩이 100에 도달하면 마솽을 중심으로 효과 범위만큼 고리가 퍼져 나가며, 고리의 가장자리를 따라 꽃 50송이가 고르게 피어납니다. 이 꽃들은 1초 뒤 저절로 터집니다. 효과 범위가 넓을수록 고리가 빠르게 퍼집니다.',
     keywords: ['양분', '중첩', '효과 범위', '꽃', '패시브'],
-    base: { area: 120 },
-    relevant: ['area'],
+    base: { area: 120, flowerCount: 50 },
+    relevant: ['flowerCount', 'area'],
+    levelUp(st, lv) { st.flowerCount = { min: st.flowerCount.min + 10 * (lv - 1), max: st.flowerCount.max + 10 * (lv - 1) }; },
+    // 3레벨: 늘어난 효과 범위 5당 꽃 +1 (업그레이드 · 문장으로 늘어난 범위 포함)
+    finalize(st, base, sk) {
+      if (sk.level < 3) return;
+      const add = Math.max(0, Math.floor(((st.area.min + st.area.max) / 2 - (base.area.min + base.area.max) / 2) / 5));
+      st.flowerCount = { min: st.flowerCount.min + add, max: st.flowerCount.max + add };
+    },
     levelText: (lv) => ['피어나는 꽃이 10송이 늘어납니다.', lv === 3 && '늘어난 효과 범위 5당 꽃이 1송이 더 핍니다.', lv === 5 && '고리가 적에게 닿으면 그 적의 자리에 꽃이 핍니다.'],
-    extra: (sk) => [`중첩 ${Math.floor(sk.stacks)} / 100`, `피어나는 꽃: ${seedFlowerCount(sk)}송이`, sk.level >= 5 && '고리가 닿은 적의 자리에 꽃이 핍니다.'],
+    extra: (sk) => [`중첩 ${Math.floor(sk.stacks)} / 100`, sk.level >= 5 && '고리가 닿은 적의 자리에 꽃이 핍니다.'],
   },
 });
 
@@ -262,12 +269,8 @@ SKILL_DEFS.honeyBomb.keywords = SKILL_DEFS.honeyBomb.keywords.map((w) => (w === 
 
 // 세계수의 씨앗: 피어나는 꽃 수 (기본 50, 레벨마다 +10, 3레벨: 늘어난 효과 범위 5당 +1)
 export function seedFlowerCount(sk) {
-  let n = 50 + 10 * (sk.level - 1);
-  if (sk.level >= 3) {
-    const base = baseStats(sk).area, st = getStats(sk).area;
-    n += Math.max(0, Math.floor(((st.min + st.max) / 2 - (base.min + base.max) / 2) / 5));
-  }
-  return n;
+  const v = getStats(sk).flowerCount;
+  return Math.floor((v.min + v.max) / 2 + 1e-9);
 }
 
 export const SKILL_ORDER = ['fireball', 'frostBarrier', 'iceball', 'magnet', 'fireAura', 'frostAura', 'enchant', 'triggerKill', 'flamethrower', 'snowfall'];
@@ -492,6 +495,7 @@ export function computeStats(skill, extra = [], scale = 1) {
   }
   finishZone(stats, base);
   applyUpgradeStats(skill, stats);
+  if (skill.def.finalize) skill.def.finalize(stats, base, skill);
   return { stats, log };
 }
 
@@ -540,8 +544,8 @@ export function fmtNum(key, x) {
 }
 export function fmtStat(key, v) {
   const a = fmtNum(key, v.min), b = fmtNum(key, v.max);
-  const u = SUBJECTS[key].unit || '';
-  return (a === b ? `${a}` : `${a}~${b}`) + u;
+  const u = SUBJECTS[key].unit || '', pre = SUBJECTS[key].plus ? '+' : '';
+  return pre + (a === b ? `${a}` : `${a}~${b}`) + u;
 }
 // 스탯 표시 (저항 무시는 % + 고정값을 함께)
 export function statText(k, stats) {

@@ -1,6 +1,7 @@
 import { ic, hydrateIcons } from './icons.js';
 import { toggleDebug, initDebug } from './debug.js';
 import * as THREE from 'three';
+import { BlobShadows } from './shadows.js';
 import { game, isPaused, updateTimers, bump, inventoryAdd, xpNeed } from './state.js';
 import { OVERKILL, STAGE_TIME, WORLD_HALF, MAX_ENEMIES, DROP, ENEMY_TYPES, BOX, START_REROLLS, ELITE_TIMES, xpToNext, hpScale } from './config.js';
 import { createWorld } from './world.js';
@@ -624,6 +625,23 @@ function frame() {
   tick(Math.min(0.05, clock.getDelta()));
 }
 
+// 둥근 그림자: 매 프레임 그림자를 드리울 물체를 모음
+const shadows = new BlobShadows(scene);
+const _wp = new THREE.Vector3();
+function updateShadows() {
+  shadows.begin();
+  if (player.model.group.visible) shadows.add(player.pos.x, player.pos.z, 0.42, 0);
+  for (const e of enemies.list) if (e.alive) shadows.add(e.x, e.z, e.r * (e.sxz || 1), e.y || 0);
+  const rt = skillsRt;
+  const objShadow = (m, r) => { if (!m || !m.visible || !m.parent) return; m.getWorldPosition(_wp); shadows.add(_wp.x, _wp.z, r, _wp.y - 0.2); };
+  for (const p of rt.projs) if (p.mesh && !p.dead) objShadow(p.mesh, Math.max(0.12, (p.size || 0.3) * 0.5));
+  for (const b of rt.snowballs || []) if (b.ball) objShadow(b.ball, b.ball.scale.x * 0.9);
+  for (const d of rt.dolls || []) if (d.x != null) shadows.add(d.x, d.z, 0.4, 0);
+  for (const sk of rt.honeys || []) if (sk.honey) objShadow(sk.honey.fruit, 0.3 * sk.honey.fruit.scale.x);
+  if (bloom) for (const fr of bloom.fruits) objShadow(fr.mesh, 0.25 * fr.mesh.scale.x);
+  shadows.end();
+}
+
 function tick(dt, draw = true) {
   realTime += dt;
   const paused = isPaused() && game.state !== 'start';
@@ -685,6 +703,7 @@ function tick(dt, draw = true) {
 
   if (!draw) return;
   world.update(animTime, player.pos, adt);
+  updateShadows();
   enemies.render(animTime);
   pickups.render(animTime);
   labels.update();

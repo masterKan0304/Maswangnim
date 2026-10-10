@@ -338,14 +338,14 @@ export class SkillRuntime {
     const p = this.player.pos;
     const obs = game.sys.world && game.sys.world.obstacles;
     const range = sample(st.range) / U;
+    const placed = [];
     for (let i = 0; i < n; i++) {
       let x = p.x, z = p.z;
-      // 미리보기: 끌어들이는 모습이 잘 보이도록 적 근처에 세움
-      const near = game.demo ? this.enemies.nearestN(p.x, p.z, range, 6) : [];
-      if (near.length) {
-        const e = near[Math.floor(Math.random() * near.length)];
-        const a = Math.random() * Math.PI * 2;
-        this.spawnDoll(sk, st, e.x + Math.cos(a) * 1.4, e.z + Math.sin(a) * 1.4);
+      // 사거리 안에서 적이 가장 많이 뭉친 곳 (두 번째 인형은 첫 인형과 떨어진 무리)
+      const spot = this.densestSpot(p.x, p.z, range, placed);
+      if (spot) {
+        placed.push(spot);
+        this.spawnDoll(sk, st, spot.x, spot.z);
         continue;
       }
       for (let k = 0; k < 12; k++) {
@@ -356,6 +356,30 @@ export class SkillRuntime {
       }
       this.spawnDoll(sk, st, x, z);
     }
+  }
+
+  // 적이 가장 많이 뭉친 곳 (avoid 와 4 이상 떨어진 곳만)
+  densestSpot(px, pz, range, avoid = []) {
+    const cands = this.enemies.query(px, pz, range + 1).filter((e) => e.alive && Math.hypot(e.x - px, e.z - pz) <= range && avoid.every((a) => Math.hypot(e.x - a.x, e.z - a.z) > 4));
+    if (!cands.length) return null;
+    const step = Math.max(1, Math.floor(cands.length / 60));
+    let best = null, bestN = -1;
+    for (let i = 0; i < cands.length; i += step) {
+      const e = cands[i];
+      const grp = this.enemies.query(e.x, e.z, 2.8).filter((o) => o.alive && Math.hypot(o.x - e.x, o.z - e.z) <= 2.8);
+      if (grp.length > bestN) {
+        bestN = grp.length;
+        // 무리의 가운데
+        let sx = 0, sz = 0;
+        for (const o of grp) { sx += o.x; sz += o.z; }
+        best = { x: sx / grp.length, z: sz / grp.length };
+      }
+    }
+    if (best) {
+      best.x = Math.max(-WORLD_HALF + 1, Math.min(WORLD_HALF - 1, best.x));
+      best.z = Math.max(-WORLD_HALF + 1, Math.min(WORLD_HALF - 1, best.z));
+    }
+    return best;
   }
 
   spawnDoll(sk, st, x, z) {
@@ -463,7 +487,8 @@ export class SkillRuntime {
     sk.honey = {
       drops, list: [], dropMat,
       st, t: sample(st.duration), dur: 0, ticks: 0, tick: 0.25, max: sample(st.duration) / 0.25,
-      dmg: sample(st.damage), area: sample(st.area), heal: sk.def.heal, fruit, ring, disc, mats: [mat, ringMat, discMat],
+      dmg: sample(st.damage), area: sample(st.area), heal: sk.def.heal,
+      dmg0: sample(st.damage), area0: sample(st.area), dmgGrow: sample(st.honeyDmgGrow) / 100, areaGrow: sample(st.honeyAreaGrow) / 100, healGrow: sample(st.honeyHealGrow), fruit, ring, disc, mats: [mat, ringMat, discMat],
     };
     this.honeys.push(sk);
     sfx('gem');
@@ -480,9 +505,9 @@ export class SkillRuntime {
         h.tick += 0.25;
         h.ticks++;
         const d = sk.def;
-        h.dmg += d.tickDmg[0] + Math.random() * (d.tickDmg[1] - d.tickDmg[0]);
-        h.area += d.tickArea;
-        h.heal += d.tickHeal;
+        h.dmg += h.dmg0 * h.dmgGrow;     // 처음 피해량 기준 +15%
+        h.area += h.area0 * h.areaGrow;  // 처음 효과 범위 기준 +20%
+        h.heal += h.healGrow;
         if (Math.random() < 0.8) this.fx.particles.emit(p.pos.x, 1.7, p.pos.z, (Math.random() - 0.5) * 1.5, 1, (Math.random() - 0.5) * 1.5, 0.5, 0.08, 0xffd27a, -2);
       }
       const k = Math.min(1, h.ticks / Math.max(1, h.max));   // 모은 정도 (0~1)
