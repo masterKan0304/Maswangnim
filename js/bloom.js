@@ -272,7 +272,7 @@ export class Bloom {
     } else {
       // 속성 열매: 터진 자리에 그 속성의 지대 (3초)
       burstFruit(fr.el, fr.tx, fr.tz, r, this.fx, FRUIT_ZONE_TIME);
-      this.skillsRt.addZone(fr.tx, fr.tz, fr.el, FRUIT_ZONE_TIME, r * 0.85, (fr.st.damage.min + fr.st.damage.max) / 2, fr.sk, fr.st);
+      this.skillsRt.addZone(fr.tx, fr.tz, fr.el, FRUIT_ZONE_TIME, r, (fr.st.damage.min + fr.st.damage.max) / 2, fr.sk, fr.st);
     }
     this.scene.remove(fr.mesh); fr.mat.dispose();
     fr.mesh.traverse((c) => { if (c.isSprite && c !== fr.mesh) c.material.dispose(); });
