@@ -48,7 +48,7 @@ export class EnemyManager {
       alive: true, boss: type === 'boss', color: new THREE.Color(T.color),
       y: 0, sy: 1, sxz: 1, spawnT: 0,
       burnT: 0, burnDmg: 0, burnTick: 0, chillT: 0, shockT: 0, rootT: 0,
-      poisonT: 0, poisonTick: 0, exhaustT: 0, stunT: 0, fearT: 0, fearImmune: 0, consT: 0, consAcc: 0, element: T.element || null,
+      poisonT: 0, poisonTick: 0, exhaustT: 0, stunT: 0, fearT: 0, fearImmune: 0, consT: 0, consAcc: 0, resDown: 0, resDownT: 0, fearZone: null, fearZoneT: 0, consZoneT: 0, element: T.element || null,
     };
     e.elite = type === 'elite';
     if (e.boss || e.elite) {
@@ -112,7 +112,7 @@ export class EnemyManager {
     // 속성 저항: 피해 × 100 / (100 + 저항). 저항 무시로 음수가 되면 그만큼 더 받음
     if (element) {
       let res = e.T.res || 0;
-      if (e.resDownT > 0) res -= e.resDown;   // 대지 지대: 모든 저항 감소
+      if (e.resDownT > 0) res -= e.resDown || 0;   // 대지 지대: 모든 저항 감소
       if (pen) res = res * (1 - Math.min(1, pen.pct)) - pen.flat;
       amount *= res >= 0 ? 100 / (100 + res) : 2 - 100 / (100 - res);
     }
@@ -179,7 +179,7 @@ export class EnemyManager {
     if (zn.el === 'earth') {
       // 대지 지대: 기절 대신 모든 저항 감소 (지대를 만든 공격 피해의 50%, 여러 지대가 겹치면 가장 큰 값)
       const v = Math.round((zn.burnBase || 0) * 0.5);
-      if (e.resDownT <= 0 || v > e.resDown) e.resDown = v;
+      if (!(e.resDownT > 0) || v > (e.resDown || 0)) e.resDown = v;
       e.resDownT = 0.45;
     }
     else if (zn.el === 'dark') {
