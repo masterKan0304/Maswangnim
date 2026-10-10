@@ -225,7 +225,7 @@ export class Tutorial {
   reroll() {
     if (this.idx !== 13 || this.lu !== 'locked') return null;
     this.lu = 'open';
-    return ['snowfall', 'chainLightning', 'iceball'].map((key) => describe({ type: 'skill', key }));
+    return ['snowfall', 'flamethrower', 'iceball'].map((key) => describe({ type: 'skill', key }));
   }
 
   // 선택지 클릭: 리롤 전에는 고를 수 없음

@@ -8,8 +8,8 @@ import { jitter, createPlayer } from './models.js';
 import { sfx } from './audio.js';
 
 const DEG = Math.PI / 180;
-const ELEMS = ['fire', 'ice', 'lightning'];
-const ZONE_COLOR = { fire: 0xff6a1a, ice: 0x7fd8ff, lightning: 0xffe066 };
+const ELEMS = ['fire', 'ice', 'nature', 'ocean', 'earth', 'dark', 'radiant'];
+const ZONE_COLOR = { fire: 0xff6a1a, ice: 0x7fd8ff, nature: 0x6fd36a, ocean: 0x3fa8ff, earth: 0xc8925a, dark: 0x9a6bff, radiant: 0xffe680 };
 
 class Pool {
   constructor(scene, factory) { this.scene = scene; this.factory = factory; this.free = []; }
@@ -586,16 +586,26 @@ export class SkillRuntime {
   castWind(sk, st) {
     sfx('dash');
     const p = this.player;
-    const near = this.enemies.nearestN(p.pos.x, p.pos.z, 30, 1)[0];
+    const flowerChains = sk.level >= 5 ? 3 : 0;
+    const near = (flowerChains && this.nearestFlower(p.pos.x, p.pos.z, 12)) || this.enemies.nearestN(p.pos.x, p.pos.z, 30, 1)[0];
     const base = near ? Math.atan2(near.z - p.pos.z, near.x - p.pos.x) : Math.atan2(p.aim.z, p.aim.x);
     const n = sampleInt(st.projCount);
     for (let i = 0; i < n; i++) {
       const a = spreadAngle(base, i);
-      this.spawnWind(sk, st, p.pos.x + Math.cos(a) * 0.5, p.pos.z + Math.sin(a) * 0.5, Math.cos(a), Math.sin(a), sampleInt(st.chains));
+      this.spawnWind(sk, st, p.pos.x + Math.cos(a) * 0.5, p.pos.z + Math.sin(a) * 0.5, Math.cos(a), Math.sin(a), sampleInt(st.chains), flowerChains);
     }
   }
 
-  spawnWind(sk, st, x, z, dx, dz, chains) {
+  // 가장 가까운 꽃 (솔바람 5레벨)
+  nearestFlower(x, z, range) {
+    const bloom = game.sys.bloom;
+    if (!bloom) return null;
+    let best = null, bd = range;
+    for (const f of bloom.flowers) { const d = Math.hypot(f.x - x, f.z - z); if (d < bd) { bd = d; best = f; } }
+    return best;
+  }
+
+  spawnWind(sk, st, x, z, dx, dz, chains, flowerChains = 0) {
     const ringMat = new THREE.MeshBasicMaterial({ color: 0xd8fff0, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false });
     const discMat = new THREE.MeshBasicMaterial({ color: 0x9fe8c0, transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
     // 회오리: 위로 갈수록 넓어지는 고리들 + 깔때기 모양의 바람막
@@ -621,7 +631,7 @@ export class SkillRuntime {
     const r1 = rings[0], r2 = rings[1];
     const w = {
       sk, st, x, z, dx, dz, r: sample(st.projSize) / PZ / 2, speed: sample(st.projSpeed) * PS, life: sample(st.duration), age: 0,
-      mul: 1, boosts: 0, petals: false, chains, inside: new Set(), mesh: g, r1, r2, rings, funnel, mats: [ringMat, discMat],
+      mul: 1, chains, flowerChains, inside: new Set(), mesh: g, r1, r2, rings, funnel, mats: [ringMat, discMat],
     };
     this.winds.push(w);
     return w;
@@ -663,12 +673,11 @@ export class SkillRuntime {
         if (!w.inside.has(e)) this.deal(e, w.sk, w.st, { mul: w.mul, kx: w.dx * 2, kz: w.dz * 2 });
       }
       w.inside = now;
-      // 꽃에 닿으면 꽃이 바로 강하게 터짐 (5레벨: 솔바람이 최대 3회까지 강해짐)
+      // 꽃에 닿으면 꽃이 바로 강하게 터짐
       if (bloom) {
         for (const f of [...bloom.flowers]) {
           if (Math.hypot(f.x - w.x, f.z - w.z) > w.r + 0.5) continue;
           bloom.explode(f, 1.5);
-          if (w.sk.level >= 5 && w.boosts < 3) { w.boosts++; w.mul *= 1.2; w.r *= 1.2; w.speed *= 1.2; w.petals = true; }
         }
       }
       // 모습
@@ -686,17 +695,17 @@ export class SkillRuntime {
         if (Math.random() > 0.85) continue;
         const a = Math.random() * Math.PI * 2, h = Math.random();
         const rr = w.r * (0.35 + h * 0.75);
-        const petal = w.petals && Math.random() < 0.6;
+        const petal = w.flowerChains > 0 && Math.random() < 0.4;
         this.fx.particles.emit(w.x + Math.cos(a) * rr, 0.1 + h * 1.7 * w.mesh.scale.y, w.z + Math.sin(a) * rr, -Math.sin(a) * 4 * rr, 1.8, Math.cos(a) * 4 * rr, 0.5,
           petal ? 0.11 : 0.07, petal ? (Math.random() < 0.5 ? 0xff9ec4 : 0xffd0e4) : (Math.random() < 0.5 ? 0x9fe8c0 : 0xe8fff4), 0.4);
       }
       if (w.age >= w.life) {
-        // 연쇄: 사라진 자리에서 가장 가까운 적을 향해 새 솔바람
+        // 연쇄: 사라진 자리에서 가장 가까운 적을 향해 새 솔바람 (5레벨: 처음 3번은 꽃을 향함)
         if (w.chains > 0) {
-          const t = this.enemies.nearestN(w.x, w.z, 12, 1)[0];
+          const t = (w.flowerChains > 0 && this.nearestFlower(w.x, w.z, 12)) || this.enemies.nearestN(w.x, w.z, 12, 1)[0];
           if (t) {
             const d = Math.hypot(t.x - w.x, t.z - w.z) || 1;
-            this.spawnWind(w.sk, w.st, w.x, w.z, (t.x - w.x) / d, (t.z - w.z) / d, w.chains - 1);
+            this.spawnWind(w.sk, w.st, w.x, w.z, (t.x - w.x) / d, (t.z - w.z) / d, w.chains - 1, Math.max(0, w.flowerChains - 1));
             this.fx.ring(w.x, w.z, 0.8, 0xd8fff0, 0.3);
           }
         }
@@ -954,10 +963,6 @@ export class SkillRuntime {
           this.spawnProj({ kind: 'ice', sk, ...gen(), gen, x: e.x + dx * e.r, z: e.z + dz * e.r, y: 0.6, dx, dz, st: ast, ignore: e, chains: sampleInt(ast.chains) });
         }
       }
-    }
-    if (e.shockT > 0) {
-      const sk = game.skills.find((s) => s.key === 'lightningAura');
-      if (sk) this.thunder(sk, e);
     }
   }
 

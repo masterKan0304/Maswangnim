@@ -13,7 +13,7 @@ const RANGE = 30 / U;      // 꽃이 피는 거리 (30)
 const AREA = 20;           // 꽃 폭발 효과 범위 (지름)
 const DMG = [12, 16];
 const MAX_FLOWERS = 24;
-const FRUIT_COLORS = { none: [0xff5a6e, 0xffc2ca], fire: [0xff7a2e, 0xffd27a], ice: [0x7fd8ff, 0xe0f8ff], lightning: [0xffe066, 0xfff8c0] };
+const FRUIT_COLORS = { none: [0xff5a6e, 0xffc2ca], fire: [0xff7a2e, 0xffd27a], ice: [0x7fd8ff, 0xe0f8ff], ocean: [0x3fa8ff, 0xc0e4ff] };
 
 export class Bloom {
   constructor(scene, fx, enemies, player, skillsRt) {
@@ -194,10 +194,10 @@ export class Bloom {
   // ── 열매 ──
   growFruit(f, sk) {
     const st = getStats(sk);
-    const el = sk.level >= 3 ? ['fire', 'ice', 'lightning'][Math.floor(Math.random() * 3)] : 'none';
+    const el = sk.level >= 3 ? ['fire', 'ice', 'ocean'][Math.floor(Math.random() * 3)] : 'none';
     const [c1, c2] = FRUIT_COLORS[el];
     const mat = new THREE.MeshStandardMaterial({ color: c1, emissive: c1, emissiveIntensity: 0.25, roughness: 0.4, flatShading: true });
-    const mesh = new THREE.Mesh(el === 'lightning' ? new THREE.OctahedronGeometry(0.24, 0) : el === 'ice' ? new THREE.IcosahedronGeometry(0.24, 0) : this.geo.fruit, mat);
+    const mesh = new THREE.Mesh(el === 'ocean' ? new THREE.OctahedronGeometry(0.24, 0) : el === 'ice' ? new THREE.IcosahedronGeometry(0.24, 0) : this.geo.fruit, mat);
     mesh.castShadow = true;
     mesh.position.set(f.x, 0.6, f.z);
     mesh.scale.setScalar(0.01);

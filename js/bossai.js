@@ -5,7 +5,7 @@
 // ─────────────────────────────────────────────
 import * as THREE from 'three';
 import { game } from './state.js';
-import { ENEMY_SKILLS, STAT_UNIT as U, WORLD_HALF } from './config.js';
+import { ENEMY_SKILLS, STAT_UNIT as U, WORLD_HALF, STATUS } from './config.js';
 import { sfx } from './audio.js';
 
 const LEAP = ENEMY_SKILLS.eliteLeap, SPIT = ENEMY_SKILLS.bossSpit, STOMP = ENEMY_SKILLS.bossStomp;
@@ -20,7 +20,8 @@ export class EnemySkills {
   }
 
   // 기술 속도 배율 (도감 미리보기에서는 더 자주 보여 줌)
-  rate(e) { return e.skillRate || 1; }
+  // 기술 속도 (탈진: 30% 느려짐)
+  rate(e) { return (e.skillRate || 1) * (e.exhaustT > 0 ? 1 - STATUS.exhaust : 1); }
 
   update(dt) {
     for (const e of this.enemies.list) {
@@ -64,11 +65,11 @@ export class EnemySkills {
   }
 
   // 범위 안 플레이어: 피해 + 범위 밖으로 밀어냄 / 일반 적: 밀어내기만
-  impact(x, z, r, dmg, color) {
+  impact(x, z, r, dmg, color, element = 'nature') {
     const p = this.player.pos;
     const dx = p.x - x, dz = p.z - z, d = Math.hypot(dx, dz);
     if (d < r + this.player.radius) {
-      this.player.takeDamage(dmg);
+      this.player.takeDamage(dmg, element);
       const nx = d > 0.01 ? dx / d : 1, nz = d > 0.01 ? dz / d : 0;
       const v = (r - d + 0.9) * 6;   // 밀려나는 거리 ≈ v / 6
       this.player.push(nx * v, nz * v);
@@ -97,6 +98,8 @@ export class EnemySkills {
   // ── 정예: 힘 모으기 → 도약 ──
   elite(e, dt) {
     const s = e.sk || (e.sk = { cd: LEAP.every, phase: 'idle', t: 0 });
+    if (e.stunT > 0 && s.phase !== 'leap') return;   // 기절: 기술 멈춤 (도약 중에는 착지까지)
+    if (e.exhaustT > 0) dt *= 1 - STATUS.exhaust;    // 탈진: 기술 진행도 느려짐
     if (s.phase === 'idle') {
       s.cd -= dt * this.rate(e);
       if (s.cd <= 0) { s.phase = 'charge'; s.t = 0; e.hold = true; s.bx = e.x; s.bz = e.z; }
@@ -147,6 +150,8 @@ export class EnemySkills {
   // ── 킹 슬라임 ──
   boss(e, dt) {
     const s = e.sk || (e.sk = { spitCd: SPIT.every, stompCd: STOMP.every, phase: 'idle', t: 0 });
+    if (e.stunT > 0) return;                         // 기절: 기술 멈춤
+    if (e.exhaustT > 0) dt *= 1 - STATUS.exhaust;    // 탈진: 기술 진행도 느려짐
     const p = this.player.pos;
     if (s.phase === 'idle') {
       s.spitCd -= dt * this.rate(e);

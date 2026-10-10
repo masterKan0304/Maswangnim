@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import { PLAYER, WORLD_HALF, DASH } from './config.js';
 import { createPlayer } from './models.js';
 import { game } from './state.js';
+import { CHARACTERS } from './characters.js';
+import { isWeak, WEAK_MUL } from './config.js';
 import { movePressed } from './keys.js';
 import { getStats, sample } from './skills.js';
 import { makeGlowSprite } from './effects.js';
@@ -190,7 +192,10 @@ export class Player {
 
   castPulse(color) { this.castT = 0.25; this.castColor.set(color); }
 
-  takeDamage(amount) {
+  // element: 공격 속성 — 캐릭터 속성이 약한 속성이면 25% 더 받음
+  takeDamage(amount, element = null) {
+    const myEl = CHARACTERS[game.charId] && CHARACTERS[game.charId].element;
+    if (isWeak(myEl, element)) amount *= WEAK_MUL;
     // 미리보기: 실제로 맞은 것처럼 보이기만 함 (체력은 그대로, 죽지 않음)
     if (game.demo && game.state === 'start') {
       if (this.invuln > 0 || this.hidden) return;

@@ -6,7 +6,7 @@ import { accountNeed } from './config.js';
 
 export const CHARACTERS = {
   masang: {
-    id: 'masang', name: '마솽', icon: 'sprout', color: '#7ed957',
+    id: 'masang', name: '마솽', icon: 'sprout', color: '#7ed957', element: 'nature',
     desc: '숲에서 태어난 새싹 정령입니다. 쓰러뜨린 적에게서 양분을 모아 전장에 꽃을 피우고, 피어난 꽃과 열매로 적을 몰아냅니다.',
     passive: {
       name: '개화', icon: 'flower',

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { ENEMY_TYPES, WORLD_HALF, STATUS } from './config.js';
+import { ENEMY_TYPES, WORLD_HALF, STATUS, isWeak, WEAK_MUL } from './config.js';
 import { slimeBodyGeometry, slimeFaceGeometry, createKingSlime, createEliteSlime } from './models.js';
 import { game } from './state.js';
 import { recordDamage } from './dps.js';
@@ -10,8 +10,11 @@ const CELL = 2;
 const _m = new THREE.Matrix4(), _q = new THREE.Quaternion(), _s = new THREE.Vector3(), _p = new THREE.Vector3(), _c = new THREE.Color();
 const UP = new THREE.Vector3(0, 1, 0);
 const WHITE = new THREE.Color(0xffffff);
-const TINT = { burn: new THREE.Color(0xff5a14), chill: new THREE.Color(0x9fe6ff), shock: new THREE.Color(0xfff06a), root: new THREE.Color(0x6a8a2a) };
-const ELEM_NUM = { fire: 'fire', ice: 'ice', lightning: 'elec' };
+const TINT = {
+  burn: new THREE.Color(0xff5a14), chill: new THREE.Color(0x9fe6ff), root: new THREE.Color(0x6a8a2a),
+  poison: new THREE.Color(0x5fd34a), exhaust: new THREE.Color(0x4a6a9a), stun: new THREE.Color(0xffe066), fear: new THREE.Color(0x5a2a9a), cons: new THREE.Color(0xffe680),
+};
+const ELEM_NUM = { fire: 'fire', ice: 'ice', nature: 'nature', ocean: 'ocean', earth: 'earth', dark: 'dark', radiant: 'radiant' };
 const key = (cx, cz) => (cx + 1000) * 4096 + (cz + 1000);
 
 export class EnemyManager {
@@ -45,6 +48,7 @@ export class EnemyManager {
       alive: true, boss: type === 'boss', color: new THREE.Color(T.color),
       y: 0, sy: 1, sxz: 1, spawnT: 0,
       burnT: 0, burnDmg: 0, burnTick: 0, chillT: 0, shockT: 0, rootT: 0,
+      poisonT: 0, poisonTick: 0, exhaustT: 0, stunT: 0, fearT: 0, fearImmune: 0, consT: 0, consAcc: 0, element: T.element || null,
     };
     e.elite = type === 'elite';
     if (e.boss || e.elite) {
@@ -97,25 +101,31 @@ export class EnemyManager {
     return c.length ? c[Math.floor(Math.random() * c.length)] : null;
   }
 
-  // element: 'fire' | 'ice' | 'lightning', status: 상태이상 부여 확률(0~1). 상태이상을 먼저 부여한 뒤 피해 적용
+  // element: 'fire' | 'ice' | 'nature' | 'ocean' | 'earth' | 'dark' | 'radiant', status: 상태이상 부여 확률(0~1). 상태이상을 먼저 부여한 뒤 피해 적용
   // pen: 저항 무시 { pct(0~1), flat }, crit: 치명타 여부, src/st: 피해를 준 스킬 (처치 시 효과용)
   // (dot: 지속 피해는 상태이상을 부여하지 않음)
-  damage(e, amount, { kx = 0, kz = 0, color, element = null, status = 0, dot = false, pen = null, crit = false, src = null, st = null } = {}) {
+  // raw: 공포 추가 피해 / 축성 폭발처럼 다른 효과에서 나온 피해 (다시 공포 · 축성에 쌓이지 않음)
+  damage(e, amount, { kx = 0, kz = 0, color, element = null, status = 0, dot = false, pen = null, crit = false, src = null, st = null, raw = false } = {}) {
     if (!e.alive) return;
-    if (element && !dot && Math.random() < status) this.applyStatus(e, element, amount, src, st);
+    // 같은 속성끼리는 상태이상을 걸 수 없음
+    if (element && !dot && element !== e.element && Math.random() < status) this.applyStatus(e, element, amount, src, st);
     // 속성 저항: 피해 × 100 / (100 + 저항). 저항 무시로 음수가 되면 그만큼 더 받음
     if (element) {
       let res = e.T.res || 0;
       if (pen) res = res * (1 - Math.min(1, pen.pct)) - pen.flat;
       amount *= res >= 0 ? 100 / (100 + res) : 2 - 100 / (100 - res);
     }
-    if (e.shockT > 0) amount *= 1 + STATUS.shockAmp;
+    if (isWeak(e.element, element)) amount *= WEAK_MUL;                 // 속성 상성: 약한 속성에 25% 더
     if (element === 'fire' && e.fireVuln) amount *= 1 + e.fireVuln;   // 화염 방사 5레벨 취약
     if (!color && element) color = ELEM_NUM[element];
     if (!src) amount *= game.mods.dmgMul;   // 스킬이 아닌 피해(꽃 등)만 여기서 — 스킬 피해는 능력치에 이미 반영
     amount = amount > 0 ? Math.max(1, Math.round(amount)) : 0;   // 실제 피해는 소수점 반올림 (최소 1)
-    recordDamage(src, amount);    // DPS 표 기록
-    e.hp -= amount;
+    // 공포: 받는 피해의 20% 를 칠흑 피해로 더 받음 / 축성: 받는 피해를 쌓아 둠
+    const fearExtra = !raw && e.fearT > 0 && amount > 0 ? Math.max(1, Math.round(amount * STATUS.fearExtra)) : 0;
+    if (!raw && e.consT > 0) e.consAcc += amount + fearExtra;
+    recordDamage(src, amount + fearExtra);    // DPS 표 기록
+    e.hp -= amount + fearExtra;
+    if (fearExtra) this.fx.numbers.spawn(e.x + 0.35, 1.3 + e.r * 1.4, e.z, fearExtra, 'dark');
     e.flash = 0.12;
     const kb = e.boss ? 0.1 : e.elite ? 0.3 : 1;
     e.kx += kx * kb; e.kz += kz * kb;
@@ -140,13 +150,64 @@ export class EnemyManager {
     } else if (element === 'ice') {
       if (e.chillT <= 0) this.fx.particles.burst(e.x, 0.5, e.z, 6, [0xd8f8ff, 0x9fe6ff], { speed: 1.5, size: 0.07, life: 0.4, up: 1.5 });
       e.chillT = STATUS.duration;
-    } else if (element === 'lightning') {
-      e.shockT = STATUS.duration;
+    } else if (element === 'nature') {
+      // 중독: 3초간 1초마다 최대 체력의 일정 비율
+      e.poisonSrc = src; e.poisonSt = st;
+      if (e.poisonT <= 0) e.poisonTick = STATUS.poisonTick;
+      e.poisonT = STATUS.duration;
+    } else if (element === 'ocean') {
+      e.exhaustT = STATUS.duration;                 // 탈진
+    } else if (element === 'earth') {
+      const mul = e.boss ? STATUS.stunMul.boss : e.elite ? STATUS.stunMul.elite : 1;
+      e.stunT = Math.max(e.stunT, STATUS.stun * mul);   // 기절
+    } else if (element === 'dark') {
+      // 공포: 풀린 뒤 3초간은 다시 걸리지 않음
+      if (e.fearT <= 0 && e.fearImmune <= 0) e.fearT = STATUS.duration * (e.boss || e.elite ? STATUS.fearBossMul : 1);
+    } else if (element === 'radiant') {
+      // 축성 중 다시 걸리면 쌓인 피해의 100% 를 바로 주고 새로 축성
+      if (e.consT > 0 && e.consAcc > 0) this.consBurst(e, STATUS.consecrateRe);
+      e.consSrc = src; e.consSt = st;
+      e.consT = STATUS.duration; e.consAcc = 0;
     }
+  }
+
+  // 축성 폭발: 쌓인 피해의 일정 비율을 광휘 피해로
+  consBurst(e, ratio) {
+    const v = e.consAcc * ratio;
+    e.consAcc = 0;
+    if (v <= 0 || !e.alive) return;
+    this.fx.particles.burst(e.x, 0.6 + e.r, e.z, 14, [0xffe680, 0xffffff, 0xfff3b0], { speed: 3, size: 0.12, life: 0.5, up: 4 });
+    this.fx.ring(e.x, e.z, e.r * 1.6, 0xffe680, 0.4);
+    this.damage(e, v, { element: 'radiant', dot: true, raw: true, color: 'radiant', src: e.consSrc, st: e.consSt });
   }
 
   updateStatus(e, dt) {
     if (e.rootT > 0) e.rootT -= dt;
+    if (e.poisonT > 0) {
+      e.poisonT -= dt; e.poisonTick -= dt;
+      if (Math.random() < dt * 6) this.fx.particles.emit(e.x + (Math.random() - 0.5) * e.r, 0.4 + Math.random() * e.r, e.z + (Math.random() - 0.5) * e.r, 0, 0.9, 0, 0.5, 0.08, Math.random() < 0.5 ? 0x6fd36a : 0xb8f5a0, -0.5);
+      if (e.poisonTick <= 0) {
+        e.poisonTick += STATUS.poisonTick;
+        const pct = e.boss ? STATUS.poisonPct.boss : e.elite ? STATUS.poisonPct.elite : STATUS.poisonPct.normal;
+        this.damage(e, e.maxHp * pct, { element: 'nature', dot: true, color: 'poison', src: e.poisonSrc, st: e.poisonSt });
+        if (!e.alive) return;
+      }
+    }
+    if (e.exhaustT > 0) e.exhaustT -= dt;
+    if (e.stunT > 0) {
+      e.stunT -= dt;
+      if (Math.random() < dt * 8) { const a = Math.random() * Math.PI * 2; this.fx.particles.emit(e.x + Math.cos(a) * e.r * 0.7, 0.6 + e.r * 1.6, e.z + Math.sin(a) * e.r * 0.7, -Math.sin(a) * 1.5, 0.2, Math.cos(a) * 1.5, 0.35, 0.08, 0xffe066, 0); }
+    }
+    if (e.fearT > 0) {
+      e.fearT -= dt;
+      if (e.fearT <= 0) e.fearImmune = STATUS.fearImmune;
+      if (Math.random() < dt * 6) this.fx.particles.emit(e.x + (Math.random() - 0.5) * e.r, 0.5 + Math.random() * e.r, e.z + (Math.random() - 0.5) * e.r, 0, 1, 0, 0.5, 0.09, Math.random() < 0.5 ? 0x5a2a9a : 0x9a6bff, -0.8);
+    } else if (e.fearImmune > 0) e.fearImmune -= dt;
+    if (e.consT > 0) {
+      e.consT -= dt;
+      if (Math.random() < dt * 5) this.fx.particles.emit(e.x + (Math.random() - 0.5) * e.r, 0.5 + Math.random() * e.r, e.z + (Math.random() - 0.5) * e.r, 0, 0.8, 0, 0.5, 0.07, 0xffe680, -0.5);
+      if (e.consT <= 0) { this.consBurst(e, STATUS.consecrate); if (!e.alive) return; }
+    }
     if (e.burnT > 0) {
       e.burnT -= dt;
       e.burnTick -= dt;
@@ -159,11 +220,6 @@ export class EnemyManager {
       if (e.burnT <= 0) e.burnTick = 0;
     }
     if (e.chillT > 0) e.chillT -= dt;
-    if (e.shockT > 0) {
-      e.shockT -= dt;
-      if (Math.random() < dt * 6) this.fx.particles.emit(e.x + (Math.random() - 0.5) * e.r * 1.5, 0.4 + Math.random() * e.r, e.z + (Math.random() - 0.5) * e.r * 1.5,
-        (Math.random() - 0.5) * 3, 2, (Math.random() - 0.5) * 3, 0.15, 0.06, 0xfff6a8, 0);
-    }
   }
 
   update(dt, player, obstacles) {
@@ -196,12 +252,13 @@ export class EnemyManager {
       let dx = tx - e.x, dz = tz - e.z;
       const dist = Math.hypot(dx, dz) || 1;
       dx /= dist; dz /= dist;
+      if (e.fearT > 0) { dx = -dx; dz = -dz; }   // 공포: 플레이어에게서 정반대로 달아남
 
       // 통통 튀는 이동
       e.phase += dt * (e.boss ? 0.75 : 1.6);
       const p = e.phase % 1;
       const air = p < 0.6;
-      const mv = e.rootT > 0 ? 0 : e.speed * (air ? 1.4 : 0.3) * (e.chillT > 0 ? 1 - STATUS.slow : 1);   // 속박: 움직이지 못함
+      const mv = e.rootT > 0 || e.stunT > 0 ? 0 : e.speed * (air ? 1.4 : 0.3) * (e.chillT > 0 ? 1 - STATUS.slow : 1) * (e.fearT > 0 ? 1 - STATUS.fearSlow : 1);   // 속박 / 기절: 멈춤, 공포: 30% 느림
       let vx = dx * mv, vz = dz * mv;
 
       // 분리 (겹침 방지)
@@ -251,8 +308,9 @@ export class EnemyManager {
       if (!e.alive) continue;
 
       // 접촉 피해
-      if (lure) { if (Math.hypot(lure.x - e.x, lure.z - e.z) < e.r * 0.9 + lure.radius) lure.hit(e); }   // 인형이 공격을 대신 받음
-      else if (Math.hypot(px - e.x, pz - e.z) < e.r * 0.9 + player.radius) player.takeDamage(e.dmg);
+      if (e.stunT > 0) { /* 기절: 부딪혀도 피해 없음 */ }
+      else if (lure) { if (Math.hypot(lure.x - e.x, lure.z - e.z) < e.r * 0.9 + lure.radius) lure.hit(e); }   // 인형이 공격을 대신 받음
+      else if (Math.hypot(px - e.x, pz - e.z) < e.r * 0.9 + player.radius) player.takeDamage(e.dmg, e.element);
 
     }
   }
@@ -262,7 +320,11 @@ export class EnemyManager {
     out.copy(e.color);
     if (e.chillT > 0) out.lerp(TINT.chill, 0.5);
     if (e.burnT > 0) out.lerp(TINT.burn, 0.3 + 0.15 * Math.sin(t * 20 + e.phase * 10));
-    if (e.shockT > 0 && Math.sin(t * 30 + e.phase * 20) > 0.3) out.lerp(TINT.shock, 0.5);
+    if (e.poisonT > 0) out.lerp(TINT.poison, 0.35 + 0.1 * Math.sin(t * 6 + e.phase * 10));
+    if (e.exhaustT > 0) out.lerp(TINT.exhaust, 0.4);
+    if (e.stunT > 0 && Math.sin(t * 24 + e.phase * 20) > 0) out.lerp(TINT.stun, 0.45);
+    if (e.fearT > 0) out.lerp(TINT.fear, 0.5);
+    if (e.consT > 0) out.lerp(TINT.cons, 0.25 + 0.2 * Math.sin(t * 10 + e.phase * 10));
     if (e.rootT > 0) out.lerp(TINT.root, 0.45);
     return out;
   }

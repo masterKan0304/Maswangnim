@@ -40,19 +40,6 @@ export const SKILL_DEFS = {
     levelText: (lv) => ['피해량과 보호막 획득량이 30% 증가합니다.', lv === 3 && '최대 스택이 1 증가합니다.', lv === 5 && '피해를 준 적을 밀쳐냅니다.'],
     extra: (sk) => [`최대 스택은 ${sk.level >= 3 ? 4 : 3}개입니다.`, sk.level >= 5 && '피해를 준 적을 밀쳐냅니다.'],
   },
-  chainLightning: {
-    key: 'chainLightning', name: '연쇄 번개', icon: ic('bolt'), color: '#ffe066', element: 'lightning', passive: false, castTime: 0.1,
-    short: '가장 가까운 적에게 번개를 쏘고 다른 적에게 연쇄합니다.',
-    desc: '가장 가까운 적에게 번개를 쏩니다. 번개는 주변의 다른 적에게 연쇄합니다.',
-    keywords: ['번개', '연쇄', '투사체', '상태이상', '스킬 쿨타임'],
-    base: { damage: [1, 15], range: 30, chains: 3, projCount: 1, projSize: 4, projSpeed: 6, statusChance: 40, manaCost: 6, cooldown: 2 },
-    labels: { projCount: '번개 줄기 수', projSize: '번개 굵기', projSpeed: '연쇄 속도' },
-    relevant: ['damage', 'chains', 'projCount', 'projSize', 'projSpeed', 'statusChance', 'manaCost', 'cooldown'],
-    hiddenUses: ['range'],
-    levelUp(st, lv) { dmgUp40(st, lv); if (lv >= 3) st.chains = { min: 6, max: 6 }; },
-    levelText: (lv) => ['피해량이 40% 증가합니다.', lv === 3 && '기본 연쇄 횟수가 6회가 됩니다.', lv === 5 && '번개 줄기에 닿은 적도 피해를 입습니다.'],
-    extra: (sk) => [sk.level >= 5 && '번개 줄기에 닿은 적도 피해를 입습니다.'],
-  },
   iceball: {
     key: 'iceball', name: '아이스볼', icon: ic('snowflake'), color: '#9fe6ff', element: 'ice', passive: false, castTime: 0.2, projectile: true,
     contactDamage: [1, 2], tick: 0.2, fireInterval: 0.1, contactChanceRatio: 2 / 3,
@@ -110,19 +97,6 @@ export const SKILL_DEFS = {
     },
     levelText: (lv) => ['피해량이 40% 증가합니다.', lv === 3 && '기본 투사체 개수가 12개가 됩니다.', lv === 5 && '기본 관통 횟수가 2회가 됩니다.'],
   },
-  lightningAura: {
-    key: 'lightningAura', name: '번개의 기운', icon: ic('storm'), color: '#ffe066', element: 'lightning', passive: true,
-    short: '감전 상태인 적을 처치하면 주변 적에게 낙뢰가 떨어집니다.',
-    desc: '감전 상태인 적을 처치하면 주변의 무작위 적에게 낙뢰를 내려칩니다. 한 적은 낙뢰를 한 번만 맞습니다.',
-    keywords: ['번개', '투사체', '상태이상', '패시브'],
-    base: { damage: [1, 10], range: 100, projCount: 1, statusChance: 50 },
-    labels: { projCount: '낙뢰 수' },
-    relevant: ['damage', 'projCount', 'statusChance'],
-    hiddenUses: ['range'],
-    levelUp(st, lv) { dmgUp40(st, lv); if (lv >= 3) st.projCount = { min: 2, max: 2 }; },
-    levelText: (lv) => ['피해량이 40% 증가합니다.', lv === 3 && '기본 낙뢰 수가 2개가 됩니다.', lv === 5 && '감전된 적에게는 낙뢰 피해가 50% 증가합니다.'],
-    extra: (sk) => [sk.level >= 5 && '감전된 적에게는 낙뢰 피해가 50% 증가합니다.'],
-  },
   snowfall: {
     key: 'snowfall', name: '낙석', icon: ic('snowball'), color: '#c8f2ff', element: 'ice', passive: false, castTime: 0.15,
     short: '체력이 가장 높은 적에게 커다란 눈덩이를 떨어뜨립니다.',
@@ -134,19 +108,6 @@ export const SKILL_DEFS = {
     levelUp(st, lv) { dmgUp40(st, lv); if (lv >= 3) st.area = { min: st.area.min * 1.5, max: st.area.max * 1.5 }; },
     levelText: (lv) => ['피해량이 40% 증가합니다.', lv === 3 && '기본 범위가 50% 증가합니다.', lv === 5 && '박힌 눈덩이가 잠시 후 한 번 더 폭발합니다.'],
     extra: (sk) => ['연쇄하면 같은 자리에 눈덩이가 다시 떨어집니다.', sk.level >= 5 && '박힌 눈덩이가 0.75초 후 폭발합니다.'],
-  },
-  lightningBeam: {
-    key: 'lightningBeam', name: '번개 광선', icon: ic('beam'), color: '#fff27a', element: 'lightning', passive: false, castTime: 0.1,
-    tick: 0.25,
-    short: '가장 가까운 적을 향해 나아가는 번개 광선을 내리꽂습니다.',
-    desc: '가장 가까운 적 방향으로 번개 광선이 하늘에서 내리꽂히며 앞으로 나아갑니다. 광선에 닿은 적은 0.25초마다 피해를 입습니다.',
-    keywords: ['번개', '효과 범위', '지속 시간', '연쇄', '상태이상', '스킬 쿨타임'],
-    base: { damage: [1, 9], area: 10, duration: 5, projSpeed: 0.75, statusChance: 40, manaCost: 15, cooldown: 12 },
-    labels: { area: '광선 범위', projSpeed: '광선 속도' },
-    relevant: ['damage', 'area', 'duration', 'projSpeed', 'chains', 'statusChance', 'manaCost', 'cooldown'],
-    levelUp: dmgUp40,
-    levelText: (lv) => ['피해량이 40% 증가합니다.', lv === 3 && '광선이 대상 적을 계속 따라갑니다.', lv === 5 && '추적 대상에게 피해를 줄 때마다 작은 번개 5개가 튑니다.'],
-    extra: (sk) => ['연쇄하면 처음 맞은 적에게서 광선이 하나 더 뻗어 나갑니다.', sk.level >= 3 && '광선이 대상 적을 계속 따라갑니다.', sk.level >= 5 && '추적 대상을 맞히면 작은 번개 5개가 튑니다.'],
   },
   enchant: {
     key: 'enchant', name: '효과 부여', icon: ic('sparkle'), color: '#ffd45a', element: null, passive: true,
@@ -231,9 +192,9 @@ Object.assign(SKILL_DEFS, {
     base: { damage: [4, 12], duration: 4, projSize: 30, projSpeed: 8, projCount: 1, manaCost: 5, cooldown: 1.5 },
     labels: { duration: '투사체 지속 시간' },
     relevant: ['damage', 'duration', 'projSize', 'projSpeed', 'projCount', 'chains', 'manaCost', 'cooldown'],
-    levelUp(st, lv) { dmgUp40(st, lv); if (lv >= 3) st.projCount = { min: 3, max: 3 }; },
-    levelText: (lv) => ['피해량이 40% 증가합니다.', lv === 3 && '기본 투사체 개수가 3개가 됩니다.', lv === 5 && '꽃에 닿을 때마다 피해량, 크기, 속도가 20%씩 증가합니다. (최대 3회)'],
-    extra: (sk) => [sk.level >= 5 && '꽃에 닿을 때마다 강해지며 꽃잎이 휘날립니다.'],
+    levelUp(st, lv) { dmgUp40(st, lv); if (lv >= 3) st.projCount = { min: 3, max: 3 }; if (lv >= 5) st.chains = { min: st.chains.min + 3, max: st.chains.max + 3 }; },
+    levelText: (lv) => ['피해량이 40% 증가합니다.', lv === 3 && '기본 투사체 개수가 3개가 됩니다.', lv === 5 && '연쇄 횟수가 3 증가하고, 처음 3번의 연쇄는 꽃을 향합니다.'],
+    extra: (sk) => [sk.level >= 5 && '사거리 안에 꽃이 있으면 처음 3번의 연쇄는 꽃을 향합니다.'],
   },
   roots: {
     key: 'roots', name: '옭아매는 뿌리', icon: ic('roots'), color: '#8ab84a', element: null, passive: false, castTime: 0.15, projectile: true, owner: 'masang', rootTime: 1.5,
@@ -285,8 +246,20 @@ Object.assign(SKILL_DEFS, {
   },
 });
 
-export const SKILL_ORDER = ['fireball', 'frostBarrier', 'chainLightning', 'iceball', 'magnet', 'fireAura', 'frostAura', 'lightningAura', 'enchant', 'triggerKill', 'flamethrower', 'snowfall', 'lightningBeam'];
-export const ATTACK_SKILLS = ['fireball', 'chainLightning', 'iceball', 'flamethrower', 'snowfall', 'lightningBeam', 'leafCut', 'pineWind', 'roots', 'strawDoll', 'honeyBomb'];
+// 번개 속성 스킬(연쇄 번개 / 번개의 기운 / 번개 광선)은 목록에서 뺌 — 새 속성 스킬로 대체 예정
+// 마솽 전용 스킬은 모두 자연 속성 (피해를 주는 스킬은 상태이상 발생율도 가짐)
+for (const k of ['leafCut', 'nature', 'fruit', 'pineWind', 'roots', 'strawDoll', 'honeyBomb', 'worldSeed']) {
+  const d = SKILL_DEFS[k];
+  d.element = 'nature';
+  if (!d.keywords.includes('자연')) d.keywords.unshift('자연');
+  if (d.base.damage) {
+    if (d.base.statusChance == null) d.base.statusChance = k === 'worldSeed' ? 50 : 25;
+    if (!d.relevant.includes('statusChance')) d.relevant.push('statusChance');
+  }
+}
+
+export const SKILL_ORDER = ['fireball', 'frostBarrier', 'iceball', 'magnet', 'fireAura', 'frostAura', 'enchant', 'triggerKill', 'flamethrower', 'snowfall'];
+export const ATTACK_SKILLS = ['fireball', 'iceball', 'flamethrower', 'snowfall', 'leafCut', 'pineWind', 'roots', 'strawDoll', 'honeyBomb'];
 // 3레벨 / 5레벨에 추가되는 효과 설명
 export const milestoneText = (d, lv) => d.levelText(lv).slice(1).filter(Boolean)[0] || '';
 export const enchantReq = (sk) => Math.max(1, sk.def.xpReq - (sk.level - 1));
@@ -317,7 +290,7 @@ export function shownStats(def, stats) {
   const out = def.relevant.filter((k) => !SUBJECTS[k].hidden);
   if (isDamaging(def)) {
     const i = out.indexOf('damage') + 1;
-    const extras = ['fireDmg', 'iceDmg', 'lightningDmg'].filter((k) => k !== ELEMENT_DMG[def.element] && (!stats || stats[k].max > 0));
+    const extras = Object.values(ELEMENT_DMG).filter((k) => k !== ELEMENT_DMG[def.element] && (!stats || stats[k].max > 0));
     out.splice(i, 0, ...extras);
     out.push('critChance', 'critDamage');
     if (!stats || stats.penetration.max > 0 || stats.penPct.max > 0) out.push('penetration');
@@ -472,7 +445,7 @@ function runSentences(skill, stats, extra = [], scale = 1) {
       stats[subj] = { min: stats.damage.min * val.min, max: stats.damage.max * val.max };
     } else applyEffect(stats, subj, val, change);
     // 피해량 변화는 이미 추가된 속성 피해에도 적용
-    if (subj === 'damage') for (const ek of ['fireDmg', 'iceDmg', 'lightningDmg']) if (stats[ek].max > 0) applyEffect(stats, ek, val, change);
+    if (subj === 'damage') for (const ek of Object.values(ELEMENT_DMG)) if (stats[ek].max > 0) applyEffect(stats, ek, val, change);
     // 지속 시간 변화는 투사체 지속 시간에도 똑같이 적용
     if (subj === 'duration' && skillUses(d, 'projDuration')) applyEffect(stats, 'projDuration', val, change);
     log.push({ i, ok: true, subj: key, before, after: { ...stats[key] } });
@@ -518,7 +491,7 @@ function applyUpgradeStats(skill, st) {
     st.damage = { min: st.damage.min + add, max: st.damage.max + add };
   }
   const dmgF = (m.dmgMul || 1) * (d.projectile && m.projDmg ? 1 + m.projDmg : 1);
-  for (const k of ['damage', 'fireDmg', 'iceDmg', 'lightningDmg']) mul(k, dmgF);
+  for (const k of ['damage', ...Object.values(ELEMENT_DMG)]) mul(k, dmgF);
   mul('area', m.areaMul);
   mul('range', m.rangeMul);
   if (d.projectile || d.relevant.includes('projSpeed')) {

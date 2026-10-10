@@ -145,7 +145,12 @@ kbd {
 }
 .dmg.fire { color: #ffd27a; }
 .dmg.ice { color: #bdf2ff; font-size: 14px; }
-.dmg.elec { color: #fff6a8; }
+.dmg.nature { color: #a8f09a; }
+.dmg.poison { color: #7fe07a; font-size: 13px; }
+.dmg.ocean { color: #9fd2ff; }
+.dmg.earth { color: #e8b47a; }
+.dmg.dark { color: #c8a8ff; font-size: 13px; }
+.dmg.radiant { color: #fff0a8; text-shadow: 0 0 8px rgba(255,230,128,0.8); }
 .dmg.hurt { color: #ff5a6e; font-size: 22px; }
 .dmg.shield { color: #7fdcff; font-size: 18px; }
 .dmg.heal { color: #6ff0a0; font-size: 16px; }
@@ -408,7 +413,11 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
 .elem { display: inline-block; font-family: 'Noto Sans KR'; font-size: 10px; font-weight: 900; padding: 0 5px; border-radius: 4px; color: #1a1a1a; vertical-align: 1px; line-height: 1.5; }
 .elem.e-fire { background: #ff8a4a; }
 .elem.e-ice { background: #8fe3ff; }
-.elem.e-lightning { background: #ffe066; }
+.elem.e-nature { background: #6fd36a; }
+.elem.e-ocean { background: #5fb4ff; }
+.elem.e-earth { background: #c8925a; }
+.elem.e-dark { background: #9a6bff; color: #fff; }
+.elem.e-radiant { background: #ffe680; }
 .dmg.burn { color: #ff9a5a; font-size: 13px; }
 
 /* 재조합 */
@@ -637,7 +646,11 @@ body.game-paused #bossbar { top: 104px; }
 /* 속성 피해 색 / 치명타 / 문장 희귀도 */
 .st.el-fire b, .tip-stats .el-fire, .st.el-fire { color: #ff8a5a; }
 .st.el-ice b, .tip-stats .el-ice, .st.el-ice { color: #8fe3ff; }
-.st.el-lightning b, .tip-stats .el-lightning, .st.el-lightning { color: #ffe066; }
+.st.el-nature b, .tip-stats .el-nature, .st.el-nature { color: #7fe07a; }
+.st.el-ocean b, .tip-stats .el-ocean, .st.el-ocean { color: #6fbcff; }
+.st.el-earth b, .tip-stats .el-earth, .st.el-earth { color: #d8a46a; }
+.st.el-dark b, .tip-stats .el-dark, .st.el-dark { color: #b48cff; }
+.st.el-radiant b, .tip-stats .el-radiant, .st.el-radiant { color: #ffe680; }
 .dmg.crit { font-size: 24px; color: #ffe14a; text-shadow: -2px 0 #6a1a00, 2px 0 #6a1a00, 0 -2px #6a1a00, 0 2px #6a1a00, 0 0 10px rgba(255,200,40,0.8); }
 .tile.k-sentence.rar2 { box-shadow: inset 0 2px 0 rgba(255,255,255,0.3), 0 0 0 2px #5fb8ff, 0 0 10px rgba(95,184,255,0.7); }
 .tile.k-sentence.rar3 { box-shadow: inset 0 2px 0 rgba(255,255,255,0.3), 0 0 0 2px #ffd45a, 0 0 12px rgba(255,212,90,0.85); }
@@ -650,7 +663,7 @@ body.game-paused #bossbar { top: 104px; }
 .bb-status { display: flex; gap: 4px; justify-content: center; margin-top: 4px; min-height: 22px; }
 .bs { position: relative; font-size: 15px; width: 24px; height: 22px; border-radius: 6px; display: flex; align-items: center; justify-content: center;
   background: rgba(20,22,40,0.8); border: 1.5px solid rgba(255,255,255,0.25); }
-.bs.e-fire { border-color: #ff8a4a; } .bs.e-ice { border-color: #8fe3ff; } .bs.e-lightning { border-color: #ffe066; }
+.bs.e-fire { border-color: #ff8a4a; } .bs.e-ice { border-color: #8fe3ff; } .bs.e-nature { border-color: #6fd36a; } .bs.e-ocean { border-color: #5fb4ff; } .bs.e-earth { border-color: #c8925a; } .bs.e-dark { border-color: #9a6bff; } .bs.e-radiant { border-color: #ffe680; }
 .bs i { position: absolute; right: -4px; bottom: -5px; font-style: normal; font-size: 10px; font-weight: 900; text-shadow: 0 0 3px #000; }
 
 /* 선택지 고르는 중 열린 스킬/인벤토리 창: 보기만 가능 (스크롤과 닫기만 동작) */

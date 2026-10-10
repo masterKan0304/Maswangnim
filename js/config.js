@@ -35,13 +35,17 @@ export const PLAYER = {
 // 단어:주체
 // noWord: 단어 블록으로 나오지 않는 내부 스탯 / hidden: 스킬 창에 표시하지 않음
 // pctOnly: 수치는 백분율만, %p 단위로 계산 / pctType: 다른 문장의 '만큼' 값으로 쓰일 때 백분율로 취급
-export const SUBJECT_ORDER = ['damage', 'fireDmg', 'iceDmg', 'lightningDmg', 'area', 'range', 'duration', 'projDuration', 'castSpeed', 'shield',
+export const SUBJECT_ORDER = ['damage', 'fireDmg', 'iceDmg', 'natureDmg', 'oceanDmg', 'earthDmg', 'darkDmg', 'radiantDmg', 'area', 'range', 'duration', 'projDuration', 'castSpeed', 'shield',
   'pierce', 'projSize', 'projSpeed', 'projCount', 'chains', 'critChance', 'critDamage', 'critFlat', 'penetration', 'penPct', 'statusChance', 'manaCost', 'cooldown', 'haste'];
 export const SUBJECTS = {
   damage:    { name: '피해량',       min: 1,               desc: '스킬이 주는 피해량입니다. 이미 추가된 속성 피해에도 함께 적용됩니다.' },
   fireDmg:   { name: '화염 피해',    min: 0, element: 'fire',      desc: '추가 화염 피해를 얻습니다. 스킬의 속성은 바뀌지 않습니다.' },
   iceDmg:    { name: '냉기 피해',    min: 0, element: 'ice',       desc: '추가 냉기 피해를 얻습니다. 스킬의 속성은 바뀌지 않습니다.' },
-  lightningDmg: { name: '번개 피해', min: 0, element: 'lightning', desc: '추가 번개 피해를 얻습니다. 스킬의 속성은 바뀌지 않습니다.' },
+  natureDmg: { name: '자연 피해',   min: 0, element: 'nature',    desc: '추가 자연 피해를 얻습니다. 스킬의 속성은 바뀌지 않습니다.' },
+  oceanDmg:  { name: '해양 피해',    min: 0, element: 'ocean',     desc: '추가 해양 피해를 얻습니다. 스킬의 속성은 바뀌지 않습니다.' },
+  earthDmg:  { name: '대지 피해',    min: 0, element: 'earth',     desc: '추가 대지 피해를 얻습니다. 스킬의 속성은 바뀌지 않습니다.' },
+  darkDmg:   { name: '칠흑 피해',    min: 0, element: 'dark',      desc: '추가 칠흑 피해를 얻습니다. 스킬의 속성은 바뀌지 않습니다.' },
+  radiantDmg: { name: '광휘 피해',   min: 0, element: 'radiant',   desc: '추가 광휘 피해를 얻습니다. 스킬의 속성은 바뀌지 않습니다.' },
   area:      { name: '효과 범위',    min: 0.5,             desc: '스킬이 닿는 범위입니다.' },
   range:     { name: '사거리',       min: 0.5, noWord: true, hidden: true, desc: '스킬의 사거리입니다.' },
   duration:  { name: '지속 시간',    min: 0.1, max: 60, unit: '초', desc: '스킬 효과가 유지되는 시간입니다.' },
@@ -65,9 +69,9 @@ export const SUBJECTS = {
   haste:     { name: '스킬 가속',    min: 0, pctAdd: true, desc: '스킬 쿨타임이 줄어듭니다. 값이 높을수록 줄어드는 정도가 점점 작아지며, 액티브 스킬에만 적용됩니다.' },
 };
 // 공격 스킬이면 공통으로 사용하는 스탯
-export const DAMAGE_EXTRA = ['fireDmg', 'iceDmg', 'lightningDmg', 'critChance', 'critDamage', 'critFlat', 'penetration', 'penPct'];
+export const DAMAGE_EXTRA = ['fireDmg', 'iceDmg', 'natureDmg', 'oceanDmg', 'earthDmg', 'darkDmg', 'radiantDmg', 'critChance', 'critDamage', 'critFlat', 'penetration', 'penPct'];
 export const STAT_DEFAULTS = { castSpeed: 1, critChance: 10, critDamage: 100 };   // 치명타: 피해 +100%
-export const ELEMENT_DMG = { fire: 'fireDmg', ice: 'iceDmg', lightning: 'lightningDmg' };
+export const ELEMENT_DMG = { fire: 'fireDmg', ice: 'iceDmg', nature: 'natureDmg', ocean: 'oceanDmg', earth: 'earthDmg', dark: 'darkDmg', radiant: 'radiantDmg' };
 
 // 단어:변화
 export const CHANGE_ORDER = ['inc', 'dec', 'set'];
@@ -78,11 +82,11 @@ export const CHANGES = {
 };
 
 export const ENEMY_TYPES = {
-  green:  { name: '그린 슬라임', hp: 10,   dmg: 2,  speed: 2.4, radius: 0.42, xp: 1, color: 0x2fe07c },
-  yellow: { name: '옐로 슬라임', hp: 25,   dmg: 4,  speed: 2.1, radius: 0.52, xp: 3, color: 0xf6cf3a },
-  red:    { name: '레드 슬라임', hp: 50,   dmg: 8,  speed: 1.9, radius: 0.66, xp: 6, color: 0xec4f4a },
-  elite:  { name: '정예 슬라임', hp: 300,  dmg: 10, speed: 2.0, radius: 1.05, xp: 12, color: 0x3f8cff, res: 40 },   // 중간 보스 (2/4/6/8분)
-  boss:   { name: '킹 슬라임',   hp: 5000, dmg: 15, speed: 1.7, radius: 2.0,  xp: 0, color: 0x9b5cf0, res: 80 },   // res: 모든 속성 저항
+  green:  { name: '그린 슬라임', hp: 10,   dmg: 2,  speed: 2.4, radius: 0.42, xp: 1, color: 0x2fe07c, element: 'nature' },
+  yellow: { name: '옐로 슬라임', hp: 25,   dmg: 4,  speed: 2.1, radius: 0.52, xp: 3, color: 0xf6cf3a, element: 'nature' },
+  red:    { name: '레드 슬라임', hp: 50,   dmg: 8,  speed: 1.9, radius: 0.66, xp: 6, color: 0xec4f4a, element: 'nature' },
+  elite:  { name: '정예 슬라임', hp: 300,  dmg: 10, speed: 2.0, radius: 1.05, xp: 12, color: 0x3f8cff, res: 40, element: 'nature' },   // 중간 보스 (2/4/6/8분)
+  boss:   { name: '킹 슬라임',   hp: 5000, dmg: 15, speed: 1.7, radius: 2.0,  xp: 0, color: 0x9b5cf0, res: 80, element: 'nature' },   // res: 모든 속성 저항
 };
 
 export const DROP = {
@@ -114,9 +118,27 @@ export const ELITE_TIMES = [120, 240, 360, 480];  // 중간 보스 등장 시각
 export const ELEMENTS = {
   fire:      { name: '화염', color: '#ff7a2e', status: '화상', desc: '3초간 0.5초마다 화염 피해를 입힙니다.' },
   ice:       { name: '냉기', color: '#7fd8ff', status: '둔화', desc: '3초간 이동 속도가 30% 감소합니다.' },
-  lightning: { name: '번개', color: '#ffe066', status: '감전', desc: '3초간 받는 피해가 20% 증가합니다.' },
+  nature:    { name: '자연', color: '#6fd36a', status: '중독', desc: '3초간 1초마다 최대 체력의 5%(정예 2%, 보스 0.5%)만큼 자연 피해를 입힙니다.' },
+  ocean:     { name: '해양', color: '#3fa8ff', status: '탈진', desc: '3초간 기술을 쓰는 속도와 기술 쿨타임이 30% 느려집니다.' },
+  earth:     { name: '대지', color: '#c8925a', status: '기절', desc: '1초간 움직이지도, 기술을 쓰지도, 부딪혀 피해를 주지도 못합니다. (정예 30%, 보스 70% 짧게)' },
+  dark:      { name: '칠흑', color: '#9a6bff', status: '공포', desc: '3초간 플레이어에게서 달아나며 이동 속도가 30% 느려지고, 받는 모든 피해의 20%를 칠흑 피해로 더 받습니다. (정예·보스 66% 짧게, 풀린 뒤 3초간 면역)' },
+  radiant:   { name: '광휘', color: '#ffe680', status: '축성', desc: '3초간 받은 피해를 쌓아 두었다가 끝날 때 그 50%를 광휘 피해로 줍니다. 축성 중 다시 걸리면 쌓인 피해의 100%를 바로 주고 새로 축성합니다.' },
 };
-export const STATUS = { duration: 3, burnTick: 0.5, slow: 0.3, shockAmp: 0.2 };
+export const STATUS = {
+  duration: 3, burnTick: 0.5, slow: 0.3,
+  poisonPct: { normal: 0.05, elite: 0.02, boss: 0.005 }, poisonTick: 1,     // 중독
+  exhaust: 0.3,                                                            // 탈진: 기술 속도 / 쿨타임 30% 감속
+  stun: 1, stunMul: { elite: 0.7, boss: 0.3 },                             // 기절 (정예 30% / 보스 70% 짧게)
+  fearSlow: 0.3, fearExtra: 0.2, fearBossMul: 0.34, fearImmune: 3,         // 공포
+  consecrate: 0.5, consecrateRe: 1,                                        // 축성
+};
+// 속성 상성: 키 속성은 값 속성들의 공격에 25% 피해를 더 받음 (같은 속성끼리는 상태이상을 걸 수 없음)
+export const ELEMENT_WEAK = {
+  fire: ['ocean', 'earth'], ocean: ['nature', 'ice'], nature: ['fire', 'ice'], ice: ['fire', 'earth'], earth: ['ocean', 'nature'],
+  dark: ['radiant'], radiant: ['dark'],
+};
+export const WEAK_MUL = 1.25;
+export const isWeak = (defEl, atkEl) => !!(defEl && atkEl && ELEMENT_WEAK[defEl] && ELEMENT_WEAK[defEl].includes(atkEl));
 export const BOX = { baseChance: 0.01, growPer10Hp: 0.01 };   // 블록 상자: 처치마다 확률 × (1 + 체력10당 1%), 드랍 시 초기화
 export const ZONE_BASE_AREA = 20;   // 처치 시 남기는 속성 지대의 기본 범위
 
@@ -131,7 +153,7 @@ export function accountNeed(lv) {
 }
 // 계정 레벨에 따라 해금되는 스킬 / 문장 (여기 없는 것은 처음부터 사용 가능)
 export const ACCOUNT_UNLOCKS = {
-  2: { skills: ['fireAura', 'frostAura', 'lightningAura'], templates: [] },
+  2: { skills: ['fireAura', 'frostAura'], templates: [] },
   3: { skills: ['triggerKill', 'magnet'], templates: ['ZONE', 'INFUSE'] },
   4: { skills: [], templates: ['AMP'] },
 };
