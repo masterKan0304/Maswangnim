@@ -8,6 +8,8 @@ import { game } from './state.js';
 import { STAT_UNIT as U, PROJ_SPEED_UNIT as PS, WORLD_HALF } from './config.js';
 import { getStats, sample, sampleInt, seedFlowerCount } from './skills.js';
 import { sfx } from './audio.js';
+import { ic } from './icons.js';
+import { CHARACTERS } from './characters.js';
 
 const NEED = 5;            // 꽃 하나에 필요한 양분
 const RANGE = 30 / U;      // 꽃이 피는 거리 (30)
@@ -28,6 +30,9 @@ export class Bloom {
     this.waves = [];         // 세계수의 씨앗 파동
     this.nutrients = 0;
     this.count = 0;          // 지금까지 핀 꽃 수 (열매 주기)
+    // 피해량 표에 '개화' 줄로 기록되는 피해 출처 (꽃 폭발)
+    const pv = CHARACTERS.masang.passive;
+    this.src = { key: 'bloom', def: { name: pv.name, icon: ic(pv.icon), color: '#ff9ec4', base: { damage: 1 } }, dmgTotal: 0 };
     // 꽃 모양 (공용 지오메트리 / 재질)
     this.geo = {
       stem: new THREE.CylinderGeometry(0.035, 0.05, 0.5, 5).translate(0, 0.25, 0),
@@ -139,7 +144,7 @@ export class Bloom {
   }
 
   // ── 꽃 ──
-  // at: 정해진 자리에 피움 / seed: 세계수의 씨앗 꽃 (1초 뒤 저절로 터짐, 개수 제한 · 열매 주기에 포함되지 않음)
+  // at: 정해진 자리에 피움 / seed: 세계수의 씨앗 꽃 (1초 뒤 저절로 터짐, 개수 제한에는 포함되지 않지만 열매 맺기 주기에는 포함)
   spawnFlower(at = null, seed = false) {
     const p = this.player.pos;
     const obs = game.sys.world && game.sys.world.obstacles;
@@ -176,10 +181,12 @@ export class Bloom {
     const f = { x, z, mesh: g, head, age: 0, armT: seed ? 1 : -1, ry: Math.random() * 6, seed };
     this.flowers.push(f);
     this.fx.particles.burst(x, 0.4, z, seed ? 6 : 10, [0xff9ec4, 0xffd0e4, 0x8ff07a], { speed: 1.6, size: 0.08, life: 0.5, up: 2.5 });
-    if (seed) { this.quietSfx('gem'); return f; }
-    const normal = this.flowers.filter((x) => !x.seed);
-    if (normal.length > (game.demo ? 10 : MAX_FLOWERS)) this.removeFlower(normal[0]);   // 미리보기에서는 최대 10개
-    sfx('gem');
+    if (seed) this.quietSfx('gem');
+    else {
+      const normal = this.flowers.filter((x) => !x.seed);
+      if (normal.length > (game.demo ? 10 : MAX_FLOWERS)) this.removeFlower(normal[0]);   // 미리보기에서는 최대 10개
+      sfx('gem');
+    }
     this.count++;
     // 열매 맺기: 매 5번째 꽃 (5레벨: 3번째)
     const fs = game.skills.find((s) => s.key === 'fruit');
@@ -211,7 +218,7 @@ export class Bloom {
       const d = Math.hypot(e.x - f.x, e.z - f.z);
       if (d > r + e.r * 0.6) continue;
       const amt = (DMG[0] + Math.random() * (DMG[1] - DMG[0])) * mul;
-      this.enemies.damage(e, amt, { color: 'bloom', kx: ((e.x - f.x) / (d || 1)) * 3, kz: ((e.z - f.z) / (d || 1)) * 3 });
+      this.enemies.damage(e, amt * (game.mods.dmgMul || 1), { color: 'bloom', src: this.src, kx: ((e.x - f.x) / (d || 1)) * 3, kz: ((e.z - f.z) / (d || 1)) * 3 });
     }
     this.fx.ring(f.x, f.z, r, 0xff9ec4, 0.5);
     this.fx.ring(f.x, f.z, r * 0.6, 0xffffff, 0.35);
@@ -334,5 +341,6 @@ export class Bloom {
     for (const w of this.waves) for (const m of [...w.rings, w.glow]) { this.scene.remove(m); m.material.dispose(); }
     this.flowers = []; this.fruits = []; this.waves = [];
     this.nutrients = 0; this.count = 0;
+    this.src.dmgTotal = 0;
   }
 }

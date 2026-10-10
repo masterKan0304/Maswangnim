@@ -32,6 +32,9 @@ export function updateDpsTable(dt) {
   if (acc > 0) return;
   acc = 0.25;
   const list = game.skills.filter(isAttack).map((sk) => ({ sk, v: sk.dmgTotal || 0 }));
+  // 마솽 패시브 '개화': 꽃 폭발 피해 (세계수의 씨앗 꽃 포함)
+  const bloom = game.sys.bloom;
+  if (bloom && bloom.active()) list.push({ sk: bloom.src, v: bloom.src.dmgTotal || 0 });
   box.classList.toggle('hidden', !list.length || game.state === 'start');
   const listEl = document.getElementById('dps-list');
   // 사라진 스킬 정리

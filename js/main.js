@@ -471,6 +471,7 @@ function requestStart(stageId) {
 function startGame(stageId = 1) {
   sfx('start');
   demo.stop();
+  bloom.clear();   // 꽃 · 열매 · 개화 피해 기록 초기화
   hideMenu();
   setSfxMuted(false);
   resize();
