@@ -367,6 +367,7 @@ export class SkillRuntime {
     for (let i = 0; i < cands.length; i += step) {
       const e = cands[i];
       const grp = this.enemies.query(e.x, e.z, 2.8).filter((o) => o.alive && Math.hypot(o.x - e.x, o.z - e.z) <= 2.8);
+      if (!grp.includes(e)) grp.push(e);
       if (grp.length > bestN) {
         bestN = grp.length;
         // 무리의 가운데
