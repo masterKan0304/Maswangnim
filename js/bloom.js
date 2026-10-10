@@ -10,6 +10,7 @@ import { getStats, sample, sampleInt, seedFlowerCount } from './skills.js';
 import { sfx } from './audio.js';
 import { ic } from './icons.js';
 import { CHARACTERS } from './characters.js';
+import { fruitGeometry, decorateFruit, tickFruit, burstFruit } from './fruitfx.js';
 
 const NEED = 5;            // 꽃 하나에 필요한 양분
 const RANGE = 30 / U;      // 꽃이 피는 거리 (30)
@@ -20,6 +21,7 @@ const FRUIT_COLORS = {
   none: [0xff5a6e, 0xffc2ca], fire: [0xff7a2e, 0xffd27a], ice: [0x7fd8ff, 0xe0f8ff], nature: [0x5fd34a, 0xc8f5b0],
   ocean: [0x3fa8ff, 0xc0e4ff], earth: [0xb07a40, 0xe8c89a], dark: [0x7a4ad0, 0xc8a8ff], radiant: [0xffe066, 0xfffae0],
 };
+const FRUIT_ZONE_TIME = 3;   // 속성 열매가 남기는 지대 지속 시간
 const FRUIT_ELEMS = ['fire', 'ice', 'nature', 'ocean', 'earth', 'dark', 'radiant'];   // 열매 맺기 3레벨: 7가지 속성 중 무작위
 
 export class Bloom {
@@ -231,9 +233,10 @@ export class Bloom {
     const st = getStats(sk);
     const el = sk.level >= 3 ? FRUIT_ELEMS[Math.floor(Math.random() * FRUIT_ELEMS.length)] : 'none';
     const [c1, c2] = FRUIT_COLORS[el];
-    const mat = new THREE.MeshStandardMaterial({ color: c1, emissive: c1, emissiveIntensity: 0.25, roughness: 0.4, flatShading: true });
-    const mesh = new THREE.Mesh(el === 'ocean' ? new THREE.OctahedronGeometry(0.24, 0) : el === 'ice' ? new THREE.IcosahedronGeometry(0.24, 0) : el === 'earth' ? new THREE.DodecahedronGeometry(0.24, 0) : el === 'dark' || el === 'radiant' ? new THREE.TetrahedronGeometry(0.28, 0) : this.geo.fruit, mat);
+    const mat = new THREE.MeshStandardMaterial({ color: c1, emissive: c1, emissiveIntensity: el === 'earth' ? 0.05 : el === 'dark' ? 0.5 : 0.25, roughness: el === 'earth' ? 0.95 : 0.4, flatShading: true });
+    const mesh = new THREE.Mesh(fruitGeometry(el, this.geo.fruit), mat);
     mesh.castShadow = true;
+    decorateFruit(mesh, el);   // 속성 열매 장식 (불꽃 · 물 막 · 잎 · 서리 · 껍질 · 칼날 · 후광)
     mesh.position.set(f.x, 0.6, f.z);
     mesh.scale.setScalar(0.01);
     this.scene.add(mesh);
@@ -273,9 +276,16 @@ export class Bloom {
       this.skillsRt.deal(e, fr.sk, fr.st, { kx: ((e.x - fr.tx) / (d || 1)) * push, kz: ((e.z - fr.tz) / (d || 1)) * push, infuse, infuseStatus: 0.5 });
     }
     const col = fr.mat.color.getHex();
-    this.fx.ring(fr.tx, fr.tz, r, col, 0.5);
-    this.fx.particles.burst(fr.tx, 0.4, fr.tz, 24, [col, fr.c2, 0xffffff], { speed: 4 + r, size: 0.13, life: 0.55, up: 4 });
+    if (fr.el === 'none') {
+      this.fx.ring(fr.tx, fr.tz, r, col, 0.5);
+      this.fx.particles.burst(fr.tx, 0.4, fr.tz, 24, [col, fr.c2, 0xffffff], { speed: 4 + r, size: 0.13, life: 0.55, up: 4 });
+    } else {
+      // 속성 열매: 터진 자리에 그 속성의 지대 (3초)
+      burstFruit(fr.el, fr.tx, fr.tz, r, this.fx, FRUIT_ZONE_TIME);
+      this.skillsRt.addZone(fr.tx, fr.tz, fr.el, FRUIT_ZONE_TIME, r * 0.85, (fr.st.damage.min + fr.st.damage.max) / 2, fr.sk, fr.st);
+    }
     this.scene.remove(fr.mesh); fr.mat.dispose();
+    fr.mesh.traverse((c) => { if (c.isSprite && c !== fr.mesh) c.material.dispose(); });
     sfx('explode');
   }
 
@@ -306,9 +316,10 @@ export class Bloom {
         fr.mesh.scale.setScalar(k * 1.2);
         fr.mesh.position.y = 0.6 + k * 0.35;
         fr.mesh.rotation.y += dt * 3;
-        if (k < 1) continue;
+        if (k < 1) { tickFruit(fr, dt, false, this.fx); continue; }
         // 다 자란 열매: 범위 안에 적이 없으면 꽃 위에서 기다림 (살랑살랑 흔들리며)
         fr.mesh.position.y = 0.95 + Math.sin(fr.t * 3) * 0.06;
+        tickFruit(fr, dt, false, this.fx);
         fr.waitT = (fr.waitT || 0) - dt;
         if (fr.waitT > 0) continue;
         fr.waitT = 0.2;
@@ -319,8 +330,10 @@ export class Bloom {
         // 투사체 개수가 늘어나면 나머지는 목표 주위 20 범위 안 무작위 위치로
         for (let i = 0; i < fr.extra; i++) {
           const a = Math.random() * Math.PI * 2, d = Math.sqrt(Math.random()) * (20 / U / 2);
-          const m2 = new THREE.Mesh(fr.mesh.geometry, fr.mat.clone());
-          m2.castShadow = true; m2.position.copy(fr.mesh.position); m2.scale.copy(fr.mesh.scale);
+          const m2 = fr.mesh.clone(true);
+          m2.material = fr.mat.clone();
+          m2.castShadow = true;
+          m2.traverse((c) => { if (c.isSprite) c.material = c.material.clone(); });   // 깜빡임은 열매마다 따로
           this.scene.add(m2);
           this.fruits.push(this.throwFruit(fr, tgt.x + Math.cos(a) * d, tgt.z + Math.sin(a) * d, m2));
         }
@@ -330,7 +343,8 @@ export class Bloom {
       const k = Math.min(1, fr.t / fr.dur);
       fr.mesh.position.set(fr.fx0 + (fr.tx - fr.fx0) * k, 0.95 + Math.sin(k * Math.PI) * 2.6 - 0.6 * k, fr.fz0 + (fr.tz - fr.fz0) * k);
       fr.mesh.rotation.x += dt * 8; fr.mesh.rotation.z += dt * 5;
-      if (Math.random() < 0.5) this.fx.particles.emit(fr.mesh.position.x, fr.mesh.position.y, fr.mesh.position.z, 0, 0.3, 0, 0.3, 0.08, fr.c2, -0.5);
+      if (fr.el === 'none') { if (Math.random() < 0.5) this.fx.particles.emit(fr.mesh.position.x, fr.mesh.position.y, fr.mesh.position.z, 0, 0.3, 0, 0.3, 0.08, fr.c2, -0.5); }
+      else tickFruit(fr, dt, true, this.fx);
       if (k >= 1) { this.fruits = this.fruits.filter((x) => x !== fr); this.land(fr); }
     }
   }

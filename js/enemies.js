@@ -165,16 +165,31 @@ export class EnemyManager {
       if (e.fearT <= 0 && e.fearImmune <= 0) e.fearT = STATUS.duration * (e.boss || e.elite ? STATUS.fearBossMul : 1);
     } else if (element === 'radiant') {
       // 축성 중 다시 걸리면 쌓인 피해의 100% 를 바로 주고 새로 축성
+      // (광휘 지대 안: 100% 를 주되 쌓인 피해는 그대로 — 계속 누적)
+      if (e.consT > 0 && e.consZoneT > 0) { this.consBurst(e, STATUS.consecrateRe, true); return; }
       if (e.consT > 0 && e.consAcc > 0) this.consBurst(e, STATUS.consecrateRe);
       e.consSrc = src; e.consSt = st;
       e.consT = STATUS.duration; e.consAcc = 0;
     }
   }
 
+  // 지대 안에 있는 동안 상태이상 유지 (대지: 계속 기절 / 칠흑: 공포 + 지대 안에 갇힘 / 광휘: 축성 유지)
+  holdStatus(e, zn) {
+    if (zn.el === 'earth') e.stunT = Math.max(e.stunT, 0.4);
+    else if (zn.el === 'dark') {
+      e.fearT = Math.max(e.fearT, 0.5); e.fearImmune = 0;
+      if (!e.elite && !e.boss) { e.fearZone = zn; e.fearZoneT = 0.45; }   // 정예 · 보스는 지대를 벗어날 수 있음
+    } else if (zn.el === 'radiant') {
+      if (e.consT <= 0) { e.consT = STATUS.duration; e.consAcc = 0; e.consSrc = zn.src; e.consSt = zn.st; }
+      e.consT = Math.max(e.consT, 0.5);
+      e.consZoneT = 0.45;
+    }
+  }
+
   // 축성 폭발: 쌓인 피해의 일정 비율을 광휘 피해로
-  consBurst(e, ratio) {
+  consBurst(e, ratio, keep = false) {
     const v = e.consAcc * ratio;
-    e.consAcc = 0;
+    if (!keep) e.consAcc = 0;
     if (v <= 0 || !e.alive) return;
     this.fx.particles.burst(e.x, 0.6 + e.r, e.z, 14, [0xffe680, 0xffffff, 0xfff3b0], { speed: 3, size: 0.12, life: 0.5, up: 4 });
     this.fx.ring(e.x, e.z, e.r * 1.6, 0xffe680, 0.4);
@@ -183,6 +198,8 @@ export class EnemyManager {
 
   updateStatus(e, dt) {
     if (e.rootT > 0) e.rootT -= dt;
+    if (e.fearZoneT > 0) { e.fearZoneT -= dt; if (e.fearZoneT <= 0) e.fearZone = null; }
+    if (e.consZoneT > 0) e.consZoneT -= dt;
     if (e.poisonT > 0) {
       e.poisonT -= dt; e.poisonTick -= dt;
       if (Math.random() < dt * 6) this.fx.particles.emit(e.x + (Math.random() - 0.5) * e.r, 0.4 + Math.random() * e.r, e.z + (Math.random() - 0.5) * e.r, 0, 0.9, 0, 0.5, 0.08, Math.random() < 0.5 ? 0x6fd36a : 0xb8f5a0, -0.5);
@@ -252,7 +269,11 @@ export class EnemyManager {
       let dx = tx - e.x, dz = tz - e.z;
       const dist = Math.hypot(dx, dz) || 1;
       dx /= dist; dz /= dist;
-      if (e.fearT > 0) { dx = -dx; dz = -dz; }   // 공포: 플레이어에게서 정반대로 달아남
+      if (e.fearT > 0 && e.fearZone) {
+        // 칠흑 지대 안의 공포: 지대 안을 이리저리 방황
+        if (e.wanderA == null || Math.random() < dt * 1.5) e.wanderA = Math.random() * Math.PI * 2;
+        dx = Math.cos(e.wanderA); dz = Math.sin(e.wanderA);
+      } else if (e.fearT > 0) { dx = -dx; dz = -dz; }   // 공포: 플레이어에게서 정반대로 달아남
 
       // 통통 튀는 이동
       e.phase += dt * (e.boss ? 0.75 : 1.6);
@@ -283,6 +304,11 @@ export class EnemyManager {
       const decay = Math.exp(-7 * dt);
       e.kx *= decay; e.kz *= decay;
       if (!e.boss) obstacles.resolve(e, e.r * 0.75);
+      // 칠흑 지대에 갇힘: 가장자리에 닿으면 안쪽으로 돌아섬
+      if (e.fearZone && e.fearT > 0) {
+        const zn = e.fearZone, ox = e.x - zn.x, oz = e.z - zn.z, d = Math.hypot(ox, oz), lim2 = Math.max(0.3, zn.r - e.r * 0.4);
+        if (d > lim2) { e.x = zn.x + (ox / d) * lim2; e.z = zn.z + (oz / d) * lim2; e.wanderA = Math.atan2(-oz, -ox) + (Math.random() - 0.5) * 1.6; }
+      }
       e.x = Math.max(-lim, Math.min(lim, e.x));
       e.z = Math.max(-lim, Math.min(lim, e.z));
 

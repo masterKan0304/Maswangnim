@@ -1093,7 +1093,9 @@ export class SkillRuntime {
       if (zn.tick <= 0) {
         zn.tick = 0.3;
         for (const e of this.enemies.query(zn.x, zn.z, zn.r + 2.2)) {
-          if (e.alive && Math.hypot(e.x - zn.x, e.z - zn.z) < zn.r + e.r * 0.5) this.enemies.applyStatus(e, zn.el, zn.burnBase, zn.src, zn.st);
+          if (!e.alive || e.element === zn.el || Math.hypot(e.x - zn.x, e.z - zn.z) >= zn.r + e.r * 0.5) continue;   // 같은 속성은 상태이상 없음
+          if (zn.el === 'earth' || zn.el === 'dark' || zn.el === 'radiant') this.enemies.holdStatus(e, zn);
+          else this.enemies.applyStatus(e, zn.el, zn.burnBase, zn.src, zn.st);
         }
       }
       if (zn.t <= 0) this.removeZone(i);
