@@ -243,20 +243,10 @@ export class Bloom {
     this.fruits.push({ phase: 'grow', t: 0, x: f.x, z: f.z, mesh, mat, sk, st, el, c2, extra: sampleInt(st.projCount) - 1 });
   }
 
-  // 적이 가장 많은 곳 (보스가 있으면 보스)
+  // 열매 기준 가장 가까운 적 (16 거리 안)
   pickTarget(x, z) {
-    let boss = null, best = null, bestN = -1;
-    const list = this.enemies.list;
-    for (const e of list) if (e.alive && e.boss) boss = e;
-    if (boss) return { x: boss.x, z: boss.z };
-    const step = Math.max(1, Math.floor(list.length / 60));
-    for (let i = 0; i < list.length; i += step) {
-      const e = list[i];
-      if (!e.alive || Math.hypot(e.x - x, e.z - z) > 16) continue;
-      const n = this.enemies.query(e.x, e.z, 2.6).length;
-      if (n > bestN) { bestN = n; best = e; }
-    }
-    return best ? { x: best.x, z: best.z } : null;
+    const e = this.enemies.nearestN(x, z, 16, 1)[0];
+    return e ? { x: e.x, z: e.z } : null;
   }
 
   throwFruit(fr, tx, tz, mesh) {

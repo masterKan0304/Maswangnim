@@ -150,7 +150,9 @@ export class SkillRuntime {
     const sp = statusProb(st, o.statusRatio ?? 1);
     const common = { pen, crit, src: sk, st };
     const critAdd = crit && st.critFlat ? sample(st.critFlat) : 0;   // 치명타: 피해 × 배율 + 추가 피해
-    this.enemies.damage(e, main * cm + critAdd, { ...common, element: el, status: sp, kx: o.kx || 0, kz: o.kz || 0 });
+    // 피해 숫자: 주 속성 → 그 위에 추가 속성 피해가 하나씩 쌓임
+    const numAt = { x: e.x + (Math.random() - 0.5) * 0.5, z: e.z + (Math.random() - 0.5) * 0.3, stack: 0 };
+    this.enemies.damage(e, main * cm + critAdd, { ...common, element: el, status: sp, kx: o.kx || 0, kz: o.kz || 0, numAt });
     for (const x of ELEMS) {
       let v = 0;
       const k = ELEMENT_DMG[x];
@@ -159,7 +161,7 @@ export class SkillRuntime {
       if (inf) v += inf.pct ? main * sample(inf) : sample(inf) * mul;
       // 다른 속성의 추가 피해: 상태이상 발생율 절반 (o.infuseStatus 가 있으면 그 확률)
       const stat = x === el ? 0 : inf && o.infuseStatus != null ? o.infuseStatus : sp * 0.5;
-      if (v > 0 && e.alive) this.enemies.damage(e, v * cm, { ...common, element: x, status: stat });
+      if (v > 0 && e.alive) this.enemies.damage(e, v * cm, { ...common, element: x, status: stat, numAt: { ...numAt, stack: ++numAt.stack } });
     }
   }
 

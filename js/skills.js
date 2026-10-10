@@ -176,7 +176,7 @@ Object.assign(SKILL_DEFS, {
   fruit: {
     key: 'fruit', name: '열매 맺기', icon: ic('fruit'), color: '#ff5a6e', element: null, passive: true, owner: 'masang',
     short: '꽃이 일정 수 피어날 때마다 열매가 자라 적이 많은 곳으로 던져집니다.',
-    desc: '매 5번째로 피어난 꽃에서 열매가 자라, 적이 가장 많은 곳(보스가 있으면 보스)으로 던져집니다. 열매는 범위 안의 적에게 피해를 주고 바깥으로 밀쳐냅니다. 투사체가 늘어나면 남은 열매는 목표 주위 20 범위에 떨어집니다.',
+    desc: '매 5번째로 피어난 꽃에서 열매가 자라, 열매 기준 가장 가까운 적에게 던져집니다. 열매는 범위 안의 적에게 피해를 주고 바깥으로 밀쳐냅니다. 투사체가 늘어나면 남은 열매는 목표 주위 20 범위에 떨어집니다.',
     keywords: ['투사체', '효과 범위', '꽃', '패시브'],
     base: { damage: [15, 30], area: 25, projSpeed: 5, projCount: 1 },
     relevant: ['damage', 'area', 'projSpeed', 'projCount'],

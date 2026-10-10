@@ -131,12 +131,15 @@ class DamageNumbers {
       this.pool.push({ el, x: 0, y: 0, z: 0, t: 0 });
     }
   }
-  spawn(x, y, z, text, cls = '') {
+  // at: { x, z, stack } — 같은 공격의 여러 속성 피해를 한 자리에 쌓음 (stack 1 이상은 75% 크기로 위에 쌓임)
+  spawn(x, y, z, text, cls = '', at = null) {
     let d = this.pool.pop();
     if (!d) d = this.active.shift();
     d.el.className = 'dmg ' + cls;
     d.el.textContent = text;
-    d.x = x + (Math.random() - 0.5) * 0.5; d.y = y; d.z = z + (Math.random() - 0.5) * 0.3; d.t = 0;
+    if (at) { d.x = at.x; d.z = at.z; d.stack = at.stack || 0; }
+    else { d.x = x + (Math.random() - 0.5) * 0.5; d.z = z + (Math.random() - 0.5) * 0.3; d.stack = 0; }
+    d.y = y; d.t = 0;
     d.el.style.display = 'block';
     this.active.push(d);
   }
@@ -154,7 +157,8 @@ class DamageNumbers {
       _p.set(d.x, d.y + d.t * 1.3, d.z).project(this.camera);
       const sx = (_p.x + 1) / 2 * w, sy = (1 - _p.y) / 2 * h;
       const pop = d.t < 0.1 ? 1 + (0.1 - d.t) * 5 : 1;
-      d.el.style.transform = `translate(${sx}px, ${sy}px) translate(-50%, -50%) scale(${pop})`;
+      const sub = d.stack > 0 ? 0.75 : 1, lift = d.stack > 0 ? 26 + (d.stack - 1) * 20 : 0;   // 추가 속성 피해: 75% 크기로 위에 쌓임
+      d.el.style.transform = `translate(${sx}px, ${sy - lift}px) translate(-50%, -50%) scale(${pop * sub})`;
       d.el.style.opacity = d.t > 0.55 ? (0.8 - d.t) / 0.25 : 1;
     }
   }

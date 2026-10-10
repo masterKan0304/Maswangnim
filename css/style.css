@@ -139,21 +139,21 @@ kbd {
 /* 데미지 숫자 */
 #dmg-layer { position: fixed; inset: 0; pointer-events: none; z-index: 8; overflow: hidden; }
 .dmg {
-  position: absolute; left: 0; top: 0; font-family: 'Jua', sans-serif; font-size: 17px; color: #fff;
+  position: absolute; left: 0; top: 0; font-family: 'Jua', sans-serif; font-size: 26px; color: #fff;
   text-shadow: -1.5px 0 #000, 1.5px 0 #000, 0 -1.5px #000, 0 1.5px #000, 0 2px 3px rgba(0,0,0,0.5);
   will-change: transform, opacity; white-space: nowrap;
 }
 .dmg.fire { color: #ffd27a; }
-.dmg.ice { color: #bdf2ff; font-size: 14px; }
+.dmg.ice { color: #bdf2ff; font-size: 21px; }
 .dmg.nature { color: #a8f09a; }
-.dmg.poison { color: #7fe07a; font-size: 13px; }
+.dmg.poison { color: #7fe07a; font-size: 20px; }
 .dmg.ocean { color: #9fd2ff; }
 .dmg.earth { color: #e8b47a; }
-.dmg.dark { color: #c8a8ff; font-size: 13px; }
+.dmg.dark { color: #c8a8ff; font-size: 20px; }
 .dmg.radiant { color: #fff0a8; text-shadow: 0 0 8px rgba(255,230,128,0.8); }
-.dmg.hurt { color: #ff5a6e; font-size: 22px; }
-.dmg.shield { color: #7fdcff; font-size: 18px; }
-.dmg.heal { color: #6ff0a0; font-size: 16px; }
+.dmg.hurt { color: #ff5a6e; font-size: 33px; }
+.dmg.shield { color: #7fdcff; font-size: 27px; }
+.dmg.heal { color: #6ff0a0; font-size: 24px; }
 
 /* ───────────── 창 ───────────── */
 .window {
@@ -418,7 +418,7 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
 .elem.e-earth { background: #c8925a; }
 .elem.e-dark { background: #9a6bff; color: #fff; }
 .elem.e-radiant { background: #ffe680; }
-.dmg.burn { color: #ff9a5a; font-size: 13px; }
+.dmg.burn { color: #ff9a5a; font-size: 20px; }
 
 /* 재조합 */
 .rc-open {
@@ -473,7 +473,7 @@ body.game-paused #bossbar { top: 104px; }
 .hp-track.mp { height: 14px; background: #121a33; }
 #mpfill { position: absolute; left: 0; top: 0; bottom: 0; background: linear-gradient(180deg, #7fa8ff, #3d6be0); transition: width 0.12s; }
 #mptext { position: absolute; inset: 0; z-index: 2; display: flex; align-items: center; justify-content: center; font-size: 10.5px; font-weight: 700; text-shadow: 0 1px 2px #000; }
-.dmg.mana { color: #8fb4ff; font-size: 16px; }
+.dmg.mana { color: #8fb4ff; font-size: 24px; }
 .sb-slot.nomana .sb-icon { filter: grayscale(0.6) brightness(0.6) drop-shadow(0 0 4px #3d6be0); }
 .sb-slot.nomana { border-color: #3d6be0 !important; }
 .sb-slot.active-skill { box-shadow: 0 0 14px rgba(255,120,40,0.8); border-color: #ff8a3a; }
@@ -651,7 +651,7 @@ body.game-paused #bossbar { top: 104px; }
 .st.el-earth b, .tip-stats .el-earth, .st.el-earth { color: #d8a46a; }
 .st.el-dark b, .tip-stats .el-dark, .st.el-dark { color: #b48cff; }
 .st.el-radiant b, .tip-stats .el-radiant, .st.el-radiant { color: #ffe680; }
-.dmg.crit { font-size: 24px; color: #ffe14a; text-shadow: -2px 0 #6a1a00, 2px 0 #6a1a00, 0 -2px #6a1a00, 0 2px #6a1a00, 0 0 10px rgba(255,200,40,0.8); }
+.dmg.crit { font-size: 36px; color: #ffe14a; text-shadow: -2px 0 #6a1a00, 2px 0 #6a1a00, 0 -2px #6a1a00, 0 2px #6a1a00, 0 0 10px rgba(255,200,40,0.8); }
 .tile.k-sentence.rar2 { box-shadow: inset 0 2px 0 rgba(255,255,255,0.3), 0 0 0 2px #5fb8ff, 0 0 10px rgba(95,184,255,0.7); }
 .tile.k-sentence.rar3 { box-shadow: inset 0 2px 0 rgba(255,255,255,0.3), 0 0 0 2px #ffd45a, 0 0 12px rgba(255,212,90,0.85); }
 .tip-rar { font-size: 11px; font-weight: 900; margin: 2px 0; }

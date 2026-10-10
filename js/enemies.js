@@ -105,7 +105,7 @@ export class EnemyManager {
   // pen: 저항 무시 { pct(0~1), flat }, crit: 치명타 여부, src/st: 피해를 준 스킬 (처치 시 효과용)
   // (dot: 지속 피해는 상태이상을 부여하지 않음)
   // raw: 공포 추가 피해 / 축성 폭발처럼 다른 효과에서 나온 피해 (다시 공포 · 축성에 쌓이지 않음)
-  damage(e, amount, { kx = 0, kz = 0, color, element = null, status = 0, dot = false, pen = null, crit = false, src = null, st = null, raw = false } = {}) {
+  damage(e, amount, { kx = 0, kz = 0, color, element = null, status = 0, dot = false, pen = null, crit = false, src = null, st = null, raw = false, numAt = null } = {}) {
     if (!e.alive) return;
     // 같은 속성끼리는 상태이상을 걸 수 없음
     if (element && !dot && element !== e.element && Math.random() < status) this.applyStatus(e, element, amount, src, st);
@@ -129,7 +129,7 @@ export class EnemyManager {
     e.flash = 0.12;
     const kb = e.boss ? 0.1 : e.elite ? 0.3 : 1;
     e.kx += kx * kb; e.kz += kz * kb;
-    this.fx.numbers.spawn(e.x, 0.9 + e.r * 1.4, e.z, crit ? `${amount}!` : amount, (color || '') + (crit ? ' crit' : ''));
+    this.fx.numbers.spawn(e.x, 0.9 + e.r * 1.4, e.z, crit ? `${amount}!` : amount, (color || '') + (crit ? ' crit' : ''), numAt);
     if (!dot) sfx('hit');
     if (e.hp <= 0) {
       e.alive = false;
