@@ -181,8 +181,8 @@ Object.assign(SKILL_DEFS, {
     base: { damage: [15, 30], area: 25, projSpeed: 5, projCount: 1 },
     relevant: ['damage', 'area', 'projSpeed', 'projCount'],
     levelUp: dmgUp40,
-    levelText: (lv) => ['피해량이 40% 증가합니다.', lv === 3 && '열매가 무작위 속성을 띠고, 기본 피해의 40%만큼 그 속성 피해를 더 줍니다.', lv === 5 && '매 3번째 꽃마다 열매가 자랍니다.'],
-    extra: (sk) => [`매 ${sk.level >= 5 ? 3 : 5}번째 꽃마다 열매가 자랍니다.`, sk.level >= 3 && '열매가 무작위 속성을 띱니다.'],
+    levelText: (lv) => ['피해량이 40% 증가합니다.', lv === 3 && '열매가 무작위 속성(7가지 중 하나)을 띠고, 기본 피해의 40%만큼 그 속성 피해를 더 줍니다.', lv === 5 && '매 3번째 꽃마다 열매가 자랍니다.'],
+    extra: (sk) => [`매 ${sk.level >= 5 ? 3 : 5}번째 꽃마다 열매가 자랍니다.`, sk.level >= 3 && '열매가 화염 · 냉기 · 자연 · 해양 · 대지 · 칠흑 · 광휘 중 무작위 속성을 띱니다.'],
   },
   pineWind: {
     key: 'pineWind', name: '솔바람', icon: ic('wind'), color: '#9fe8c0', element: null, passive: false, castTime: 0.1, projectile: true, owner: 'masang',
@@ -193,20 +193,20 @@ Object.assign(SKILL_DEFS, {
     labels: { duration: '투사체 지속 시간' },
     relevant: ['damage', 'duration', 'projSize', 'projSpeed', 'projCount', 'chains', 'manaCost', 'cooldown'],
     levelUp(st, lv) { dmgUp40(st, lv); if (lv >= 3) st.projCount = { min: 3, max: 3 }; if (lv >= 5) st.chains = { min: st.chains.min + 3, max: st.chains.max + 3 }; },
-    levelText: (lv) => ['피해량이 40% 증가합니다.', lv === 3 && '기본 투사체 개수가 3개가 됩니다.', lv === 5 && '연쇄 횟수가 3 증가하고, 처음 3번의 연쇄는 꽃을 향합니다.'],
-    extra: (sk) => [sk.level >= 5 && '사거리 안에 꽃이 있으면 처음 3번의 연쇄는 꽃을 향합니다.'],
+    levelText: (lv) => ['피해량이 40% 증가합니다.', lv === 3 && '기본 투사체 개수가 3개가 됩니다.', lv === 5 && '연쇄 횟수가 3 증가하고, 처음 3번의 연쇄는 꽃을 향합니다. 꽃에 닿을 때마다 피해량과 투사체 크기가 20% 증가합니다. (투사체 크기는 최대 100%)'],
+    extra: (sk) => [sk.level >= 5 && '사거리 안에 꽃이 있으면 처음 3번의 연쇄는 꽃을 향합니다.', sk.level >= 5 && '꽃에 닿을 때마다 피해량 · 투사체 크기 +20% (크기 최대 +100%, 연쇄에도 이어짐)'],
   },
   roots: {
     key: 'roots', name: '옭아매는 뿌리', icon: ic('roots'), color: '#8ab84a', element: null, passive: false, castTime: 0.15, projectile: true, owner: 'masang', rootTime: 1.5,
-    short: '적을 향해 덩굴 뿌리를 뻗어 피해를 주고 1.5초간 속박합니다.',
-    desc: '가까운 적을 향해 땅을 타고 나아가는 덩굴 뿌리를 내보냅니다. 뿌리에 닿은 적은 피해를 입고 1.5초간 움직이지 못합니다. 정예와 보스는 속박되지 않습니다.',
+    short: '적을 향해 덩굴 뿌리를 뻗어 피해를 주고 속박합니다.',
+    desc: '가까운 적을 향해 땅을 타고 나아가는 덩굴 뿌리를 내보냅니다. 뿌리에 닿은 적은 피해를 입고 속박 지속 시간 동안 움직이지 못합니다. 정예와 보스는 속박되지 않습니다. 지속 시간 블록은 투사체 지속 시간과 속박 지속 시간에 모두 적용됩니다.',
     keywords: ['투사체', '관통', '연쇄', '속박', '스킬 쿨타임'],
-    base: { damage: [8, 16], duration: 2.5, projSize: 12, projSpeed: 4, projCount: 1, pierce: 3, manaCost: 8, cooldown: 5 },
+    base: { damage: [8, 16], duration: 2.5, rootDuration: 1.5, projSize: 12, projSpeed: 4, projCount: 1, pierce: 3, manaCost: 8, cooldown: 5 },
     labels: { duration: '투사체 지속 시간' },
-    relevant: ['damage', 'duration', 'pierce', 'projSize', 'projSpeed', 'projCount', 'chains', 'manaCost', 'cooldown'],
+    relevant: ['damage', 'duration', 'rootDuration', 'pierce', 'projSize', 'projSpeed', 'projCount', 'chains', 'manaCost', 'cooldown'],
     levelUp: dmgUp40,
     levelText: (lv) => ['피해량이 40% 증가합니다.', lv === 3 && '뿌리가 가장 가까운 적을 따라가며, 관통할 때마다 새 대상을 찾습니다.', lv === 5 && '뿌리가 처음 적을 관통할 때 뿌리 3개가 더 뻗어 나갑니다.'],
-    extra: (sk) => ['닿은 적을 1.5초간 속박합니다. (정예 · 보스 면역)', sk.level >= 3 && '가장 가까운 적을 따라갑니다.', sk.level >= 5 && '처음 관통할 때 뿌리 3개가 더 뻗어 나갑니다.'],
+    extra: (sk) => ['닿은 적을 속박합니다. (정예 · 보스 면역)', sk.level >= 3 && '가장 가까운 적을 따라갑니다.', sk.level >= 5 && '처음 관통할 때 뿌리 3개가 더 뻗어 나갑니다.'],
   },
   strawDoll: {
     key: 'strawDoll', name: '짚 인형', icon: ic('doll'), color: '#e6c26a', element: null, passive: false, castTime: 0.15, owner: 'masang', lureArea: 50, hpRatio: 0.4,
@@ -235,14 +235,13 @@ Object.assign(SKILL_DEFS, {
   },
   worldSeed: {
     key: 'worldSeed', name: '세계수의 씨앗', icon: ic('worldtree'), color: '#ffe680', element: null, passive: true, owner: 'masang',
-    short: '양분을 얻을 때마다 중첩을 쌓고, 가득 차면 주위의 모든 적에게 피해를 주며 양분을 얻습니다.',
-    desc: '양분을 얻을 때마다 중첩을 1 얻습니다. 중첩이 100에 도달하면 효과 범위 안의 모든 적에게 피해를 주고, 피해를 준 적 하나당 양분을 2 얻습니다. 이 스킬로 얻은 양분으로는 중첩을 얻지 않습니다.',
-    keywords: ['양분', '중첩', '효과 범위', '패시브'],
-    base: { damage: [50, 80], area: 120 },
-    relevant: ['damage', 'area'],
-    levelUp: dmgUp40,
-    levelText: (lv) => ['피해량이 40% 증가합니다.', lv === 3 && '필요한 중첩이 70이 됩니다.', lv === 5 && '피해를 준 적의 자리에 꽃이 핍니다.'],
-    extra: (sk) => [`중첩 ${Math.floor(sk.stacks)} / ${sk.level >= 3 ? 70 : 100}`, sk.level >= 5 && '피해를 준 적의 자리에 꽃이 핍니다.'],
+    short: '양분을 얻을 때마다 중첩을 쌓고, 가득 차면 퍼져 나가는 고리를 따라 꽃이 만개합니다.',
+    desc: '양분을 얻을 때마다 중첩을 1 얻습니다. 중첩이 100에 도달하면 마솽을 중심으로 효과 범위만큼 고리가 퍼져 나가며, 고리의 가장자리를 따라 꽃 50송이가 고르게 피어납니다. 이 꽃들은 1초 뒤 저절로 터집니다. 효과 범위가 넓을수록 고리가 빠르게 퍼집니다.',
+    keywords: ['양분', '중첩', '효과 범위', '꽃', '패시브'],
+    base: { area: 120 },
+    relevant: ['area'],
+    levelText: (lv) => ['피어나는 꽃이 10송이 늘어납니다.', lv === 3 && '늘어난 효과 범위 5당 꽃이 1송이 더 핍니다.', lv === 5 && '고리가 적에게 닿으면 그 적의 자리에 꽃이 핍니다.'],
+    extra: (sk) => [`중첩 ${Math.floor(sk.stacks)} / 100`, `피어나는 꽃: ${seedFlowerCount(sk)}송이`, sk.level >= 5 && '고리가 닿은 적의 자리에 꽃이 핍니다.'],
   },
 });
 
@@ -253,9 +252,22 @@ for (const k of ['leafCut', 'nature', 'fruit', 'pineWind', 'roots', 'strawDoll',
   d.element = 'nature';
   if (!d.keywords.includes('자연')) d.keywords.unshift('자연');
   if (d.base.damage) {
-    if (d.base.statusChance == null) d.base.statusChance = k === 'worldSeed' ? 50 : 25;
+    if (d.base.statusChance == null) d.base.statusChance = 25;
     if (!d.relevant.includes('statusChance')) d.relevant.push('statusChance');
   }
+}
+// 꿀열매 폭탄은 광휘 속성
+SKILL_DEFS.honeyBomb.element = 'radiant';
+SKILL_DEFS.honeyBomb.keywords = SKILL_DEFS.honeyBomb.keywords.map((w) => (w === '자연' ? '광휘' : w));
+
+// 세계수의 씨앗: 피어나는 꽃 수 (기본 50, 레벨마다 +10, 3레벨: 늘어난 효과 범위 5당 +1)
+export function seedFlowerCount(sk) {
+  let n = 50 + 10 * (sk.level - 1);
+  if (sk.level >= 3) {
+    const base = baseStats(sk).area, st = getStats(sk).area;
+    n += Math.max(0, Math.floor(((st.min + st.max) / 2 - (base.min + base.max) / 2) / 5));
+  }
+  return n;
 }
 
 export const SKILL_ORDER = ['fireball', 'frostBarrier', 'iceball', 'magnet', 'fireAura', 'frostAura', 'enchant', 'triggerKill', 'flamethrower', 'snowfall'];
@@ -448,6 +460,8 @@ function runSentences(skill, stats, extra = [], scale = 1) {
     if (subj === 'damage') for (const ek of Object.values(ELEMENT_DMG)) if (stats[ek].max > 0) applyEffect(stats, ek, val, change);
     // 지속 시간 변화는 투사체 지속 시간에도 똑같이 적용
     if (subj === 'duration' && skillUses(d, 'projDuration')) applyEffect(stats, 'projDuration', val, change);
+    // 지속 시간 변화는 속박 지속 시간에도 (옭아매는 뿌리)
+    if (subj === 'duration' && skillUses(d, 'rootDuration')) applyEffect(stats, 'rootDuration', val, change);
     log.push({ i, ok: true, subj: key, before, after: { ...stats[key] } });
   }
   return log;

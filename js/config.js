@@ -35,7 +35,7 @@ export const PLAYER = {
 // 단어:주체
 // noWord: 단어 블록으로 나오지 않는 내부 스탯 / hidden: 스킬 창에 표시하지 않음
 // pctOnly: 수치는 백분율만, %p 단위로 계산 / pctType: 다른 문장의 '만큼' 값으로 쓰일 때 백분율로 취급
-export const SUBJECT_ORDER = ['damage', 'fireDmg', 'iceDmg', 'natureDmg', 'oceanDmg', 'earthDmg', 'darkDmg', 'radiantDmg', 'area', 'range', 'duration', 'projDuration', 'castSpeed', 'shield',
+export const SUBJECT_ORDER = ['damage', 'fireDmg', 'iceDmg', 'natureDmg', 'oceanDmg', 'earthDmg', 'darkDmg', 'radiantDmg', 'area', 'range', 'duration', 'rootDuration', 'projDuration', 'castSpeed', 'shield',
   'pierce', 'projSize', 'projSpeed', 'projCount', 'chains', 'critChance', 'critDamage', 'critFlat', 'penetration', 'penPct', 'statusChance', 'manaCost', 'cooldown', 'haste'];
 export const SUBJECTS = {
   damage:    { name: '피해량',       min: 1,               desc: '스킬이 주는 피해량입니다. 이미 추가된 속성 피해에도 함께 적용됩니다.' },
@@ -49,6 +49,7 @@ export const SUBJECTS = {
   area:      { name: '효과 범위',    min: 0.5,             desc: '스킬이 닿는 범위입니다.' },
   range:     { name: '사거리',       min: 0.5, noWord: true, hidden: true, desc: '스킬의 사거리입니다.' },
   duration:  { name: '지속 시간',    min: 0.1, max: 60, unit: '초', desc: '스킬 효과가 유지되는 시간입니다.' },
+  rootDuration: { name: '속박 지속 시간', min: 0.1, max: 60, unit: '초', noWord: true, desc: '적을 속박하는 시간입니다. 지속 시간 블록의 효과를 함께 받습니다.' },
   projDuration: { name: '투사체 지속 시간', min: 0.05, max: 60, unit: '초', noWord: true, desc: '투사체가 유지되는 시간입니다.' },
   castSpeed: { name: '시전 속도',    min: 0.1, max: 20, noWord: true, hidden: true, desc: '스킬을 시전하는 속도입니다.' },
   shield:    { name: '보호막 획득량', min: 0,              desc: '얻는 보호막의 양입니다.' },
@@ -116,13 +117,13 @@ export const ELITE_TIMES = [120, 240, 360, 480];  // 중간 보스 등장 시각
 
 // 스킬 속성 & 상태이상
 export const ELEMENTS = {
-  fire:      { name: '화염', color: '#ff7a2e', status: '화상', desc: '3초간 0.5초마다 화염 피해를 입힙니다.' },
-  ice:       { name: '냉기', color: '#7fd8ff', status: '둔화', desc: '3초간 이동 속도가 30% 감소합니다.' },
-  nature:    { name: '자연', color: '#6fd36a', status: '중독', desc: '3초간 1초마다 최대 체력의 5%(정예 2%, 보스 0.5%)만큼 자연 피해를 입힙니다.' },
-  ocean:     { name: '해양', color: '#3fa8ff', status: '탈진', desc: '3초간 기술을 쓰는 속도와 기술 쿨타임이 30% 느려집니다.' },
-  earth:     { name: '대지', color: '#c8925a', status: '기절', desc: '1초간 움직이지도, 기술을 쓰지도, 부딪혀 피해를 주지도 못합니다. (정예 30%, 보스 70% 짧게)' },
-  dark:      { name: '칠흑', color: '#9a6bff', status: '공포', desc: '3초간 플레이어에게서 달아나며 이동 속도가 30% 느려지고, 받는 모든 피해의 20%를 칠흑 피해로 더 받습니다. (정예·보스 66% 짧게, 풀린 뒤 3초간 면역)' },
-  radiant:   { name: '광휘', color: '#ffe680', status: '축성', desc: '3초간 받은 피해를 쌓아 두었다가 끝날 때 그 50%를 광휘 피해로 줍니다. 축성 중 다시 걸리면 쌓인 피해의 100%를 바로 주고 새로 축성합니다.' },
+  fire:      { name: '화염', icon: 'fire', color: '#ff7a2e', status: '화상', desc: '3초간 0.5초마다 화염 피해를 입힙니다.' },
+  ice:       { name: '냉기', icon: 'snowflake', color: '#7fd8ff', status: '둔화', desc: '3초간 이동 속도가 30% 감소합니다.' },
+  nature:    { name: '자연', icon: 'leaf', color: '#6fd36a', status: '중독', desc: '3초간 1초마다 최대 체력의 5%(정예 2%, 보스 0.5%)만큼 자연 피해를 입힙니다.' },
+  ocean:     { name: '해양', icon: 'wave', color: '#3fa8ff', status: '탈진', desc: '3초간 기술을 쓰는 속도와 기술 쿨타임이 30% 느려집니다.' },
+  earth:     { name: '대지', icon: 'rock', color: '#c8925a', status: '기절', desc: '1초간 움직이지도, 기술을 쓰지도, 부딪혀 피해를 주지도 못합니다. (정예 30%, 보스 70% 짧게)' },
+  dark:      { name: '칠흑', icon: 'moon', color: '#9a6bff', status: '공포', desc: '3초간 플레이어에게서 달아나며 이동 속도가 30% 느려지고, 받는 모든 피해의 20%를 칠흑 피해로 더 받습니다. (정예·보스 66% 짧게, 풀린 뒤 3초간 면역)' },
+  radiant:   { name: '광휘', icon: 'sun', color: '#ffe680', status: '축성', desc: '3초간 받은 피해를 쌓아 두었다가 끝날 때 그 50%를 광휘 피해로 줍니다. 축성 중 다시 걸리면 쌓인 피해의 100%를 바로 주고 새로 축성합니다.' },
 };
 export const STATUS = {
   duration: 3, burnTick: 0.5, slow: 0.3,

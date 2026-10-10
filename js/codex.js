@@ -160,12 +160,16 @@ function refreshDetail() {
   if (infoScroll) infoScroll.setTop(0);
 }
 
+// 스킬 아이콘 오른쪽 위 A·P 왼쪽의 작은 속성 아이콘
+export const elemBadge = (el) => (ELEMENTS[el] ? `<span class="cx-elic" style="--ec:${ELEMENTS[el].color}" data-el="${el}" data-elmode="atk">${ic(ELEMENTS[el].icon)}</span>` : '');
+
 function item(grid, id, iconHtml, name, opts2 = {}) {
   const tab = state.tab;
   const it = el('div', 'cx-item' + (state.sel[tab] === id ? ' sel' : '') + (opts2.locked ? ' locked' : ''), `<div class="cx-ic">${iconHtml}</div><div class="cx-name">${name}</div>${opts2.badge ? `<span class="cx-badge">${opts2.badge}</span>` : ''}`);
   it.dataset.id = id;
   if (opts2.nameFirst) it.classList.add('name-first');
   if (opts2.ap) it.insertAdjacentHTML('beforeend', `<span class="cx-ap ${opts2.ap}">${opts2.ap === 'a' ? 'A' : 'P'}</span>`);
+  if (opts2.el) it.insertAdjacentHTML('beforeend', elemBadge(opts2.el));
   if (opts2.color) it.style.setProperty('--c', opts2.color);
   it.addEventListener('click', () => {
     if (state.sel[tab] === id) return;
@@ -189,7 +193,7 @@ function gridSkills(grid) {
     const mlv = masteryOf(id).lv;
     for (const key of keys) {
       const d = SKILL_DEFS[key], need = ch.unlock[key] || 1;
-      item(grid, key, d.icon, d.name, { color: d.color, ap: d.passive ? 'p' : 'a', ...(mlv < need ? { locked: true, badge: `${ic('lock')} 숙련 ${need}` } : {}) });
+      item(grid, key, d.icon, d.name, { color: d.color, ap: d.passive ? 'p' : 'a', el: d.element, ...(mlv < need ? { locked: true, badge: `${ic('lock')} 숙련 ${need}` } : {}) });
     }
   }
   // 공용 스킬 (해금 레벨이 높을수록 뒤에)
@@ -197,7 +201,7 @@ function gridSkills(grid) {
   const keys = [...SKILL_ORDER].sort((a, b) => unlockLevel('skills', a) - unlockLevel('skills', b));
   for (const key of keys) {
     const d = SKILL_DEFS[key];
-    item(grid, key, d.icon, d.name, { color: d.color, ap: d.passive ? 'p' : 'a', ...lockBadge(unlockLevel('skills', key)) });
+    item(grid, key, d.icon, d.name, { color: d.color, ap: d.passive ? 'p' : 'a', el: d.element, ...lockBadge(unlockLevel('skills', key)) });
   }
 }
 

@@ -6,7 +6,7 @@ import * as THREE from 'three';
 import { RingMesh } from './effects.js';
 import { game } from './state.js';
 import { STAT_UNIT as U, PROJ_SPEED_UNIT as PS, WORLD_HALF } from './config.js';
-import { getStats, sample, sampleInt } from './skills.js';
+import { getStats, sample, sampleInt, seedFlowerCount } from './skills.js';
 import { sfx } from './audio.js';
 
 const NEED = 5;            // 꽃 하나에 필요한 양분
@@ -14,7 +14,11 @@ const RANGE = 30 / U;      // 꽃이 피는 거리 (30)
 const AREA = 20;           // 꽃 폭발 효과 범위 (지름)
 const DMG = [12, 16];
 const MAX_FLOWERS = 24;
-const FRUIT_COLORS = { none: [0xff5a6e, 0xffc2ca], fire: [0xff7a2e, 0xffd27a], ice: [0x7fd8ff, 0xe0f8ff], ocean: [0x3fa8ff, 0xc0e4ff] };
+const FRUIT_COLORS = {
+  none: [0xff5a6e, 0xffc2ca], fire: [0xff7a2e, 0xffd27a], ice: [0x7fd8ff, 0xe0f8ff], nature: [0x5fd34a, 0xc8f5b0],
+  ocean: [0x3fa8ff, 0xc0e4ff], earth: [0xb07a40, 0xe8c89a], dark: [0x7a4ad0, 0xc8a8ff], radiant: [0xffe066, 0xfffae0],
+};
+const FRUIT_ELEMS = ['fire', 'ice', 'nature', 'ocean', 'earth', 'dark', 'radiant'];   // 열매 맺기 3레벨: 7가지 속성 중 무작위
 
 export class Bloom {
   constructor(scene, fx, enemies, player, skillsRt) {
@@ -51,12 +55,12 @@ export class Bloom {
     const seed = !fromSeed && game.skills.find((s) => s.key === 'worldSeed');
     if (seed) {
       seed.stacks += n;
-      const goal = seed.level >= 3 ? 70 : 100;
+      const goal = 100;
       if (seed.stacks >= goal) { seed.stacks -= goal; this.seedBurst(seed); }
     }
   }
 
-  // 세계수의 씨앗: 마솽을 중심으로 파동이 퍼져 나가며 닿는 적마다 피해 (맞은 적 하나당 양분 2, 5레벨: 그 자리에 꽃)
+  // 세계수의 씨앗: 마솽을 중심으로 고리가 퍼져 나가며 가장자리를 따라 꽃이 고르게 핌 (1초 뒤 저절로 터짐, 5레벨: 닿은 적의 자리에도 꽃)
   seedBurst(sk) {
     const st = getStats(sk);
     const p = this.player.pos;
@@ -72,7 +76,8 @@ export class Bloom {
     // 파동 고리 3겹 (금빛 · 초록 · 흰빛) + 바닥에 번지는 빛
     const rings = [mk(0xffe680, 0.95), mk(0x7ed957, 0.8), mk(0xffffff, 0.6)];
     const glow = mk(0xfff3a0, 0.35, this.fx.circleGeo);
-    this.waves.push({ sk, st, x: p.x, z: p.z, R, t: 0, dur: 1.6, hit: new Set(), spots: [], rings, glow });
+    // 고리가 퍼지는 시간은 일정 → 효과 범위가 넓을수록 빠르게 퍼짐
+    this.waves.push({ sk, st, x: p.x, z: p.z, R, t: 0, dur: 1.8, n: seedFlowerCount(sk), born: 0, hit: new Set(), rings, glow });
     // 가운데에서 솟는 빛 기둥
     for (let k = 0; k < 70; k++) {
       const a = Math.random() * Math.PI * 2, d = Math.random() * 0.9;
@@ -88,7 +93,7 @@ export class Bloom {
     for (const w of [...this.waves]) {
       w.t += dt;
       const k = Math.min(1, w.t / w.dur);
-      const ease = 1 - Math.pow(1 - k, 2.2);   // 처음엔 빠르게, 끝으로 갈수록 천천히
+      const ease = 1 - Math.pow(1 - k, 1.6);   // 처음엔 빠르게, 끝으로 갈수록 천천히
       const r = Math.max(0.1, w.R * ease);
       const fade = 1 - Math.max(0, (k - 0.75) / 0.25);
       w.rings[0].scale.setScalar(r); w.rings[0].material.opacity = 0.95 * fade;
@@ -104,28 +109,38 @@ export class Bloom {
         this.fx.particles.emit(w.x + Math.cos(a) * r, 0.15 + Math.random() * 0.4, w.z + Math.sin(a) * r, Math.cos(a) * 3, 2 + Math.random() * 3, Math.sin(a) * 3,
           0.6 + Math.random() * 0.5, roll < 0.7 ? 0.11 + Math.random() * 0.06 : 0.07, col, 1.2);
       }
-      // 파동이 닿는 적에게 피해
-      for (const e of this.enemies.query(w.x, w.z, r + 2.2)) {
-        if (!e.alive || w.hit.has(e)) continue;
-        const d = Math.hypot(e.x - w.x, e.z - w.z);
-        if (d > r + e.r * 0.5) continue;
-        w.hit.add(e);
-        w.spots.push({ x: e.x, z: e.z });
-        this.skillsRt.deal(e, w.sk, w.st, { kx: ((e.x - w.x) / (d || 1)) * 4, kz: ((e.z - w.z) / (d || 1)) * 4 });
-        this.fx.particles.burst(e.x, 0.6, e.z, 8, [0xffe680, 0x7ed957, 0xff9ec4], { speed: 2.5, size: 0.11, life: 0.55, up: 3.5 });
+      // 고리의 가장자리를 따라 꽃이 고르게 핌 (퍼지는 시간 동안 같은 간격으로)
+      const obs = game.sys.world && game.sys.world.obstacles;
+      while (w.born < w.n && w.t >= ((w.born + 0.5) / w.n) * w.dur) {
+        w.born++;
+        let x = w.x, z = w.z;
+        for (let tries = 0; tries < 6; tries++) {
+          const a = Math.random() * Math.PI * 2;
+          x = Math.max(-WORLD_HALF + 1, Math.min(WORLD_HALF - 1, w.x + Math.cos(a) * r));
+          z = Math.max(-WORLD_HALF + 1, Math.min(WORLD_HALF - 1, w.z + Math.sin(a) * r));
+          if (!obs || !obs.blocked(x, z, 0.4)) break;
+        }
+        this.spawnFlower({ x, z }, true);
+      }
+      // 5레벨: 고리가 닿은 적의 자리에 꽃 (고리는 피해를 주지 않음)
+      if (w.sk.level >= 5) {
+        for (const e of this.enemies.query(w.x, w.z, r + 2.2)) {
+          if (!e.alive || w.hit.has(e) || w.hit.size >= 40) continue;
+          if (Math.hypot(e.x - w.x, e.z - w.z) > r + e.r * 0.5) continue;
+          w.hit.add(e);
+          this.spawnFlower({ x: e.x, z: e.z }, true);
+        }
       }
       if (k >= 1) {
         for (const m of [...w.rings, w.glow]) { this.scene.remove(m); m.material.dispose(); }
         this.waves = this.waves.filter((x) => x !== w);
-        if (w.hit.size) this.addNutrient(w.hit.size * 2, true);
-        if (w.sk.level >= 5) for (const h of w.spots.slice(0, 12)) this.spawnFlower(h);
       }
     }
   }
 
   // ── 꽃 ──
-  // at: 정해진 자리에 피움 (도감 미리보기용)
-  spawnFlower(at = null) {
+  // at: 정해진 자리에 피움 / seed: 세계수의 씨앗 꽃 (1초 뒤 저절로 터짐, 개수 제한 · 열매 주기에 포함되지 않음)
+  spawnFlower(at = null, seed = false) {
     const p = this.player.pos;
     const obs = game.sys.world && game.sys.world.obstacles;
     let x = p.x, z = p.z;
@@ -158,16 +173,27 @@ export class Bloom {
     g.position.set(x, 0, z);
     g.scale.setScalar(0.01);
     this.scene.add(g);
-    const f = { x, z, mesh: g, head, age: 0, armT: -1, ry: Math.random() * 6 };
+    const f = { x, z, mesh: g, head, age: 0, armT: seed ? 1 : -1, ry: Math.random() * 6, seed };
     this.flowers.push(f);
-    if (this.flowers.length > (game.demo ? 10 : MAX_FLOWERS)) this.removeFlower(this.flowers[0]);   // 미리보기에서는 최대 10개
-    this.fx.particles.burst(x, 0.4, z, 10, [0xff9ec4, 0xffd0e4, 0x8ff07a], { speed: 1.6, size: 0.08, life: 0.5, up: 2.5 });
+    this.fx.particles.burst(x, 0.4, z, seed ? 6 : 10, [0xff9ec4, 0xffd0e4, 0x8ff07a], { speed: 1.6, size: 0.08, life: 0.5, up: 2.5 });
+    if (seed) { this.quietSfx('gem'); return f; }
+    const normal = this.flowers.filter((x) => !x.seed);
+    if (normal.length > (game.demo ? 10 : MAX_FLOWERS)) this.removeFlower(normal[0]);   // 미리보기에서는 최대 10개
     sfx('gem');
     this.count++;
     // 열매 맺기: 매 5번째 꽃 (5레벨: 3번째)
     const fs = game.skills.find((s) => s.key === 'fruit');
     if (fs && this.count % (fs.level >= 5 ? 3 : 5) === 0) this.growFruit(f, fs);
     return f;
+  }
+
+  // 한꺼번에 많이 피고 터질 때 소리가 겹치지 않게
+  quietSfx(name) {
+    const now = performance.now();
+    this._sfxT = this._sfxT || {};
+    if (now - (this._sfxT[name] || 0) < 70) return;
+    this._sfxT[name] = now;
+    sfx(name);
   }
 
   removeFlower(f) {
@@ -189,17 +215,17 @@ export class Bloom {
     }
     this.fx.ring(f.x, f.z, r, 0xff9ec4, 0.5);
     this.fx.ring(f.x, f.z, r * 0.6, 0xffffff, 0.35);
-    this.fx.particles.burst(f.x, 0.5, f.z, 26 + Math.round(mul * 6), [0xff9ec4, 0xffd0e4, 0xffffff, 0x8ff07a], { speed: 3 + r * 1.5, size: 0.12, life: 0.6, up: 3.5 });
-    sfx('explode');
+    this.fx.particles.burst(f.x, 0.5, f.z, (f.seed ? 14 : 26) + Math.round(mul * 6), [0xff9ec4, 0xffd0e4, 0xffffff, 0x8ff07a], { speed: 3 + r * 1.5, size: 0.12, life: 0.6, up: 3.5 });
+    this.quietSfx('explode');
   }
 
   // ── 열매 ──
   growFruit(f, sk) {
     const st = getStats(sk);
-    const el = sk.level >= 3 ? ['fire', 'ice', 'ocean'][Math.floor(Math.random() * 3)] : 'none';
+    const el = sk.level >= 3 ? FRUIT_ELEMS[Math.floor(Math.random() * FRUIT_ELEMS.length)] : 'none';
     const [c1, c2] = FRUIT_COLORS[el];
     const mat = new THREE.MeshStandardMaterial({ color: c1, emissive: c1, emissiveIntensity: 0.25, roughness: 0.4, flatShading: true });
-    const mesh = new THREE.Mesh(el === 'ocean' ? new THREE.OctahedronGeometry(0.24, 0) : el === 'ice' ? new THREE.IcosahedronGeometry(0.24, 0) : this.geo.fruit, mat);
+    const mesh = new THREE.Mesh(el === 'ocean' ? new THREE.OctahedronGeometry(0.24, 0) : el === 'ice' ? new THREE.IcosahedronGeometry(0.24, 0) : el === 'earth' ? new THREE.DodecahedronGeometry(0.24, 0) : el === 'dark' || el === 'radiant' ? new THREE.TetrahedronGeometry(0.28, 0) : this.geo.fruit, mat);
     mesh.castShadow = true;
     mesh.position.set(f.x, 0.6, f.z);
     mesh.scale.setScalar(0.01);
@@ -255,7 +281,7 @@ export class Bloom {
       let s = grow * (1 + 0.15 * Math.sin(Math.min(1, f.age / 0.35) * Math.PI));
       if (f.armT < 0) {
         for (const e of this.enemies.query(f.x, f.z, 1.6)) {
-          if (e.alive && Math.hypot(e.x - f.x, e.z - f.z) < e.r + 0.35) { f.armT = 1; if (!game.demo) sfx('select'); break; }
+          if (e.alive && Math.hypot(e.x - f.x, e.z - f.z) < e.r + 0.35) { f.armT = 1; if (!game.demo) this.quietSfx('select'); break; }
         }
       } else {
         f.armT -= dt;

@@ -2,7 +2,9 @@
 //  디버그 모드 (전투 중 F8)
 // ─────────────────────────────────────────────
 import { game, bump, inventoryAdd } from './state.js';
-import { SUBJECTS, SUBJECT_ORDER, CHANGES, MAX_SENTENCE_SLOTS, MAX_SKILL_LEVEL, hpScale, WORLD_HALF } from './config.js';
+import { SUBJECTS, SUBJECT_ORDER, CHANGES, MAX_SENTENCE_SLOTS, MAX_SKILL_LEVEL, MAX_SKILLS, hpScale, WORLD_HALF } from './config.js';
+import { SKILL_DEFS, SKILL_ORDER, createSkill } from './skills.js';
+import { CHARACTERS, CHARACTER_ORDER } from './characters.js';
 import { makeSentence, makeWord, makeFixed, makeRange, makePercent, TEMPLATES, sentenceText, slotAccepts } from './blocks.js';
 import { ic } from './icons.js';
 import { sfx } from './audio.js';
@@ -90,6 +92,30 @@ export function renderDebug() {
   }
   s2.appendChild(bossRow);
   body.appendChild(s2);
+
+  // ── 스킬 획득 (숙련도 · 계정 레벨로 잠긴 스킬도) ──
+  const sg = section('스킬 획득');
+  const keys = [...SKILL_ORDER];
+  for (const cid of CHARACTER_ORDER) for (const k of CHARACTERS[cid].skills) if (k && SKILL_DEFS[k] && !keys.includes(k)) keys.push(k);
+  const chips = document.createElement('div');
+  chips.className = 'dbg-chips';
+  for (const k of keys) {
+    const d = SKILL_DEFS[k], have = game.skills.some((s) => s.key === k);
+    const b = document.createElement('button');
+    b.className = 'dbg-chip' + (have ? ' on' : '');
+    b.innerHTML = `${d.icon} ${d.name}`;
+    b.addEventListener('click', () => {
+      if (game.skills.some((s) => s.key === k)) { game.sys.ui.toast('이미 가지고 있는 스킬입니다', 'warn'); sfx('error'); return; }
+      if (game.skills.length >= MAX_SKILLS) { game.sys.ui.toast('스킬 칸이 가득 찼습니다', 'warn'); sfx('error'); return; }
+      game.skills.push(createSkill(k));
+      sfx('select');
+      game.sys.ui.toast(`[디버그] 스킬 획득: ${d.name}`);
+      bump(); game.sys.ui.refresh(); renderDebug();
+    });
+    chips.appendChild(b);
+  }
+  sg.appendChild(chips);
+  body.appendChild(sg);
 
   // ── 스킬 레벨 ──
   const s3 = section('스킬 레벨');

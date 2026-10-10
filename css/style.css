@@ -1193,3 +1193,8 @@ body.in-menu #hud, body.in-menu #label-layer, body.in-menu #vignette { display: 
 /* 속성 키워드: 커서를 올리면 상성 설명 */
 [data-el] { cursor: help; }
 .ch-sub .elem { margin-left: 4px; }
+
+/* 스킬 아이콘: A·P 왼쪽의 작은 속성 아이콘 */
+.cx-elic { position: absolute; top: 4px; right: 34px; width: 19px; height: 19px; border-radius: 6px; display: grid; place-items: center;
+  background: rgba(10,12,24,0.85); border: 1.5px solid var(--ec); box-shadow: 0 0 6px color-mix(in srgb, var(--ec) 45%, transparent); color: var(--ec); }
+.cx-elic .ic { width: 12px; height: 12px; }

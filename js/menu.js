@@ -5,7 +5,7 @@
 import { profile, saveProfile, renderUpgrades, renderSettings } from './meta.js';
 import { STAGES, stageById, stageLabel, isStageUnlocked, isStartable, lastStartable } from './stages.js';
 import { accountNeed, ELEMENTS } from './config.js';
-import { openCodex, closeCodex, attachPreview } from './codex.js';
+import { openCodex, closeCodex, attachPreview, elemBadge } from './codex.js';
 import { CHARACTERS, CHARACTER_ORDER, masteryNeed } from './characters.js';
 import { masteryOf } from './meta.js';
 import { SKILL_DEFS } from './skills.js';
@@ -221,7 +221,7 @@ function renderChar() {
       const d = SKILL_DEFS[key], lv = ch.unlock[key] || 1, locked = m.lv < lv;
       slot.className = 'ch-skill' + (locked ? ' locked' : '');
       slot.style.setProperty('--c', d.color);
-      slot.innerHTML = `${d.icon}<span class="cx-ap ${d.passive ? 'p' : 'a'}">${d.passive ? 'P' : 'A'}</span>${i === 0 ? '<span class="ch-basic">기본</span>' : ''}${locked ? `<span class="ch-lock">${ic('lock')} 숙련 ${lv}</span>` : ''}`;
+      slot.innerHTML = `${d.icon}<span class="cx-ap ${d.passive ? 'p' : 'a'}">${d.passive ? 'P' : 'A'}</span>${elemBadge(d.element)}${i === 0 ? '<span class="ch-basic">기본</span>' : ''}${locked ? `<span class="ch-lock">${ic('lock')} 숙련 ${lv}</span>` : ''}`;
       slot._tip = () => `<div class="tip-title">${d.icon} ${d.name} <span class="tip-dim">${d.passive ? '패시브' : '액티브'}</span></div><div>${d.desc}</div>`
         + `<div class="tip-dim">3레벨 효과 : ${d.levelText(3).slice(1).filter(Boolean)[0] || ''}</div><div class="tip-dim">5레벨 효과 : ${d.levelText(5).slice(1).filter(Boolean)[0] || ''}</div>`
         + (i === 0 ? '<div class="tip-ok">스테이지를 시작할 때 장착하고 시작합니다.</div>' : '')

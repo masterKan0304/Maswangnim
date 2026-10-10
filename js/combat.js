@@ -212,7 +212,7 @@ export class SkillRuntime {
     if (sk.cd > 0) return false;
     let st = getStats(sk);
     const p = this.player.pos;
-    const need = { roots: manual ? 0 : 20, strawDoll: manual ? 0 : 10, honeyBomb: manual ? 0 : 3, leafCut: manual ? 0 : 20, pineWind: manual ? 0 : 20, nature: manual ? 0 : sample(st.area) / U / 2, fireball: manual ? 0 : 20, chainLightning: sample(st.range) / U, snowfall: sample(st.range) / U, flamethrower: manual ? 0 : (sample(st.area) / U) * 1.3, lightningBeam: manual ? 0 : 14 }[sk.key];
+    const need = { roots: manual ? 0 : 20, strawDoll: manual ? 0 : 10, honeyBomb: 0, leafCut: manual ? 0 : 20, pineWind: manual ? 0 : 20, nature: manual ? 0 : sample(st.area) / U / 2, fireball: manual ? 0 : 20, chainLightning: sample(st.range) / U, snowfall: sample(st.range) / U, flamethrower: manual ? 0 : (sample(st.area) / U) * 1.3, lightningBeam: manual ? 0 : 14 }[sk.key];
     if (need && !this.enemies.anyInRange(p.x, p.z, need)) {
       if (manual) game.sys.ui.toast('사거리 안에 적이 없습니다', 'warn');
       return false;
@@ -632,7 +632,7 @@ export class SkillRuntime {
     const n = sampleInt(st.projCount);
     for (let i = 0; i < n; i++) {
       const a = spreadAngle(base, i);
-      this.spawnWind(sk, st, p.pos.x + Math.cos(a) * 0.5, p.pos.z + Math.sin(a) * 0.5, Math.cos(a), Math.sin(a), sampleInt(st.chains), flowerChains);
+      this.spawnWind(sk, st, p.pos.x + Math.cos(a) * 0.5, p.pos.z + Math.sin(a) * 0.5, Math.cos(a), Math.sin(a), sampleInt(st.chains), flowerChains, 0);
     }
   }
 
@@ -645,7 +645,8 @@ export class SkillRuntime {
     return best;
   }
 
-  spawnWind(sk, st, x, z, dx, dz, chains, flowerChains = 0) {
+  // boosts: 5레벨에 꽃에 닿은 횟수 (피해 · 크기 20%씩, 크기는 최대 100%) — 연쇄에도 이어짐
+  spawnWind(sk, st, x, z, dx, dz, chains, flowerChains = 0, boosts = 0) {
     const ringMat = new THREE.MeshBasicMaterial({ color: 0xd8fff0, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false });
     const discMat = new THREE.MeshBasicMaterial({ color: 0x9fe8c0, transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
     // 회오리: 위로 갈수록 넓어지는 고리들 + 깔때기 모양의 바람막
@@ -670,8 +671,8 @@ export class SkillRuntime {
     this.scene.add(g);
     const r1 = rings[0], r2 = rings[1];
     const w = {
-      sk, st, x, z, dx, dz, r: sample(st.projSize) / PZ / 2, speed: sample(st.projSpeed) * PS, life: sample(st.duration), age: 0,
-      mul: 1, chains, flowerChains, inside: new Set(), mesh: g, r1, r2, rings, funnel, mats: [ringMat, discMat],
+      sk, st, x, z, dx, dz, r: (sample(st.projSize) / PZ / 2) * (1 + Math.min(1, 0.2 * boosts)), speed: sample(st.projSpeed) * PS, life: sample(st.duration), age: 0,
+      mul: 1 + 0.2 * boosts, r0: sample(st.projSize) / PZ / 2, boosts, chains, flowerChains, inside: new Set(), mesh: g, r1, r2, rings, funnel, mats: [ringMat, discMat],
     };
     this.winds.push(w);
     return w;
@@ -718,6 +719,7 @@ export class SkillRuntime {
         for (const f of [...bloom.flowers]) {
           if (Math.hypot(f.x - w.x, f.z - w.z) > w.r + 0.5) continue;
           bloom.explode(f, 1.5);
+          if (w.sk.level >= 5) { w.boosts++; w.mul = 1 + 0.2 * w.boosts; w.r = w.r0 * (1 + Math.min(1, 0.2 * w.boosts)); }
         }
       }
       // 모습
@@ -735,7 +737,7 @@ export class SkillRuntime {
         if (Math.random() > 0.85) continue;
         const a = Math.random() * Math.PI * 2, h = Math.random();
         const rr = w.r * (0.35 + h * 0.75);
-        const petal = w.flowerChains > 0 && Math.random() < 0.4;
+        const petal = (w.flowerChains > 0 || w.boosts > 0) && Math.random() < 0.4;
         this.fx.particles.emit(w.x + Math.cos(a) * rr, 0.1 + h * 1.7 * w.mesh.scale.y, w.z + Math.sin(a) * rr, -Math.sin(a) * 4 * rr, 1.8, Math.cos(a) * 4 * rr, 0.5,
           petal ? 0.11 : 0.07, petal ? (Math.random() < 0.5 ? 0xff9ec4 : 0xffd0e4) : (Math.random() < 0.5 ? 0x9fe8c0 : 0xe8fff4), 0.4);
       }
@@ -745,7 +747,7 @@ export class SkillRuntime {
           const t = (w.flowerChains > 0 && this.nearestFlower(w.x, w.z, 12)) || this.enemies.nearestN(w.x, w.z, 12, 1)[0];
           if (t) {
             const d = Math.hypot(t.x - w.x, t.z - w.z) || 1;
-            this.spawnWind(w.sk, w.st, w.x, w.z, (t.x - w.x) / d, (t.z - w.z) / d, w.chains - 1, Math.max(0, w.flowerChains - 1));
+            this.spawnWind(w.sk, w.st, w.x, w.z, (t.x - w.x) / d, (t.z - w.z) / d, w.chains - 1, Math.max(0, w.flowerChains - 1), w.boosts);
             this.fx.ring(w.x, w.z, 0.8, 0xd8fff0, 0.3);
           }
         }
@@ -1427,7 +1429,7 @@ export class SkillRuntime {
       }
     } else {
       this.deal(e, p.sk, p.st, { mul: p.dmgMul, kx: p.kind === 'root' ? 0 : p.dx * 1.5, kz: p.kind === 'root' ? 0 : p.dz * 1.5, infuse: p.infused });
-      if (p.kind === 'root' && e.alive && !e.elite && !e.boss) this.bind(e, p.sk.def.rootTime);
+      if (p.kind === 'root' && e.alive && !e.elite && !e.boss) this.bind(e, p.st.rootDuration ? sample(p.st.rootDuration) : p.sk.def.rootTime);
       const cols = p.kind === 'leaf' ? [0x8ff07a, 0x4fbf4a] : p.kind === 'root' ? [0x8a6a3a, 0x7ed957] : [0xd8f8ff, 0x9fe6ff];
       this.fx.particles.burst(p.x, p.y, p.z, 4, cols, { speed: 2, size: 0.06, life: 0.25, up: 1.5 });
     }
