@@ -104,8 +104,7 @@ export function castDreamEat(rt, sk, st) {
       if (e.fearT > 0) e.fearT = STATUS.duration * (e.boss || e.elite ? STATUS.fearBossMul : 1);
       if (e.nightmareT > 0) e.nightmareT = e.nightmareMax || STATUS.duration;
     } else {
-      if (e.fearT > 0) { e.fearT = 0; e.fearImmune = STATUS.fearImmune; e.fearZone = null; }
-      e.nightmareT = 0;
+      if (e.fearT > 0 || e.nightmareT > 0) { e.fearT = 0; e.nightmareT = 0; e.fearImmune = STATUS.fearImmune; e.fearZone = null; }
     }
     // 빨아들인 악몽 (적 → 게르게르)
     for (let k = 0; k < 8; k++) rt.fx.particles.emit(e.x + rnd(-0.3, 0.3), rnd(0.4, 1), e.z + rnd(-0.3, 0.3), (P.x - e.x) * 2.2, rnd(0.5, 1.5), (P.z - e.z) * 2.2, 0.45, rnd(0.07, 0.12), pick([0x9a6bff, 0x2a0a3a, 0xd9a8ff]), 0);

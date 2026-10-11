@@ -12,7 +12,7 @@ const UP = new THREE.Vector3(0, 1, 0);
 const WHITE = new THREE.Color(0xffffff);
 const TINT = {
   burn: new THREE.Color(0xff5a14), chill: new THREE.Color(0x9fe6ff), root: new THREE.Color(0x6a8a2a),
-  poison: new THREE.Color(0x5fd34a), exhaust: new THREE.Color(0x4a6a9a), stun: new THREE.Color(0xffe066), fear: new THREE.Color(0x5a2a9a), cons: new THREE.Color(0xffe680),
+  poison: new THREE.Color(0x5fd34a), exhaust: new THREE.Color(0x4a6a9a), stun: new THREE.Color(0xffe066), fear: new THREE.Color(0x5a2a9a), night: new THREE.Color(0x07020c), cons: new THREE.Color(0xffe680),
 };
 const ELEM_NUM = { fire: 'fire', ice: 'ice', nature: 'nature', ocean: 'ocean', earth: 'earth', dark: 'dark', radiant: 'radiant' };
 const key = (cx, cz) => (cx + 1000) * 4096 + (cz + 1000);
@@ -123,7 +123,7 @@ export class EnemyManager {
     if (!src) amount *= game.mods.dmgMul;   // 스킬이 아닌 피해(꽃 등)만 여기서 — 스킬 피해는 능력치에 이미 반영
     amount = amount > 0 ? Math.max(1, Math.round(amount)) : 0;   // 실제 피해는 소수점 반올림 (최소 1)
     // 공포: 받는 피해의 20% 를 칠흑 피해로 더 받음 / 축성: 받는 피해를 쌓아 둠
-    const fearExtra = !raw && (e.fearT > 0 || e.nightmareT > 0) && amount > 0 ? Math.max(1, Math.round(amount * STATUS.fearExtra)) : 0;
+    const fearExtra = !raw && (e.fearT > 0 || e.nightmareT > 0) && amount > 0 ? Math.max(1, Math.round(amount * (e.nightmareT > 0 ? STATUS.nightmareExtra : STATUS.fearExtra))) : 0;   // 공포 20% / 악몽 50%
     if (!raw && e.consT > 0) e.consAcc += amount + fearExtra;
     recordDamage(src, amount + fearExtra);    // DPS 표 기록
     e.hp -= amount + fearExtra;
@@ -155,18 +155,20 @@ export class EnemyManager {
     for (let i = 1; i < w.length; i += 2) sum += w[i];
     if (sum < e.maxHp * 0.5) return;
     w.length = 0;
-    if (e.element === 'dark' || e.fearT > 0) return;
+    if (e.element === 'dark' || e.fearT > 0 || e.nightmareT > 0) return;
     if (this.applyStatus(e, 'dark', 0) === false) return;
     this.fx.particles.burst(e.x, 0.8 + e.r, e.z, 14, [0x14051f, 0x7a3aff, 0xd9a8ff], { speed: 2.5, size: 0.1, life: 0.5, up: 3 });
     this.fx.ring(e.x, e.z, e.r * 1.5, 0x9a6bff, 0.4);
   }
 
-  // 악몽: 공포와 같은 효과 (달아남 · 이동 30% 감소 · 받는 피해 20% 를 칠흑 피해로 더) — 풀려도 면역이 생기지 않음
+  // 악몽: 공포 중에 공포가 다시 걸리면 (또는 암흑의 눈 3레벨) — 3초간 제자리에 멈춤 (정예 · 보스는 60% 감속),
+  // 받는 피해의 50% 를 칠흑 피해로 더 받음. 악몽 중에는 갱신되지 않고, 풀리면 공포 면역 3초
   nightmare(e, t = STATUS.duration) {
-    if (!e.alive || e.element === 'dark') return false;
-    const d = t * (e.boss || e.elite ? STATUS.fearBossMul : 1);
-    e.nightmareT = Math.max(e.nightmareT, d);
-    e.nightmareMax = d;
+    if (!e.alive || e.element === 'dark' || e.nightmareT > 0 || e.fearImmune > 0) return false;
+    e.fearT = 0; e.fearZone = null;
+    e.nightmareT = t;
+    e.nightmareMax = t;
+    this.fx.particles.burst(e.x, 0.8 + e.r, e.z, 16, [0x07020c, 0x3a1a5a, 0xc040ff], { speed: 2.2, size: 0.12, life: 0.55, up: 2.5 });
     return true;
   }
 
@@ -199,7 +201,8 @@ export class EnemyManager {
       e.stunT = Math.max(e.stunT, STATUS.stun * mul);   // 기절
     } else if (element === 'dark') {
       // 공포: 풀린 뒤 3초간은 다시 걸리지 않음
-      if (e.fearT > 0 || e.fearImmune > 0) return false;   // 이미 공포 중 / 면역
+      if (e.nightmareT > 0 || e.fearImmune > 0) return false;   // 악몽 중 (갱신 없음) / 면역
+      if (e.fearT > 0) return this.nightmare(e);                 // 공포 중에 다시 공포 → 악몽
       e.fearT = STATUS.duration * (e.boss || e.elite ? STATUS.fearBossMul : 1);
     } else if (element === 'radiant') {
       // 축성 중 다시 걸리면 쌓인 피해의 100% 를 바로 주고 새로 축성
@@ -275,6 +278,7 @@ export class EnemyManager {
     }
     if (e.nightmareT > 0) {
       e.nightmareT -= dt;
+      if (e.nightmareT <= 0) e.fearImmune = STATUS.fearImmune;   // 악몽이 풀리면 공포 면역
       if (Math.random() < dt * 7) this.fx.particles.emit(e.x + (Math.random() - 0.5) * e.r, 0.6 + Math.random() * e.r, e.z + (Math.random() - 0.5) * e.r, 0, 0.9, 0, 0.6, 0.1, Math.random() < 0.5 ? 0x14051f : 0xc040ff, -0.6);
     }
     if (e.fearT > 0) {
@@ -336,13 +340,14 @@ export class EnemyManager {
         // 칠흑 지대 안의 공포: 지대 안을 이리저리 방황
         if (e.wanderA == null || Math.random() < dt * 1.5) e.wanderA = Math.random() * Math.PI * 2;
         dx = Math.cos(e.wanderA); dz = Math.sin(e.wanderA);
-      } else if (e.fearT > 0 || e.nightmareT > 0) { dx = -dx; dz = -dz; }   // 공포 · 악몽: 플레이어에게서 정반대로 달아남
+      } else if (e.fearT > 0 || e.nightmareT > 0) { dx = -dx; dz = -dz; }   // 공포: 플레이어에게서 정반대로 달아남 (악몽: 일반은 멈춤, 정예 · 보스는 느리게 달아남)
 
       // 통통 튀는 이동
       e.phase += dt * (e.boss ? 0.75 : 1.6);
       const p = e.phase % 1;
       const air = p < 0.6;
-      const mv = e.rootT > 0 || e.stunT > 0 ? 0 : e.speed * (air ? 1.4 : 0.3) * (e.chillT > 0 ? 1 - STATUS.slow : 1) * (e.fearT > 0 || e.nightmareT > 0 ? 1 - STATUS.fearSlow : 1);   // 속박 / 기절: 멈춤, 공포: 30% 느림
+      const nmStop = e.nightmareT > 0 && !e.elite && !e.boss;   // 악몽: 제자리에 멈춤
+      const mv = e.rootT > 0 || e.stunT > 0 || nmStop ? 0 : e.speed * (air ? 1.4 : 0.3) * (e.chillT > 0 ? 1 - STATUS.slow : 1) * (e.nightmareT > 0 ? 1 - STATUS.nightmareSlow : e.fearT > 0 ? 1 - STATUS.fearSlow : 1);   // 속박 / 기절: 멈춤, 공포: 30% 느림
       let vx = dx * mv, vz = dz * mv;
 
       // 분리 (겹침 방지)
@@ -413,7 +418,7 @@ export class EnemyManager {
     if (e.exhaustT > 0) out.lerp(TINT.exhaust, 0.4);
     if (e.stunT > 0 && Math.sin(t * 24 + e.phase * 20) > 0) out.lerp(TINT.stun, 0.45);
     if (e.fearT > 0) out.lerp(TINT.fear, 0.5);
-    if (e.nightmareT > 0) out.lerp(TINT.fear, 0.4 + 0.25 * Math.sin(t * 9 + e.phase * 10));
+    if (e.nightmareT > 0) { out.lerp(TINT.fear, 0.6); out.lerp(TINT.night, 0.35 + 0.35 * Math.sin(t * 5 + e.phase * 10)); }   // 악몽: 보라 + 검정이 일렁임
     if (e.consT > 0) out.lerp(TINT.cons, 0.25 + 0.2 * Math.sin(t * 10 + e.phase * 10));
     if (e.rootT > 0) out.lerp(TINT.root, 0.45);
     return out;
