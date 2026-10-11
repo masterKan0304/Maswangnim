@@ -287,7 +287,7 @@ export function createWorld(scene) {
 
   // 밤 (게르게르): 너무 어둡지 않게, 색채만 보랏빛 밤처럼
   const DAY = { bg: new THREE.Color(0xa6dcf5), sky: new THREE.Color(0xdff1ff), gnd: new THREE.Color(0x5b7d3a), sun: new THREE.Color(0xfff0d2), hi: 1.15, si: 2.4 };
-  const NIGHT = { bg: new THREE.Color(0x4a3d78), sky: new THREE.Color(0xb4a2f0), gnd: new THREE.Color(0x3a3060), sun: new THREE.Color(0xb7a2ff), hi: 1.05, si: 1.55 };
+  const NIGHT = { bg: new THREE.Color(0x5a4690), sky: new THREE.Color(0xc4b0ff), gnd: new THREE.Color(0x5a4486), sun: new THREE.Color(0xc8b0ff), hi: 1.2, si: 1.9 };
   let nightK = 0;
   function applyNight(k) {
     scene.background.copy(DAY.bg).lerp(NIGHT.bg, k);

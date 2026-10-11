@@ -710,7 +710,9 @@ function tick(dt, draw = true) {
   }
 
   if (!draw) return;
-  world.update(animTime, player.pos, adt, !!(CHARACTERS[game.charId] && CHARACTERS[game.charId].night) && game.state !== 'start');
+  const night = !!(CHARACTERS[game.charId] && CHARACTERS[game.charId].night) && game.state !== 'start';
+  world.update(animTime, player.pos, adt, night);
+  if (document.body.classList.contains('night') !== night) document.body.classList.toggle('night', night);   // 보랏빛 밤 색조
   updateShadows();
   enemies.render(animTime);
   pickups.render(animTime);
