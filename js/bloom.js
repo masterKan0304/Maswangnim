@@ -229,7 +229,7 @@ export class Bloom {
       const d = Math.hypot(e.x - f.x, e.z - f.z);
       if (d > r + e.r * 0.6) continue;
       const amt = (DMG[0] + Math.random() * (DMG[1] - DMG[0])) * mul;
-      this.enemies.damage(e, amt * (game.mods.dmgMul || 1), { color: 'bloom', src: this.src, kx: ((e.x - f.x) / (d || 1)) * 3, kz: ((e.z - f.z) / (d || 1)) * 3 });
+      this.enemies.damage(e, amt * (game.mods.dmgMul || 1), { element: 'nature', color: 'nature', src: this.src, kx: ((e.x - f.x) / (d || 1)) * 3, kz: ((e.z - f.z) / (d || 1)) * 3 });
     }
     this.fx.ring(f.x, f.z, r, 0xff9ec4, 0.5);
     this.fx.ring(f.x, f.z, r * 0.6, 0xffffff, 0.35);
