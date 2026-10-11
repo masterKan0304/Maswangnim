@@ -304,9 +304,9 @@ Object.assign(SKILL_DEFS, {
   darkEye: {
     key: 'darkEye', name: '암흑의 눈', icon: ic('darkeye'), color: '#7a3aff', element: 'dark', passive: false, castTime: 0.1, owner: 'gerger',
     short: '감시하는 눈을 설치해, 범위 안의 적에게 시선을 연결해 지속 피해를 주고 공포에 빠트립니다.',
-    desc: '사거리 안 무작위 위치에 감시하는 눈을 설치합니다. 눈은 지속 시간 동안 유지되며 효과 범위 안의 무작위 적에게 시선을 연결해 지속적으로 피해를 주고 공포 상태로 만듭니다. 시선은 연쇄할 수 있으며, 시선 사이에 있는 적은 영향을 받지 않습니다. (피해량은 초당 피해량이며 0.2초마다 나누어 줍니다.)',
+    desc: '사거리 안 무작위 위치에 감시하는 눈을 설치합니다. 눈은 지속 시간 동안 유지되며 효과 범위 안의 무작위 적에게 시선을 연결해 지속적으로 피해를 주고 공포 상태로 만듭니다. 시선은 연쇄할 수 있으며, 시선(레이저)에 닿은 적도 피해를 받습니다. (피해량은 초당 피해량이며 0.2초마다 나누어 줍니다.)',
     keywords: ['칠흑', '설치', '지속 피해', '공포', '연쇄', '지속 시간', '스킬 쿨타임'],
-    base: { damage: [12, 20], range: 40, area: 30, duration: 6, chains: 0, cooldown: 8 },
+    base: { damage: [6, 10], range: 40, area: 30, duration: 6, chains: 0, cooldown: 8 },
     labels: { damage: '초당 피해' },
     relevant: ['damage', 'range', 'area', 'duration', 'chains', 'cooldown'],
     levelUp: dmgUp40,
@@ -314,15 +314,15 @@ Object.assign(SKILL_DEFS, {
     extra: (sk) => [`시선 ${sk.level >= 5 ? 2 : 1}개 (0.2초마다 초당 피해의 20%)`, sk.level >= 3 ? '시선이 닿은 적은 악몽 상태가 됩니다.' : '시선이 닿은 적은 공포 상태가 됩니다.'],
   },
   ambush: {
-    key: 'ambush', name: '암습', icon: ic('ambush'), color: '#c040ff', element: 'dark', passive: false, castTime: 0, owner: 'gerger', gaugeCost: 30, gaugeCostLv3: 10, powerful: true,
+    key: 'ambush', name: '암습', icon: ic('ambush'), color: '#c040ff', element: 'dark', passive: false, castTime: 0, owner: 'gerger', gaugeCost: 30, powerful: true,
     short: '사거리 안의 적에게 순간 이동해 주위에 피해를 줍니다. 공포 · 악몽 상태인 적을 노립니다. (어둠 게이지 30)',
     desc: '사거리 안 무작위 적에게 순간 이동한 뒤 곧바로 효과 범위 안에 피해를 줍니다. 공포 또는 악몽 상태인 적을 우선 대상으로 하며, 공포 또는 악몽 상태인 적에게는 추가 피해를 줍니다. 공격 후 약 0.1초 동안 움직일 수 없습니다. 강력한 공격이라 치명타 확률이 30%입니다.',
     keywords: ['강력한 공격', '칠흑', '어둠 게이지', '순간 이동', '효과 범위', '공포', '스킬 쿨타임'],
     base: { damage: [45, 60], bonusDmg: 100, range: 50, area: 15, cooldown: 15, statusChance: 25, critChance: 30 },
     relevant: ['damage', 'bonusDmg', 'range', 'area', 'cooldown', 'statusChance'],
     levelUp: dmgUp40,
-    levelText: (lv) => ['피해량이 40% 증가합니다.', lv === 3 && '어둠 게이지 소모량이 10으로 줄어듭니다.', lv === 5 && '이 스킬로 공포 · 악몽 상태인 적을 처치하면 스킬 쿨타임이 초기화됩니다.'],
-    extra: (sk) => ['강력한 공격: 사용하면 다른 강력한 공격 스킬의 쿨타임이 최소 1.5초가 됩니다.', `어둠 게이지 ${gaugeCostOf(sk)} 소모`, sk.level >= 5 && '공포 · 악몽 상태인 적 처치 시 쿨타임 초기화'],
+    levelText: (lv) => ['피해량이 40% 증가합니다.', lv === 3 && '이 스킬로 공포 · 악몽 상태인 적을 처치하면 소모한 어둠 게이지를 돌려받습니다.', lv === 5 && '이 스킬로 공포 · 악몽 상태인 적을 처치하면 스킬 쿨타임이 초기화됩니다.'],
+    extra: (sk) => ['강력한 공격: 사용하면 다른 강력한 공격 스킬의 쿨타임이 최소 1.5초가 됩니다.', `어둠 게이지 ${gaugeCostOf(sk)} 소모`, sk.level >= 3 && '공포 · 악몽 상태인 적 처치 시 소모한 어둠 게이지 반환', sk.level >= 5 && '공포 · 악몽 상태인 적 처치 시 쿨타임 초기화'],
   },
 });
 

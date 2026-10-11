@@ -72,12 +72,13 @@ export class Labels {
       const landed = b.t >= b.fly;
       _v.set(landed ? b.x : p.x, landed ? 1.12 : p.y + 0.62, landed ? b.z : p.z).project(this.camera);
       const sx = ((_v.x + 1) / 2) * W, sy = ((1 - _v.y) / 2) * H;
-      if (sx < -100 || sx > W + 100 || sy < -60 || sy > H + 60) { b.label.style.display = 'none'; continue; }
-      b.label.style.display = '';
-      list.push({ b, sx, sy, d: (p.x - pl.x) ** 2 + (p.z - pl.z) ** 2 });
+      const off = sx < -100 || sx > W + 100 || sy < -60 || sy > H + 60;
+      b.label.style.display = off ? 'none' : '';
+      list.push({ b, sx, sy, off, landed, d: (p.x - pl.x) ** 2 + (p.z - pl.z) ** 2 });
     }
-    // 플레이어에 가까운 아이템부터 원래 자리에 배치하고, 겹치는 것은 밀어냄
-    list.sort((a, b) => a.d - b.d);
+    // 이미 자리를 잡은(떨어진 뒤 고정된) 이름표는 그 자리 그대로 — 카메라가 평행 이동만 하므로 화면 위 서로의 간격도 변하지 않음
+    // 새로 떨어진 이름표만 비어 있는 가까운 자리를 찾아 고정
+    list.sort((a, b) => (b.b.lFixed ? 1 : 0) - (a.b.lFixed ? 1 : 0) || a.d - b.d);
     const placed = [];
     const hit = (x, y, w, h) => placed.some((r) => x < r.x + r.w + GAP && x + w + GAP > r.x && y < r.y + r.h + GAP && y + h + GAP > r.y);
     for (const it of list) {
@@ -85,9 +86,8 @@ export class Labels {
       const w = b.lw, h = b.lh;
       const x0 = it.sx - w / 2, y0 = it.sy - h;
       let best = null;
-      if (!hit(x0, y0, w, h)) best = [x0, y0];
-      // 직전 프레임에 밀려났던 위치가 아직 비어 있으면 그대로 유지 (자리 바뀜 방지)
-      else if (b.lOff && !hit(x0 + b.lOff[0], y0 + b.lOff[1], w, h)) best = [x0 + b.lOff[0], y0 + b.lOff[1]];
+      if (b.lFixed) best = [x0 + b.lOff[0], y0 + b.lOff[1]];
+      else if (!hit(x0, y0, w, h)) best = [x0, y0];
       // 세로는 이름표 높이만큼, 가로는 짧은 간격(최대 34px)씩 밀어 가며 가까운 빈자리를 찾음
       const stepX = Math.min(w / 2, 34) + GAP;
       for (let k = 1; !best && k <= 20; k++) {
@@ -97,7 +97,8 @@ export class Labels {
       }
       if (!best) best = [x0, y0];
       placed.push({ x: best[0], y: best[1], w, h });
-      b.lOff = [best[0] - x0, best[1] - y0];
+      if (!b.lFixed) { b.lOff = [best[0] - x0, best[1] - y0]; if (it.landed) b.lFixed = true; }   // 땅에 떨어지면 자리 고정
+      if (it.off) continue;
       b.label.style.transform = `translate(${best[0]}px, ${best[1]}px)`;
       b.label.classList.toggle('picked', b === game.sys.player.moveTarget);
     }

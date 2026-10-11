@@ -5,7 +5,7 @@
 import * as THREE from 'three';
 import { game } from './state.js';
 import { STAT_UNIT as U, STATUS, PROJ_SPEED_UNIT as PS, PROJ_SIZE_UNIT as PZ } from './config.js';
-import { sample } from './skills.js';
+import { sample, gaugeCostOf } from './skills.js';
 import { sfx } from './audio.js';
 import { makeGlowSprite } from './effects.js';
 
@@ -491,6 +491,24 @@ function updateEyes(rt, dt) {
     eye.tick -= dt;
     if (eye.tick <= 0) {
       eye.tick += 0.2;
+      // 시선(레이저)에 닿은 적: 피해만 (공포 · 악몽은 시선이 연결된 적만)
+      const linked = new Set();
+      for (const l of eye.links) for (const e of l.chain) linked.add(e);
+      const touched = new Set();
+      for (const l of eye.links) {
+        let ax = eye.x, az = eye.z;
+        for (const t of l.chain) {
+          const sx = t.x - ax, sz = t.z - az, L = Math.hypot(sx, sz) || 1, ux = sx / L, uz = sz / L;
+          for (const e of rt.enemies.query((ax + t.x) / 2, (az + t.z) / 2, L / 2 + 2)) {
+            if (!e.alive || linked.has(e) || touched.has(e)) continue;
+            const ox = e.x - ax, oz = e.z - az, along = ox * ux + oz * uz;
+            if (along < 0 || along > L || Math.abs(ox * uz - oz * ux) > 0.25 + e.r * 0.6) continue;
+            touched.add(e);
+          }
+          ax = t.x; az = t.z;
+        }
+      }
+      for (const e of touched) rt.deal(e, eye.sk, eye.st, { mul: 0.2, statusRatio: 0, at: { x: e.x, z: e.z } });
       for (const l of eye.links) for (const e of l.chain) {
         if (!e.alive) continue;
         rt.deal(e, eye.sk, eye.st, { mul: 0.2, statusRatio: 0, at: { x: e.x, z: e.z } });
@@ -535,6 +553,8 @@ export function castAmbush(rt, sk, st) {
   }
   ambushFx(rt.fx, t.x, t.z, Math.atan2(dz, dx), R);
   // 5레벨: 공포 · 악몽 상태인 적을 처치하면 쿨타임 초기화
+  // 3레벨: 공포 · 악몽 상태인 적을 처치하면 소모한 어둠 게이지 반환
+  if (sk.level >= 3 && killedScared && !game.debug.god) { p.addGauge(gaugeCostOf(sk)); rt.fx.numbers.spawn(P.x, 2, P.z, `+${gaugeCostOf(sk)}`, 'dark'); }
   if (sk.level >= 5 && killedScared) { setTimeout(() => { sk.cd = 0; }, 0); rt.fx.ring(P.x, P.z, 1.2, 0xff4a6a, 0.4, 1); }
   p.lockMove = true; p.postT = 0.1;   // 후딜레이
   game.shake = Math.max(game.shake || 0, 0.18);
