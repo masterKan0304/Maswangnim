@@ -142,19 +142,19 @@ export function startCruel(rt, sk, st) {
   const L = sample(st.area) / U;
   p.lockMove = true; p.castInvuln = true; p.tailBlades = true;
   const bladeGeo = shared('bladeGeo', () => {
-    const g = new THREE.ConeGeometry(0.16, 1, 4);   // 길이 1, 끝이 +Y
+    const g = new THREE.ConeGeometry(0.2, 1, 4);   // 길이 1, 끝이 +Y (납작한 칼날)
     g.translate(0, 0.5, 0);
-    g.scale(1, 1, 0.3);
+    g.scale(1, 1, 0.22);
     return g;
   });
-  const bladeMat = new THREE.MeshStandardMaterial({ color: 0x241536, emissive: 0x7a3aff, emissiveIntensity: 0.6, roughness: 0.3, metalness: 0.4, flatShading: true, transparent: true, opacity: 1 });
-  const edgeMat = new THREE.MeshBasicMaterial({ color: 0xd9a8ff, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false });
+  const bladeMat = new THREE.MeshStandardMaterial({ color: 0x1a0e28, emissive: 0x4a1a9a, emissiveIntensity: 0.4, roughness: 0.25, metalness: 0.6, flatShading: true, transparent: true, opacity: 1 });
+  const edgeMat = new THREE.MeshBasicMaterial({ color: 0x8a4aff, transparent: true, opacity: 0.35, blending: THREE.AdditiveBlending, depthWrite: false });
   const blades = [];
   for (let i = 0; i < n; i++) {
     const g = new THREE.Group();
     const core = new THREE.Mesh(bladeGeo, bladeMat);
-    const edge = new THREE.Mesh(bladeGeo, edgeMat); edge.scale.set(1.5, 1.02, 1.5);
-    const tip = makeGlowSprite(0xb48cff, 0.9, 0.9); tip.position.y = 1;
+    const edge = new THREE.Mesh(bladeGeo, edgeMat); edge.scale.set(1.35, 1.03, 1.6);
+    const tip = makeGlowSprite(0x9a6bff, 0.7, 0.8); tip.position.y = 1;
     g.add(core, edge, tip);
     g.userData = { tip, core };
     g.visible = false;
@@ -199,12 +199,13 @@ export function updateCruels(rt, dt) {
         if (k < 0.2) { g.visible = false; return; }
         g.visible = true;
         const grow = Math.min(1, (k - 0.2) / 0.5);
-        const fan = (i - (c.n - 1) / 2) * 0.32 * grow;
+        const fan = (i - (c.n - 1) / 2) * (c.n > 3 ? 0.42 : 0.6) * grow;
         const ang = c.a + Math.PI + fan;   // 뒤쪽 위로 펼쳐짐
-        const len = 0.3 + 1.5 * grow;
-        placeBlade(g, tailX, ty, tailZ, tailX + Math.cos(ang) * len * 0.45, ty + len * 0.9, tailZ + Math.sin(ang) * len * 0.45);
+        const len = 0.3 + 1.8 * grow;
+        placeBlade(g, tailX, ty, tailZ, tailX + Math.cos(ang) * len * 0.7, ty + len * 0.75, tailZ + Math.sin(ang) * len * 0.7);
       });
-      c.bladeMat.emissiveIntensity = 0.6 + k * 1.6;
+      c.bladeMat.emissiveIntensity = 0.4 + k * 0.9;
+      c.edgeMat.opacity = 0.35 + k * 0.35;
       // 어둠이 빨려 들어옴
       for (let q = 0; q < 6; q++) {
         const b = Math.random() * Math.PI * 2, d = rnd(2, 4.5);
@@ -233,7 +234,7 @@ export function updateCruels(rt, dt) {
           rt.fx.particles.emit(P.x + (tx - P.x) * f, by + (ty - by) * f, P.z + (tz - P.z) * f, 0, 0, 0, 0.3, rnd(0.08, 0.16), pick([0x9a6bff, 0xd9a8ff, 0x2a0a3a]), 0);
         }
       });
-      c.bladeMat.emissiveIntensity = 2.4;
+      c.bladeMat.emissiveIntensity = 1.4;
     } else {
       if (!c.struck) { c.struck = true; strike(rt, sk, c); }
       // 착지
