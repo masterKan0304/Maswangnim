@@ -29,7 +29,8 @@ const NUM_DESC = { fixed: '항상 같은 값입니다.', range: '적용될 때�
 const KIND_BADGE = { sentence: '문장', subject: '주체', change: '변화', number: '수치', op: '연산' };
 const STAT_SHORT = { damage: '피해량', area: '효과 범위', range: '사거리', duration: '지속 시간', castSpeed: '시전 속도', shield: '보호막', pierce: '관통', projSize: '투사체 크기', projSpeed: '투사체 속도', projCount: '투사체 개수', chains: '연쇄 횟수', statusChance: '상태이상 발생율', projDuration: '투사체 지속 시간', manaCost: '마나', cooldown: '쿨타임', haste: '스킬 가속',
   critChance: '치명타 확률', critDamage: '치명타 피해', critFlat: '치명타 추가 피해', penetration: '저항 무시', fireDmg: '화염 피해', iceDmg: '냉기 피해', natureDmg: '자연 피해', oceanDmg: '해양 피해', earthDmg: '대지 피해', darkDmg: '칠흑 피해', radiantDmg: '광휘 피해' };
-const shortName = (def, k) => (k === 'damage' && def.element ? statLabel(def, k) : (def.labels && def.labels[k]) || STAT_SHORT[k]);
+// 짧은 이름이 없는 능력치(밀치기 거리 · 추가 피해 · 꽃 생성 수 등)는 원래 이름으로
+const shortName = (def, k) => (k === 'damage' && def.element ? statLabel(def, k) : (def.labels && def.labels[k]) || STAT_SHORT[k] || (SUBJECTS[k] && SUBJECTS[k].name) || k);
 // 속성 피해 표시 색
 const ELEM_CLASS = { fireDmg: 'fire', iceDmg: 'ice', natureDmg: 'nature', oceanDmg: 'ocean', earthDmg: 'earth', darkDmg: 'dark', radiantDmg: 'radiant' };
 const statElemClass = (def, k) => (k === 'damage' ? def.element : ELEM_CLASS[k]) || '';
