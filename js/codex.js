@@ -212,6 +212,7 @@ function detailSkill(info) {
   const need = d.owner ? masteryUnlock(d.key) : unlockLevel('skills', d.key);
   const have = d.owner ? masteryOf(d.owner).lv : game.accountLevel;
   const tags = [d.element ? `<span class="elem e-${d.element}" data-el="${d.element}" data-elmode="atk">${ELEMENTS[d.element].name}</span>` : '', `<span class="cx-tag">${d.passive ? '패시브' : '액티브'}</span>`,
+    d.powerful ? '<span class="cx-tag power" data-power="1">강력한 공격</span>' : '',
     d.owner ? `<span class="cx-tag own">${CHARACTERS[d.owner].name} 전용</span>` : '<span class="cx-tag">공용</span>',
     need > 1 ? `<span class="cx-tag ${have >= need ? 'ok' : 'lock'}">${d.owner ? '숙련도' : '계정'} Lv.${need} 해금</span>` : ''].join('');
   const stats = shownStats(d, st).filter((k) => st[k] && st[k].max !== 0).map((k) => `<div class="cx-stat"><span>${statLabel(d, k)}</span><b>${statText(k, st)}</b></div>`).join('');

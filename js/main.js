@@ -589,7 +589,7 @@ function showEndScreen(kind) {
       const it = document.createElement('div');
       it.className = 'eu-item';
       it.innerHTML = `<div class="eu-ic" style="--c:${d.color}">${d.icon}</div><div class="eu-name">${d.name}</div>`;
-      it._tip = () => `<div class="tip-title">${d.icon} ${d.name}</div><div>${d.short}</div><div class="kw-list">${d.keywords.map((w) => `<span class="kw">${w}</span>`).join('')}</div>`;
+      it._tip = () => `<div class="tip-title">${d.icon} ${d.name}</div><div>${d.short}</div><div class="kw-list">${d.keywords.map((w) => `<span class="kw${w === '강력한 공격' ? ' power' : ''}">${w}</span>`).join('')}</div>`;
       list.appendChild(it);
     }
     for (const t of acc.unlocked.templates) {

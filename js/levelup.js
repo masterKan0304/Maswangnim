@@ -5,7 +5,7 @@ import { SKILL_DEFS, SKILL_ORDER, createSkill, baseStats, fmtStat } from './skil
 import { CHARACTERS } from './characters.js';
 
 const elemTag = (d) => (d.element ? `<span class="elem e-${d.element}">${ELEMENTS[d.element].name}</span> ` : '');
-const keywordHTML = (d) => `<div class="kw-list">${d.keywords.map((k) => `<span class="kw">${k}</span>`).join('')}</div>`;
+const keywordHTML = (d) => `<div class="kw-list">${d.keywords.map((k) => `<span class="kw${k === '강력한 공격' ? ' power' : ''}">${k}</span>`).join('')}</div>`;
 
 // 선택지 → 표시용 객체. id 는 리롤 중복 방지용 (같은 유형+대상이면 같은 id)
 export function describe(c) {

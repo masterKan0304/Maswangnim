@@ -266,6 +266,11 @@ export class SkillRuntime {
     sk.cd = sample(st.cooldown) + castTime;
     sk.cdMax = sk.cd;
     this.casts.push({ sk, t: castTime, st });
+    // 강력한 공격: 다른 강력한 공격 스킬에 쿨타임 1.5초 (더 길면 그대로) + 몸 주위로 검은 연기
+    if (sk.def.powerful) {
+      for (const o of game.skills) if (o !== sk && o.def.powerful && o.cd < 1.5) { o.cd = 1.5; o.cdMax = Math.max(o.cdMax || 0, 1.5); }
+      this.player.smokeT = 1.1;
+    }
     this.player.castPulse(sk.def.color);
     return true;
   }

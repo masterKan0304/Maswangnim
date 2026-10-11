@@ -189,7 +189,31 @@ function placeBlade(g, bx, by, bz, tx, ty, tz) {
   g.userData.tip.scale.set(0.6, 0.6 / len, 0.6);   // 끝의 빛은 늘어나지 않게
 }
 
+// 강력한 공격: 몸 주위로 뿜어지는 검은 연기 (사악한 기운)
+function updateSmoke(rt, dt) {
+  const p = rt.player;
+  if (!(p.smokeT > 0)) return;
+  p.smokeT -= dt;
+  const P = p.pos, k = Math.min(1, p.smokeT / 0.4);
+  for (let q = 0; q < 5; q++) {
+    const b = Math.random() * Math.PI * 2, d = rnd(0.25, 0.65);
+    rt.fx.particles.emit(P.x + Math.cos(b) * d, rnd(0.1, 0.9), P.z + Math.sin(b) * d, Math.cos(b) * rnd(0.3, 1.1), rnd(1.2, 2.6), Math.sin(b) * rnd(0.3, 1.1), rnd(0.5, 0.9), rnd(0.12, 0.24) * (0.5 + 0.5 * k), pick([0x050208, 0x0e0616, 0x1a0a2a, 0x2a1040]), -1.2);
+  }
+  // 뭉게뭉게 피어오르는 연기 덩어리
+  if (Math.random() < dt * 14) {
+    const mat = new THREE.SpriteMaterial({ map: shared('smokeTex', () => makeGlowSprite(0x000000, 1, 1).material.map), color: 0x0a0412, transparent: true, opacity: 0, depthWrite: false });
+    const sp = new THREE.Sprite(mat);
+    const b = Math.random() * Math.PI * 2, d = rnd(0.2, 0.5), x = P.x + Math.cos(b) * d, z = P.z + Math.sin(b) * d, s0 = rnd(0.6, 1), vy = rnd(1, 1.8);
+    rt.fx.add([sp], 0.9, (t) => {
+      sp.position.set(x + Math.cos(b) * t * 0.5, 0.4 + t * vy, z + Math.sin(b) * t * 0.5);
+      sp.scale.setScalar(s0 * (1 + t * 1.3));
+      mat.opacity = (t < 0.15 ? t / 0.15 : (1 - t) / 0.85) * 0.75;
+    }, [mat]);
+  }
+}
+
 export function updateCruels(rt, dt) {
+  updateSmoke(rt, dt);
   for (const sk of [...rt.cruels]) {
     const c = sk.cruel;
     if (!c) { rt.cruels = rt.cruels.filter((x) => x !== sk); continue; }
