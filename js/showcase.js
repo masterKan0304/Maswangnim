@@ -37,6 +37,10 @@ const SKILL_SCENES = {
   lightningAura: () => ({ slots: [...CLUSTER, ...BEHIND, [0.5, 2], [0.5, -2]], hp: 0.9, companion: 'fireball', status: 'shock' }),
   enchant: () => ({ slots: [], special: 'enchant' }),
   triggerKill: () => ({ slots: [...CLUSTER, ...BEHIND], hp: 0.9, companion: 'fireball', special: 'trigger' }),
+  // 게르게르 전용
+  claw: () => ({ slots: [[PX + 1.3, 0], [PX + 1.7, 0.7], [PX + 1.7, -0.7]], hp: 3, pullBack: 1.5 }),
+  dreamEat: () => ({ slots: [[PX + 1.5, 0], [PX + 2, 0.8], [PX + 2, -0.8]], hp: 3, pullBack: 1.5, status: 'fear' }),
+  cruelBurst: (lv) => ({ slots: [[PX + 2.5, 0], [PX + 4, 0.3], [PX + 5.5, -0.3], [PX + 7, 0.6], [PX + 4.5, lv >= 5 ? 1.2 : 0.8], [PX + 6.2, lv >= 5 ? -1.4 : -1]], hp: 5, pullBack: 0.8 }),
   // 마솽 전용
   leafCut: (lv) => ({ slots: lv >= 3 ? [...CLUSTER, ...BEHIND] : CLUSTER, hp: 2 }),
   nature: () => ({ slots: RING(6, 1.6, PX, PV), hp: 3, pullBack: 1.2 }),
@@ -193,6 +197,7 @@ export class Showcase {
         if (scn.status === 'burn') e.burnT = Math.max(e.burnT, 1);
         if (scn.status === 'chill') e.chillT = Math.max(e.chillT, 1);
         if (scn.status === 'shock') e.shockT = Math.max(e.shockT, 1);
+        if (scn.status === 'fear' && e.fearT <= 0 && Math.random() < dt * 0.6) { e.fearT = 1.2; e.fearImmune = 0; }
         continue;
       }
       if (s.e) { s.e = null; s.wait = 1.1; }

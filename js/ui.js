@@ -371,6 +371,7 @@ export class UI {
     const { stats } = getResult(sk);
     let h = `<div class="tip-title">${d.icon} ${d.name} <span class="tip-dim">Lv.${sk.level}</span>${d.element ? ` <span class="elem e-${d.element}">${ELEMENTS[d.element].name}</span>` : ''}</div><div>${d.desc}</div>`;
     if (d.element) h += `<div class="tip-dim">${ELEMENTS[d.element].status}: ${ELEMENTS[d.element].desc}</div>`;
+    if (d.gaugeCost) h += `<div class="tip-warn">어둠 게이지 ${d.gaugeCost} 소모</div>`;
     for (const [k, el2] of Object.entries(ELEM_CLASS)) {
       if (el2 !== d.element && stats[k] && stats[k].max > 0) h += `<div class="tip-ok">추가 ${ELEMENTS[el2].name} 피해를 얻었습니다.</div>`;
     }
@@ -424,7 +425,7 @@ export class UI {
     ps.innerHTML = '<span class="sb-icon"></span><span class="sb-stack"></span><span class="sb-ptag">패시브</span>';
     ps._tip = () => {
       const ch = CHARACTERS[game.charId];
-      return ch ? `<div class="tip-title">${ic(ch.passive.icon)} ${ch.passive.name} <span class="tip-dim">고유 패시브</span></div><div>${ch.passive.desc}</div><div class="tip-dim">양분 ${game.sys.bloom ? game.sys.bloom.nutrients : 0} / 5</div>` : '';
+      return ch ? `<div class="tip-title">${ic(ch.passive.icon)} ${ch.passive.name} <span class="tip-dim">고유 패시브</span></div><div>${ch.passive.desc}</div><div class="tip-dim">${ch.id === 'gerger' ? `어둠 게이지 ${Math.floor(game.sys.player.gauge)} / 100${game.sys.player.gaugeSum() ? ` · 소모 효과: 이동 속도 +${game.sys.player.gaugeSum()}%, 스킬 피해 +${game.sys.player.gaugeSum() * 2}%` : ''}` : `양분 ${game.sys.bloom ? game.sys.bloom.nutrients : 0} / 5`}</div>` : '';
     };
     this.skillbarEl.appendChild(ps);
     this.sbPassive = ps;
@@ -996,6 +997,7 @@ export class UI {
       if (e.stunT > 0) st.push([ic('stun'), '기절', 'earth', e.stunT]);
       if (e.fearT > 0) st.push([ic('moon'), '공포', 'dark', e.fearT]);
       if (e.consT > 0) st.push([ic('sun'), '축성', 'radiant', e.consT]);
+      if (e.bleeds && e.bleeds.length) st.push([ic('blood'), '출혈', 'bleed', 0]);
       if (e.resDownT > 0 && e.resDown > 0) st.push([ic('rock'), `모든 저항 -${e.resDown}`, 'earth', 0]);
       if (e.fireVuln > 0) st.push([ic('flamewave'), `화염 취약 +${Math.round(e.fireVuln * 100)}%`, 'fire', 0]);
       const key = st.map((x) => x[1]).join('|');
@@ -1012,8 +1014,20 @@ export class UI {
     const pl = game.sys.player;
     $('#hpfill').style.width = `${(pl.hp / pl.maxHp) * 100}%`;
     $('#shieldfill').style.width = `${Math.min(1, pl.shield / pl.maxHp) * 100}%`;
-    $('#mpfill').style.width = `${(pl.mana / pl.maxMana) * 100}%`;
-    $('#mptext').textContent = `${Math.floor(pl.mana)} / ${pl.maxMana}`;
+    // 게르게르: 마나 대신 어둠 게이지
+    if (this._gaugeMode !== !!pl.noMana) {
+      this._gaugeMode = !!pl.noMana;
+      document.querySelector('.hp-label.mp').textContent = pl.noMana ? '어둠' : 'MP';
+      document.querySelector('.hp-label.mp').classList.toggle('gauge', !!pl.noMana);
+      document.querySelector('.hp-track.mp').classList.toggle('gauge', !!pl.noMana);
+    }
+    if (pl.noMana) {
+      $('#mpfill').style.width = `${pl.gauge}%`;
+      $('#mptext').textContent = `${Math.floor(pl.gauge)} / 100`;
+    } else {
+      $('#mpfill').style.width = `${(pl.mana / pl.maxMana) * 100}%`;
+      $('#mptext').textContent = `${Math.floor(pl.mana)} / ${pl.maxMana}`;
+    }
     this.renderBuffs();
     $('#hptext').textContent = `${Math.floor(pl.hp)} / ${pl.maxHp}${pl.shield > 0 ? `  (+${Math.floor(pl.shield)})` : ''}`;
     const need = xpNeed(game.level);
@@ -1047,7 +1061,7 @@ export class UI {
       this.sbPassive.classList.toggle('hidden', !ch);
       if (ch) {
         if (this.sbPassive._ch !== ch.id) { this.sbPassive._ch = ch.id; this.sbPassive.querySelector('.sb-icon').innerHTML = ic(ch.passive.icon); }
-        this.sbPassive.querySelector('.sb-stack').textContent = game.sys.bloom ? game.sys.bloom.nutrients : 0;
+        this.sbPassive.querySelector('.sb-stack').textContent = ch.id === 'gerger' ? Math.floor(game.sys.player.gauge) : game.sys.bloom ? game.sys.bloom.nutrients : 0;
       }
     }
     this.sbSlots.forEach((s, i) => {

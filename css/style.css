@@ -1200,3 +1200,21 @@ body.in-menu #hud, body.in-menu #label-layer, body.in-menu #vignette { display: 
 .cx-elic { position: absolute; top: 28px; right: 3.5px; width: 19px; height: 19px; border-radius: 6px; display: grid; place-items: center;
   background: rgba(10,12,24,0.85); border: 1.5px solid var(--ec); box-shadow: 0 0 6px color-mix(in srgb, var(--ec) 45%, transparent); color: var(--ec); }
 .cx-elic .ic { width: 12px; height: 12px; }
+
+/* 게르게르: 어둠 게이지 / 출혈 / 캐릭터 해금 */
+.hp-label.mp.gauge { color: #c8a8ff; font-size: 11px; }
+.hp-track.mp.gauge #mpfill { background: linear-gradient(180deg, #b48cff, #5a2a9a); box-shadow: 0 0 8px rgba(154,107,255,0.6); }
+.dmg.bleed { color: #ff4a5e; font-size: 20px; }
+.bs.e-bleed { border-color: #d0304a; }
+.ch-traits { margin: 6px 0 0; padding-left: 18px; font-size: 12px; color: #d6c8ff; line-height: 1.6; }
+.ch-card.lockedc { opacity: 0.75; }
+.ch-card.lockedc .chc-ic { filter: grayscale(0.6) brightness(0.8); }
+.chc-lock { font-size: 11px; color: #ffb4c2; font-weight: 700; }
+.chc-lock .ic { width: 12px; height: 12px; vertical-align: -0.15em; }
+.ch-unlock { margin-top: 10px; padding: 10px 12px; border-radius: 12px; background: rgba(154,107,255,0.12); border: 1px solid rgba(154,107,255,0.4); }
+.chu-title { font-family: 'Jua', sans-serif; font-size: 16px; margin-bottom: 4px; }
+.chu-title .ic, .chu-req .ic, .ch-unlock-btn .ic { width: 14px; height: 14px; vertical-align: -0.15em; }
+.chu-req { font-size: 12px; font-weight: 700; }
+.chu-req.ok { color: #9ff0a8; } .chu-req.no { color: #ff9aa8; }
+.ch-unlock-btn { margin-top: 8px; width: 100%; padding: 8px; font-size: 15px; background: linear-gradient(180deg, #8a5ae0, #5a2a9a); }
+.ch-unlock-btn.off { opacity: 0.45; cursor: not-allowed; }

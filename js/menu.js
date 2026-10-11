@@ -197,10 +197,22 @@ function selectIdx(i) {
 // ── 캐릭터 선택 ──
 // 위 왼쪽: 전용 스킬 8칸 (4x2) + 플레이 미리보기 / 위 오른쪽: 설명 · 고유 패시브 · 숙련도 / 아래: 캐릭터 목록
 const CHAR_SLOTS = 3;   // 아래 목록 칸 수 (아직 없는 캐릭터는 '준비 중')
+let viewChar = null;    // 보고 있는 캐릭터 (해금 전 캐릭터도 볼 수 있음)
+let unlockArm = false;  // 해금 버튼: 한 번 더 눌러야 확정
+const isOwned = (cid) => !CHARACTERS[cid].unlockReq || (profile.ownedChars || []).includes(cid);
+function unlockBox(ch) {
+  const r = ch.unlockReq;
+  const lvOk = profile.accountLevel >= r.accountLevel, goldOk = profile.gold >= r.gold;
+  return `<div class="ch-unlock"><div class="chu-title">${ic('lock')} 잠긴 캐릭터</div>
+    <div class="chu-req ${lvOk ? 'ok' : 'no'}">계정 레벨 ${r.accountLevel} 이상 (현재 ${profile.accountLevel})</div>
+    <div class="chu-req ${goldOk ? 'ok' : 'no'}">${ic('coin')} ${r.gold.toLocaleString()} 골드 (보유 ${profile.gold.toLocaleString()})</div>
+    <button class="menu-btn ch-unlock-btn${lvOk && goldOk ? '' : ' off'}">${unlockArm ? `정말 해금할까요? (${ic('coin')} ${r.gold.toLocaleString()} 사용)` : '해금하기'}</button></div>`;
+}
+
 function renderChar() {
   const body = $('#char-body');
   body.innerHTML = '';
-  const id = CHARACTERS[profile.character] ? profile.character : 'masang';
+  const id = CHARACTERS[viewChar] ? viewChar : CHARACTERS[profile.character] ? profile.character : 'masang';
   const ch = CHARACTERS[id];
   const m = masteryOf(id);
   const need = masteryNeed(m.lv);
@@ -236,8 +248,8 @@ function renderChar() {
 
   const right = document.createElement('div');
   right.className = 'ch-right';
-  right.innerHTML = `<div class="ch-head"><span class="ch-portrait" style="--c:${ch.color}">${ic(ch.icon)}</span><div><div class="ch-name">${ch.name}</div><div class="ch-sub">기본 캐릭터${ch.element ? ` <span class="elem e-${ch.element}" data-el="${ch.element}">${ELEMENTS[ch.element].name}</span>` : ''}</div></div></div>
-    <div class="ch-desc">${ch.desc}</div>
+  right.innerHTML = `<div class="ch-head"><span class="ch-portrait" style="--c:${ch.color}">${ic(ch.icon)}</span><div><div class="ch-name">${ch.name}</div><div class="ch-sub">${ch.sub || '기본 캐릭터'}${ch.element ? ` <span class="elem e-${ch.element}" data-el="${ch.element}">${ELEMENTS[ch.element].name}</span>` : ''}</div></div></div>
+    <div class="ch-desc">${ch.desc}</div>${ch.traits ? `<ul class="ch-traits">${ch.traits.map((t) => `<li>${t}</li>`).join('')}</ul>` : ''}${isOwned(id) ? '' : unlockBox(ch)}
     <div class="ch-passive"><div class="chp-title">${ic(ch.passive.icon)} 고유 패시브 · ${ch.passive.name}</div><div class="chp-desc">${ch.passive.desc}</div></div>
     <div class="ch-mastery"><div class="chm-head"><span>숙련도 <b>Lv.${m.lv}</b></span><span class="chm-xp">${Math.floor(m.xp).toLocaleString()} / ${need.toLocaleString()}</span></div>
       <div class="acct-bar"><i style="width:${Math.min(100, (m.xp / need) * 100)}%"></i></div>
@@ -254,17 +266,35 @@ function renderChar() {
       card.innerHTML = '<div class="chc-ic">?</div><div class="chc-name">준비 중</div>';
     } else {
       const c = CHARACTERS[cid];
-      card.className = 'ch-card' + (cid === id ? ' sel' : '');
+      const own = isOwned(cid);
+      card.className = 'ch-card' + (cid === id ? ' sel' : '') + (own ? '' : ' lockedc');
       card.style.setProperty('--c', c.color);
-      card.innerHTML = `<div class="chc-ic">${ic(c.icon)}</div><div class="chc-name">${c.name}</div><div class="chc-lv">숙련도 Lv.${masteryOf(cid).lv}</div>`;
+      card.innerHTML = `<div class="chc-ic">${ic(c.icon)}</div><div class="chc-name">${c.name}</div>${own ? `<div class="chc-lv">숙련도 Lv.${masteryOf(cid).lv}</div>` : `<div class="chc-lock">${ic('lock')} 잠김</div>`}`;
       card.addEventListener('click', () => {
-        if (profile.character === cid) return;
-        profile.character = cid; saveProfile(); sfx('select'); updateStageTag(); renderChar();
+        if (id === cid) return;
+        viewChar = cid; unlockArm = false;
+        if (own) { profile.character = cid; saveProfile(); updateStageTag(); }
+        sfx('select'); renderChar();
       });
     }
     list.appendChild(card);
   }
   body.append(top, list);
+
+  // 해금 버튼 (계정 레벨 · 골드 조건)
+  const ub = body.querySelector('.ch-unlock-btn');
+  if (ub) ub.addEventListener('click', () => {
+    const r = ch.unlockReq;
+    if (profile.accountLevel < r.accountLevel || profile.gold < r.gold) { sfx('error'); return; }
+    if (!unlockArm) { unlockArm = true; sfx('open'); renderChar(); return; }
+    profile.gold -= r.gold;
+    profile.ownedChars = [...new Set([...(profile.ownedChars || ['masang']), id])];
+    profile.character = id;
+    unlockArm = false;
+    saveProfile(); sfx('buy'); sfx('levelup');
+    if (opts.refreshGold) opts.refreshGold();
+    updateStageTag(); renderChar();
+  });
 
   // 해금된 전용 스킬로 싸우는 미리보기
   const keys = ch.skills.filter((k) => k && m.lv >= (ch.unlock[k] || 1));

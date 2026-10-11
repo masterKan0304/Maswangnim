@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { PLAYER, WORLD_HALF, DASH } from './config.js';
-import { createPlayer } from './models.js';
+import { createPlayer, createGerger } from './models.js';
 import { game } from './state.js';
 import { CHARACTERS } from './characters.js';
 import { elemMul } from './config.js';
@@ -41,6 +41,10 @@ export class Player {
     this.dashT = 0;
     this.dashDir = new THREE.Vector3();
     this.ghostT = 0;
+    this.modelId = 'masang';
+    this.gauge = 0;          // 어둠 게이지 (게르게르)
+    this.gaugeBuffs = [];    // 소모한 어둠 게이지 { n, t }
+    this.lift = 0;           // 크루엘 버스트: 공중으로 떠오른 높이
 
     // 보호막 구체
     this.bubbleMat = new THREE.MeshBasicMaterial({ color: 0x7fd8ff, transparent: true, opacity: 0.18, depthWrite: false, blending: THREE.AdditiveBlending });
@@ -93,11 +97,14 @@ export class Player {
       const tx = t.x - this.pos.x, tz = t.z - this.pos.z;
       if (Math.hypot(tx, tz) > 0.3) mv.set(tx, 0, tz);
     }
+    if (this.lockMove) mv.set(0, 0, 0);   // 크루엘 버스트 중: 제자리
     this.moving = mv.lengthSq() > 0;
     if (this.moving) {
       mv.normalize();
       this.moveDir.copy(mv);
-      mv.multiplyScalar(PLAYER.speed * game.mods.speedMul * (1 - (this.slow || 0)) * dt);   // slow: 꿀열매 폭탄 등
+      const ch = CHARACTERS[game.charId];
+      const spd = (ch && ch.speedMul || 1) * (1 + 0.01 * this.gaugeSum());   // 캐릭터 기본 이동 속도 / 어둠 게이지 소모 1당 +1%
+      mv.multiplyScalar(PLAYER.speed * spd * game.mods.speedMul * (1 - (this.slow || 0)) * dt);   // slow: 꿀열매 폭탄 등
       this.pos.x += mv.x; this.pos.z += mv.z;
     }
     // 대시
@@ -141,7 +148,9 @@ export class Player {
         this.fx.numbers.spawn(this.pos.x, 1.6, this.pos.z, `+${regenAmt}`, 'heal');
       }
     }
-    this.mana = Math.min(this.maxMana, this.mana + (PLAYER.manaRegen + game.mods.manaRegen) * (1 + (game.mods.manaRegenMul || 0)) * dt);
+    if (this.noMana) this.mana = 0;   // 게르게르: 마나 없음 (마나 관련 효과를 받지 않음)
+    else this.mana = Math.min(this.maxMana, this.mana + (PLAYER.manaRegen + game.mods.manaRegen) * (1 + (game.mods.manaRegenMul || 0)) * dt);
+    for (let i = this.gaugeBuffs.length - 1; i >= 0; i--) { this.gaugeBuffs[i].t -= dt; if (this.gaugeBuffs[i].t <= 0) this.gaugeBuffs.splice(i, 1); }
     if (game.mods.regenPerSec && this.hp > 0 && this.hp < this.maxHp) this.hp = Math.min(this.maxHp, this.hp + game.mods.regenPerSec * dt);   // 초당 체력 재생
     if (this.hurtT > 0) this.hurtT -= dt;
     if (this.castT > 0) this.castT -= dt;
@@ -177,6 +186,25 @@ export class Player {
     this.shieldMax = Math.max(this.shieldMax, this.shield);
   }
 
+  // 어둠 게이지
+  addGauge(v) { this.gauge = Math.min(100, this.gauge + v); }
+  spendGauge(n) {
+    this.gauge = Math.max(0, this.gauge - n);
+    this.gaugeBuffs.push({ n, t: 4 });   // 소모한 1당 4초간 이동 속도 +1%, 스킬 피해 +2%
+  }
+  gaugeSum() { let s = 0; for (const b of this.gaugeBuffs) s += b.n; return s; }
+
+  // 캐릭터 모델 교체 (그룹은 그대로 두고 안쪽만 바꿈 — pos 참조 유지)
+  setModel(id) {
+    const g = this.model.group;
+    g.remove(this.model.root);
+    const m = id === 'gerger' ? createGerger() : createPlayer();
+    m.group.remove(m.root);
+    g.add(m.root);
+    this.model = { ...m, group: g };
+    this.modelId = id;
+  }
+
   // 바깥으로 밀어냄 (속도 단위)
   push(vx, vz) { this.kx += vx; this.kz += vz; }
 
@@ -188,6 +216,11 @@ export class Player {
     this.hp = this.maxHp;
     this.maxMana = Math.round((PLAYER.maxMana + m.maxMana) * (1 + (m.maxManaPct || 0)));
     this.mana = this.maxMana;
+    const ch = CHARACTERS[game.charId];
+    this.noMana = !!(ch && ch.noMana);
+    if (this.noMana) this.mana = 0;
+    this.gauge = 0; this.gaugeBuffs.length = 0;
+    this.lift = 0; this.lockMove = false; this.castInvuln = false; this.tailBlades = false;
   }
 
   castPulse(color) { this.castT = 0.25; this.castColor.set(color); }
@@ -204,6 +237,7 @@ export class Player {
       this.fx.numbers.spawn(this.pos.x, 1.7, this.pos.z, Math.floor(amount), 'hurt');
       return;
     }
+    if (this.castInvuln) return;   // 크루엘 버스트: 무적
     if (this.invuln > 0 || game.state !== 'playing' || game.debug.god || game.tutorial) return;   // 튜토리얼: 피해 없음
     if (game.mods.dashInvuln && this.dashT > 0) return;   // 재빠른 움직임: 대시 중 무적
     this.invuln = PLAYER.invuln * (1 + (game.mods.invulnMul || 0)) + game.mods.invuln;
@@ -237,9 +271,12 @@ export class Player {
   }
 
   render(time) {
+    const want = game.charId === 'gerger' ? 'gerger' : 'masang';
+    if (this.modelId !== want) this.setModel(want);
     const m = this.model;
     const g = m.group;
     g.rotation.y = this.facing;
+    if (m.kind === 'dog') { this.renderDog(m, time); this.renderCommon(time); return; }
     // 걷기 애니메이션
     const sw = this.moving ? Math.sin(this.walk) : 0;
     const k = this.moving ? 1 : 0;
@@ -262,6 +299,33 @@ export class Player {
       else if (this.castT > 0) mat.emissive.copy(this.castColor).multiplyScalar(0.15 * (this.castT / 0.25));
       else mat.emissive.setRGB(0, 0, 0);
     }
+    m.root.position.y += this.lift;
+    this.renderCommon(time);
+  }
+
+  // 게르게르: 네 다리 교차 걸음, 꼬리 살랑, 머리 끄덕
+  renderDog(m, time) {
+    const sw = this.moving ? Math.sin(this.walk * 1.25) : 0;
+    m.legs[0].rotation.x = sw * 0.65; m.legs[3].rotation.x = sw * 0.65;
+    m.legs[1].rotation.x = -sw * 0.65; m.legs[2].rotation.x = -sw * 0.65;
+    if (this.lift > 0.05) for (const l of m.legs) l.rotation.x = -0.5;   // 공중: 다리를 웅크림
+    m.root.position.y = (this.moving ? Math.abs(Math.sin(this.walk * 1.25)) * 0.05 : Math.sin(time * 2.2) * 0.012) + this.lift;
+    m.headPivot.rotation.x = this.moving ? Math.sin(this.walk * 2.5) * 0.06 : Math.sin(time * 1.8) * 0.04;
+    m.tail.rotation.z = Math.sin(time * (this.moving ? 7 : 2.6)) * 0.18;
+    m.tail.rotation.x = Math.sin(time * 1.7) * 0.06;
+    m.tailTip.visible = !this.tailBlades;   // 크루엘 버스트: 꼬리 끝이 칼날로 갈라짐
+    if (this.castT > 0) m.headPivot.rotation.x = -0.35 * Math.sin((this.castT / 0.25) * Math.PI);   // 할퀴기 · 꿈먹기: 앞으로 덤벼듦
+    const hurt = this.hurtT > 0 ? this.hurtT / 0.25 : 0;
+    for (const mat of m.materials) {
+      if (!mat.emissive) continue;
+      if (hurt > 0) mat.emissive.setRGB(hurt * 0.8, 0, 0);
+      else if (this.castT > 0) mat.emissive.copy(this.castColor).multiplyScalar(0.15 * (this.castT / 0.25));
+      else mat.emissive.setRGB(0, 0, 0);
+    }
+  }
+
+  renderCommon(time) {
+    const g = this.model.group;
     this.arrow.visible = !this.hidden;
     g.visible = !this.hidden && !(this.invuln > 0 && this.hurtT <= 0 && Math.floor(time * 20) % 2 === 0 && this.invuln < PLAYER.invuln - 0.25);
 

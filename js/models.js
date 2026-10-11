@@ -281,6 +281,130 @@ export function createPlayer() {
 }
 
 // ─────────────────────────────────────────────
+//  게르게르: 4족 보행 사냥개 (보라색 몸, 큰 둥근 머리, 한쪽 뿔, 늘어진 혀,
+//  끝에 눈이 달린 꼬리, 연보라 발톱) — 마솽보다 20% 정도 큼, 머리 : 몸통 = 1 : 1.2
+// ─────────────────────────────────────────────
+export function createGerger() {
+  const group = new THREE.Group();
+  const root = new THREE.Group();
+  group.add(root);
+  const std = (o) => new THREE.MeshStandardMaterial({ roughness: 0.75, flatShading: true, ...o });
+  const furMat = std({ color: 0x6e5c92 });
+  const bellyMat = std({ color: 0x5c4c7e });
+  const darkMat = std({ color: 0x241c30, roughness: 0.5 });
+  const clawMat = std({ color: 0xd2b8f5 });
+  const tongueMat = std({ color: 0xf28aa8, roughness: 0.45 });
+  const eyeMat = new THREE.MeshBasicMaterial({ color: 0xe6c4ff });
+  const mk = (geo, mat) => { const m = new THREE.Mesh(geo, mat); m.castShadow = true; return m; };
+
+  const HR = 0.36;            // 머리 반지름
+  const BR = HR * 1.2;        // 몸통 (머리의 1.2배)
+  // 몸통
+  const body = mk(new THREE.SphereGeometry(BR, 14, 10).scale(0.92, 0.78, 1.12), furMat);
+  body.position.set(0, 0.6, -0.14);
+  root.add(body);
+  const belly = mk(new THREE.SphereGeometry(BR * 0.8, 10, 8).scale(0.85, 0.6, 1), bellyMat);
+  belly.position.set(0, 0.48, -0.1);
+  root.add(belly);
+
+  // 다리 4개 + 발 + 발톱
+  const legs = [];
+  const legGeo = new THREE.CylinderGeometry(0.085, 0.105, 0.36, 7).translate(0, -0.18, 0);
+  const pawGeo = new THREE.SphereGeometry(0.115, 8, 6).scale(1.1, 0.6, 1.3);
+  const clawGeo = new THREE.ConeGeometry(0.028, 0.08, 4).rotateX(Math.PI / 2);
+  for (const [sx, sz] of [[-1, 1], [1, 1], [-1, -1], [1, -1]]) {
+    const pivot = new THREE.Group();
+    pivot.position.set(sx * 0.21, 0.44, -0.14 + sz * 0.27);
+    pivot.add(mk(legGeo, furMat));
+    const paw = mk(pawGeo, furMat);
+    paw.position.set(0, -0.37, 0.03);
+    pivot.add(paw);
+    for (const cx of [-0.05, 0, 0.05]) {
+      const c = mk(clawGeo, clawMat);
+      c.position.set(cx, -0.39, 0.17);
+      pivot.add(c);
+    }
+    root.add(pivot);
+    legs.push(pivot);
+  }
+
+  // 머리
+  const headPivot = new THREE.Group();
+  headPivot.position.set(0, 0.98, 0.26);
+  const head = mk(new THREE.SphereGeometry(HR, 16, 12).scale(1, 0.94, 0.98), furMat);
+  headPivot.add(head);
+  // 한쪽 뿔 (뒤로 휘어진 검은 뿔)
+  const hornCurve = new THREE.CatmullRomCurve3([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0.03, 0.12, -0.03), new THREE.Vector3(0.02, 0.22, -0.12), new THREE.Vector3(-0.02, 0.27, -0.22)]);
+  const hornGeo = new THREE.TubeGeometry(hornCurve, 8, 0.07, 6);
+  const hp = hornGeo.attributes.position;   // 끝으로 갈수록 가늘게
+  for (let i = 0; i < hp.count; i++) {
+    const seg = Math.floor(i / 7) / 8;
+    const c = hornCurve.getPoint(Math.min(1, seg));
+    const k = 1 - seg * 0.85;
+    hp.setXYZ(i, c.x + (hp.getX(i) - c.x) * k, c.y + (hp.getY(i) - c.y) * k, c.z + (hp.getZ(i) - c.z) * k);
+  }
+  hornGeo.computeVertexNormals();
+  const horn = mk(hornGeo, darkMat);
+  horn.position.set(0.2, 0.24, -0.04);
+  horn.rotation.z = -0.35;
+  headPivot.add(horn);
+  // 물결 모양 입 선
+  const mouthPts = [];
+  for (let i = 0; i <= 12; i++) {
+    const x = -0.22 + (0.44 * i) / 12;
+    const y = -0.07 + Math.sin(i * 1.6) * 0.018;
+    const z = Math.sqrt(Math.max(0.001, HR * HR - x * x - y * y)) * 0.98 + 0.004;
+    mouthPts.push(new THREE.Vector3(x, y, z));
+  }
+  headPivot.add(mk(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(mouthPts), 24, 0.011, 4), darkMat));
+  // 늘어진 혀
+  const tongue = mk(new THREE.SphereGeometry(0.13, 10, 8).scale(1.05, 0.42, 1.25), tongueMat);
+  tongue.position.set(0, -0.17, HR * 0.86);
+  tongue.rotation.x = 0.55;
+  headPivot.add(tongue);
+  const tline = mk(new THREE.BoxGeometry(0.012, 0.012, 0.13), std({ color: 0xc0506e }));
+  tline.position.set(0, -0.12, HR * 0.95);
+  tline.rotation.x = 0.55;
+  headPivot.add(tline);
+  root.add(headPivot);
+
+  // 꼬리: 몸통 뒤에서 위로 휘어 오른 뒤 끝에 눈 달린 공
+  const tail = new THREE.Group();
+  tail.position.set(0, 0.66, -0.58);
+  const tailCurve = new THREE.CatmullRomCurve3([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0.1, -0.2), new THREE.Vector3(0, 0.45, -0.3), new THREE.Vector3(0, 0.8, -0.15), new THREE.Vector3(0, 0.95, 0)]);
+  tail.add(mk(new THREE.TubeGeometry(tailCurve, 16, 0.048, 6), furMat));
+  const tailTip = new THREE.Group();
+  tailTip.position.set(0, 1.02, 0.03);
+  tailTip.add(mk(new THREE.SphereGeometry(0.16, 12, 9), furMat));
+  const eye = new THREE.Mesh(new THREE.SphereGeometry(0.1, 12, 8).scale(1, 0.5, 0.45), eyeMat);
+  eye.position.set(0, 0, 0.125);
+  tailTip.add(eye);
+  const slit = new THREE.Mesh(new THREE.BoxGeometry(0.014, 0.075, 0.02), new THREE.MeshBasicMaterial({ color: 0x3a1a5a }));
+  slit.position.set(0, 0, 0.17);
+  tailTip.add(slit);
+  const glow = makeGlow(0xb48cff, 0.45);
+  glow.position.set(0, 0, 0.16);
+  tailTip.add(glow);
+  tail.add(tailTip);
+  root.add(tail);
+
+  return { group, root, legs, arms: [], headPivot, tail, tailTip, kind: 'dog', materials: [furMat, bellyMat, darkMat, clawMat, tongueMat] };
+}
+
+// 부드러운 빛 (꼬리 눈)
+function makeGlow(color, scale) {
+  const c = document.createElement('canvas');
+  c.width = c.height = 32;
+  const g = c.getContext('2d');
+  const grd = g.createRadialGradient(16, 16, 0, 16, 16, 16);
+  grd.addColorStop(0, 'rgba(255,255,255,1)'); grd.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = grd; g.fillRect(0, 0, 32, 32);
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), color, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false }));
+  sp.scale.setScalar(scale);
+  return sp;
+}
+
+// ─────────────────────────────────────────────
 //  슬라임
 // ─────────────────────────────────────────────
 export function slimeBodyGeometry() {

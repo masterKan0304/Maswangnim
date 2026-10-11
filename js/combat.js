@@ -6,6 +6,7 @@ import { getStats, computeStats, sample, sampleInt, avg, statusProb, maxStacks, 
 import { makeGlowSprite, RingMesh } from './effects.js';
 import { jitter, createPlayer } from './models.js';
 import { sfx } from './audio.js';
+import { castClaw, castDreamEat, startCruel, updateCruels, clearCruels } from './gerger.js';
 
 const DEG = Math.PI / 180;
 // 꿀열매 크기: t초 동안 자란 정도 (2.5초 = 1, 5초를 넘길 때마다 자라는 속도 절반)
@@ -60,6 +61,7 @@ export class SkillRuntime {
     this.vines = [];    // 속박된 적을 감싼 덩굴
     this.dolls = [];    // 짚 인형
     this.honeys = [];   // 꿀을 모으는 중인 스킬
+    this.cruels = [];   // 크루엘 버스트 진행 중
 
     // 파이어볼: 울퉁불퉁한 검붉은 돌 + 틈 사이로 비치는 용암 핵 (뜨거운 운석)
     const rockGeo = jitter(new THREE.DodecahedronGeometry(0.5, 0), 0.32, 41);
@@ -138,7 +140,7 @@ export class SkillRuntime {
   //  o.at: 적중 위치 (범위 스킬은 범위의 중심, 투사체는 투사체 위치 / 없으면 적의 위치) — 지대 생성 문장
   // ─────────────────────────────────────────
   deal(e, sk, st, o = {}) {
-    if (!e.alive) return;
+    if (!e.alive) return 0;
     const at = o.at || { x: e.x, z: e.z };
     this.enemies.statusHit = false;
     const el = sk.def.element;
@@ -148,14 +150,15 @@ export class SkillRuntime {
     const pen = { pct: avg(st.penPct) + (m.penPct || 0), flat: sample(st.penetration) };
     let mul = o.mul ?? 1;
     if (m.manaPower) mul *= 1 + m.manaPower * Math.floor(this.player.mana / 5);                    // 마나 비전: 현재 마나 5당
-    if (st.manaDmg) mul *= st.manaDmg;                                                               // 마나 전환: 이번 시전에 쓴 마나만큼
+    if (st.manaDmg) mul *= st.manaDmg;
+    if (this.player.gaugeSum) mul *= 1 + 0.02 * this.player.gaugeSum();                              // 어둠 게이지 소모: 1당 스킬 피해 +2% (4초)                                                               // 마나 전환: 이번 시전에 쓴 마나만큼
     const main = (o.base ?? sample(st.damage)) * mul;   // 스킬 피해 업그레이드는 능력치(st.damage)에 이미 들어 있음
     const sp = statusProb(st, o.statusRatio ?? 1);
     const common = { pen, crit, src: sk, st };
     const critAdd = crit && st.critFlat ? sample(st.critFlat) : 0;   // 치명타: 피해 × 배율 + 추가 피해
     // 피해 숫자: 주 속성 → 그 위에 추가 속성 피해가 하나씩 쌓임
     const numAt = { x: e.x + (Math.random() - 0.5) * 0.5, z: e.z + (Math.random() - 0.5) * 0.3, stack: 0 };
-    this.enemies.damage(e, main * cm + critAdd, { ...common, element: el, status: sp, kx: o.kx || 0, kz: o.kz || 0, numAt });
+    let dealt = this.enemies.damage(e, main * cm + critAdd, { ...common, element: el, status: sp, kx: o.kx || 0, kz: o.kz || 0, numAt });
     for (const x of ELEMS) {
       let v = 0;
       const k = ELEMENT_DMG[x];
@@ -164,13 +167,14 @@ export class SkillRuntime {
       if (inf) v += inf.pct ? main * sample(inf) : sample(inf) * mul;
       // 다른 속성의 추가 피해: 상태이상 발생율 절반 (o.infuseStatus 가 있으면 그 확률)
       const stat = x === el ? 0 : inf && o.infuseStatus != null ? o.infuseStatus : sp * 0.5;
-      if (v > 0 && e.alive) this.enemies.damage(e, v * cm, { ...common, element: x, status: stat, numAt: { ...numAt, stack: ++numAt.stack } });
+      if (v > 0 && e.alive) dealt += this.enemies.damage(e, v * cm, { ...common, element: x, status: stat, numAt: { ...numAt, stack: ++numAt.stack } });
     }
     // 지대 생성 문장: 이번 적중으로 상태이상이 발생하면 적중 위치에 스킬 속성의 지대 (스킬마다 초당 1회)
     if (this.enemies.statusHit && st.zone && st.zone.max > 0 && el && this.clock - (sk.zoneAt ?? -9) >= 1) {
       sk.zoneAt = this.clock;
       this.addZone(at.x, at.z, el, sample(st.zone), sample(st.zoneArea) / U / 2, avg(st.damage), sk, st);
     }
+    return dealt;
   }
 
   // ── 시전 ─────────────────────────────
@@ -204,6 +208,7 @@ export class SkillRuntime {
     this.updateRootTrail(dt);
     this.updateDolls(dt);
     this.updateHoneys(dt);
+    updateCruels(this, dt);
   }
 
   updateBarrier(sk, dt) {
@@ -219,11 +224,11 @@ export class SkillRuntime {
   }
 
   tryCast(sk, manual) {
-    if (sk.def.passive || sk.flame || sk.honey) return false;
+    if (sk.def.passive || sk.flame || sk.honey || sk.cruel) return false;
     if (sk.cd > 0) return false;
     let st = getStats(sk);
     const p = this.player.pos;
-    const need = { roots: manual ? 0 : 20, strawDoll: manual ? 0 : 10, honeyBomb: 0, leafCut: manual ? 0 : 20, pineWind: manual ? 0 : 20, nature: manual ? 0 : sample(st.area) / U / 2, fireball: manual ? 0 : 20, chainLightning: sample(st.range) / U, snowfall: sample(st.range) / U, flamethrower: manual ? 0 : (sample(st.area) / U) * 1.3, lightningBeam: manual ? 0 : 14 }[sk.key];
+    const need = { roots: manual ? 0 : 20, strawDoll: manual ? 0 : 10, honeyBomb: 0, claw: manual ? 0 : 2.4, dreamEat: manual ? 0 : 3.4, cruelBurst: manual ? 0 : 8, leafCut: manual ? 0 : 20, pineWind: manual ? 0 : 20, nature: manual ? 0 : sample(st.area) / U / 2, fireball: manual ? 0 : 20, chainLightning: sample(st.range) / U, snowfall: sample(st.range) / U, flamethrower: manual ? 0 : (sample(st.area) / U) * 1.3, lightningBeam: manual ? 0 : 14 }[sk.key];
     if (need && !this.enemies.anyInRange(p.x, p.z, need)) {
       if (manual) game.sys.ui.toast('사거리 안에 적이 없습니다', 'warn');
       return false;
@@ -234,6 +239,13 @@ export class SkillRuntime {
       if (manual) { game.sys.ui.toast('마나가 부족합니다', 'warn'); sfx('error'); }
       return false;
     }
+    // 어둠 게이지 (게르게르)
+    const gc = game.debug.god ? 0 : sk.def.gaugeCost || 0;
+    if (gc > 0 && (this.player.gauge || 0) < gc) {
+      if (manual) { game.sys.ui.toast('어둠 게이지가 부족합니다', 'warn'); sfx('error'); }
+      return false;
+    }
+    if (gc > 0) this.player.spendGauge(gc);
     this.player.mana -= cost;
     if (cost > 0 && game.mods.manaRefund) this.player.mana = Math.min(this.player.maxMana, this.player.mana + cost * game.mods.manaRefund);   // 마나 효율
     if (cost > 0 && game.mods.manaToDmg) st = { ...st, manaDmg: 1 + game.mods.manaToDmg * cost };    // 마나 전환: 쓴 마나 1당 +3%
@@ -271,6 +283,9 @@ export class SkillRuntime {
     else if (sk.key === 'roots') this.castRoots(sk, st);
     else if (sk.key === 'strawDoll') this.castDolls(sk, st);
     else if (sk.key === 'honeyBomb') this.startHoney(sk, st);
+    else if (sk.key === 'claw') castClaw(this, sk, st);
+    else if (sk.key === 'dreamEat') castDreamEat(this, sk, st);
+    else if (sk.key === 'cruelBurst') startCruel(this, sk, st);
   }
 
   // ── 옭아매는 뿌리 ──
@@ -858,6 +873,7 @@ export class SkillRuntime {
 
   // 진행 중인 모든 스킬 연출 제거 (도감 미리보기 장면 초기화)
   clearAll() {
+    clearCruels(this);
     for (const p of this.projs) this.poolOf(p.kind).put(p.mesh);
     while (this.winds.length) this.removeWind(0);
     for (const tr of this.rootTrail) this.trailPool.put(tr.mesh);

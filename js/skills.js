@@ -263,6 +263,44 @@ for (const k of ['leafCut', 'nature', 'fruit', 'pineWind', 'roots', 'strawDoll',
     if (!d.relevant.includes('statusChance')) d.relevant.push('statusChance');
   }
 }
+// ── 게르게르 전용 스킬 ──
+Object.assign(SKILL_DEFS, {
+  claw: {
+    key: 'claw', name: '할퀴기', icon: ic('claw'), color: '#d9c4ff', element: null, passive: false, castTime: 0.05, owner: 'gerger',
+    short: '전방을 할퀴어 피해를 주고, 일반 몬스터는 밀쳐냅니다.',
+    desc: '전방(이동 방향)을 할퀴어 피해를 줍니다. 일반 몬스터라면 밀쳐냅니다.',
+    keywords: ['근접', '효과 범위', '밀치기', '스킬 쿨타임'],
+    base: { damage: [9, 15], area: 10, knockback: 3, cooldown: 1 },
+    relevant: ['damage', 'area', 'knockback', 'cooldown'],
+    levelUp(st, lv) { dmgUp40(st, lv); if (lv >= 3) st.cooldown = { min: 0.7, max: 0.7 }; },
+    levelText: (lv) => ['피해량이 40% 증가합니다.', lv === 3 && '기본 스킬 쿨타임이 0.7초가 됩니다.', lv === 5 && '적중한 적을 출혈시킵니다. (3초 동안 준 피해의 50%를 저항을 무시하는 고정 피해로)'],
+    extra: (sk) => [sk.level >= 5 && '적중 시 출혈: 3초 동안 준 피해의 50% (0.2초마다, 모든 저항 무시)'],
+  },
+  dreamEat: {
+    key: 'dreamEat', name: '꿈먹기', icon: ic('fang'), color: '#9a6bff', element: 'dark', passive: false, castTime: 0.05, owner: 'gerger',
+    short: '전방을 깨물어 피해를 줍니다. 공포 · 악몽 상태인 적에게는 추가 피해를 주고 상태를 해제합니다.',
+    desc: '전방(이동 방향)을 깨물어 피해를 줍니다. 공포 또는 악몽 상태인 적에게는 추가 피해를 주고 그 상태를 해제시킵니다.',
+    keywords: ['칠흑', '근접', '효과 범위', '공포', '스킬 쿨타임'],
+    base: { damage: [13, 21], area: 15, bonusDmg: 200, cooldown: 2.5, statusChance: 25 },
+    relevant: ['damage', 'area', 'bonusDmg', 'cooldown', 'statusChance'],
+    levelUp: dmgUp40,
+    levelText: (lv) => ['피해량이 40% 증가합니다.', lv === 3 && '공포 · 악몽 상태인 적에게 피해를 주면 체력을 1, 처치하면 4 회복합니다.', lv === 5 && '적중해도 공포 · 악몽 상태를 해제하지 않고 지속 시간을 초기화합니다.'],
+    extra: (sk) => [sk.level >= 3 && '공포 · 악몽 상태인 적: 피해 시 체력 1, 처치 시 4 회복', sk.level >= 5 && '공포 · 악몽 상태를 해제하지 않고 지속 시간 초기화'],
+  },
+  cruelBurst: {
+    key: 'cruelBurst', name: '크루엘 버스트', icon: ic('blades'), color: '#b48cff', element: 'dark', passive: false, castTime: 0, owner: 'gerger', gaugeCost: 30,
+    short: '공중으로 떠올라 꼬리를 칼날로 갈라 전방을 세차게 내리칩니다. (어둠 게이지 30)',
+    desc: '1초간 공중으로 떠올라 무적 상태가 되고, 꼬리가 칼날 3개로 갈라진 뒤 전방으로 세차게 내리쳐 각 칼날 자리의 적에게 피해를 주고 3초간 출혈시킵니다. 칼날 자국은 川 자 모양으로 남으며, 한 적이 여러 칼날에 동시에 맞을 수 있습니다. 이후 착지하며 무적이 풀립니다. 어둠 게이지를 30 소모합니다.',
+    keywords: ['칠흑', '어둠 게이지', '무적', '출혈', '효과 범위', '스킬 쿨타임'],
+    base: { damage: [35, 70], area: 50, cooldown: 10, statusChance: 25 },
+    labels: { area: '칼날 길이' },
+    relevant: ['damage', 'area', 'cooldown', 'statusChance'],
+    levelUp: dmgUp40,
+    levelText: (lv) => ['피해량이 40% 증가합니다.', lv === 3 && '공포 · 악몽 상태인 적에게 50%의 추가 피해를 줍니다.', lv === 5 && '칼날 5개로 공격합니다.'],
+    extra: (sk) => ['어둠 게이지 30 소모', `칼날 ${sk.level >= 5 ? 5 : 3}개 (발사각 10도 차, 칼날마다 피해)`, '맞은 적은 3초간 출혈 (준 피해의 50%, 모든 저항 무시)', sk.level >= 3 && '공포 · 악몽 상태인 적에게 50% 추가 피해'],
+  },
+});
+
 // 꿀열매 폭탄은 광휘 속성
 SKILL_DEFS.honeyBomb.element = 'radiant';
 SKILL_DEFS.honeyBomb.keywords = SKILL_DEFS.honeyBomb.keywords.map((w) => (w === '자연' ? '광휘' : w));

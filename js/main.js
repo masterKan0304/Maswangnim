@@ -479,7 +479,8 @@ function startGame(stageId = 1) {
   game.accountLevel = profile.accountLevel;
   const tut = stageById(stageId).tutorial;
   game.overkill = OVERKILL.start;   // 오버킬 시간: 2분에서 시작
-  game.charId = tut ? 'masang' : (CHARACTERS[profile.character] ? profile.character : DEFAULT_CHARACTER);   // 튜토리얼은 마솽
+  const owned = (id) => CHARACTERS[id] && (!CHARACTERS[id].unlockReq || (profile.ownedChars || []).includes(id));
+  game.charId = tut ? 'masang' : (owned(profile.character) ? profile.character : DEFAULT_CHARACTER);   // 튜토리얼은 마솽 / 해금한 캐릭터만
   game.masteryLevel = masteryOf(game.charId).lv;
   game.mods = computeMods(tut);   // 튜토리얼: 업그레이드 효과 없음
   player.applyMods(game.mods);
@@ -701,9 +702,15 @@ function tick(dt, draw = true) {
   camTarget.lerp(player.pos, 1 - Math.exp(-dt * 8));
   camera.position.copy(camTarget).add(CAM_OFF);
   camera.lookAt(camTarget);
+  // 화면 흔들림 (크루엘 버스트 등)
+  if (game.shake > 0) {
+    const s = game.shake * 0.5;
+    camera.position.x += (Math.random() - 0.5) * s; camera.position.y += (Math.random() - 0.5) * s; camera.position.z += (Math.random() - 0.5) * s;
+    game.shake = Math.max(0, game.shake - dt * 1.6);
+  }
 
   if (!draw) return;
-  world.update(animTime, player.pos, adt);
+  world.update(animTime, player.pos, adt, !!(CHARACTERS[game.charId] && CHARACTERS[game.charId].night) && game.state !== 'start');
   updateShadows();
   enemies.render(animTime);
   pickups.render(animTime);

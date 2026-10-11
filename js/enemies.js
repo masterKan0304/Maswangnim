@@ -23,6 +23,7 @@ export class EnemyManager {
     this.fx = fx;
     this.list = [];
     this.lures = [];   // 적을 끌어들이는 대상 (짚 인형) { x, z, r, radius, dead, hit(e) }
+    this.clock = 0;    // 악의 (2초 피해 누적) 기준 시간
     this.grid = new Map();
     this.onKill = null;
 
@@ -48,7 +49,7 @@ export class EnemyManager {
       alive: true, boss: type === 'boss', color: new THREE.Color(T.color),
       y: 0, sy: 1, sxz: 1, spawnT: 0,
       burnT: 0, burnDmg: 0, burnTick: 0, chillT: 0, shockT: 0, rootT: 0,
-      poisonT: 0, poisonTick: 0, exhaustT: 0, stunT: 0, fearT: 0, fearImmune: 0, consT: 0, consAcc: 0, resDown: 0, resDownT: 0, fearZone: null, fearZoneT: 0, consZoneT: 0, element: T.element || null,
+      poisonT: 0, poisonTick: 0, exhaustT: 0, stunT: 0, fearT: 0, fearImmune: 0, consT: 0, consAcc: 0, resDown: 0, resDownT: 0, fearZone: null, fearZoneT: 0, consZoneT: 0, bleeds: null, malice: null, nightmareT: 0, element: T.element || null,
     };
     e.elite = type === 'elite';
     if (e.boss || e.elite) {
@@ -106,7 +107,7 @@ export class EnemyManager {
   // (dot: 지속 피해는 상태이상을 부여하지 않음)
   // raw: 공포 추가 피해 / 축성 폭발처럼 다른 효과에서 나온 피해 (다시 공포 · 축성에 쌓이지 않음)
   damage(e, amount, { kx = 0, kz = 0, color, element = null, status = 0, dot = false, pen = null, crit = false, src = null, st = null, raw = false, numAt = null } = {}) {
-    if (!e.alive) return;
+    if (!e.alive) return 0;
     // 같은 속성끼리는 상태이상을 걸 수 없음
     if (element && !dot && element !== e.element && Math.random() < status && this.applyStatus(e, element, amount, src, st) !== false) this.statusHit = true;   // 지대 생성 문장용
     // 속성 저항: 피해 × 100 / (100 + 저항). 저항 무시로 음수가 되면 그만큼 더 받음
@@ -138,8 +139,34 @@ export class EnemyManager {
       this.fx.particles.burst(e.x, 0.4, e.z, e.boss ? 60 : e.elite ? 30 : 12, [e.T.color, 0xffffff, e.T.color], { speed: e.boss ? 8 : e.elite ? 5 : 3.5, size: e.boss ? 0.35 : e.elite ? 0.24 : 0.16, life: 0.6, up: 4 });
       this.fx.splat(e.x, e.z, e.T.color, e.r);
       if (e.model) this.scene.remove(e.model.group);
+      // 게르게르 '악의': 공포 · 악몽 상태인 적을 처치하면 어둠 게이지 +2
+      if (game.charId === 'gerger' && (e.fearT > 0 || e.nightmareT > 0) && game.sys.player && game.sys.player.addGauge) game.sys.player.addGauge(2);
       if (this.onKill) this.onKill(e, src, st);
-    }
+    } else if (game.charId === 'gerger' && amount > 0) this.malice(e, amount + fearExtra);
+    return amount + fearExtra;
+  }
+
+  // 게르게르 '악의': 2초 안에 최대 체력의 50% 피해 → 공포
+  malice(e, v) {
+    const w = e.malice || (e.malice = []);
+    w.push(this.clock, v);
+    while (w.length && w[0] < this.clock - 2) w.splice(0, 2);
+    let sum = 0;
+    for (let i = 1; i < w.length; i += 2) sum += w[i];
+    if (sum < e.maxHp * 0.5) return;
+    w.length = 0;
+    if (e.element === 'dark' || e.fearT > 0) return;
+    if (this.applyStatus(e, 'dark', 0) === false) return;
+    this.fx.particles.burst(e.x, 0.8 + e.r, e.z, 14, [0x14051f, 0x7a3aff, 0xd9a8ff], { speed: 2.5, size: 0.1, life: 0.5, up: 3 });
+    this.fx.ring(e.x, e.z, e.r * 1.5, 0x9a6bff, 0.4);
+  }
+
+  // 출혈: total 만큼의 피해를 dur 초에 걸쳐 0.2초마다 (모든 저항 무시 고정 피해)
+  addBleed(e, total, dur, src = null) {
+    if (!(total > 0) || !e.alive) return;
+    const b = e.bleeds || (e.bleeds = []);
+    if (b.length >= 12) b.shift();
+    b.push({ left: total, per: total * 0.2 / dur, t: 0.2, src });
   }
 
   applyStatus(e, element, amount, src = null, st = null) {
@@ -206,6 +233,20 @@ export class EnemyManager {
   updateStatus(e, dt) {
     if (e.rootT > 0) e.rootT -= dt;
     if (e.fearZoneT > 0) { e.fearZoneT -= dt; if (e.fearZoneT <= 0) e.fearZone = null; }
+    if (e.bleeds && e.bleeds.length) {
+      for (let i = e.bleeds.length - 1; i >= 0; i--) {
+        const b = e.bleeds[i];
+        b.t -= dt;
+        if (b.t > 0) continue;
+        b.t += 0.2;
+        const v = Math.min(b.per, b.left);
+        b.left -= v;
+        if (b.left <= 1e-6) e.bleeds.splice(i, 1);
+        this.damage(e, v, { dot: true, color: 'bleed', src: b.src });   // 속성 없음 → 저항 무시
+        if (!e.alive) return;
+      }
+      if (Math.random() < dt * 8) this.fx.particles.emit(e.x + (Math.random() - 0.5) * e.r, 0.3 + Math.random() * e.r, e.z + (Math.random() - 0.5) * e.r, 0, -0.5, 0, 0.4, 0.07, 0xc0203a, 6);
+    }
     if (e.consZoneT > 0) e.consZoneT -= dt;
     if (e.resDownT > 0) { e.resDownT -= dt; if (e.resDownT <= 0) e.resDown = 0; }
     if (e.poisonT > 0) {
@@ -248,6 +289,7 @@ export class EnemyManager {
   }
 
   update(dt, player, obstacles) {
+    this.clock = (this.clock || 0) + dt;
     // 죽은 적 제거 (in-place)
     let w = 0;
     for (let i = 0; i < this.list.length; i++) if (this.list[i].alive) this.list[w++] = this.list[i];

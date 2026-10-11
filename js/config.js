@@ -35,7 +35,7 @@ export const PLAYER = {
 // 단어:주체
 // noWord: 단어 블록으로 나오지 않는 내부 스탯 / hidden: 스킬 창에 표시하지 않음
 // pctOnly: 수치는 백분율만, %p 단위로 계산 / pctType: 다른 문장의 '만큼' 값으로 쓰일 때 백분율로 취급
-export const SUBJECT_ORDER = ['damage', 'fireDmg', 'iceDmg', 'natureDmg', 'oceanDmg', 'earthDmg', 'darkDmg', 'radiantDmg', 'area', 'range', 'duration', 'rootDuration', 'flowerCount', 'honeyDmgGrow', 'honeyAreaGrow', 'honeyHealGrow', 'projDuration', 'castSpeed', 'shield',
+export const SUBJECT_ORDER = ['damage', 'fireDmg', 'iceDmg', 'natureDmg', 'oceanDmg', 'earthDmg', 'darkDmg', 'radiantDmg', 'area', 'range', 'duration', 'knockback', 'bonusDmg', 'rootDuration', 'flowerCount', 'honeyDmgGrow', 'honeyAreaGrow', 'honeyHealGrow', 'projDuration', 'castSpeed', 'shield',
   'pierce', 'projSize', 'projSpeed', 'projCount', 'chains', 'critChance', 'critDamage', 'critFlat', 'penetration', 'penPct', 'statusChance', 'manaCost', 'cooldown', 'haste'];
 export const SUBJECTS = {
   damage:    { name: '피해량',       min: 1,               desc: '스킬이 주는 피해량입니다. 이미 추가된 속성 피해에도 함께 적용됩니다.' },
@@ -53,6 +53,8 @@ export const SUBJECTS = {
   honeyDmgGrow: { name: '피해량 증가량', min: 0, unit: '%', plus: true, noWord: true, desc: '열매가 커질 때(0.25초마다)마다 늘어나는 피해량입니다. 처음 피해량을 기준으로 합니다.' },
   honeyAreaGrow: { name: '효과 범위 증가량', min: 0, unit: '%', plus: true, noWord: true, desc: '열매가 커질 때(0.25초마다)마다 늘어나는 효과 범위입니다. 처음 효과 범위를 기준으로 합니다.' },
   honeyHealGrow: { name: '체력 회복 증가량', min: 0, plus: true, noWord: true, desc: '열매가 커질 때(0.25초마다)마다 늘어나는 체력 회복량입니다.' },
+  knockback: { name: '밀치기 거리', min: 0, noWord: true, desc: '일반 몬스터를 밀쳐내는 거리입니다.' },
+  bonusDmg: { name: '추가 피해', min: 0, unit: '%', noWord: true, desc: '공포 또는 악몽 상태인 적에게 주는 추가 피해입니다.' },
   rootDuration: { name: '속박 지속 시간', min: 0.1, max: 60, unit: '초', noWord: true, desc: '적을 속박하는 시간입니다. 지속 시간 블록의 효과를 함께 받습니다.' },
   projDuration: { name: '투사체 지속 시간', min: 0.05, max: 60, unit: '초', noWord: true, desc: '투사체가 유지되는 시간입니다.' },
   castSpeed: { name: '시전 속도',    min: 0.1, max: 20, noWord: true, hidden: true, desc: '스킬을 시전하는 속도입니다.' },

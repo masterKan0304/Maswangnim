@@ -285,7 +285,26 @@ export function createWorld(scene) {
     scene.add(grp);
   }
 
-  function update(t, playerPos, dt) {
+  // 밤 (게르게르): 너무 어둡지 않게, 색채만 보랏빛 밤처럼
+  const DAY = { bg: new THREE.Color(0xa6dcf5), sky: new THREE.Color(0xdff1ff), gnd: new THREE.Color(0x5b7d3a), sun: new THREE.Color(0xfff0d2), hi: 1.15, si: 2.4 };
+  const NIGHT = { bg: new THREE.Color(0x4a3d78), sky: new THREE.Color(0xb4a2f0), gnd: new THREE.Color(0x3a3060), sun: new THREE.Color(0xb7a2ff), hi: 1.05, si: 1.55 };
+  let nightK = 0;
+  function applyNight(k) {
+    scene.background.copy(DAY.bg).lerp(NIGHT.bg, k);
+    if (scene.fog) scene.fog.color.copy(scene.background);
+    hemi.color.copy(DAY.sky).lerp(NIGHT.sky, k);
+    hemi.groundColor.copy(DAY.gnd).lerp(NIGHT.gnd, k);
+    hemi.intensity = DAY.hi + (NIGHT.hi - DAY.hi) * k;
+    sun.color.copy(DAY.sun).lerp(NIGHT.sun, k);
+    sun.intensity = DAY.si + (NIGHT.si - DAY.si) * k;
+  }
+
+  function update(t, playerPos, dt, night = false) {
+    const target = night ? 1 : 0;
+    if (nightK !== target) {
+      nightK += Math.sign(target - nightK) * Math.min(Math.abs(target - nightK), Math.max(dt, 1 / 60) * 2.5);
+      applyNight(nightK);
+    }
     timeU.value = t;
     sun.position.copy(playerPos).add(SUN_OFF);
     sun.target.position.copy(playerPos);

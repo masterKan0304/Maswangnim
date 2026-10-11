@@ -19,6 +19,7 @@ export const profile = {
   accountLevel: 1, // 계정 레벨
   accountXp: 0,    // 현재 레벨에서 쌓인 계정 경험치
   character: 'masang',   // 고른 캐릭터
+  ownedChars: ['masang'],   // 해금한 캐릭터
   mastery: {},           // 캐릭터별 숙련도 { id: { lv, xp } }
   crystals: 0,           // 크리스탈 (스테이지 클리어마다 1개, 빨간 업그레이드에 씀)
   upgVer: 2,             // 업그레이드 트리 버전
@@ -39,6 +40,8 @@ export function loadProfile() {
       profile.accountXp = d.accountXp || 0;
       profile.character = d.character || 'masang';
       profile.mastery = d.mastery || {};
+      profile.ownedChars = Array.isArray(d.ownedChars) ? d.ownedChars : ['masang'];
+      if (!profile.ownedChars.includes('masang')) profile.ownedChars.unshift('masang');
       profile.crystals = d.crystals || 0;
       // 이전 업그레이드 트리: 쓴 골드를 모두 돌려주고 새 트리로
       if (d.upgVer !== 2) {
