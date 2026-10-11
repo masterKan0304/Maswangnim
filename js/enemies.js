@@ -108,7 +108,7 @@ export class EnemyManager {
   damage(e, amount, { kx = 0, kz = 0, color, element = null, status = 0, dot = false, pen = null, crit = false, src = null, st = null, raw = false, numAt = null } = {}) {
     if (!e.alive) return;
     // 같은 속성끼리는 상태이상을 걸 수 없음
-    if (element && !dot && element !== e.element && Math.random() < status) this.applyStatus(e, element, amount, src, st);
+    if (element && !dot && element !== e.element && Math.random() < status && this.applyStatus(e, element, amount, src, st) !== false) this.statusHit = true;   // 지대 생성 문장용
     // 속성 저항: 피해 × 100 / (100 + 저항). 저항 무시로 음수가 되면 그만큼 더 받음
     if (element) {
       let res = e.T.res || 0;
@@ -163,7 +163,8 @@ export class EnemyManager {
       e.stunT = Math.max(e.stunT, STATUS.stun * mul);   // 기절
     } else if (element === 'dark') {
       // 공포: 풀린 뒤 3초간은 다시 걸리지 않음
-      if (e.fearT <= 0 && e.fearImmune <= 0) e.fearT = STATUS.duration * (e.boss || e.elite ? STATUS.fearBossMul : 1);
+      if (e.fearT > 0 || e.fearImmune > 0) return false;   // 이미 공포 중 / 면역
+      e.fearT = STATUS.duration * (e.boss || e.elite ? STATUS.fearBossMul : 1);
     } else if (element === 'radiant') {
       // 축성 중 다시 걸리면 쌓인 피해의 100% 를 바로 주고 새로 축성
       // (광휘 지대 안: 100% 를 주되 쌓인 피해는 그대로 — 계속 누적)

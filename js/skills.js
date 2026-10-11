@@ -277,7 +277,8 @@ export function seedFlowerCount(sk) {
   return Math.floor((v.min + v.max) / 2 + 1e-9);
 }
 
-export const SKILL_ORDER = ['fireball', 'frostBarrier', 'iceball', 'magnet', 'fireAura', 'frostAura', 'enchant', 'triggerKill', 'flamethrower', 'snowfall'];
+// 자석 / 발동 : 처치는 목록에서 뺌
+export const SKILL_ORDER = ['fireball', 'frostBarrier', 'iceball', 'fireAura', 'frostAura', 'enchant', 'flamethrower', 'snowfall'];
 export const ATTACK_SKILLS = ['fireball', 'iceball', 'flamethrower', 'snowfall', 'leafCut', 'pineWind', 'roots', 'strawDoll', 'honeyBomb'];
 // 3레벨 / 5레벨에 추가되는 효과 설명
 export const milestoneText = (d, lv) => d.levelText(lv).slice(1).filter(Boolean)[0] || '';

@@ -22,7 +22,7 @@ export const makePercent = (p) => ({ id: uid(), kind: 'number', ntype: 'percent'
 export const makeOp = (op) => ({ id: uid(), kind: 'op', op, slots: [null, null] });
 
 // SNC: [주체]-[수치]-[변화],  SSC: [주체]-[주체]-[변화]
-// ZONE: 처치 시 [고정/랜덤 수치]초간 속성 지대,  INFUSE: 지대를 지난 투사체가 [수치]만큼 속성 피해 획득
+// ZONE: 적중해 상태이상 발생 시 [고정/랜덤 수치]초간 속성 지대 (초당 1회),  INFUSE: 지대를 지난 투사체가 [수치]만큼 속성 피해 획득
 // AMP: 장착된 다른 모든 문장의 효과가 [수치] [변화]
 export const TEMPLATES = {
   SNC: ['subject', 'number', 'change'],
@@ -265,7 +265,7 @@ export function slotChipLabel(s, i) {
 // [{slot:i} | {text}] 배열
 export function sentenceParts(s) {
   if (s.template === 'ZONE') {
-    return [{ text: '적 처치 시 ' }, { slot: 0 }, { text: (s.slots[0].block ? '' : '초') + '간 스킬 속성에 따른 지대를 남깁니다.' }];
+    return [{ text: '스킬이 적중하여 상태이상 발생 시 ' }, { slot: 0 }, { text: (s.slots[0].block ? '' : '초') + '간 스킬 속성에 따른 지대를 남깁니다. (초당 1회)' }];
   }
   if (s.template === 'INFUSE') {
     return [{ text: '투사체가 속성 지대 위를 지나면 ' }, { slot: 0 }, { text: '만큼 그 속성 피해를 얻습니다.' }];

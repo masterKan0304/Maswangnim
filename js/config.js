@@ -169,7 +169,7 @@ export function elemTipHTML(el, mode) {
   return h;
 }
 export const BOX = { baseChance: 0.01, growPer10Hp: 0.01 };   // 블록 상자: 처치마다 확률 × (1 + 체력10당 1%), 드랍 시 초기화
-export const ZONE_BASE_AREA = 20;   // 처치 시 남기는 속성 지대의 기본 범위
+export const ZONE_BASE_AREA = 20;   // 상태이상 발생 시 남기는 속성 지대의 기본 범위
 
 // ─────────────────────────────────────────────
 //  계정 레벨: 스테이지에서 얻은 골드의 25%가 계정 경험치로 쌓임 (캐릭터 숙련도는 그 75%)
@@ -183,7 +183,7 @@ export function accountNeed(lv) {
 // 계정 레벨에 따라 해금되는 스킬 / 문장 (여기 없는 것은 처음부터 사용 가능)
 export const ACCOUNT_UNLOCKS = {
   2: { skills: ['fireAura', 'frostAura'], templates: [] },
-  3: { skills: ['triggerKill', 'magnet'], templates: ['ZONE', 'INFUSE'] },
+  3: { skills: [], templates: ['ZONE', 'INFUSE'] },
   4: { skills: [], templates: ['AMP'] },
 };
 export function unlockLevel(kind, key) {

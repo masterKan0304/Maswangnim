@@ -135,9 +135,12 @@ export class SkillRuntime {
   //  피해 처리: 치명타 → 주 속성 피해 → 추가 속성 피해 (저항 / 저항 무시 / 상태이상)
   //  o.base: 기본 피해 (기본값 = 스킬 피해량 표본), o.mul: 배율, o.statusRatio: 상태이상 확률 배율
   //  o.infuse: 지대에서 얻은 속성 피해 { fire: {min,max,pct}, ... }
+  //  o.at: 적중 위치 (범위 스킬은 범위의 중심, 투사체는 투사체 위치 / 없으면 적의 위치) — 지대 생성 문장
   // ─────────────────────────────────────────
   deal(e, sk, st, o = {}) {
     if (!e.alive) return;
+    const at = o.at || { x: e.x, z: e.z };
+    this.enemies.statusHit = false;
     const el = sk.def.element;
     const crit = Math.random() * 100 < sample(st.critChance);
     const cm = crit ? 1 + sample(st.critDamage) / 100 : 1;   // 치명타 피해량 100% → 피해 2배
@@ -163,10 +166,16 @@ export class SkillRuntime {
       const stat = x === el ? 0 : inf && o.infuseStatus != null ? o.infuseStatus : sp * 0.5;
       if (v > 0 && e.alive) this.enemies.damage(e, v * cm, { ...common, element: x, status: stat, numAt: { ...numAt, stack: ++numAt.stack } });
     }
+    // 지대 생성 문장: 이번 적중으로 상태이상이 발생하면 적중 위치에 스킬 속성의 지대 (스킬마다 초당 1회)
+    if (this.enemies.statusHit && st.zone && st.zone.max > 0 && el && this.clock - (sk.zoneAt ?? -9) >= 1) {
+      sk.zoneAt = this.clock;
+      this.addZone(at.x, at.z, el, sample(st.zone), sample(st.zoneArea) / U / 2, avg(st.damage), sk, st);
+    }
   }
 
   // ── 시전 ─────────────────────────────
   update(dt) {
+    this.clock = (this.clock || 0) + dt;   // 지대 생성 문장 (초당 1회) 기준 시간
     for (const sk of game.skills) {
       if (sk.def.passive) { if (sk.key === 'frostBarrier') this.updateBarrier(sk, dt); continue; }
       if (sk.flame || sk.honey) continue;           // 화염 방사 / 꿀 모으는 중: 끝난 뒤에 쿨타임 시작
@@ -460,7 +469,7 @@ export class SkillRuntime {
       const dist = Math.hypot(e.x - d.x, e.z - d.z);
       if (dist > R + e.r * 0.6) continue;
       const push = (R - dist + 1) * 5;
-      this.deal(e, d.sk, d.st, { kx: ((e.x - d.x) / (dist || 1)) * push, kz: ((e.z - d.z) / (dist || 1)) * push });
+      this.deal(e, d.sk, d.st, { at: d, kx: ((e.x - d.x) / (dist || 1)) * push, kz: ((e.z - d.z) / (dist || 1)) * push });
     }
     this.fx.ring(d.x, d.z, R, 0xffd27a, 0.5);
     this.fx.explosion(d.x, d.z, R * 0.8, 0xffb347);
@@ -586,7 +595,7 @@ export class SkillRuntime {
       const d = Math.hypot(e.x - p.x, e.z - p.z);
       if (d > R + e.r * 0.6) continue;
       const push = (R - d + 1) * 6;
-      this.deal(e, sk, h.st, { base: h.dmg * bonus, kx: ((e.x - p.x) / (d || 1)) * push, kz: ((e.z - p.z) / (d || 1)) * push });
+      this.deal(e, sk, h.st, { at: { x: p.x, z: p.z }, base: h.dmg * bonus, kx: ((e.x - p.x) / (d || 1)) * push, kz: ((e.z - p.z) / (d || 1)) * push });
     }
     const heal = Math.round(h.heal * bonus * 10) / 10;
     if (this.player.hp < this.player.maxHp) {
@@ -739,7 +748,7 @@ export class SkillRuntime {
       for (const e of this.enemies.query(w.x, w.z, w.r + 2.2)) {
         if (!e.alive || Math.hypot(e.x - w.x, e.z - w.z) > w.r + e.r * 0.8) continue;
         now.add(e);
-        if (!w.inside.has(e)) this.deal(e, w.sk, w.st, { mul: w.mul, kx: w.dx * 2, kz: w.dz * 2 });
+        if (!w.inside.has(e)) this.deal(e, w.sk, w.st, { at: { x: w.x, z: w.z }, mul: w.mul, kx: w.dx * 2, kz: w.dz * 2 });
       }
       w.inside = now;
       // 꽃에 닿으면 꽃이 바로 강하게 터짐
@@ -972,17 +981,13 @@ export class SkillRuntime {
     for (const e of this.enemies.query(p.x, p.z, radius + 2.2)) {
       const d = Math.hypot(e.x - p.x, e.z - p.z);
       if (e.alive && d <= radius + e.r) {
-        this.deal(e, sk, st, { kx: ((e.x - p.x) / (d || 1)) * push, kz: ((e.z - p.z) / (d || 1)) * push });
+        this.deal(e, sk, st, { at: { x: p.x, z: p.z }, kx: ((e.x - p.x) / (d || 1)) * push, kz: ((e.z - p.z) / (d || 1)) * push });
       }
     }
   }
 
-  // ── 적 처치 시 (지대 / 발동 : 처치 / 화염·냉기·번개의 기운) ──
+  // ── 적 처치 시 (화염·냉기의 기운) ──
   onKill(e, src, st) {
-    // 처치한 스킬에 '지대' 문장이 있으면 속성 지대를 남김
-    if (src && st && st.zone && st.zone.max > 0 && src.def.element) {
-      this.addZone(e.x, e.z, src.def.element, sample(st.zone), sample(st.zoneArea) / U / 2, avg(st.damage), src, st);
-    }
     const tk = game.skills.find((s) => s.key === 'triggerKill');
     const goal = tk ? triggerGoal(tk) : 0;
     // 완성된 문장이 장착되어 목표치가 정해진 상태에서만 중첩이 쌓임
@@ -1015,7 +1020,7 @@ export class SkillRuntime {
         for (const t of this.enemies.query(x, z, radius + 2.2)) {
           const d = Math.hypot(t.x - x, t.z - z);
           if (t.alive && d <= radius + t.r * 0.7) {
-            this.deal(t, sk, ast, { base: sample(ast.damage) + bonus, kx: ((t.x - x) / (d || 1)) * 3, kz: ((t.z - z) / (d || 1)) * 3 });
+            this.deal(t, sk, ast, { at: { x, z }, base: sample(ast.damage) + bonus, kx: ((t.x - x) / (d || 1)) * 3, kz: ((t.z - z) / (d || 1)) * 3 });
           }
         }
       }
@@ -1227,7 +1232,7 @@ export class SkillRuntime {
         ib.tick += ib.sk.def.tick;
         for (const e of this.enemies.query(ib.x, ib.z, radius + 2.2)) {
           if (e.alive && Math.hypot(e.x - ib.x, e.z - ib.z) < radius + e.r) {
-            this.deal(e, ib.sk, st, { base: sample(ib.contact) * (game.mods.dmgMul || 1), statusRatio: ib.sk.def.contactChanceRatio });
+            this.deal(e, ib.sk, st, { at: { x: ib.x, z: ib.z }, base: sample(ib.contact) * (game.mods.dmgMul || 1), statusRatio: ib.sk.def.contactChanceRatio });
           }
         }
       }
@@ -1436,7 +1441,7 @@ export class SkillRuntime {
         const d = Math.hypot(t.x - p.x, t.z - p.z);
         if (d <= radius + t.r * 0.7 || t === e) {
           const nx = (t.x - p.x) / (d || 1), nz = (t.z - p.z) / (d || 1);
-          this.deal(t, p.sk, p.st, { mul: p.dmgMul, kx: nx * 4, kz: nz * 4, infuse: p.infused });
+          this.deal(t, p.sk, p.st, { at: { x: p.x, z: p.z }, mul: p.dmgMul, kx: nx * 4, kz: nz * 4, infuse: p.infused });
         }
       }
       // 5레벨: 진행 방향으로 작은 투사체 3개 (작은 투사체는 다시 튀지 않음)
@@ -1458,7 +1463,7 @@ export class SkillRuntime {
         }
       }
     } else {
-      this.deal(e, p.sk, p.st, { mul: p.dmgMul, kx: p.kind === 'root' ? 0 : p.dx * 1.5, kz: p.kind === 'root' ? 0 : p.dz * 1.5, infuse: p.infused });
+      this.deal(e, p.sk, p.st, { at: { x: p.x, z: p.z }, mul: p.dmgMul, kx: p.kind === 'root' ? 0 : p.dx * 1.5, kz: p.kind === 'root' ? 0 : p.dz * 1.5, infuse: p.infused });
       if (p.kind === 'root' && e.alive && !e.elite && !e.boss) this.bind(e, p.st.rootDuration ? sample(p.st.rootDuration) : p.sk.def.rootTime);
       const cols = p.kind === 'leaf' ? [0x8ff07a, 0x4fbf4a] : p.kind === 'root' ? [0x8a6a3a, 0x7ed957] : [0xd8f8ff, 0x9fe6ff];
       this.fx.particles.burst(p.x, p.y, p.z, 4, cols, { speed: 2, size: 0.06, life: 0.25, up: 1.5 });
@@ -1511,7 +1516,7 @@ export class SkillRuntime {
       const d = Math.hypot(e.x - s.x, e.z - s.z);
       if (!e.alive || d > r + e.r * 0.7) continue;
       const push = Math.max(0, r * 0.75 - d) * 7 + 2;
-      this.deal(e, s.sk, s.st, { kx: ((e.x - s.x) / (d || 1)) * push, kz: ((e.z - s.z) / (d || 1)) * push });
+      this.deal(e, s.sk, s.st, { at: { x: s.x, z: s.z }, kx: ((e.x - s.x) / (d || 1)) * push, kz: ((e.z - s.z) / (d || 1)) * push });
     }
   }
 

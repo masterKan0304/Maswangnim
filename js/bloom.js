@@ -272,7 +272,7 @@ export class Bloom {
       const d = Math.hypot(e.x - fr.tx, e.z - fr.tz);
       if (d > r + e.r * 0.6) continue;
       const push = (r - d + 1) * 6;   // 중심에서 바깥으로 밀쳐냄
-      this.skillsRt.deal(e, fr.sk, fr.st, { kx: ((e.x - fr.tx) / (d || 1)) * push, kz: ((e.z - fr.tz) / (d || 1)) * push, infuse, infuseStatus: 0.5 });
+      this.skillsRt.deal(e, fr.sk, fr.st, { at: { x: fr.tx, z: fr.tz }, kx: ((e.x - fr.tx) / (d || 1)) * push, kz: ((e.z - fr.tz) / (d || 1)) * push, infuse, infuseStatus: 0.5 });
     }
     const col = fr.mat.color.getHex();
     if (fr.el === 'none') {
