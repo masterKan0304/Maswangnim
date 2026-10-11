@@ -311,8 +311,9 @@ export class Player {
     if (this.lift > 0.05) for (const l of m.legs) l.rotation.x = -0.5;   // 공중: 다리를 웅크림
     m.root.position.y = (this.moving ? Math.abs(Math.sin(this.walk * 1.25)) * 0.05 : Math.sin(time * 2.2) * 0.012) + this.lift;
     m.headPivot.rotation.x = this.moving ? Math.sin(this.walk * 2.5) * 0.06 : Math.sin(time * 1.8) * 0.04;
-    m.tail.rotation.z = Math.sin(time * (this.moving ? 7 : 2.6)) * 0.18;
-    m.tail.rotation.x = Math.sin(time * 1.7) * 0.06;
+    // 꼬리 살랑살랑
+    m.tail.rotation.z = Math.sin(time * (this.moving ? 9 : 4.5)) * 0.45;
+    m.tail.rotation.x = Math.sin(time * 2.3) * 0.12 - 0.1;
     m.tailTip.visible = !this.tailBlades;   // 크루엘 버스트: 꼬리 끝이 칼날로 갈라짐
     if (this.castT > 0) m.headPivot.rotation.x = -0.35 * Math.sin((this.castT / 0.25) * Math.PI);   // 할퀴기 · 꿈먹기: 앞으로 덤벼듦
     const hurt = this.hurtT > 0 ? this.hurtT / 0.25 : 0;

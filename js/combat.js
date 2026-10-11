@@ -62,6 +62,7 @@ export class SkillRuntime {
     this.dolls = [];    // 짚 인형
     this.honeys = [];   // 꿀을 모으는 중인 스킬
     this.cruels = [];   // 크루엘 버스트 진행 중
+    this.gwaves = [];   // 크루엘 버스트: 땅을 가르는 파동
 
     // 파이어볼: 울퉁불퉁한 검붉은 돌 + 틈 사이로 비치는 용암 핵 (뜨거운 운석)
     const rockGeo = jitter(new THREE.DodecahedronGeometry(0.5, 0), 0.32, 41);
@@ -228,7 +229,7 @@ export class SkillRuntime {
     if (sk.cd > 0) return false;
     let st = getStats(sk);
     const p = this.player.pos;
-    const need = { roots: manual ? 0 : 20, strawDoll: manual ? 0 : 10, honeyBomb: 0, claw: manual ? 0 : 2.4, dreamEat: manual ? 0 : 3.4, cruelBurst: manual ? 0 : 8, leafCut: manual ? 0 : 20, pineWind: manual ? 0 : 20, nature: manual ? 0 : sample(st.area) / U / 2, fireball: manual ? 0 : 20, chainLightning: sample(st.range) / U, snowfall: sample(st.range) / U, flamethrower: manual ? 0 : (sample(st.area) / U) * 1.3, lightningBeam: manual ? 0 : 14 }[sk.key];
+    const need = { roots: manual ? 0 : 20, strawDoll: manual ? 0 : 10, honeyBomb: 0, claw: manual ? 0 : 2.4, dreamEat: manual ? 0 : 3.4, cruelBurst: manual ? 0 : 12, leafCut: manual ? 0 : 20, pineWind: manual ? 0 : 20, nature: manual ? 0 : sample(st.area) / U / 2, fireball: manual ? 0 : 20, chainLightning: sample(st.range) / U, snowfall: sample(st.range) / U, flamethrower: manual ? 0 : (sample(st.area) / U) * 1.3, lightningBeam: manual ? 0 : 14 }[sk.key];
     if (need && !this.enemies.anyInRange(p.x, p.z, need)) {
       if (manual) game.sys.ui.toast('사거리 안에 적이 없습니다', 'warn');
       return false;

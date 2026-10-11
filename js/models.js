@@ -297,31 +297,31 @@ export function createGerger() {
   const eyeMat = new THREE.MeshBasicMaterial({ color: 0xe6c4ff });
   const mk = (geo, mat) => { const m = new THREE.Mesh(geo, mat); m.castShadow = true; return m; };
 
-  const HR = 0.36;            // 머리 반지름
-  const BR = HR * 1.2;        // 몸통 (머리의 1.2배)
+  const HR = 0.42;            // 머리 반지름 (몸통보다 크게 — 귀엽게)
+  const BR = HR * 0.82;       // 몸통
   // 몸통
   const body = mk(new THREE.SphereGeometry(BR, 14, 10).scale(0.92, 0.78, 1.12), furMat);
-  body.position.set(0, 0.6, -0.14);
+  body.position.set(0, 0.42, -0.16);
   root.add(body);
   const belly = mk(new THREE.SphereGeometry(BR * 0.8, 10, 8).scale(0.85, 0.6, 1), bellyMat);
-  belly.position.set(0, 0.48, -0.1);
+  belly.position.set(0, 0.33, -0.12);
   root.add(belly);
 
   // 다리 4개 + 발 + 발톱
   const legs = [];
-  const legGeo = new THREE.CylinderGeometry(0.085, 0.105, 0.36, 7).translate(0, -0.18, 0);
+  const legGeo = new THREE.CylinderGeometry(0.085, 0.1, 0.2, 7).translate(0, -0.1, 0);   // 짧은 다리
   const pawGeo = new THREE.SphereGeometry(0.115, 8, 6).scale(1.1, 0.6, 1.3);
   const clawGeo = new THREE.ConeGeometry(0.028, 0.08, 4).rotateX(Math.PI / 2);
   for (const [sx, sz] of [[-1, 1], [1, 1], [-1, -1], [1, -1]]) {
     const pivot = new THREE.Group();
-    pivot.position.set(sx * 0.21, 0.44, -0.14 + sz * 0.27);
+    pivot.position.set(sx * 0.19, 0.27, -0.16 + sz * 0.21);
     pivot.add(mk(legGeo, furMat));
     const paw = mk(pawGeo, furMat);
-    paw.position.set(0, -0.37, 0.03);
+    paw.position.set(0, -0.21, 0.03);
     pivot.add(paw);
     for (const cx of [-0.05, 0, 0.05]) {
       const c = mk(clawGeo, clawMat);
-      c.position.set(cx, -0.39, 0.17);
+      c.position.set(cx, -0.23, 0.17);
       pivot.add(c);
     }
     root.add(pivot);
@@ -330,7 +330,7 @@ export function createGerger() {
 
   // 머리
   const headPivot = new THREE.Group();
-  headPivot.position.set(0, 0.98, 0.26);
+  headPivot.position.set(0, 0.86, 0.2);
   const head = mk(new THREE.SphereGeometry(HR, 16, 12).scale(1, 0.94, 0.98), furMat);
   headPivot.add(head);
   // 한쪽 뿔 (뒤로 휘어진 검은 뿔)
@@ -345,7 +345,7 @@ export function createGerger() {
   }
   hornGeo.computeVertexNormals();
   const horn = mk(hornGeo, darkMat);
-  horn.position.set(0.2, 0.24, -0.04);
+  horn.position.set(0.23, 0.28, -0.05);
   horn.rotation.z = -0.35;
   headPivot.add(horn);
   // 물결 모양 입 선
@@ -370,11 +370,12 @@ export function createGerger() {
 
   // 꼬리: 몸통 뒤에서 위로 휘어 오른 뒤 끝에 눈 달린 공
   const tail = new THREE.Group();
-  tail.position.set(0, 0.66, -0.58);
-  const tailCurve = new THREE.CatmullRomCurve3([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0.1, -0.2), new THREE.Vector3(0, 0.45, -0.3), new THREE.Vector3(0, 0.8, -0.15), new THREE.Vector3(0, 0.95, 0)]);
-  tail.add(mk(new THREE.TubeGeometry(tailCurve, 16, 0.048, 6), furMat));
+  tail.position.set(0, 0.46, -0.48);
+  // 꼬리 길이 50%
+  const tailCurve = new THREE.CatmullRomCurve3([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0.05, -0.1), new THREE.Vector3(0, 0.22, -0.15), new THREE.Vector3(0, 0.4, -0.08), new THREE.Vector3(0, 0.48, 0)]);
+  tail.add(mk(new THREE.TubeGeometry(tailCurve, 12, 0.045, 6), furMat));
   const tailTip = new THREE.Group();
-  tailTip.position.set(0, 1.02, 0.03);
+  tailTip.position.set(0, 0.55, 0.03);
   tailTip.add(mk(new THREE.SphereGeometry(0.16, 12, 9), furMat));
   const eye = new THREE.Mesh(new THREE.SphereGeometry(0.1, 12, 8).scale(1, 0.5, 0.45), eyeMat);
   eye.position.set(0, 0, 0.125);
