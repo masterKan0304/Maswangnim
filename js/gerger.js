@@ -4,7 +4,7 @@
 // ─────────────────────────────────────────────
 import * as THREE from 'three';
 import { game } from './state.js';
-import { STAT_UNIT as U, STATUS, PROJ_SPEED_UNIT as PS } from './config.js';
+import { STAT_UNIT as U, STATUS, PROJ_SPEED_UNIT as PS, PROJ_SIZE_UNIT as PZ } from './config.js';
 import { sample } from './skills.js';
 import { sfx } from './audio.js';
 import { makeGlowSprite } from './effects.js';
@@ -244,6 +244,7 @@ export function updateCruels(rt, dt) {
 function fireWaves(rt, sk, c) {
   const P = rt.player.pos, st = c.st;
   const speed = sample(st.projSpeed) * PS, life = sample(st.projDuration);
+  const size = sample(st.projSize) / PZ;   // 투사체 크기 (기본 20 = 1배) → 파동 · 자국 너비
   for (let i = 0; i < c.n; i++) {
     const ai = c.a + (i - (c.n - 1) / 2) * 10 * DEG;
     const crest = new THREE.Group();
@@ -259,10 +260,11 @@ function fireWaves(rt, sk, c) {
     const glow = makeGlowSprite(0x9a6bff, 1.6, 0.8); glow.position.y = 0.4;
     crest.add(glow);
     crest.rotation.y = -ai;
+    crest.scale.set(1, 1, size);
     crest.position.set(P.x, 0, P.z);
     rt.scene.add(crest);
-    const scar = scarMark(rt.fx, P.x, P.z, ai, speed * life, life + 2.6, life);
-    rt.gwaves.push({ sk, st, x: P.x, z: P.z, x0: P.x, z0: P.z, dx: Math.cos(ai), dz: Math.sin(ai), speed, life, t: 0, hit: new Set(), crest, shardMat, glow, scar });
+    const scar = scarMark(rt.fx, P.x, P.z, ai, speed * life, life, size);
+    rt.gwaves.push({ sk, st, x: P.x, z: P.z, x0: P.x, z0: P.z, dx: Math.cos(ai), dz: Math.sin(ai), speed, life, size, t: 0, hit: new Set(), crest, shardMat, glow, scar });
   }
   rt.fx.ring(P.x, P.z, 1.4, 0xd9a8ff, 0.35);
   rt.fx.ring(P.x, P.z, 2.4, 0x7a3aff, 0.45);
@@ -280,10 +282,10 @@ function updateWaves(rt, dt) {
     w.crest.position.set(w.x, 0, w.z);
     w.crest.position.y = Math.sin(w.t * 40) * 0.04;
     // 지나간 자리: 흙 · 어둠이 솟구침
-    for (let q = 0; q < 4; q++) rt.fx.particles.emit(w.x + rnd(-0.3, 0.3), 0.1, w.z + rnd(-0.3, 0.3), rnd(-1, 1), rnd(2.5, 5), rnd(-1, 1), rnd(0.35, 0.6), rnd(0.07, 0.14), pick([0x2a0a3a, 0x5a4a6a, 0x7a3aff, 0xd9a8ff]), 12);
+    for (let q = 0; q < 4; q++) rt.fx.particles.emit(w.x + rnd(-0.3, 0.3) * w.size, 0.1, w.z + rnd(-0.3, 0.3) * w.size, rnd(-1, 1), rnd(2.5, 5), rnd(-1, 1), rnd(0.35, 0.6), rnd(0.07, 0.14), pick([0x2a0a3a, 0x5a4a6a, 0x7a3aff, 0xd9a8ff]), 12);
     // 관통하며 닿은 적마다 한 번씩
     for (const e of rt.enemies.query(w.x, w.z, 2.6)) {
-      if (!e.alive || w.hit.has(e) || Math.hypot(e.x - w.x, e.z - w.z) > 0.55 + e.r * 0.7) continue;
+      if (!e.alive || w.hit.has(e) || Math.hypot(e.x - w.x, e.z - w.z) > 0.55 * w.size + e.r * 0.7) continue;
       w.hit.add(e);
       const bonus = w.sk.level >= 3 && scared(e) ? 1.5 : 1;
       const dealt = rt.deal(e, w.sk, w.st, { at: { x: w.x, z: w.z }, mul: bonus, kx: w.dx * 3, kz: w.dz * 3 });
@@ -301,14 +303,18 @@ function updateWaves(rt, dt) {
 }
 
 // 川 자 자국: 나란한 세 줄의 긁힌 자국 (어둡게 패인 자국 + 보랏빛) — growT 동안 파동을 따라 그어짐
-function scarMark(fx, x, z, a, L, life, growT) {
+// 1초부터 사라지기 시작해 0.5초 뒤 완전히 사라짐 / size: 투사체 크기 배율 (자국 너비)
+const SCAR_HOLD = 1, SCAR_FADE = 0.5;
+function scarMark(fx, x, z, a, L, growT, size = 1) {
+  const life = Math.max(growT, SCAR_HOLD) + SCAR_FADE;
   const geo = shared('scarGeo', () => new THREE.PlaneGeometry(1, 1).translate(0.5, 0, 0).rotateX(-Math.PI / 2));
   const darkMat = new THREE.MeshBasicMaterial({ color: 0x12081c, transparent: true, opacity: 0.85, depthWrite: false });
   const glowMat = new THREE.MeshBasicMaterial({ color: 0xb48cff, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false });
   const objs = [];
   const nx = -Math.sin(a), nz = Math.cos(a);   // 옆 방향
-  for (const off of [-0.17, 0, 0.17]) {
-    const len = L * rnd(0.92, 1), w = off === 0 ? 0.075 : 0.06;
+  for (const off0 of [-0.17, 0, 0.17]) {
+    const off = off0 * size;
+    const len = L * rnd(0.92, 1), w = (off0 === 0 ? 0.075 : 0.06) * size;
     const start = rnd(0.2, 0.5);
     for (const [mat, ww, y] of [[darkMat, w, 0.045], [glowMat, w * 0.45, 0.05]]) {
       const m = new THREE.Mesh(geo, mat);
@@ -322,8 +328,10 @@ function scarMark(fx, x, z, a, L, life, growT) {
   fx.add(objs, life, (k) => {
     const grow = Math.min(1, (k * life) / growT);
     for (const m of objs) m.scale.x = Math.max(0.01, m.userData.len * grow);
-    glowMat.opacity = 0.9 * Math.max(0, 1 - Math.max(0, k * life - growT) / 1.2);
-    darkMat.opacity = 0.85 * (k > 0.75 ? (1 - k) / 0.25 : 1);
+    const t = k * life, hold = Math.max(growT, SCAR_HOLD);
+    const fade = t < hold ? 1 : Math.max(0, 1 - (t - hold) / SCAR_FADE);
+    glowMat.opacity = 0.9 * fade * Math.max(0.3, 1 - Math.max(0, t - growT) / 0.6);
+    darkMat.opacity = 0.85 * fade;
   }, [darkMat, glowMat]);
 }
 
