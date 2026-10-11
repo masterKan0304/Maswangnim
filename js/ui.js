@@ -9,7 +9,7 @@ import {
   blockLabel, colorKey, kindName, isComplete, missingCount, sentenceParts, slotChipLabel, PLACEHOLDER,
   evalNumber, fmtValue, slotAccepts, sentenceAccepts, dismantle, OP_SYMBOL, numText, blockSig, randomOfType, TEMPLATE_INFO, RARITY_NAME,
 } from './blocks.js';
-import { getResult, baseStats, fmtStat, statText, statLabel, shownStats, extraLines, maxStacks, getStats, avg, enchantReq, triggerGoal, milestoneText, fruitNeed } from './skills.js';
+import { getResult, baseStats, fmtStat, statText, statLabel, shownStats, extraLines, maxStacks, getStats, avg, enchantReq, triggerGoal, milestoneText, fruitNeed, gaugeCostOf } from './skills.js';
 
 const $ = (s) => document.querySelector(s);
 function el(tag, cls, html) {
@@ -371,7 +371,7 @@ export class UI {
     const { stats } = getResult(sk);
     let h = `<div class="tip-title">${d.icon} ${d.name} <span class="tip-dim">Lv.${sk.level}</span>${d.element ? ` <span class="elem e-${d.element}">${ELEMENTS[d.element].name}</span>` : ''}</div><div>${d.desc}</div>`;
     if (d.element) h += `<div class="tip-dim">${ELEMENTS[d.element].status}: ${ELEMENTS[d.element].desc}</div>`;
-    if (d.gaugeCost) h += `<div class="tip-warn">어둠 게이지 ${d.gaugeCost} 소모</div>`;
+    if (d.gaugeCost) h += `<div class="tip-warn">어둠 게이지 ${gaugeCostOf(sk)} 소모</div>`;
     if (d.powerful) h += '<div><span class="cx-tag power">강력한 공격</span> <span class="tip-dim">사용하면 다른 강력한 공격 스킬의 쿨타임이 최소 1.5초가 됩니다.</span></div>';
     for (const [k, el2] of Object.entries(ELEM_CLASS)) {
       if (el2 !== d.element && stats[k] && stats[k].max > 0) h += `<div class="tip-ok">추가 ${ELEMENTS[el2].name} 피해를 얻었습니다.</div>`;
@@ -997,6 +997,7 @@ export class UI {
       if (e.exhaustT > 0) st.push([ic('wave'), '탈진', 'ocean', e.exhaustT]);
       if (e.stunT > 0) st.push([ic('stun'), '기절', 'earth', e.stunT]);
       if (e.fearT > 0) st.push([ic('moon'), '공포', 'dark', e.fearT]);
+      if (e.nightmareT > 0) st.push([ic('malice'), '악몽', 'dark', e.nightmareT]);
       if (e.consT > 0) st.push([ic('sun'), '축성', 'radiant', e.consT]);
       if (e.bleeds && e.bleeds.length) st.push([ic('blood'), '출혈', 'bleed', 0]);
       if (e.resDownT > 0 && e.resDown > 0) st.push([ic('rock'), `모든 저항 -${e.resDown}`, 'earth', 0]);

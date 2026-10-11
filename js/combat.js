@@ -2,11 +2,11 @@ import { ic } from './icons.js';
 import * as THREE from 'three';
 import { WORLD_HALF, STAT_UNIT as U, PROJ_SPEED_UNIT as PS, PROJ_SIZE_UNIT as PZ, STATUS, ELEMENT_DMG } from './config.js';
 import { game, schedule } from './state.js';
-import { getStats, computeStats, sample, sampleInt, avg, statusProb, maxStacks, areaFactor, ATTACK_SKILLS, enchantReq, triggerGoal, completeSentences } from './skills.js';
+import { gaugeCostOf, getStats, computeStats, sample, sampleInt, avg, statusProb, maxStacks, areaFactor, ATTACK_SKILLS, enchantReq, triggerGoal, completeSentences } from './skills.js';
 import { makeGlowSprite, RingMesh } from './effects.js';
 import { jitter, createPlayer } from './models.js';
 import { sfx } from './audio.js';
-import { castClaw, castDreamEat, startCruel, updateCruels, clearCruels } from './gerger.js';
+import { castClaw, castDreamEat, startCruel, updateCruels, clearCruels, castDarkEye, castAmbush } from './gerger.js';
 
 const DEG = Math.PI / 180;
 // 꿀열매 크기: t초 동안 자란 정도 (2.5초 = 1, 5초를 넘길 때마다 자라는 속도 절반)
@@ -63,6 +63,7 @@ export class SkillRuntime {
     this.honeys = [];   // 꿀을 모으는 중인 스킬
     this.cruels = [];   // 크루엘 버스트 진행 중
     this.gwaves = [];   // 크루엘 버스트: 땅을 가르는 파동
+    this.eyes = [];     // 암흑의 눈
 
     // 파이어볼: 울퉁불퉁한 검붉은 돌 + 틈 사이로 비치는 용암 핵 (뜨거운 운석)
     const rockGeo = jitter(new THREE.DodecahedronGeometry(0.5, 0), 0.32, 41);
@@ -229,7 +230,7 @@ export class SkillRuntime {
     if (sk.cd > 0) return false;
     let st = getStats(sk);
     const p = this.player.pos;
-    const need = { roots: manual ? 0 : 20, strawDoll: manual ? 0 : 10, honeyBomb: 0, claw: manual ? 0 : 2.4, dreamEat: manual ? 0 : 3.4, cruelBurst: manual ? 0 : 12, leafCut: manual ? 0 : 20, pineWind: manual ? 0 : 20, nature: manual ? 0 : sample(st.area) / U / 2, fireball: manual ? 0 : 20, chainLightning: sample(st.range) / U, snowfall: sample(st.range) / U, flamethrower: manual ? 0 : (sample(st.area) / U) * 1.3, lightningBeam: manual ? 0 : 14 }[sk.key];
+    const need = { roots: manual ? 0 : 20, strawDoll: manual ? 0 : 10, honeyBomb: 0, claw: manual ? 0 : 2.4, dreamEat: manual ? 0 : 3.4, cruelBurst: manual ? 0 : 12, darkEye: manual ? 0 : 13, ambush: sample(st.range) / U, leafCut: manual ? 0 : 20, pineWind: manual ? 0 : 20, nature: manual ? 0 : sample(st.area) / U / 2, fireball: manual ? 0 : 20, chainLightning: sample(st.range) / U, snowfall: sample(st.range) / U, flamethrower: manual ? 0 : (sample(st.area) / U) * 1.3, lightningBeam: manual ? 0 : 14 }[sk.key];
     if (need && !this.enemies.anyInRange(p.x, p.z, need)) {
       if (manual) game.sys.ui.toast('사거리 안에 적이 없습니다', 'warn');
       return false;
@@ -241,7 +242,7 @@ export class SkillRuntime {
       return false;
     }
     // 어둠 게이지 (게르게르)
-    const gc = game.debug.god ? 0 : sk.def.gaugeCost || 0;
+    const gc = game.debug.god ? 0 : gaugeCostOf(sk);
     if (gc > 0 && (this.player.gauge || 0) < gc) {
       if (manual) { game.sys.ui.toast('어둠 게이지가 부족합니다', 'warn'); sfx('error'); }
       return false;
@@ -292,6 +293,8 @@ export class SkillRuntime {
     else if (sk.key === 'claw') castClaw(this, sk, st);
     else if (sk.key === 'dreamEat') castDreamEat(this, sk, st);
     else if (sk.key === 'cruelBurst') startCruel(this, sk, st);
+    else if (sk.key === 'darkEye') castDarkEye(this, sk, st);
+    else if (sk.key === 'ambush') { if (!castAmbush(this, sk, st)) sk.cd = 0.3; }
   }
 
   // ── 옭아매는 뿌리 ──

@@ -232,7 +232,7 @@ function renderChar() {
     } else {
       const d = SKILL_DEFS[key], lv = ch.unlock[key] || 1, locked = m.lv < lv;
       slot.className = 'ch-skill' + (locked ? ' locked' : '');
-      slot.style.setProperty('--c', d.color);
+      slot.style.setProperty('--c', d.element ? ELEMENTS[d.element].color : d.color);   // 배경: 스킬 속성 색
       slot.innerHTML = `${d.icon}<span class="cx-ap ${d.passive ? 'p' : 'a'}">${d.passive ? 'P' : 'A'}</span>${elemBadge(d.element)}${i === 0 ? '<span class="ch-basic">기본</span>' : ''}${locked ? `<span class="ch-lock">${ic('lock')} 숙련 ${lv}</span>` : ''}`;
       slot._tip = () => `<div class="tip-title">${d.icon} ${d.name} <span class="tip-dim">${d.passive ? '패시브' : '액티브'}</span></div><div>${d.desc}</div>`
         + `<div class="tip-dim">3레벨 효과 : ${d.levelText(3).slice(1).filter(Boolean)[0] || ''}</div><div class="tip-dim">5레벨 효과 : ${d.levelText(5).slice(1).filter(Boolean)[0] || ''}</div>`

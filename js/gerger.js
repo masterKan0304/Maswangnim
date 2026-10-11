@@ -195,25 +195,28 @@ function updateSmoke(rt, dt) {
   if (!(p.smokeT > 0)) return;
   p.smokeT -= dt;
   const P = p.pos, k = Math.min(1, p.smokeT / 0.4);
-  for (let q = 0; q < 5; q++) {
+  for (let q = 0; q < 2; q++) {
     const b = Math.random() * Math.PI * 2, d = rnd(0.25, 0.65);
-    rt.fx.particles.emit(P.x + Math.cos(b) * d, rnd(0.1, 0.9), P.z + Math.sin(b) * d, Math.cos(b) * rnd(0.3, 1.1), rnd(1.2, 2.6), Math.sin(b) * rnd(0.3, 1.1), rnd(0.5, 0.9), rnd(0.12, 0.24) * (0.5 + 0.5 * k), pick([0x050208, 0x0e0616, 0x1a0a2a, 0x2a1040]), -1.2);
+    rt.fx.particles.emit(P.x + Math.cos(b) * d, rnd(0.1, 0.9), P.z + Math.sin(b) * d, Math.cos(b) * rnd(1.2, 3), rnd(1, 2.2), Math.sin(b) * rnd(1.2, 3), rnd(0.6, 1), rnd(0.07, 0.14) * (0.5 + 0.5 * k), pick([0x1a0a2a, 0x2a1040, 0x3a1a5a]), -0.8);
   }
   // 뭉게뭉게 피어오르는 연기 덩어리
-  if (Math.random() < dt * 14) {
+  if (Math.random() < dt * 16) {
     const mat = new THREE.SpriteMaterial({ map: shared('smokeTex', () => makeGlowSprite(0x000000, 1, 1).material.map), color: 0x0a0412, transparent: true, opacity: 0, depthWrite: false });
     const sp = new THREE.Sprite(mat);
-    const b = Math.random() * Math.PI * 2, d = rnd(0.2, 0.5), x = P.x + Math.cos(b) * d, z = P.z + Math.sin(b) * d, s0 = rnd(0.6, 1), vy = rnd(1, 1.8);
-    rt.fx.add([sp], 0.9, (t) => {
-      sp.position.set(x + Math.cos(b) * t * 0.5, 0.4 + t * vy, z + Math.sin(b) * t * 0.5);
-      sp.scale.setScalar(s0 * (1 + t * 1.3));
-      mat.opacity = (t < 0.15 ? t / 0.15 : (1 - t) / 0.85) * 0.75;
+    const b = Math.random() * Math.PI * 2, d = rnd(0.2, 0.5), x = P.x + Math.cos(b) * d, z = P.z + Math.sin(b) * d, s0 = rnd(0.6, 1), vy = rnd(0.6, 1.4), far = rnd(1.6, 2.8);
+    rt.fx.add([sp], 1.2, (t) => {
+      const e = 1 - (1 - t) ** 2;   // 바깥으로 멀리 퍼짐
+      sp.position.set(x + Math.cos(b) * e * far, 0.4 + t * vy, z + Math.sin(b) * e * far);
+      sp.scale.setScalar(s0 * (1 + t * 2));
+      mat.opacity = (t < 0.15 ? t / 0.15 : (1 - t) / 0.85) * 0.32;   // 반투명
     }, [mat]);
   }
 }
 
 export function updateCruels(rt, dt) {
   updateSmoke(rt, dt);
+  updateEyes(rt, dt);
+  if (rt.player.postT > 0) { rt.player.postT -= dt; if (rt.player.postT <= 0 && !rt.cruels.length) rt.player.lockMove = false; }
   for (const sk of [...rt.cruels]) {
     const c = sk.cruel;
     if (!c) { rt.cruels = rt.cruels.filter((x) => x !== sk); continue; }
@@ -374,4 +377,190 @@ export function clearCruels(rt) {
   for (const sk of [...(rt.cruels || [])]) endCruel(rt, sk);
   for (const w of rt.gwaves || []) { rt.scene.remove(w.crest); w.shardMat.dispose(); w.glow.material.dispose(); }
   if (rt.gwaves) rt.gwaves.length = 0;
+  for (const eye of [...(rt.eyes || [])]) removeEye(rt, eye);
+  rt.player.postT = 0; rt.player.lockMove = false;
+}
+
+// ── 암흑의 눈: 사거리 안 무작위 위치에 감시하는 눈 → 효과 범위 안 무작위 적에게 시선 (0.2초마다 피해 · 공포/악몽, 연쇄) ──
+export function castDarkEye(rt, sk, st) {
+  const P = rt.player.pos;
+  const range = sample(st.range) / U;
+  // 적이 있는 쪽을 조금 더 노림: 사거리 안 무작위 적 근처 (없으면 무작위 위치)
+  const cands = rt.enemies.query(P.x, P.z, range + 1).filter((e) => e.alive && Math.hypot(e.x - P.x, e.z - P.z) <= range);
+  let x, z;
+  if (cands.length) { const e = pick(cands); const b = Math.random() * Math.PI * 2, d = rnd(0.5, 2); x = e.x + Math.cos(b) * d; z = e.z + Math.sin(b) * d; }
+  else { const b = Math.random() * Math.PI * 2, d = Math.sqrt(Math.random()) * range; x = P.x + Math.cos(b) * d; z = P.z + Math.sin(b) * d; }
+  const g = new THREE.Group();
+  const white = new THREE.MeshStandardMaterial({ color: 0xece0ff, emissive: 0x6a2aff, emissiveIntensity: 0.35, roughness: 0.35 });
+  const ball = new THREE.Mesh(shared('eyeBall', () => new THREE.SphereGeometry(0.34, 16, 12)), white);
+  ball.castShadow = true;
+  const iris = new THREE.Mesh(shared('eyeIris', () => new THREE.SphereGeometry(0.2, 14, 10).scale(1, 1, 0.45)), new THREE.MeshBasicMaterial({ color: 0x9a3aff }));
+  iris.position.z = 0.27;
+  const pupil = new THREE.Mesh(shared('eyePupil', () => new THREE.BoxGeometry(0.05, 0.24, 0.04)), new THREE.MeshBasicMaterial({ color: 0x0a0410 }));
+  pupil.position.z = 0.35;
+  const look = new THREE.Group();
+  look.add(ball, iris, pupil);
+  const aura = makeGlowSprite(0x7a3aff, 1.6, 0.7);
+  const shade = new THREE.Sprite(new THREE.SpriteMaterial({ map: aura.material.map, color: 0x14051f, transparent: true, opacity: 0.6, depthWrite: false }));
+  shade.scale.setScalar(1.5);
+  g.add(shade, aura, look);
+  g.position.set(x, 1.6, z);
+  g.scale.setScalar(0.01);
+  rt.scene.add(g);
+  const eye = { sk, st, x, z, t: 0, life: sample(st.duration), R: sample(st.area) / U / 2, g, look, aura, mats: [white, iris.material, pupil.material, aura.material, shade.material], links: [], tick: 0.2 };
+  rt.eyes.push(eye);
+  rt.fx.ring(x, z, eye.R, 0x7a3aff, 0.5);
+  rt.fx.particles.burst(x, 1.6, z, 18, [0x14051f, 0x7a3aff, 0xd9a8ff], { speed: 2, size: 0.1, life: 0.5, up: 1 });
+  sfx('frost');
+}
+
+function makeBeam() {
+  const mat = new THREE.MeshBasicMaterial({ color: 0xc070ff, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false });
+  const core = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false });
+  const geo = shared('beamGeo', () => new THREE.CylinderGeometry(1, 1, 1, 6, 1, true).translate(0, 0.5, 0));
+  const g = new THREE.Group();
+  const outer = new THREE.Mesh(geo, mat), inner = new THREE.Mesh(geo, core);
+  outer.scale.set(0.07, 1, 0.07); inner.scale.set(0.025, 1, 0.025);
+  g.add(outer, inner);
+  g.userData = { mat, core, outer, inner };
+  return g;
+}
+function aimBeam(b, ax, ay, az, bx, by, bz, t) {
+  const len = Math.hypot(bx - ax, by - ay, bz - az) || 0.001;
+  b.position.set(ax, ay, az);
+  _v.set(bx - ax, by - ay, bz - az).normalize();
+  b.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), _v);
+  b.scale.set(1, len, 1);
+  const w = 1 + 0.25 * Math.sin(t * 30);
+  b.userData.outer.scale.set(0.07 * w, 1, 0.07 * w);
+}
+
+function removeEye(rt, eye) {
+  rt.scene.remove(eye.g);
+  for (const l of eye.links) { rt.scene.remove(l.beam); l.beam.userData.mat.dispose(); l.beam.userData.core.dispose(); }
+  eye.mats.forEach((m) => m.dispose());
+  rt.eyes = rt.eyes.filter((x) => x !== eye);
+}
+
+function updateEyes(rt, dt) {
+  for (const eye of [...(rt.eyes || [])]) {
+    eye.t += dt;
+    const grow = Math.min(1, eye.t / 0.25), fade = Math.min(1, (eye.life - eye.t) / 0.3);
+    eye.g.scale.setScalar(Math.max(0.01, grow * fade));
+    eye.g.position.y = 1.6 + Math.sin(eye.t * 2.4) * 0.12;
+    const ey = eye.g.position.y;
+    const inRange = (e) => e && e.alive && Math.hypot(e.x - eye.x, e.z - eye.z) <= eye.R + e.r * 0.5;
+    // 시선: 끊긴 시선은 범위 안의 다른 무작위 적에게 다시 연결 (5레벨: 2개)
+    const want = eye.sk.level >= 5 ? 2 : 1;
+    const used = new Set();
+    for (const l of eye.links) for (const e of l.chain) used.add(e);
+    eye.links = eye.links.filter((l) => {
+      if (inRange(l.chain[0])) return true;
+      rt.scene.remove(l.beam); l.beam.userData.mat.dispose(); l.beam.userData.core.dispose();
+      for (const b of l.chainBeams) { rt.scene.remove(b); b.userData.mat.dispose(); b.userData.core.dispose(); }
+      return false;
+    });
+    while (eye.links.length < want) {
+      const cands = rt.enemies.query(eye.x, eye.z, eye.R + 2).filter((e) => inRange(e) && !eye.links.some((l) => l.chain[0] === e));
+      if (!cands.length) break;
+      const first = pick(cands);
+      const beam = makeBeam(); rt.scene.add(beam);
+      eye.links.push({ chain: [first], beam, chainBeams: [] });
+      sfx('zap');
+    }
+    // 연쇄: 시선이 닿은 적에서 가까운 다른 적으로 이어짐 (효과 범위 안)
+    const chains = Math.max(0, Math.round(sample(eye.st.chains)));
+    for (const l of eye.links) {
+      l.chain = l.chain.filter((e, i) => i === 0 || (e.alive && Math.hypot(e.x - l.chain[i - 1].x, e.z - l.chain[i - 1].z) <= eye.R * 2));
+      while (l.chain.length < chains + 1) {
+        const last = l.chain[l.chain.length - 1];
+        const next = rt.enemies.nearestN(last.x, last.z, eye.R * 2, 6).find((e) => e.alive && !l.chain.includes(e));
+        if (!next) break;
+        l.chain.push(next);
+      }
+      while (l.chainBeams.length < l.chain.length - 1) { const b = makeBeam(); rt.scene.add(b); l.chainBeams.push(b); }
+      while (l.chainBeams.length > l.chain.length - 1) { const b = l.chainBeams.pop(); rt.scene.remove(b); b.userData.mat.dispose(); b.userData.core.dispose(); }
+      const t0 = l.chain[0];
+      aimBeam(l.beam, eye.x, ey, eye.z, t0.x, 0.5 + t0.r * 0.5, t0.z, eye.t);
+      l.chainBeams.forEach((b, i) => { const a = l.chain[i], c = l.chain[i + 1]; aimBeam(b, a.x, 0.5 + a.r * 0.5, a.z, c.x, 0.5 + c.r * 0.5, c.z, eye.t + i); });
+      for (const b of [l.beam, ...l.chainBeams]) { b.userData.mat.opacity = 0.85 * fade; b.userData.core.opacity = 0.8 * fade; }
+    }
+    // 눈동자가 첫 시선 쪽을 바라봄
+    const tgt = eye.links[0] && eye.links[0].chain[0];
+    if (tgt) eye.look.lookAt(tgt.x, 0.5, tgt.z);
+    // 0.2초마다 초당 피해의 20% + 공포 (3레벨: 악몽)
+    eye.tick -= dt;
+    if (eye.tick <= 0) {
+      eye.tick += 0.2;
+      for (const l of eye.links) for (const e of l.chain) {
+        if (!e.alive) continue;
+        rt.deal(e, eye.sk, eye.st, { mul: 0.2, statusRatio: 0, at: { x: e.x, z: e.z } });
+        if (!e.alive) continue;
+        if (eye.sk.level >= 3) rt.enemies.nightmare(e);
+        else if (!(e.fearT > 0)) rt.enemies.applyStatus(e, 'dark', 0);
+        if (Math.random() < 0.5) rt.fx.particles.emit(e.x, 0.6 + e.r * 0.5, e.z, rnd(-1, 1), rnd(0.5, 1.5), rnd(-1, 1), 0.35, 0.08, pick([0xc070ff, 0x14051f]), 2);
+      }
+    }
+    if (eye.t >= eye.life) removeEye(rt, eye);
+  }
+}
+
+// ── 암습: 사거리 안 적에게 순간 이동 → 즉시 주위에 피해 (공포 · 악몽 우선, 추가 피해) → 0.1초 후딜레이 ──
+export function castAmbush(rt, sk, st) {
+  const p = rt.player, P = p.pos;
+  const range = sample(st.range) / U;
+  const cands = rt.enemies.query(P.x, P.z, range + 1).filter((e) => e.alive && Math.hypot(e.x - P.x, e.z - P.z) <= range);
+  if (!cands.length) return false;
+  const scaredOnes = cands.filter(scared);
+  const t = pick(scaredOnes.length ? scaredOnes : cands);
+  const fx0 = P.x, fz0 = P.z;
+  // 순간 이동: 대상 바로 앞 (내 쪽)
+  const dx = t.x - P.x, dz = t.z - P.z, d = Math.hypot(dx, dz) || 1;
+  const off = Math.min(d, t.r + 0.45);
+  P.x = t.x - (dx / d) * off; P.z = t.z - (dz / d) * off;
+  p.aim.set(dx / d, 0, dz / d);
+  p.facing = Math.atan2(dx / d, dz / d);
+  p.moveTarget = null;
+  // 출발 자리 · 궤적의 어둠
+  rt.fx.particles.burst(fx0, 0.6, fz0, 22, [0x14051f, 0x3a1a5a, 0x9a6bff], { speed: 2.5, size: 0.13, life: 0.5, up: 2, grav: 0 });
+  for (let i = 0; i < 26; i++) { const f = Math.random(); rt.fx.particles.emit(fx0 + (P.x - fx0) * f, rnd(0.3, 1), fz0 + (P.z - fz0) * f, 0, rnd(0.2, 0.8), 0, rnd(0.25, 0.45), rnd(0.08, 0.16), pick([0x14051f, 0x7a3aff, 0xc040ff]), 0); }
+  // 즉시 공격
+  const R = sample(st.area) / U / 2;
+  let killedScared = false;
+  for (const e of rt.enemies.query(t.x, t.z, R + 2.2)) {
+    if (!e.alive || Math.hypot(e.x - t.x, e.z - t.z) > R + e.r * 0.5) continue;
+    const was = scared(e);
+    rt.deal(e, sk, st, { at: { x: t.x, z: t.z }, mul: was ? 1 + sample(st.bonusDmg) / 100 : 1 });
+    if (was && !e.alive) killedScared = true;
+    rt.fx.particles.burst(e.x, 0.6, e.z, 8, [0xff4a6a, 0x9a6bff, 0x14051f], { speed: 3, size: 0.1, life: 0.4, up: 2 });
+  }
+  ambushFx(rt.fx, t.x, t.z, Math.atan2(dz, dx), R);
+  // 5레벨: 공포 · 악몽 상태인 적을 처치하면 쿨타임 초기화
+  if (sk.level >= 5 && killedScared) { setTimeout(() => { sk.cd = 0; }, 0); rt.fx.ring(P.x, P.z, 1.2, 0xff4a6a, 0.4, 1); }
+  p.lockMove = true; p.postT = 0.1;   // 후딜레이
+  game.shake = Math.max(game.shake || 0, 0.18);
+  sfx('dash'); sfx('explode');
+  return true;
+}
+
+// 엇갈린 X 자 베기 + 어둠 폭발
+function ambushFx(fx, x, z, a, R) {
+  for (const da of [-0.7, 0.7]) {
+    const geo = shared('ambushSlash', () => new THREE.PlaneGeometry(1, 0.14).rotateX(-Math.PI / 2));
+    const dark = new THREE.MeshBasicMaterial({ color: 0x0c0412, transparent: true, opacity: 0.85, depthWrite: false, side: THREE.DoubleSide });
+    const red = new THREE.MeshBasicMaterial({ color: 0xff2a5a, transparent: true, opacity: 1, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+    const m1 = new THREE.Mesh(geo, dark), m2 = new THREE.Mesh(geo, red);
+    m2.scale.set(1, 1, 0.4); m2.position.y = 0.01;
+    const g = new THREE.Group(); g.add(m1, m2);
+    g.position.set(x, 0.6, z);
+    g.rotation.y = -(a + da);
+    fx.add([g], 0.3, (k) => {
+      const e = Math.min(1, k / 0.35);
+      g.scale.set(R * 2.4 * e, 1, 1 + k);
+      dark.opacity = 0.85 * (1 - k); red.opacity = 1 - k;
+    }, [dark, red]);
+  }
+  fx.explosion(x, z, R * 0.9, 0x6a2aff);
+  fx.ring(x, z, R, 0xc040ff, 0.4);
+  fx.particles.burst(x, 0.6, z, 36, [0x14051f, 0x3a1a5a, 0xc040ff, 0xffffff], { speed: 3 + R * 2, size: 0.12, life: 0.5, up: 3, grav: 4 });
 }

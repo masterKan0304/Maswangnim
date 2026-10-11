@@ -41,6 +41,8 @@ const SKILL_SCENES = {
   claw: () => ({ slots: [[PX + 1.3, 0], [PX + 1.7, 0.7], [PX + 1.7, -0.7]], hp: 3, pullBack: 1.5 }),
   dreamEat: () => ({ slots: [[PX + 1.5, 0], [PX + 2, 0.8], [PX + 2, -0.8]], hp: 3, pullBack: 1.5, status: 'fear' }),
   cruelBurst: (lv) => ({ slots: [[PX + 2.5, 0], [PX + 4, 0.3], [PX + 5.5, -0.3], [PX + 7, 0.6], [PX + 4.5, lv >= 5 ? 1.2 : 0.8], [PX + 6.2, lv >= 5 ? -1.4 : -1]], hp: 5, pullBack: 0.8 }),
+  darkEye: () => ({ slots: [[0.4, 0], [1.1, 0.7], [1.1, -0.7], [1.8, 0]], hp: 4, pullBack: 1.5 }),
+  ambush: () => ({ slots: [[1.6, 0], [2.2, 0.6], [2.2, -0.6], [3.2, 0.2]], hp: 3, pullBack: 1, status: 'fear' }),
   // 마솽 전용
   leafCut: (lv) => ({ slots: lv >= 3 ? [...CLUSTER, ...BEHIND] : CLUSTER, hp: 2 }),
   nature: () => ({ slots: RING(6, 1.6, PX, PV), hp: 3, pullBack: 1.2 }),
