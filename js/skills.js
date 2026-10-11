@@ -141,7 +141,6 @@ export const SKILL_DEFS = {
     desc: '지속 시간 동안 가장 가까운 적을 향해 부채꼴 불길을 내뿜습니다. 불길이 끝나면 쿨타임이 시작됩니다.',
     keywords: ['화염', '효과 범위', '지속 시간', '상태이상', '스킬 쿨타임'],
     base: { damage: [2, 5], area: 20, duration: 2.5, statusChance: 40, manaCost: 8, cooldown: 2.5 },
-    labels: { area: '불길 길이' },
     relevant: ['damage', 'area', 'duration', 'statusChance', 'manaCost', 'cooldown'],
     levelUp(st, lv) { dmgUp40(st, lv); if (lv >= 3) st.area = { min: 28, max: 28 }; },
     levelText: (lv) => ['피해량이 40% 증가합니다.', lv === 3 && '불길이 더 넓고 길어집니다.', lv === 5 && '불길에 맞은 적은 화염 피해를 더 받습니다.'],

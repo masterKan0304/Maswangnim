@@ -148,9 +148,9 @@ kbd {
 .dmg.nature { color: #a8f09a; }
 .dmg.poison { color: #7fe07a; font-size: 20px; }
 .dmg.ocean { color: #9fd2ff; }
-.dmg.earth { color: #e8b47a; }
+.dmg.earth { color: #b5773a; }   /* 대지: 갈색 */
 .dmg.dark { color: #c8a8ff; font-size: 20px; }
-.dmg.radiant { color: #fffcee; }   /* 광휘: 회복 · 화염 · 대지와 겹치지 않게 아주 연하게, 테두리는 검정 */
+.dmg.radiant { color: #ffe66a; }   /* 광휘: 노란색 (테두리는 검정) */
 .dmg.hurt { color: #ff5a6e; font-size: 33px; }
 .dmg.shield { color: #7fdcff; font-size: 27px; }
 .dmg.heal { color: #6ff0a0; font-size: 24px; }
@@ -653,7 +653,7 @@ body.game-paused #bossbar { top: 104px; }
 .st.el-radiant b, .tip-stats .el-radiant, .st.el-radiant { color: #ffe680; }
 /* 치명타: 속성 색은 그대로, 크게 + 왼쪽 위 폭발 아이콘 (글자 뒤) */
 .dmg.crit { font-size: 36px; text-shadow: -2px 0 #000, 2px 0 #000, 0 -2px #000, 0 2px #000, 0 2px 4px rgba(0,0,0,0.6); }
-.dmg.crit::before { content: '💥'; position: absolute; left: -0.45em; top: -0.42em; font-size: 0.72em; z-index: -1; text-shadow: none; opacity: 0.95; }
+.dmg.crit::before { content: ''; position: absolute; left: -0.62em; top: -0.6em; width: 1.08em; height: 1.08em; z-index: -1; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 1l2.2 6.3 5.6-3.6-2.5 6.1 6.5 1.2-6 3 4.4 5-6.5-1.5-.6 6.6-3.1-5.8-3.1 5.8-.6-6.6-6.5 1.5 4.4-5-6-3 6.5-1.2-2.5-6.1 5.6 3.6z' fill='%23e8283a'/%3E%3C/svg%3E") center / contain no-repeat; }   /* 붉은 단색 폭발 아이콘 */
 .tile.k-sentence.rar2 { box-shadow: inset 0 2px 0 rgba(255,255,255,0.3), 0 0 0 2px #5fb8ff, 0 0 10px rgba(95,184,255,0.7); }
 .tile.k-sentence.rar3 { box-shadow: inset 0 2px 0 rgba(255,255,255,0.3), 0 0 0 2px #ffd45a, 0 0 12px rgba(255,212,90,0.85); }
 .tip-rar { font-size: 11px; font-weight: 900; margin: 2px 0; }
