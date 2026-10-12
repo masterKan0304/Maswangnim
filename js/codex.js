@@ -289,8 +289,11 @@ function detailBlock(info) {
 
 // 적 (스테이지 등장 순서)
 function gridEnemies(grid) {
-  section(grid, '스테이지 1 · 초원');
+  // 스테이지별로 묶어 표시
+  let cur = null;
   for (const en of ENEMIES) {
+    const sec = en.stage === '해변' ? '스테이지 2 · 해변' : '스테이지 1 · 초원';
+    if (sec !== cur) { cur = sec; section(grid, sec); }
     const T = ENEMY_TYPES[en.type];
     const col = '#' + T.color.toString(16).padStart(6, '0');
     item(grid, en.type, `<img class="cx-enemy" src="${enemyIcon(en.type)}" alt="">`, T.name, { color: col, badge: en.grade !== '일반' ? en.grade : '' });
