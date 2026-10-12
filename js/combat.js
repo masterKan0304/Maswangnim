@@ -6,7 +6,7 @@ import { gaugeCostOf, getStats, computeStats, sample, sampleInt, avg, statusProb
 import { makeGlowSprite, RingMesh } from './effects.js';
 import { jitter, createPlayer } from './models.js';
 import { sfx } from './audio.js';
-import { castClaw, castDreamEat, startCruel, updateCruels, clearCruels, castDarkEye, castAmbush } from './gerger.js';
+import { castClaw, castDreamEat, startCruel, updateCruels, clearCruels, castDarkEye, castAmbush, nightStep } from './gerger.js';
 
 const DEG = Math.PI / 180;
 // 꿀열매 크기: t초 동안 자란 정도 (2.5초 = 1, 5초를 넘길 때마다 자라는 속도 절반)
@@ -271,6 +271,7 @@ export class SkillRuntime {
     if (sk.def.powerful) {
       for (const o of game.skills) if (o !== sk && o.def.powerful && o.cd < 1.5) { o.cd = 1.5; o.cdMax = Math.max(o.cdMax || 0, 1.5); }
       this.player.smokeT = 1.1;
+      nightStep(this);   // 드리우는 밤: 눈을 한 단계 뜸
     }
     this.player.castPulse(sk.def.color);
     return true;

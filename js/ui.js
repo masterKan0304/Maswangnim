@@ -999,6 +999,7 @@ export class UI {
       if (e.stunT > 0) st.push([ic('stun'), '기절', 'earth', e.stunT]);
       if (e.fearT > 0) st.push([ic('moon'), '공포', 'dark', e.fearT]);
       if (e.nightmareT > 0) st.push([ic('malice'), '악몽', 'dark', e.nightmareT]);
+      if (e.charmT > 0) st.push([ic('darkeye'), '현혹', 'dark', e.charmT]);
       if (e.consT > 0) st.push([ic('sun'), '축성', 'radiant', e.consT]);
       if (e.bleeds && e.bleeds.length) st.push([ic('blood'), '출혈', 'bleed', 0]);
       if (e.resDownT > 0 && e.resDown > 0) st.push([ic('rock'), `모든 저항 -${e.resDown}`, 'earth', 0]);

@@ -4,8 +4,8 @@
 // ─────────────────────────────────────────────
 import * as THREE from 'three';
 import { game } from './state.js';
-import { STAT_UNIT as U, STATUS, PROJ_SPEED_UNIT as PS, PROJ_SIZE_UNIT as PZ } from './config.js';
-import { sample, gaugeCostOf } from './skills.js';
+import { STAT_UNIT as U, STATUS, PROJ_SPEED_UNIT as PS, PROJ_SIZE_UNIT as PZ, WORLD_HALF } from './config.js';
+import { sample, gaugeCostOf, getStats } from './skills.js';
 import { sfx } from './audio.js';
 import { makeGlowSprite } from './effects.js';
 
@@ -215,6 +215,7 @@ function updateSmoke(rt, dt) {
 export function updateCruels(rt, dt) {
   updateSmoke(rt, dt);
   updateEyes(rt, dt);
+  updateNight(rt, dt);
   if (rt.player.postT > 0) { rt.player.postT -= dt; if (rt.player.postT <= 0 && !rt.cruels.length) rt.player.lockMove = false; }
   for (const sk of [...rt.cruels]) {
     const c = sk.cruel;
@@ -378,6 +379,7 @@ export function clearCruels(rt) {
   if (rt.gwaves) rt.gwaves.length = 0;
   for (const eye of [...(rt.eyes || [])]) removeEye(rt, eye);
   rt.player.postT = 0; rt.player.lockMove = false;
+  clearNight(rt);
 }
 
 // ── 암흑의 눈: 사거리 안 무작위 위치에 감시하는 눈 → 효과 범위 안 무작위 적에게 시선 (0.2초마다 피해 · 공포/악몽, 연쇄) ──
@@ -582,4 +584,127 @@ function ambushFx(fx, x, z, a, R) {
   fx.explosion(x, z, R * 0.9, 0x6a2aff);
   fx.ring(x, z, R, 0xc040ff, 0.4);
   fx.particles.burst(x, 0.6, z, 36, [0x14051f, 0x3a1a5a, 0xc040ff, 0xffffff], { speed: 3 + R * 2, size: 0.12, life: 0.5, up: 3, grav: 4 });
+}
+
+// ── 드리우는 밤 (패시브): 강력한 공격마다 밤의 눈이 한 단계씩 떠짐 (1초에 한 번) → 5단계에서 어둠의 파도 ──
+const EYE_OPEN = [0, 0, 0.25, 0.5, 0.75, 1];   // 단계별 눈 뜬 정도 (1: 감음 … 5: 완전히 뜸)
+let eyeEl = null, wispT = 0;
+function eyeDom() {
+  if (!eyeEl) eyeEl = document.getElementById('night-eye');
+  return eyeEl;
+}
+function setEye(step) {
+  const el = eyeDom();
+  if (!el) return;
+  el.classList.toggle('hidden', step <= 0);
+  el.classList.remove('burst');
+  el.style.setProperty('--lv', step);
+  const o = EYE_OPEN[step] || 0;
+  el.querySelector('.ne-lid.top').style.transform = `translateY(${-40 * o}px)`;
+  el.querySelector('.ne-lid.bot').style.transform = `translateY(${40 * o}px)`;
+}
+
+// force: 도감 미리보기 (1초 제한 무시)
+export function nightStep(rt, force = false) {
+  const sk = game.skills.find((s) => s.key === 'nightFall');
+  if (!sk || sk.nightWave) return;
+  const now = rt.clock || 0;
+  if (!force && now - (sk.nightAt ?? -9) < 1) return;
+  sk.nightAt = now;
+  sk.nightStep = Math.min(5, (sk.nightStep || 0) + 1);
+  game.nightDark = sk.nightStep * 0.1;   // 밤이 조금씩 짙어짐
+  setEye(sk.nightStep);
+  sfx(sk.nightStep >= 5 ? 'boss' : 'frost');
+  if (sk.nightStep >= 5) startNightWave(rt, sk);
+}
+
+function startNightWave(rt, sk) {
+  const el = eyeDom();
+  if (el) { el.classList.add('burst'); setTimeout(() => { el.classList.add('hidden'); el.classList.remove('burst'); }, 380); }   // 강하게 떠진 뒤 빠르게 사라짐
+  game.nightDark = 0.7;   // 밤이 더욱 짙어짐
+  const H = WORLD_HALF;
+  const axis = Math.random() < 0.5 ? 'x' : 'z', dir = Math.random() < 0.5 ? 1 : -1;
+  // 어둠의 벽 (울타리 한쪽 → 반대편)
+  const wallMat = new THREE.MeshBasicMaterial({ color: 0x0a0414, transparent: true, opacity: 0.55, depthWrite: false, side: THREE.DoubleSide });
+  const edgeMat = new THREE.MeshBasicMaterial({ color: 0x9a3aff, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+  const wall = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.PlaneGeometry(H * 2 + 4, 3.2), wallMat); body.position.y = 1.6;
+  const edge = new THREE.Mesh(new THREE.PlaneGeometry(H * 2 + 4, 0.5).rotateX(-Math.PI / 2), edgeMat); edge.position.y = 0.06;
+  const glow = new THREE.Mesh(new THREE.PlaneGeometry(H * 2 + 4, 0.35), edgeMat); glow.position.y = 3.1;
+  wall.add(body, edge, glow);
+  if (axis === 'x') wall.rotation.y = Math.PI / 2;   // x 축으로 움직이면 벽은 z 방향으로 길게
+  rt.scene.add(wall);
+  sk.nightWave = { t: 0, axis, dir, from: -dir * (H + 1), to: dir * (H + 1), prev: -dir * (H + 1), wall, mats: [wallMat, edgeMat], geos: [body.geometry, edge.geometry, glow.geometry], hit: new Set(), st: getStats(sk) };
+  game.shake = Math.max(game.shake || 0, 0.3);
+  sfx('explode');
+}
+
+function updateNight(rt, dt) {
+  const sk = game.skills.find((s) => s.key === 'nightFall');
+  const el = eyeDom();
+  // 기운: 눈이 떠질수록 더 강하게 내뿜음
+  if (sk && sk.nightStep > 0 && !sk.nightWave && el && !el.classList.contains('hidden')) {
+    wispT -= dt;
+    if (wispT <= 0) {
+      wispT = 0.32 / sk.nightStep;
+      const w = document.createElement('div');
+      w.className = 'ne-wisp';
+      const a = Math.random() * Math.PI * 2, d = 50 + sk.nightStep * 14;
+      w.style.setProperty('--dx', `${Math.cos(a) * d}px`); w.style.setProperty('--dy', `${Math.sin(a) * d * 0.6}px`);
+      w.addEventListener('animationend', () => w.remove());
+      el.querySelector('.ne-wisps').appendChild(w);
+    }
+  }
+  if (!sk && el && !el.classList.contains('hidden')) { el.classList.add('hidden'); game.nightDark = 0; }
+  if (!sk || !sk.nightWave) return;
+  const w = sk.nightWave;
+  w.t += dt;
+  if (w.t < 1) {
+    // 1초에 걸쳐 반대편 울타리까지
+    const pos = w.from + (w.to - w.from) * w.t;
+    if (w.axis === 'x') w.wall.position.set(pos, 0, 0); else w.wall.position.set(0, 0, pos);
+    const lo = Math.min(w.prev, pos) - 0.6, hi = Math.max(w.prev, pos) + 0.6;
+    w.prev = pos;
+    let gained = 0;
+    for (const e of rt.enemies.list) {
+      if (!e.alive || w.hit.has(e)) continue;
+      const c = w.axis === 'x' ? e.x : e.z;
+      if (c < lo || c > hi) continue;
+      w.hit.add(e);
+      rt.deal(e, sk, w.st, { statusRatio: 0, at: { x: e.x, z: e.z } });
+      if (!e.alive) continue;
+      const before = e.nightmareT > 0 ? 2 : e.fearT > 0 ? 1 : 0;
+      rt.enemies.applyStatus(e, 'dark', 0);   // 공포 (이미 공포라면 악몽)
+      const after = e.nightmareT > 0 ? 2 : e.fearT > 0 ? 1 : 0;
+      if (after > before) gained++;
+      if (sk.level >= 5 && after > 0) e.charmT = Math.max(e.fearT, e.nightmareT);   // 5레벨: 현혹
+      rt.fx.particles.burst(e.x, 0.6, e.z, 6, [0x14051f, 0x9a3aff], { speed: 2, size: 0.1, life: 0.4, up: 2 });
+    }
+    if (sk.level >= 3 && gained) rt.player.addGauge(gained);   // 3레벨: 공포 · 악몽으로 만든 적 하나당 어둠 게이지 +1
+    // 파도 앞쪽에 어둠 입자 (화면 근처만)
+    const P = rt.player.pos;
+    for (let q = 0; q < 10; q++) {
+      const along = (w.axis === 'x' ? P.z : P.x) + rnd(-14, 14);
+      const x = w.axis === 'x' ? pos : along, z = w.axis === 'x' ? along : pos;
+      rt.fx.particles.emit(x, rnd(0.1, 3), z, w.axis === 'x' ? w.dir * rnd(2, 6) : 0, rnd(0.5, 2), w.axis === 'z' ? w.dir * rnd(2, 6) : 0, rnd(0.4, 0.7), rnd(0.12, 0.25), pick([0x07020c, 0x2a0a3a, 0x7a3aff, 0xc070ff]), 0);
+    }
+    return;
+  }
+  // 울타리에 닿음 → 모든 강력한 공격 쿨타임 초기화, 0.5초에 걸쳐 원래 밤으로
+  if (!w.done) {
+    w.done = true;
+    for (const o of game.skills) if (o.def.powerful) o.cd = 0;
+    rt.scene.remove(w.wall);
+    w.mats.forEach((m) => m.dispose()); w.geos.forEach((g) => g.dispose());
+    game.nightDark = 0;
+  }
+  if (w.t >= 1.5) { sk.nightWave = null; sk.nightStep = 0; setEye(0); }
+}
+
+export function clearNight(rt) {
+  const sk = game.skills.find((s) => s.key === 'nightFall');
+  if (sk && sk.nightWave && !sk.nightWave.done) { rt.scene.remove(sk.nightWave.wall); sk.nightWave.mats.forEach((m) => m.dispose()); }
+  if (sk) { sk.nightWave = null; sk.nightStep = 0; }
+  setEye(0);
+  game.nightDark = 0;
 }

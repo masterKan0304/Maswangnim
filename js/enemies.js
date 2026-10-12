@@ -49,7 +49,7 @@ export class EnemyManager {
       alive: true, boss: type === 'boss', color: new THREE.Color(T.color),
       y: 0, sy: 1, sxz: 1, spawnT: 0,
       burnT: 0, burnDmg: 0, burnTick: 0, chillT: 0, shockT: 0, rootT: 0,
-      poisonT: 0, poisonTick: 0, exhaustT: 0, stunT: 0, fearT: 0, fearImmune: 0, consT: 0, consAcc: 0, resDown: 0, resDownT: 0, fearZone: null, fearZoneT: 0, consZoneT: 0, bleeds: null, malice: null, nightmareT: 0, element: T.element || null,
+      poisonT: 0, poisonTick: 0, exhaustT: 0, stunT: 0, fearT: 0, fearImmune: 0, consT: 0, consAcc: 0, resDown: 0, resDownT: 0, fearZone: null, fearZoneT: 0, consZoneT: 0, bleeds: null, malice: null, nightmareT: 0, charmT: 0, element: T.element || null,
     };
     e.elite = type === 'elite';
     if (e.boss || e.elite) {
@@ -123,7 +123,7 @@ export class EnemyManager {
     if (!src) amount *= game.mods.dmgMul;   // 스킬이 아닌 피해(꽃 등)만 여기서 — 스킬 피해는 능력치에 이미 반영
     amount = amount > 0 ? Math.max(1, Math.round(amount)) : 0;   // 실제 피해는 소수점 반올림 (최소 1)
     // 공포: 받는 피해의 20% 를 칠흑 피해로 더 받음 / 축성: 받는 피해를 쌓아 둠
-    const fearExtra = !raw && (e.fearT > 0 || e.nightmareT > 0) && amount > 0 ? Math.max(1, Math.round(amount * (e.nightmareT > 0 ? STATUS.nightmareExtra : STATUS.fearExtra))) : 0;   // 공포 20% / 악몽 50%
+    const fearExtra = !raw && (e.fearT > 0 || e.nightmareT > 0) && amount > 0 ? Math.max(1, Math.round(amount * (e.nightmareT > 0 ? STATUS.nightmareExtra : STATUS.fearExtra) * (e.charmT > 0 ? 2 : 1))) : 0;   // 현혹: 2배   // 공포 20% / 악몽 50%
     if (!raw && e.consT > 0) e.consAcc += amount + fearExtra;
     recordDamage(src, amount + fearExtra);    // DPS 표 기록
     e.hp -= amount + fearExtra;
@@ -260,6 +260,7 @@ export class EnemyManager {
       if (Math.random() < dt * 8) this.fx.particles.emit(e.x + (Math.random() - 0.5) * e.r, 0.3 + Math.random() * e.r, e.z + (Math.random() - 0.5) * e.r, 0, -0.5, 0, 0.4, 0.07, 0xc0203a, 6);
     }
     if (e.consZoneT > 0) e.consZoneT -= dt;
+    if (e.charmT > 0) e.charmT -= dt;
     if (e.resDownT > 0) { e.resDownT -= dt; if (e.resDownT <= 0) e.resDown = 0; }
     if (e.poisonT > 0) {
       e.poisonT -= dt; e.poisonTick -= dt;
@@ -340,14 +341,15 @@ export class EnemyManager {
         // 칠흑 지대 안의 공포: 지대 안을 이리저리 방황
         if (e.wanderA == null || Math.random() < dt * 1.5) e.wanderA = Math.random() * Math.PI * 2;
         dx = Math.cos(e.wanderA); dz = Math.sin(e.wanderA);
-      } else if (e.fearT > 0 || e.nightmareT > 0) { dx = -dx; dz = -dz; }   // 공포: 플레이어에게서 정반대로 달아남 (악몽: 일반은 멈춤, 정예 · 보스는 느리게 달아남)
+      } else if ((e.fearT > 0 || e.nightmareT > 0) && !(e.charmT > 0)) { dx = -dx; dz = -dz; }   // 공포: 플레이어에게서 정반대로 달아남 (악몽: 일반은 멈춤, 정예 · 보스는 느리게 달아남)
 
       // 통통 튀는 이동
       e.phase += dt * (e.boss ? 0.75 : 1.6);
       const p = e.phase % 1;
       const air = p < 0.6;
-      const nmStop = e.nightmareT > 0 && !e.elite && !e.boss;   // 악몽: 제자리에 멈춤
-      const mv = e.rootT > 0 || e.stunT > 0 || nmStop ? 0 : e.speed * (air ? 1.4 : 0.3) * (e.chillT > 0 ? 1 - STATUS.slow : 1) * (e.nightmareT > 0 ? 1 - STATUS.nightmareSlow : e.fearT > 0 ? 1 - STATUS.fearSlow : 1);   // 속박 / 기절: 멈춤, 공포: 30% 느림
+      const charmed = e.charmT > 0 && (e.fearT > 0 || e.nightmareT > 0);   // 현혹: 달아나거나 멈추지 않고 플레이어에게 서서히 다가옴
+      const nmStop = e.nightmareT > 0 && !e.elite && !e.boss && !charmed;   // 악몽: 제자리에 멈춤
+      const mv = e.rootT > 0 || e.stunT > 0 || nmStop ? 0 : e.speed * (air ? 1.4 : 0.3) * (e.chillT > 0 ? 1 - STATUS.slow : 1) * (charmed ? 0.35 : e.nightmareT > 0 ? 1 - STATUS.nightmareSlow : e.fearT > 0 ? 1 - STATUS.fearSlow : 1);   // 속박 / 기절: 멈춤, 공포: 30% 느림
       let vx = dx * mv, vz = dz * mv;
 
       // 분리 (겹침 방지)
@@ -402,7 +404,7 @@ export class EnemyManager {
       if (!e.alive) continue;
 
       // 접촉 피해
-      if (e.stunT > 0) { /* 기절: 부딪혀도 피해 없음 */ }
+      if (e.stunT > 0 || charmed) { /* 기절 · 현혹: 부딪혀도 피해 없음 */ }
       else if (lure) { if (Math.hypot(lure.x - e.x, lure.z - e.z) < e.r * 0.9 + lure.radius) lure.hit(e); }   // 인형이 공격을 대신 받음
       else if (Math.hypot(px - e.x, pz - e.z) < e.r * 0.9 + player.radius) player.takeDamage(e.dmg, e.element);
 

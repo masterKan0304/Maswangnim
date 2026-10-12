@@ -713,6 +713,9 @@ function tick(dt, draw = true) {
   const night = !!(CHARACTERS[game.charId] && CHARACTERS[game.charId].night) && game.state !== 'start';
   world.update(animTime, player.pos, adt, night);
   if (document.body.classList.contains('night') !== night) document.body.classList.toggle('night', night);   // 보랏빛 밤 색조
+  // 드리우는 밤: 밤이 짙어짐 (부드럽게)
+  game.nightDarkCur = (game.nightDarkCur || 0) + ((game.state === 'start' ? 0 : game.nightDark || 0) - (game.nightDarkCur || 0)) * Math.min(1, adt * 4);
+  const nd = $id('night-dark'); if (nd) nd.style.opacity = (game.nightDarkCur * 0.55).toFixed(3);
   updateShadows();
   enemies.render(animTime);
   pickups.render(animTime);

@@ -5,6 +5,7 @@
 import { game, bump } from './state.js';
 import { createSkill, getStats, triggerGoal, sample, SKILL_DEFS } from './skills.js';
 import { makeSentence, makeWord, makeFixed } from './blocks.js';
+import { nightStep } from './gerger.js';
 
 export const SC_CENTER = { x: 0, z: 0 };
 const PX = -3.4;   // 플레이어 자리 (공터 왼쪽)
@@ -42,7 +43,8 @@ const SKILL_SCENES = {
   dreamEat: () => ({ slots: [[PX + 1.5, 0], [PX + 2, 0.8], [PX + 2, -0.8]], hp: 3, pullBack: 1.5, status: 'fear' }),
   cruelBurst: (lv) => ({ slots: [[PX + 2.5, 0], [PX + 4, 0.3], [PX + 5.5, -0.3], [PX + 7, 0.6], [PX + 4.5, lv >= 5 ? 1.2 : 0.8], [PX + 6.2, lv >= 5 ? -1.4 : -1]], hp: 5, pullBack: 0.8 }),
   darkEye: () => ({ slots: [[0.4, 0], [1.1, 0.7], [1.1, -0.7], [1.8, 0]], hp: 4, pullBack: 1.5 }),
-  ambush: () => ({ slots: [[1.6, 0], [2.2, 0.6], [2.2, -0.6], [3.2, 0.2]], hp: 3, pullBack: 1, status: 'fear' }),
+  ambush: () => ({ slots: [[1.6, 0], [2.2, 0.6], [2.2, -0.6], [3.2, 0.2], [-1, 1.4], [0.4, -1.6]], hp: 3, pullBack: 1, status: 'fear', free: true }),
+  nightFall: () => ({ slots: [...CLUSTER, ...BEHIND, [0, 1.6], [0, -1.6]], hp: 3, pullBack: 0.8, special: 'nightfall' }),
   // 마솽 전용
   leafCut: (lv) => ({ slots: lv >= 3 ? [...CLUSTER, ...BEHIND] : CLUSTER, hp: 2 }),
   nature: () => ({ slots: RING(6, 1.6, PX, PV), hp: 3, pullBack: 1.2 }),
@@ -78,6 +80,7 @@ export class Showcase {
   set(cfg) {
     const { player } = this.sys;
     this.cfg = cfg;
+    this.camF = null;
     this.clearWorld();
     this.seedT = 1;
     game.showcase = true;   // 미리보기에서 처치한 적은 경험치를 떨어뜨리지 않음
@@ -152,6 +155,12 @@ export class Showcase {
   focus() {
     if (this.cfg && this.cfg.kind === 'enemy' && this.enemy && this.enemy.alive) return { x: this.enemy.x + 1, z: this.enemy.z };
     if (this.cfg && this.cfg.kind === 'character') return { x: this.sys.player.pos.x, z: this.sys.player.pos.z };
+    // 플레이어가 움직이는 장면(암습): 카메라가 부드럽게 따라감
+    if (this.scn && this.scn.free) {
+      const p = this.sys.player.pos, f = this.camF || (this.camF = { x: SC_CENTER.x, z: SC_CENTER.z });
+      f.x += (p.x + 2 - f.x) * 0.12; f.z += (p.z - f.z) * 0.12;
+      return f;
+    }
     return SC_CENTER;
   }
 
@@ -184,13 +193,14 @@ export class Showcase {
       return;
     }
     // 스킬 장면: 고정된 자리의 적이 죽으면 잠시 뒤 같은 자리에 다시 생김
-    const p0 = W(PX, PV);
-    player.pos.set(p0.x, 0, p0.z);
     const scn = this.scn;
+    if (!scn.free) { const p0 = W(PX, PV); player.pos.set(p0.x, 0, p0.z); }   // 암습 등: 플레이어가 실제로 이동
     for (const s of this.slots) {
       if (s.e && s.e.alive) {
         const e = s.e;
         if (scn.moving) continue;   // 짚 인형: 적이 실제로 움직여 인형에게 끌려감
+        // 공포 · 악몽: 실제로 도망침 (풀리면 천천히 제자리로)
+        if (e.fearT > 0 || e.nightmareT > 0) { e.speed = e.T.speed; continue; }
         e.speed = 0;
         // 밀려난 적은 천천히 제자리로
         const back = scn.pullBack || 0.4;
@@ -251,6 +261,11 @@ export class Showcase {
       sk.stacks = 0;   // 중첩으로는 발동하지 않음
       this.seedT = (this.seedT ?? 1) - dt;
       if (this.seedT <= 0) { this.seedT = 6; this.sys.bloom.seedBurst(sk); }
+    }
+    // 드리우는 밤: 강력한 공격을 쓴 것처럼 눈을 1초마다 한 단계씩 뜸
+    if (scn.special === 'nightfall') {
+      this.nightT = (this.nightT ?? 1) - dt;
+      if (this.nightT <= 0) { this.nightT = 1.1; nightStep(skillsRt, true); }
     }
     if (scn.special === 'trigger') {
       // 중첩을 빠르게 채워 발동 장면을 자주 보여 줌

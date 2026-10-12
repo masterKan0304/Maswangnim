@@ -96,7 +96,8 @@ export function renderDebug() {
   // ── 스킬 획득 (숙련도 · 계정 레벨로 잠긴 스킬도) ──
   const sg = section('스킬 획득');
   const keys = [...SKILL_ORDER];
-  for (const cid of CHARACTER_ORDER) for (const k of CHARACTERS[cid].skills) if (k && SKILL_DEFS[k] && !keys.includes(k)) keys.push(k);
+  const ch = CHARACTERS[game.charId];   // 다른 캐릭터의 전용 스킬은 제외
+  if (ch) for (const k of ch.skills) if (k && SKILL_DEFS[k] && !keys.includes(k)) keys.push(k);
   const chips = document.createElement('div');
   chips.className = 'dbg-chips';
   for (const k of keys) {
