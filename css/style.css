@@ -1241,3 +1241,10 @@ body.night #night-tint { opacity: 0.42; }
 #night-eye.burst .ne-aura { animation: ne-burst-aura 0.38s ease-out forwards; }
 @keyframes ne-burst { 0% { transform: scale(1); filter: drop-shadow(0 0 30px #c070ff) brightness(1.6); } 45% { transform: scale(1.35); opacity: 1; } 100% { transform: scale(0.6, 0.05); opacity: 0; } }
 @keyframes ne-burst-aura { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(2.4); opacity: 0; } }
+
+/* 밤의 눈: 동그란 눈 · 테두리가 흐릿하게 번지며 서서히 드리움 */
+#night-eye { width: 150px; height: 150px; }
+#night-eye svg { -webkit-mask-image: radial-gradient(circle, #000 58%, rgba(0,0,0,0.6) 68%, transparent 76%); mask-image: radial-gradient(circle, #000 58%, rgba(0,0,0,0.6) 68%, transparent 76%); }
+#night-eye .ne-lid { transition: transform 0.9s cubic-bezier(.35,0,.25,1); }
+#night-eye:not(.hidden) { animation: ne-fadein 0.9s ease-out; }
+@keyframes ne-fadein { from { opacity: 0; filter: blur(8px); } to { opacity: 1; filter: blur(0); } }

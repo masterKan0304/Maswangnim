@@ -23,12 +23,13 @@
   <div id="night-tint"></div>
   <div id="night-dark"></div>
   <div id="night-eye" class="hidden"><div class="ne-aura"></div><div class="ne-wisps"></div>
-    <svg viewBox="0 0 160 80"><defs><clipPath id="ne-clip"><path d="M6 40Q80-14 154 40Q80 94 6 40Z"/></clipPath>
-      <radialGradient id="ne-iris"><stop offset="0" stop-color="#e9b8ff"/><stop offset=".55" stop-color="#a040ff"/><stop offset="1" stop-color="#3a0a6a"/></radialGradient></defs>
-      <path d="M6 40Q80-14 154 40Q80 94 6 40Z" fill="#12061c"/>
-      <g clip-path="url(#ne-clip)"><circle cx="80" cy="40" r="25" fill="url(#ne-iris)"/><ellipse cx="80" cy="40" rx="4.5" ry="21" fill="#05010a"/><circle cx="72" cy="31" r="3.5" fill="#fff" opacity=".7"/>
-        <rect class="ne-lid top" x="0" y="-40" width="160" height="80" fill="#07020c"/><rect class="ne-lid bot" x="0" y="40" width="160" height="80" fill="#07020c"/></g>
-      <path d="M6 40Q80-14 154 40Q80 94 6 40Z" fill="none" stroke="#b070ff" stroke-width="2.5"/></svg></div>
+    <svg viewBox="0 0 100 100"><defs><clipPath id="ne-clip"><circle cx="50" cy="50" r="44"/></clipPath>
+      <radialGradient id="ne-iris"><stop offset="0" stop-color="#f0c8ff"/><stop offset=".5" stop-color="#a040ff"/><stop offset="1" stop-color="#2a0650"/></radialGradient>
+      <filter id="ne-blur" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="3.2"/></filter></defs>
+      <circle cx="50" cy="50" r="44" fill="#12061c"/>
+      <g clip-path="url(#ne-clip)"><circle cx="50" cy="50" r="27" fill="url(#ne-iris)"/><ellipse cx="50" cy="50" rx="5" ry="23" fill="#05010a"/><circle cx="41" cy="40" r="4" fill="#fff" opacity=".7"/>
+        <ellipse class="ne-lid top" cx="50" cy="0" rx="120" ry="54" fill="#07020c"/><ellipse class="ne-lid bot" cx="50" cy="100" rx="120" ry="54" fill="#07020c"/></g>
+      <circle cx="50" cy="50" r="44" fill="none" stroke="#b070ff" stroke-width="5" filter="url(#ne-blur)" opacity=".9"/></svg></div>
   <div id="pause-dim"></div>
   <div id="vignette"></div>
   <div id="label-layer"></div>

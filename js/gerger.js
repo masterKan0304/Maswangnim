@@ -600,8 +600,8 @@ function setEye(step) {
   el.classList.remove('burst');
   el.style.setProperty('--lv', step);
   const o = EYE_OPEN[step] || 0;
-  el.querySelector('.ne-lid.top').style.transform = `translateY(${-40 * o}px)`;
-  el.querySelector('.ne-lid.bot').style.transform = `translateY(${40 * o}px)`;
+  el.querySelector('.ne-lid.top').style.transform = `translateY(${-58 * o}px)`;
+  el.querySelector('.ne-lid.bot').style.transform = `translateY(${58 * o}px)`;
 }
 
 // force: 도감 미리보기 (1초 제한 무시)
@@ -628,15 +628,42 @@ function startNightWave(rt, sk) {
   const wallMat = new THREE.MeshBasicMaterial({ color: 0x0a0414, transparent: true, opacity: 0.55, depthWrite: false, side: THREE.DoubleSide });
   const edgeMat = new THREE.MeshBasicMaterial({ color: 0x9a3aff, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
   const wall = new THREE.Group();
-  const body = new THREE.Mesh(new THREE.PlaneGeometry(H * 2 + 4, 3.2), wallMat); body.position.y = 1.6;
-  const edge = new THREE.Mesh(new THREE.PlaneGeometry(H * 2 + 4, 0.5).rotateX(-Math.PI / 2), edgeMat); edge.position.y = 0.06;
-  const glow = new THREE.Mesh(new THREE.PlaneGeometry(H * 2 + 4, 0.35), edgeMat); glow.position.y = 3.1;
-  wall.add(body, edge, glow);
-  if (axis === 'x') wall.rotation.y = Math.PI / 2;   // x 축으로 움직이면 벽은 z 방향으로 길게
+  const L = H * 2 + 4;
+  // 두꺼운 어둠의 파도: 여러 겹의 어둠 막 (앞쪽이 가장 짙음) + 바닥의 어둠 띠 + 보랏빛 마루
+  const geos = [];
+  const layers = [];
+  for (let i = 0; i < 6; i++) {
+    const m = new THREE.MeshBasicMaterial({ color: 0x0a0414, transparent: true, opacity: 0.5 - i * 0.07, depthWrite: false, side: THREE.DoubleSide });
+    const g = new THREE.PlaneGeometry(L, 3.6 - i * 0.35);
+    geos.push(g);
+    const p = new THREE.Mesh(g, m);
+    p.position.set(0, (3.6 - i * 0.35) / 2, -i * 0.7);   // 뒤로 갈수록 낮고 옅게
+    wall.add(p); layers.push(m);
+  }
+  const band = new THREE.Mesh(new THREE.PlaneGeometry(L, 4.5).rotateX(-Math.PI / 2), wallMat); band.position.set(0, 0.05, -1.8);
+  const edge = new THREE.Mesh(new THREE.PlaneGeometry(L, 0.7).rotateX(-Math.PI / 2), edgeMat); edge.position.y = 0.07;
+  const glow = new THREE.Mesh(new THREE.PlaneGeometry(L, 0.45), edgeMat); glow.position.y = 3.5;
+  wall.add(band, edge, glow);
+  geos.push(band.geometry);
+  const body = edge;
+  // 진행 방향을 앞(+z 쪽)으로: 뒤쪽 겹은 지나온 쪽에 남음
+  if (axis === 'x') wall.rotation.y = dir > 0 ? Math.PI / 2 : -Math.PI / 2; else wall.rotation.y = dir > 0 ? 0 : Math.PI;
   rt.scene.add(wall);
-  sk.nightWave = { t: 0, axis, dir, from: -dir * (H + 1), to: dir * (H + 1), prev: -dir * (H + 1), wall, mats: [wallMat, edgeMat], geos: [body.geometry, edge.geometry, glow.geometry], hit: new Set(), st: getStats(sk) };
+  sk.nightWave = { t: 0, axis, dir, from: -dir * (H + 1), to: dir * (H + 1), prev: -dir * (H + 1), wall, mats: [wallMat, edgeMat, ...layers], geos: [...geos, edge.geometry, glow.geometry], hit: new Set(), st: getStats(sk) };
   game.shake = Math.max(game.shake || 0, 0.3);
   sfx('explode');
+}
+
+// 뭉게뭉게 퍼지는 어두운 연기 덩어리
+function smokePuff(fx, x, z, s0, life) {
+  const mat = new THREE.SpriteMaterial({ map: shared('smokeTex2', () => makeGlowSprite(0x000000, 1, 1).material.map), color: 0x0a0414, transparent: true, opacity: 0, depthWrite: false });
+  const sp = new THREE.Sprite(mat);
+  const y0 = rnd(0.3, 2.2), vy = rnd(0.3, 1);
+  fx.add([sp], life, (t) => {
+    sp.position.set(x, y0 + t * vy, z);
+    sp.scale.setScalar(s0 * (1 + t * 1.4));
+    mat.opacity = (t < 0.2 ? t / 0.2 : (1 - t) / 0.8) * 0.55;
+  }, [mat]);
 }
 
 function updateNight(rt, dt) {
@@ -681,12 +708,17 @@ function updateNight(rt, dt) {
       rt.fx.particles.burst(e.x, 0.6, e.z, 6, [0x14051f, 0x9a3aff], { speed: 2, size: 0.1, life: 0.4, up: 2 });
     }
     if (sk.level >= 3 && gained) rt.player.addGauge(gained);   // 3레벨: 공포 · 악몽으로 만든 적 하나당 어둠 게이지 +1
-    // 파도 앞쪽에 어둠 입자 (화면 근처만)
+    // 파도 마루에서 뿜어지는 연기 + 지나간 자리에 남는 불길한 기운 (화면 근처만)
     const P = rt.player.pos;
-    for (let q = 0; q < 10; q++) {
-      const along = (w.axis === 'x' ? P.z : P.x) + rnd(-14, 14);
-      const x = w.axis === 'x' ? pos : along, z = w.axis === 'x' ? along : pos;
-      rt.fx.particles.emit(x, rnd(0.1, 3), z, w.axis === 'x' ? w.dir * rnd(2, 6) : 0, rnd(0.5, 2), w.axis === 'z' ? w.dir * rnd(2, 6) : 0, rnd(0.4, 0.7), rnd(0.12, 0.25), pick([0x07020c, 0x2a0a3a, 0x7a3aff, 0xc070ff]), 0);
+    const at = (along, off) => (w.axis === 'x' ? [pos - w.dir * off, along] : [along, pos - w.dir * off]);
+    for (let q = 0; q < 14; q++) {
+      const [x, z] = at((w.axis === 'x' ? P.z : P.x) + rnd(-15, 15), rnd(-0.5, 1));
+      rt.fx.particles.emit(x, rnd(0.1, 3.4), z, w.axis === 'x' ? w.dir * rnd(3, 8) : rnd(-1, 1), rnd(1, 3), w.axis === 'z' ? w.dir * rnd(3, 8) : rnd(-1, 1), rnd(0.5, 0.9), rnd(0.15, 0.3), pick([0x07020c, 0x14051f, 0x2a0a3a, 0x7a3aff, 0xc070ff]), -0.5);
+    }
+    if (Math.random() < 0.9) for (let q = 0; q < 3; q++) smokePuff(rt.fx, ...at((w.axis === 'x' ? P.z : P.x) + rnd(-13, 13), rnd(0, 2.5)), rnd(1.2, 2.4), 0.8 + Math.random() * 0.5);
+    for (let q = 0; q < 6; q++) {
+      const [x, z] = at((w.axis === 'x' ? P.z : P.x) + rnd(-15, 15), rnd(1, 6));
+      rt.fx.particles.emit(x, rnd(0.05, 0.5), z, 0, rnd(0.2, 0.6), 0, rnd(1.5, 2.6), rnd(0.08, 0.16), pick([0x14051f, 0x3a1a5a, 0x7a3aff]), -0.15);   // 오래 남는 기운
     }
     return;
   }

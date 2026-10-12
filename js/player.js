@@ -190,7 +190,9 @@ export class Player {
   addGauge(v) { this.gauge = Math.min(100, this.gauge + v); }
   spendGauge(n) {
     this.gauge = Math.max(0, this.gauge - n);
-    this.gaugeBuffs.push({ n, t: 4 });   // 소모한 1당 4초간 이동 속도 +1%, 스킬 피해 +2%
+    // 소모한 1당 4초간 이동 속도 +1%, 스킬 피해 +2% — 중첩되지 않고 마지막 소모량으로 새로 고침
+    this.gaugeBuffs.length = 0;
+    this.gaugeBuffs.push({ n, t: 4 });
   }
   gaugeSum() { let s = 0; for (const b of this.gaugeBuffs) s += b.n; return s; }
 
