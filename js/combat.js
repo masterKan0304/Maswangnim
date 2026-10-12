@@ -6,7 +6,8 @@ import { gaugeCostOf, getStats, computeStats, sample, sampleInt, avg, statusProb
 import { makeGlowSprite, RingMesh } from './effects.js';
 import { jitter, createPlayer } from './models.js';
 import { sfx } from './audio.js';
-import { castClaw, castDreamEat, startCruel, updateCruels, clearCruels, castDarkEye, castAmbush, nightStep } from './gerger.js';
+import { castClaw, castDreamEat, startCruel, updateCruels, clearCruels, castDarkEye, castAmbush, nightStep, bleedInduce, castSabbath } from './gerger.js';
+const BLEED_SOURCES = new Set(['claw', 'dreamEat', 'cruelBurst', 'ambush']);   // 출혈 유발 대상 (게르게르가 직접 주는 피해)
 
 const DEG = Math.PI / 180;
 // 꿀열매 크기: t초 동안 자란 정도 (2.5초 = 1, 5초를 넘길 때마다 자라는 속도 절반)
@@ -64,6 +65,7 @@ export class SkillRuntime {
     this.cruels = [];   // 크루엘 버스트 진행 중
     this.gwaves = [];   // 크루엘 버스트: 땅을 가르는 파동
     this.eyes = [];     // 암흑의 눈
+    this.sabbaths = []; // 블랙 사바스 파동
 
     // 파이어볼: 울퉁불퉁한 검붉은 돌 + 틈 사이로 비치는 용암 핵 (뜨거운 운석)
     const rockGeo = jitter(new THREE.DodecahedronGeometry(0.5, 0), 0.32, 41);
@@ -176,6 +178,8 @@ export class SkillRuntime {
       sk.zoneAt = this.clock;
       this.addZone(at.x, at.z, el, sample(st.zone), sample(st.zoneArea) / U / 2, avg(st.damage), sk, st);
     }
+    // 출혈 유발 (게르게르가 직접 준 피해)
+    if (dealt > 0 && BLEED_SOURCES.has(sk.key)) bleedInduce(this, e);
     return dealt;
   }
 
@@ -230,7 +234,7 @@ export class SkillRuntime {
     if (sk.cd > 0) return false;
     let st = getStats(sk);
     const p = this.player.pos;
-    const need = { roots: manual ? 0 : 20, strawDoll: manual ? 0 : 10, honeyBomb: 0, claw: manual ? 0 : 2.4, dreamEat: manual ? 0 : 3.4, cruelBurst: manual ? 0 : 12, darkEye: manual ? 0 : 13, ambush: sample(st.range) / U, leafCut: manual ? 0 : 20, pineWind: manual ? 0 : 20, nature: manual ? 0 : sample(st.area) / U / 2, fireball: manual ? 0 : 20, chainLightning: sample(st.range) / U, snowfall: sample(st.range) / U, flamethrower: manual ? 0 : (sample(st.area) / U) * 1.3, lightningBeam: manual ? 0 : 14 }[sk.key];
+    const need = { roots: manual ? 0 : 20, strawDoll: manual ? 0 : 10, honeyBomb: 0, claw: manual ? 0 : 2.4, dreamEat: manual ? 0 : 3.4, cruelBurst: manual ? 0 : 12, darkEye: manual ? 0 : 13, blackSabbath: manual ? 0 : 14, ambush: sample(st.range) / U, leafCut: manual ? 0 : 20, pineWind: manual ? 0 : 20, nature: manual ? 0 : sample(st.area) / U / 2, fireball: manual ? 0 : 20, chainLightning: sample(st.range) / U, snowfall: sample(st.range) / U, flamethrower: manual ? 0 : (sample(st.area) / U) * 1.3, lightningBeam: manual ? 0 : 14 }[sk.key];
     if (need && !this.enemies.anyInRange(p.x, p.z, need)) {
       if (manual) game.sys.ui.toast('사거리 안에 적이 없습니다', 'warn');
       return false;
@@ -295,6 +299,7 @@ export class SkillRuntime {
     else if (sk.key === 'dreamEat') castDreamEat(this, sk, st);
     else if (sk.key === 'cruelBurst') startCruel(this, sk, st);
     else if (sk.key === 'darkEye') castDarkEye(this, sk, st);
+    else if (sk.key === 'blackSabbath') castSabbath(this, sk, st);
     else if (sk.key === 'ambush') { if (!castAmbush(this, sk, st)) sk.cd = 0.3; }
   }
 

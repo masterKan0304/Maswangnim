@@ -330,13 +330,40 @@ Object.assign(SKILL_DEFS, {
   nightFall: {
     key: 'nightFall', name: '드리우는 밤', icon: ic('nighteye'), color: '#5a2a9a', element: 'dark', passive: true, owner: 'gerger',
     short: '강력한 공격을 쓸 때마다 밤의 눈이 떠지고, 완전히 떠지면 어둠의 파도가 적들을 덮칩니다.',
-    desc: '강력한 공격을 사용할 때마다 밤이 짙어지며 밤의 눈이 서서히 떠집니다. (1초에 한 번만) 눈이 완전히 떠지면(5번) 어둠의 파도가 울타리 한쪽에서 반대편까지 순식간에 휩쓸어 닿은 적에게 피해를 주고 공포 상태로 만들며(이미 공포라면 악몽), 모든 강력한 공격의 스킬 쿨타임을 초기화합니다.',
+    desc: '강력한 공격을 사용할 때마다 밤이 짙어지며 밤의 눈이 서서히 떠집니다. 눈이 완전히 떠지면(5번) 어둠의 파도가 울타리 한쪽에서 반대편까지 순식간에 휩쓸어 닿은 적에게 피해를 주고 공포 상태로 만들며(이미 공포라면 악몽), 모든 강력한 공격의 스킬 쿨타임을 초기화합니다.',
     keywords: ['칠흑', '강력한 공격', '공포', '악몽', '패시브'],
     base: { damage: [9, 18] },
     relevant: ['damage'],
     levelUp: dmgUp40,
     levelText: (lv) => ['피해량이 40% 증가합니다.', lv === 3 && '공포 · 악몽 상태로 만든 적 하나당 어둠 게이지를 1 얻습니다.', lv === 5 && '파도에 맞은 적을 현혹 상태로 만듭니다. (공포 · 악몽 상태여도 달아나거나 멈추지 않고 천천히 다가오며 접촉 피해를 주지 않고, 추가 칠흑 피해가 2배)'],
     extra: (sk) => [`밤의 눈: ${sk.nightStep || 1} / 5 단계 (강력한 공격 5번)`, sk.level >= 3 && '공포 · 악몽 상태로 만든 적 하나당 어둠 게이지 +1', sk.level >= 5 && '맞은 적을 현혹 상태로 만듦'],
+  },
+});
+
+Object.assign(SKILL_DEFS, {
+  bleedInduce: {
+    key: 'bleedInduce', name: '출혈 유발', icon: ic('bleedpaw'), color: '#d0304a', element: null, passive: true, owner: 'gerger',
+    short: '게르게르가 직접 피해를 줄 때마다 중첩되는 출혈을 일으킵니다.',
+    desc: '게르게르가 직접 적에게 피해를 줄 때마다(할퀴기 · 꿈먹기 · 크루엘 버스트 · 암습) 출혈을 일으킵니다. 이 출혈은 중첩되며, 다른 스킬의 출혈과 따로 적용되고, 적의 저항을 무시합니다.',
+    keywords: ['출혈', '중첩', '지속 시간', '패시브'],
+    base: { damage: [8, 12], duration: 3 },
+    labels: { damage: '초당 출혈 피해' },
+    relevant: ['damage', 'duration'],
+    levelUp(st, lv) { dmgUp40(st, lv); if (lv >= 3) st.duration = { min: 5, max: 5 }; },
+    levelText: (lv) => ['피해량이 40% 증가합니다.', lv === 3 && '기본 출혈 지속 시간이 5초가 됩니다.', lv === 5 && '적에게 쌓인 출혈의 총 피해량보다 적의 현재 체력이 낮으면 즉시 처치합니다.'],
+    extra: (sk) => ['대상: 할퀴기 · 꿈먹기 · 크루엘 버스트 · 암습', sk.level >= 5 && '남은 출혈 피해 총합 > 현재 체력 → 즉시 처치'],
+  },
+  blackSabbath: {
+    key: 'blackSabbath', name: '블랙 사바스', icon: ic('sabbath'), color: '#7a2ad8', element: 'dark', passive: false, castTime: 0.1, owner: 'gerger', powerful: true, projectile: true,
+    short: '가장 가까운 적을 향해 스멀스멀 나아가는 어둠의 파동을 내보냅니다. 공포 · 악몽 상태인 적에게 닿으면 폭발합니다.',
+    desc: '가장 가까운 적을 향해 천천히 나아가는 어둠의 파동을 내보내 닿은 적에게 피해를 줍니다. 파동은 적을 관통합니다. 공포 상태인 적에게 닿으면 폭발이 일어나 주위에 추가 피해를 주고, 악몽 상태인 적은 즉시 처치되며 더 큰 폭발이 일어납니다. 투사체 크기가 커지면 파동이 넓어집니다. 강력한 공격이라 치명타 확률이 30%입니다.',
+    keywords: ['강력한 공격', '칠흑', '투사체', '관통', '폭발', '공포', '악몽', '스킬 쿨타임'],
+    base: { damage: [40, 65], projCount: 1, projSize: 40, projSpeed: 2, projDuration: 6, area: 20, cooldown: 12, statusChance: 25, critChance: 30 },
+    labels: { area: '폭발 효과 범위' },
+    relevant: ['damage', 'projCount', 'projSize', 'projSpeed', 'projDuration', 'area', 'cooldown', 'statusChance'],
+    levelUp: dmgUp40,
+    levelText: (lv) => ['피해량이 40% 증가합니다.', lv === 3 && '파동이 가까운 공포 · 악몽 상태인 적을 추적합니다.', lv === 5 && '폭발에 맞은 적이 폭발을 일으킨 적의 공포 · 악몽 상태를 이어받습니다.'],
+    extra: (sk) => ['강력한 공격: 사용하면 다른 강력한 공격 스킬의 쿨타임이 최소 1.5초가 됩니다.', '공포 상태인 적: 폭발 (효과 범위) / 악몽 상태인 적: 즉시 처치 + 2배 범위 폭발', sk.level >= 3 && '가까운 공포 · 악몽 상태인 적을 추적', sk.level >= 5 && '폭발에 맞은 적이 공포 · 악몽 상태를 이어받음'],
   },
 });
 

@@ -176,7 +176,7 @@ export class EnemyManager {
   addBleed(e, total, dur, src = null) {
     if (!(total > 0) || !e.alive) return;
     const b = e.bleeds || (e.bleeds = []);
-    if (b.length >= 12) b.shift();
+    if (b.length >= 40) b.shift();
     b.push({ left: total, per: total * 0.2 / dur, t: 0.2, src });
   }
 

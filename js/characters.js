@@ -28,8 +28,8 @@ export const CHARACTERS = {
       name: '악의', icon: 'malice',
       desc: '2초 안에 적의 최대 체력의 50%만큼 피해를 주면 그 적을 공포 상태로 만듭니다. 공포 상태인 적을 처치하면 어둠 게이지를 2 얻습니다. 일부 스킬은 어둠 게이지를 사용하며, 소모한 어둠 게이지 1당 4초 동안 이동 속도가 1%, 스킬 피해가 2% 증가합니다.',
     },
-    skills: ['claw', 'dreamEat', 'cruelBurst', 'darkEye', 'ambush', 'nightFall', null, null],
-    unlock: { claw: 1, dreamEat: 1, cruelBurst: 1, darkEye: 1, ambush: 1, nightFall: 1 },
+    skills: ['claw', 'dreamEat', 'cruelBurst', 'darkEye', 'ambush', 'bleedInduce', 'blackSabbath', 'nightFall'],
+    unlock: { claw: 1, dreamEat: 1, cruelBurst: 1, darkEye: 2, ambush: 3, bleedInduce: 4, blackSabbath: 5, nightFall: 6 },
   },
 };
 export const CHARACTER_ORDER = ['masang', 'gerger'];

@@ -1021,7 +1021,7 @@ export class UI {
     // 게르게르: 마나 대신 어둠 게이지
     if (this._gaugeMode !== !!pl.noMana) {
       this._gaugeMode = !!pl.noMana;
-      document.querySelector('.hp-label.mp').textContent = pl.noMana ? '어둠' : 'MP';
+      document.querySelector('.hp-label.mp').textContent = pl.noMana ? 'DARK' : 'MP';
       document.querySelector('.hp-label.mp').classList.toggle('gauge', !!pl.noMana);
       document.querySelector('.hp-track.mp').classList.toggle('gauge', !!pl.noMana);
     }

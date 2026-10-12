@@ -44,6 +44,8 @@ const SKILL_SCENES = {
   cruelBurst: (lv) => ({ slots: [[PX + 2.5, 0], [PX + 4, 0.3], [PX + 5.5, -0.3], [PX + 7, 0.6], [PX + 4.5, lv >= 5 ? 1.2 : 0.8], [PX + 6.2, lv >= 5 ? -1.4 : -1]], hp: 5, pullBack: 0.8 }),
   darkEye: () => ({ slots: [[0.4, 0], [1.1, 0.7], [1.1, -0.7], [1.8, 0]], hp: 4, pullBack: 1.5 }),
   ambush: () => ({ slots: [[1.6, 0], [2.2, 0.6], [2.2, -0.6], [3.2, 0.2], [-1, 1.4], [0.4, -1.6]], hp: 3, pullBack: 1, status: 'fear', free: true }),
+  bleedInduce: () => ({ slots: [[PX + 1.3, 0], [PX + 1.7, 0.7], [PX + 1.7, -0.7]], hp: 6, pullBack: 1.5, companion: 'claw' }),
+  blackSabbath: () => ({ slots: [[0, 0], [1.2, 0.5], [1.2, -0.5], [2.4, 0], [3.2, 0.8], [3.2, -0.8]], hp: 3, pullBack: 0.6, status: 'fear' }),
   nightFall: () => ({ slots: [...CLUSTER, ...BEHIND, [0, 1.6], [0, -1.6]], hp: 3, pullBack: 0.8, special: 'nightfall' }),
   // 마솽 전용
   leafCut: (lv) => ({ slots: lv >= 3 ? [...CLUSTER, ...BEHIND] : CLUSTER, hp: 2 }),

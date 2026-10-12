@@ -216,6 +216,7 @@ export function updateCruels(rt, dt) {
   updateSmoke(rt, dt);
   updateEyes(rt, dt);
   updateNight(rt, dt);
+  updateSabbaths(rt, dt);
   if (rt.player.postT > 0) { rt.player.postT -= dt; if (rt.player.postT <= 0 && !rt.cruels.length) rt.player.lockMove = false; }
   for (const sk of [...rt.cruels]) {
     const c = sk.cruel;
@@ -380,6 +381,7 @@ export function clearCruels(rt) {
   for (const eye of [...(rt.eyes || [])]) removeEye(rt, eye);
   rt.player.postT = 0; rt.player.lockMove = false;
   clearNight(rt);
+  for (const w of [...(rt.sabbaths || [])]) removeSabbath(rt, w);
 }
 
 // ── 암흑의 눈: 사거리 안 무작위 위치에 감시하는 눈 → 효과 범위 안 무작위 적에게 시선 (0.2초마다 피해 · 공포/악몽, 연쇄) ──
@@ -609,10 +611,9 @@ export function nightStep(rt, force = false) {
   const sk = game.skills.find((s) => s.key === 'nightFall');
   if (!sk || sk.nightWave) return;
   const now = rt.clock || 0;
-  if (!force && now - (sk.nightAt ?? -9) < 1) return;
   sk.nightAt = now;
   sk.nightStep = Math.min(5, (sk.nightStep || 0) + 1);
-  game.nightDark = sk.nightStep * 0.1;   // 밤이 조금씩 짙어짐
+  game.nightDark = sk.nightStep * 0.2;   // 단계마다 밤이 짙어짐
   setEye(sk.nightStep);
   sfx(sk.nightStep >= 5 ? 'boss' : 'frost');
   if (sk.nightStep >= 5) startNightWave(rt, sk);
@@ -621,7 +622,7 @@ export function nightStep(rt, force = false) {
 function startNightWave(rt, sk) {
   const el = eyeDom();
   if (el) { el.classList.add('burst'); setTimeout(() => { el.classList.add('hidden'); el.classList.remove('burst'); }, 380); }   // 강하게 떠진 뒤 빠르게 사라짐
-  game.nightDark = 0.7;   // 밤이 더욱 짙어짐
+  game.nightDark = 1.4;   // 밤이 더욱 짙어짐
   const H = WORLD_HALF;
   const axis = Math.random() < 0.5 ? 'x' : 'z', dir = Math.random() < 0.5 ? 1 : -1;
   // 어둠의 벽 (울타리 한쪽 → 반대편)
@@ -739,4 +740,122 @@ export function clearNight(rt) {
   if (sk) { sk.nightWave = null; sk.nightStep = 0; }
   setEye(0);
   game.nightDark = 0;
+}
+
+// ── 출혈 유발 (패시브): 게르게르가 직접 피해를 줄 때마다 중첩되는 출혈 (5레벨: 남은 출혈 총합 > 현재 체력 → 즉시 처치) ──
+export function bleedInduce(rt, e) {
+  const sk = game.skills.find((s) => s.key === 'bleedInduce');
+  if (!sk || !e.alive) return;
+  const st = getStats(sk);
+  const dps = sample(st.damage), dur = sample(st.duration);
+  rt.enemies.addBleed(e, dps * dur, dur, sk);
+  if (sk.level >= 5 && e.bleeds) {
+    let total = 0;
+    for (const b of e.bleeds) total += b.left;   // 남은 지속 시간 × 초당 피해
+    if (total >= e.hp) {
+      rt.fx.particles.burst(e.x, 0.7, e.z, 22, [0xd0304a, 0x7a0a1a, 0x14051f, 0xff6a7a], { speed: 3.5, size: 0.12, life: 0.5, up: 3 });
+      rt.fx.ring(e.x, e.z, e.r * 1.6, 0xd0304a, 0.4);
+      rt.enemies.damage(e, e.hp + 1, { dot: true, raw: true, color: 'bleed', src: sk });   // 즉시 처치
+    }
+  }
+}
+
+// ── 블랙 사바스: 가장 가까운 적을 향해 스멀스멀 나아가는 어둠의 파동 (관통) ──
+// 공포 상태인 적 → 폭발 (효과 범위) / 악몽 상태인 적 → 즉시 처치 + 2배 폭발 (3레벨: 공포 · 악몽 적 추적, 5레벨: 폭발에 맞은 적이 상태를 이어받음)
+export function castSabbath(rt, sk, st) {
+  const P = rt.player.pos;
+  const near = rt.enemies.nearestN(P.x, P.z, 30, 1)[0];
+  const base = near ? Math.atan2(near.z - P.z, near.x - P.x) : Math.atan2(rt.player.aim.z, rt.player.aim.x);
+  const n = Math.max(1, Math.round(sample(st.projCount)));
+  const width = sample(st.projSize) / PZ;   // 투사체 크기 → 파동 너비
+  for (let i = 0; i < n; i++) {
+    const a = base + (i - (n - 1) / 2) * 20 * DEG;
+    const g = new THREE.Group();
+    const puffs = [];
+    const puffMat = new THREE.SpriteMaterial({ map: shared('smokeTex3', () => makeGlowSprite(0x000000, 1, 1).material.map), color: 0x0a0414, transparent: true, opacity: 0.75, depthWrite: false });
+    for (let k = 0; k < 7; k++) {
+      const sp = new THREE.Sprite(puffMat);
+      sp.userData = { off: (k / 6 - 0.5), ph: Math.random() * 6 };
+      g.add(sp); puffs.push(sp);
+    }
+    const glowMat = new THREE.MeshBasicMaterial({ color: 0x8a3aff, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+    const band = new THREE.Mesh(shared('sabBand', () => new THREE.PlaneGeometry(1, 0.6).rotateX(-Math.PI / 2)), glowMat);
+    band.position.y = 0.06;
+    g.add(band);
+    rt.scene.add(g);
+    rt.sabbaths.push({ sk, st, x: P.x, z: P.z, a, speed: sample(st.projSpeed) * PS, life: sample(st.projDuration), t: 0, width, hit: new Set(), g, puffs, band, mats: [puffMat, glowMat] });
+  }
+  sfx('frost'); sfx('crackle');
+}
+
+function removeSabbath(rt, w) {
+  rt.scene.remove(w.g);
+  w.mats.forEach((m) => m.dispose());
+  rt.sabbaths = rt.sabbaths.filter((x) => x !== w);
+}
+
+function sabbathBlast(rt, w, x, z, R, state) {
+  const big = state === 'nightmare';
+  rt.fx.explosion(x, z, R, big ? 0x3a0a8a : 0x6a2aff);
+  rt.fx.ring(x, z, R, big ? 0xc040ff : 0x9a6bff, 0.5);
+  if (big) { rt.fx.ring(x, z, R * 0.6, 0x07020c, 0.6); game.shake = Math.max(game.shake || 0, 0.25); }
+  rt.fx.particles.burst(x, 0.6, z, big ? 60 : 30, [0x07020c, 0x2a0a3a, 0x9a3aff, 0xe0b0ff], { speed: 3 + R * 2, size: big ? 0.16 : 0.12, life: 0.6, up: 4, grav: 4 });
+  for (let k = 0; k < (big ? 6 : 3); k++) smokePuff(rt.fx, x + rnd(-R, R) * 0.5, z + rnd(-R, R) * 0.5, R * rnd(0.6, 1), 0.9);
+  sfx('explode');
+  for (const o of rt.enemies.query(x, z, R + 2.2)) {
+    if (!o.alive || Math.hypot(o.x - x, o.z - z) > R + o.r * 0.5) continue;
+    rt.deal(o, w.sk, w.st, { statusRatio: 0, at: { x, z } });
+    if (!o.alive || w.sk.level < 5) continue;
+    // 5레벨: 폭발을 일으킨 적의 상태를 이어받음
+    if (state === 'nightmare') rt.enemies.nightmare(o);
+    else if (!(o.fearT > 0) && !(o.nightmareT > 0) && !(o.fearImmune > 0) && o.element !== 'dark') o.fearT = STATUS.duration * (o.boss || o.elite ? STATUS.fearBossMul : 1);
+  }
+}
+
+function updateSabbaths(rt, dt) {
+  for (const w of [...(rt.sabbaths || [])]) {
+    w.t += dt;
+    // 3레벨: 가까운 공포 · 악몽 상태인 적을 향해 서서히 방향을 틂
+    if (w.sk.level >= 3) {
+      const tgt = rt.enemies.nearestN(w.x, w.z, 9, 8).find((e) => e.alive && scared(e) && !w.hit.has(e));
+      if (tgt) {
+        const want = Math.atan2(tgt.z - w.z, tgt.x - w.x);
+        let d = want - w.a; d = Math.atan2(Math.sin(d), Math.cos(d));
+        w.a += Math.max(-1.6 * dt, Math.min(1.6 * dt, d));
+      }
+    }
+    const dx = Math.cos(w.a), dz = Math.sin(w.a);
+    w.x += dx * w.speed * dt; w.z += dz * w.speed * dt;
+    // 모습: 너비만큼 늘어선 연기 덩어리가 일렁이며 스멀스멀
+    w.g.position.set(w.x, 0, w.z);
+    w.g.rotation.y = Math.atan2(dx, dz);
+    const fade = Math.min(1, w.t / 0.3) * Math.min(1, (w.life - w.t) / 0.5);
+    for (const sp of w.puffs) {
+      const u = sp.userData;
+      sp.position.set(u.off * w.width, 0.5 + Math.sin(w.t * 3 + u.ph) * 0.15, Math.sin(w.t * 2.2 + u.ph) * 0.25);
+      sp.scale.setScalar((0.9 + 0.25 * Math.sin(w.t * 4 + u.ph)) * Math.max(0.9, w.width * 0.45));
+    }
+    w.mats[0].opacity = 0.75 * fade;
+    w.band.scale.set(w.width * 1.1, 1, 1);
+    w.mats[1].opacity = (0.55 + 0.2 * Math.sin(w.t * 6)) * fade;
+    if (Math.random() < 0.8) {
+      const s = (Math.random() - 0.5) * w.width, px = w.x - dz * s, pz = w.z + dx * s;
+      rt.fx.particles.emit(px, rnd(0.1, 0.8), pz, dx * 0.5, rnd(0.5, 1.4), dz * 0.5, rnd(0.6, 1), rnd(0.1, 0.2), pick([0x07020c, 0x2a0a3a, 0x7a3aff]), -0.4);
+    }
+    // 관통하며 닿은 적마다 한 번씩
+    for (const e of rt.enemies.query(w.x, w.z, w.width / 2 + 2.2)) {
+      if (!e.alive || w.hit.has(e)) continue;
+      const ox = e.x - w.x, oz = e.z - w.z;
+      if (Math.abs(ox * dx + oz * dz) > 0.6 + e.r * 0.5 || Math.abs(-ox * dz + oz * dx) > w.width / 2 + e.r * 0.5) continue;
+      w.hit.add(e);
+      const state = e.nightmareT > 0 ? 'nightmare' : e.fearT > 0 ? 'fear' : null;
+      rt.deal(e, w.sk, w.st, { at: { x: e.x, z: e.z } });
+      const R = sample(w.st.area) / U / 2;
+      if (state === 'nightmare') {
+        if (e.alive && !e.boss && !e.elite) rt.enemies.damage(e, e.hp + 1, { raw: true, color: 'dark', src: w.sk });   // 악몽: 즉시 처치 (정예 · 보스 제외)
+        sabbathBlast(rt, w, e.x, e.z, R * 2, state);
+      } else if (state === 'fear') sabbathBlast(rt, w, e.x, e.z, R, state);
+    }
+    if (w.t >= w.life) removeSabbath(rt, w);
+  }
 }
