@@ -356,7 +356,7 @@ function enemyIcon(type) {
   const k = 2.05 / Math.max(size.x, size.y, size.z);
   obj.scale.multiplyScalar(k);
   obj.position.set(-c.x * k, -c.y * k, -c.z * k);
-  obj.rotation.y = 0.5;
+  obj.rotation.y = T.model ? 1.15 : 0.5;   // 만탄 · 마타: 끌리는 꼬리 자락이 보이게 옆모습
   sc.add(obj);
   const cam = new THREE.PerspectiveCamera(30, 1, 0.1, 50);
   cam.position.set(1.4, 1.5, 3.6);
