@@ -354,16 +354,16 @@ Object.assign(SKILL_DEFS, {
     extra: (sk) => ['대상: 할퀴기 · 꿈먹기 · 크루엘 버스트 · 암습', sk.level >= 5 && '남은 출혈 피해 총합 > 현재 체력 → 즉시 처치'],
   },
   blackSabbath: {
-    key: 'blackSabbath', name: '블랙 사바스', icon: ic('sabbath'), color: '#7a2ad8', element: 'dark', passive: false, castTime: 0.1, owner: 'gerger', powerful: true, projectile: true,
+    key: 'blackSabbath', name: '블랙 사바스', icon: ic('sabbath'), color: '#7a2ad8', element: 'dark', passive: false, castTime: 0.1, owner: 'gerger', powerful: true, projectile: true, gaugeCost: 30,
     short: '가장 가까운 적을 향해 스멀스멀 나아가는 어둠의 파동을 내보냅니다. 공포 · 악몽 상태인 적에게 닿으면 폭발합니다.',
     desc: '가장 가까운 적을 향해 천천히 나아가는 어둠의 파동을 내보내 닿은 적에게 피해를 줍니다. 파동은 적을 관통합니다. 공포 상태인 적에게 닿으면 폭발이 일어나 주위에 추가 피해를 주고, 악몽 상태인 적은 즉시 처치되며 더 큰 폭발이 일어납니다. 투사체 크기가 커지면 파동이 넓어집니다. 강력한 공격이라 치명타 확률이 30%입니다.',
-    keywords: ['강력한 공격', '칠흑', '투사체', '관통', '폭발', '공포', '악몽', '스킬 쿨타임'],
+    keywords: ['강력한 공격', '칠흑', '어둠 게이지', '투사체', '관통', '폭발', '공포', '악몽', '스킬 쿨타임'],
     base: { damage: [40, 65], projCount: 1, projSize: 40, projSpeed: 2, projDuration: 6, area: 20, cooldown: 12, statusChance: 25, critChance: 30 },
     labels: { area: '폭발 효과 범위' },
     relevant: ['damage', 'projCount', 'projSize', 'projSpeed', 'projDuration', 'area', 'cooldown', 'statusChance'],
     levelUp: dmgUp40,
     levelText: (lv) => ['피해량이 40% 증가합니다.', lv === 3 && '파동이 가까운 공포 · 악몽 상태인 적을 추적합니다.', lv === 5 && '폭발에 맞은 적이 폭발을 일으킨 적의 공포 · 악몽 상태를 이어받습니다.'],
-    extra: (sk) => ['강력한 공격: 사용하면 다른 강력한 공격 스킬의 쿨타임이 최소 1.5초가 됩니다.', '공포 상태인 적: 폭발 (효과 범위) / 악몽 상태인 적: 즉시 처치 + 2배 범위 폭발', sk.level >= 3 && '가까운 공포 · 악몽 상태인 적을 추적', sk.level >= 5 && '폭발에 맞은 적이 공포 · 악몽 상태를 이어받음'],
+    extra: (sk) => ['강력한 공격: 사용하면 다른 강력한 공격 스킬의 쿨타임이 최소 1.5초가 됩니다.', '어둠 게이지 30 소모', '공포 상태인 적: 폭발 (효과 범위) / 악몽 상태인 적: 즉시 처치 + 2배 범위 폭발', sk.level >= 3 && '가까운 공포 · 악몽 상태인 적을 추적', sk.level >= 5 && '폭발에 맞은 적이 공포 · 악몽 상태를 이어받음'],
   },
 });
 

@@ -779,11 +779,34 @@ export function castSabbath(rt, sk, st) {
       g.add(sp); puffs.push(sp);
     }
     const glowMat = new THREE.MeshBasicMaterial({ color: 0x8a3aff, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
-    const band = new THREE.Mesh(shared('sabBand', () => new THREE.PlaneGeometry(1, 0.6).rotateX(-Math.PI / 2)), glowMat);
+    const band = new THREE.Mesh(shared('sabBand', () => new THREE.PlaneGeometry(1, 1.8).rotateX(-Math.PI / 2).translate(0, 0, -0.6)), glowMat);
     band.position.y = 0.06;
     g.add(band);
+    // 날아가는 어둠의 벽: 앞이 가장 높고 짙은 여러 겹의 막 + 보랏빛 마루 (너비 = 투사체 크기)
+    const walls = [];
+    const wallGeo = shared('sabWall', () => {
+      const geo = new THREE.PlaneGeometry(1, 1, 8, 1);
+      const p = geo.attributes.position;
+      for (let k = 0; k < p.count; k++) {   // 가운데가 더 높고 앞으로 굽은 파도 모양
+        const x = p.getX(k), y = p.getY(k) + 0.5;
+        p.setY(k, y * (1 - x * x * 1.4));
+        p.setZ(k, -x * x * 0.8 + y * 0.35);
+      }
+      geo.computeVertexNormals();
+      return geo;
+    });
+    for (let k = 0; k < 4; k++) {
+      const m = new THREE.MeshBasicMaterial({ color: k === 0 ? 0x14051f : 0x0a0414, transparent: true, opacity: 0.78 - k * 0.15, depthWrite: false, side: THREE.DoubleSide });
+      const wm = new THREE.Mesh(wallGeo, m);
+      wm.userData = { k };
+      g.add(wm); walls.push(wm);
+      puffMat.userData.extra = (puffMat.userData.extra || []).concat(m);
+    }
+    const crestMat = new THREE.MeshBasicMaterial({ color: 0xb060ff, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+    const crest = new THREE.Mesh(wallGeo, crestMat);
+    g.add(crest);
     rt.scene.add(g);
-    rt.sabbaths.push({ sk, st, x: P.x, z: P.z, a, speed: sample(st.projSpeed) * PS, life: sample(st.projDuration), t: 0, width, hit: new Set(), g, puffs, band, mats: [puffMat, glowMat] });
+    rt.sabbaths.push({ sk, st, x: P.x, z: P.z, a, speed: sample(st.projSpeed) * PS, life: sample(st.projDuration), t: 0, width, hit: new Set(), g, puffs, band, walls, crest, mats: [puffMat, glowMat, crestMat, ...puffMat.userData.extra] });
   }
   sfx('frost'); sfx('crackle');
 }
@@ -835,9 +858,25 @@ function updateSabbaths(rt, dt) {
       sp.position.set(u.off * w.width, 0.5 + Math.sin(w.t * 3 + u.ph) * 0.15, Math.sin(w.t * 2.2 + u.ph) * 0.25);
       sp.scale.setScalar((0.9 + 0.25 * Math.sin(w.t * 4 + u.ph)) * Math.max(0.9, w.width * 0.45));
     }
-    w.mats[0].opacity = 0.75 * fade;
-    w.band.scale.set(w.width * 1.1, 1, 1);
+    w.mats[0].opacity = 0.6 * fade;
+    w.band.scale.set(w.width * 1.15, 1, 1);
     w.mats[1].opacity = (0.55 + 0.2 * Math.sin(w.t * 6)) * fade;
+    // 벽: 겹마다 높이 · 위치가 다르게 일렁임
+    const H = 1.6 + w.width * 0.35;
+    for (const wm of w.walls) {
+      const k = wm.userData.k;
+      wm.position.set(Math.sin(w.t * 3 + k) * 0.08, 0, -k * 0.45);
+      wm.scale.set(w.width * (1.15 - k * 0.05), H * (1 - k * 0.18) * (1 + 0.06 * Math.sin(w.t * 5 + k * 1.7)), 1 + k * 0.2);
+      wm.material.opacity = (0.78 - k * 0.15) * fade;
+    }
+    w.crest.position.set(0, 0.02, 0.06);
+    w.crest.scale.set(w.width * 1.15, H * (1.02 + 0.06 * Math.sin(w.t * 5)), 1.05);
+    w.mats[2].opacity = (0.35 + 0.15 * Math.sin(w.t * 9)) * fade;
+    // 마루에서 흩날리는 어둠 · 물보라
+    for (let q = 0; q < 3; q++) {
+      const s = (Math.random() - 0.5) * w.width, px = w.x - dz * s + dx * 0.2, pz = w.z + dx * s + dz * 0.2;
+      rt.fx.particles.emit(px, H * (0.6 + Math.random() * 0.4), pz, dx * rnd(1, 3), rnd(0.5, 2), dz * rnd(1, 3), rnd(0.4, 0.7), rnd(0.08, 0.16), pick([0x07020c, 0x3a1a5a, 0x9a3aff, 0xd9a8ff]), 4);
+    }
     if (Math.random() < 0.8) {
       const s = (Math.random() - 0.5) * w.width, px = w.x - dz * s, pz = w.z + dx * s;
       rt.fx.particles.emit(px, rnd(0.1, 0.8), pz, dx * 0.5, rnd(0.5, 1.4), dz * 0.5, rnd(0.6, 1), rnd(0.1, 0.2), pick([0x07020c, 0x2a0a3a, 0x7a3aff]), -0.4);
@@ -849,7 +888,8 @@ function updateSabbaths(rt, dt) {
       if (Math.abs(ox * dx + oz * dz) > 0.6 + e.r * 0.5 || Math.abs(-ox * dz + oz * dx) > w.width / 2 + e.r * 0.5) continue;
       w.hit.add(e);
       const state = e.nightmareT > 0 ? 'nightmare' : e.fearT > 0 ? 'fear' : null;
-      rt.deal(e, w.sk, w.st, { at: { x: e.x, z: e.z } });
+      const sweep = !e.boss && !e.elite ? 7 : 0;   // 파도가 적을 쓸어 밀어냄
+      rt.deal(e, w.sk, w.st, { at: { x: e.x, z: e.z }, kx: dx * sweep, kz: dz * sweep });
       const R = sample(w.st.area) / U / 2;
       if (state === 'nightmare') {
         if (e.alive && !e.boss && !e.elite) rt.enemies.damage(e, e.hp + 1, { raw: true, color: 'dark', src: w.sk });   // 악몽: 즉시 처치 (정예 · 보스 제외)

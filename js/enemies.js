@@ -257,7 +257,12 @@ export class EnemyManager {
         this.damage(e, v, { dot: true, color: 'bleed', src: b.src });   // 속성 없음 → 저항 무시
         if (!e.alive) return;
       }
-      if (Math.random() < dt * 8) this.fx.particles.emit(e.x + (Math.random() - 0.5) * e.r, 0.3 + Math.random() * e.r, e.z + (Math.random() - 0.5) * e.r, 0, -0.5, 0, 0.4, 0.07, 0xc0203a, 6);
+      // 핏방울: 튀어 올랐다가 중력에 떨어짐 + 바닥에 핏자국
+      if (Math.random() < dt * 16) {
+        const a = Math.random() * Math.PI * 2, v = 0.6 + Math.random() * 1.2;
+        this.fx.particles.emit(e.x + Math.cos(a) * e.r * 0.4, 0.4 + Math.random() * e.r, e.z + Math.sin(a) * e.r * 0.4, Math.cos(a) * v, 1 + Math.random() * 1.6, Math.sin(a) * v, 0.55 + Math.random() * 0.3, 0.06 + Math.random() * 0.06, Math.random() < 0.6 ? 0xd0203a : 0x8a0a1a, 14);
+      }
+      if (Math.random() < dt * 3.5) this.fx.splat(e.x + (Math.random() - 0.5) * e.r * 1.4, e.z + (Math.random() - 0.5) * e.r * 1.4, Math.random() < 0.5 ? 0x9a0a1a : 0x6a0410, 0.12 + Math.random() * 0.16);
     }
     if (e.consZoneT > 0) e.consZoneT -= dt;
     if (e.charmT > 0) e.charmT -= dt;

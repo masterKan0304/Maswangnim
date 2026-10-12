@@ -84,6 +84,8 @@ function setPreview(cfg) {
 export function attachPreview(box, cfg) {
   if (!canvas) { canvas = document.createElement('canvas'); canvas.id = 'codex-canvas'; }
   box.prepend(canvas);
+  // 밤 분위기 (게르게르): 미리보기 위에도 보랏빛 색조
+  if (!box.querySelector('.pv-night')) { const t = document.createElement('div'); t.className = 'pv-night'; canvas.after(t); }
   pvBox = box;
   setPreview(cfg);
 }

@@ -710,7 +710,7 @@ function tick(dt, draw = true) {
   }
 
   if (!draw) return;
-  const night = !!(CHARACTERS[game.charId] && CHARACTERS[game.charId].night) && game.state !== 'start';
+  const night = !!(CHARACTERS[game.charId] && CHARACTERS[game.charId].night) && (game.state !== 'start' || game.demo);   // 메인 화면 · 도감 미리보기에서도
   world.update(animTime, player.pos, adt, night);
   if (document.body.classList.contains('night') !== night) document.body.classList.toggle('night', night);   // 보랏빛 밤 색조
   // 드리우는 밤: 밤이 짙어짐 (부드럽게)

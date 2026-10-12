@@ -1248,3 +1248,7 @@ body.night #night-tint { opacity: 0.42; }
 #night-eye .ne-lid { transition: transform 0.9s cubic-bezier(.35,0,.25,1); }
 #night-eye:not(.hidden) { animation: ne-fadein 0.9s ease-out; }
 @keyframes ne-fadein { from { opacity: 0; filter: blur(8px); } to { opacity: 1; filter: blur(0); } }
+
+/* 도감 · 캐릭터 미리보기의 밤 색조 */
+.pv-night { position: absolute; inset: 0; pointer-events: none; background: #7448d8; mix-blend-mode: color; opacity: 0; transition: opacity 0.6s; border-radius: inherit; }
+body.night .pv-night { opacity: 0.42; }

@@ -8,10 +8,13 @@ import { WORLD_HALF } from './config.js';
 import { createSkill } from './skills.js';
 import { previewStages } from './stages.js';
 import { Showcase } from './showcase.js';
+import { CHARACTERS, CHARACTER_ORDER } from './characters.js';
+import { SKILL_ORDER } from './skills.js';
 
 const CLIP = 5.5;        // 장면 하나의 길이 (초)
 const FADE = 0.28;       // 장면 전환 암전 시간 (초)
-const POOL = ['fireball', 'iceball', 'flamethrower', 'snowfall', 'fireAura', 'frostAura', 'leafCut', 'pineWind', 'nature', 'fruit', 'roots', 'strawDoll', 'honeyBomb', 'worldSeed'];
+const COMMON = ['fireball', 'iceball', 'flamethrower', 'snowfall', 'fireAura', 'frostAura'];   // 공용 스킬 (캐릭터 전용 스킬과 섞음)
+const PER_CHAR = 3;      // 캐릭터마다 보여 줄 장면 수
 const DIR_UP = new THREE.Vector3(-1, 0, -1).normalize();
 const DIR_RIGHT = new THREE.Vector3(1, 0, -1).normalize();
 
@@ -76,7 +79,10 @@ export class Demo {
     pickups.gems.length = 0;
     if (this.sys.enemySkills) this.sys.enemySkills.clear();
     if (this.sys.bloom) this.sys.bloom.clear();
-    game.charId = 'masang';
+    // 캐릭터: 3장면씩 차례로 (캐릭터가 늘어나면 자동으로 포함)
+    this.clipN = (this.clipN ?? -1) + 1;
+    const cid = CHARACTER_ORDER[Math.floor(this.clipN / PER_CHAR) % CHARACTER_ORDER.length];
+    game.charId = cid;
     skillsRt.clearAll();   // 이전 장면의 투사체 / 불길 / 대기 중인 시전까지 정리
     game.skills.length = 0;
     game.buffs.length = 0;
@@ -87,8 +93,10 @@ export class Demo {
     player.shield = 0;
     if (this.sys.onTeleport) this.sys.onTeleport(player.pos);
     // 스킬 조합 (2~4개, 레벨 다양하게)
-    const keys = [...POOL].sort(() => Math.random() - 0.5).slice(0, 2 + Math.floor(Math.random() * 3));
-    if (!keys.some((k) => !['fireAura', 'frostAura', 'nature', 'fruit'].includes(k))) keys.push('leafCut');
+    const own = CHARACTERS[cid].skills.filter(Boolean);
+    const pool = [...own, ...own, ...COMMON.filter((k) => SKILL_ORDER.includes(k))];   // 전용 스킬이 더 자주 나옴
+    const keys = [...new Set([...pool].sort(() => Math.random() - 0.5))].slice(0, 2 + Math.floor(Math.random() * 3));
+    if (!keys.includes(own[0])) keys.unshift(own[0]);   // 기본 스킬은 항상
     for (const k of keys) {
       const sk = createSkill(k);
       sk.level = Math.min(5, 1 + Math.floor(Math.random() * 3) + Math.floor(Math.random() * 3));
@@ -169,6 +177,7 @@ export class Demo {
     if (this.mode === 'showcase') { this.showcase.update(dt); return; }
     this.t += dt;
     this.steer(dt);
+    this.sys.player.gauge = 100;   // 미리보기: 어둠 게이지 가득 (게르게르)
     // 적이 계속 몰려옴
     this.spawnAcc += dt * 7;
     while (this.spawnAcc >= 1) {
