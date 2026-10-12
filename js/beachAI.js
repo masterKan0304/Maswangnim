@@ -49,7 +49,7 @@ function hermit(e, dt, dx, dz, dist) {
       d.v = 1 + (d.v0 - 1) * (d.brakeT / 0.5);
       if (d.brakeT <= 0) { e.dash = null; e.dashCd = 8; e.dashing = false; return { dx, dz, speed: e.speed, y: 0 }; }   // 원래대로 → 8초 쿨타임
     } else d.v = Math.min(5, d.v + dt * 6);   // 최대 5 까지 가속
-    if (d.t > 4) d.brakeT = d.brakeT || 0.5;
+    if (d.t > 4 && !d.brakeT) { d.brakeT = 0.5; d.v0 = d.v; }   // 너무 오래 돌진하면 감속
     e.spin = (e.spin || 0) + d.v * dt * 4.5;   // 속도에 비례한 회전
     e.dashing = d.v > 1.5;
     return { dx: d.dx, dz: d.dz, speed: d.v, keepRot: true, y: e.r * 2.3, tilt: Math.PI, spin: e.spin };   // 뒤집힌 채 (껍데기가 아래)
