@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { ENEMY_TYPES, WORLD_HALF, STATUS, elemMul } from './config.js';
-import { slimeBodyGeometry, slimeFaceGeometry, createKingSlime, createEliteSlime } from './models.js';
+import { slimeBodyGeometry, slimeFaceGeometry, createKingSlime, createEliteSlime, createGerger } from './models.js';
 import { game } from './state.js';
 import { recordDamage } from './dps.js';
 import { sfx } from './audio.js';
@@ -51,8 +51,12 @@ export class EnemyManager {
       burnT: 0, burnDmg: 0, burnTick: 0, chillT: 0, shockT: 0, rootT: 0,
       poisonT: 0, poisonTick: 0, exhaustT: 0, stunT: 0, fearT: 0, fearImmune: 0, consT: 0, consAcc: 0, resDown: 0, resDownT: 0, fearZone: null, fearZoneT: 0, consZoneT: 0, bleeds: null, malice: null, nightmareT: 0, charmT: 0, element: T.element || null,
     };
-    e.elite = type === 'elite';
-    if (e.boss || e.elite) {
+    e.elite = type === 'elite' || type === 'gergerE';   // 몬스터 게르게르: 정예와 같은 대우 (보상 · 상태이상 시간)
+    if (type === 'gergerE') {
+      e.model = createGerger();
+      e.model.group.traverse((o) => { if (o.isMesh) o.castShadow = true; });
+      this.scene.add(e.model.group);
+    } else if (e.boss || e.elite) {
       e.model = e.boss ? createKingSlime() : createEliteSlime();
       this.scene.add(e.model.group);
       e.summonT = 5;
@@ -445,6 +449,7 @@ export class EnemyManager {
         this.tint(e, _c, t);
         e.model.body.material.color.copy(_c);
         e.model.body.material.emissive.setRGB(e.flash > 0 ? 0.5 : 0, e.flash > 0 ? 0.5 : 0, e.flash > 0 ? 0.5 : 0);
+        if (e.redGlow > 0) e.model.body.material.emissive.setRGB(0.55 + 0.25 * Math.sin(t * 30), 0, 0);   // 공격 직전: 붉게 (위험)
         continue;
       }
       _p.set(e.x, e.y, e.z);

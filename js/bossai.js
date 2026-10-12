@@ -27,8 +27,8 @@ export class EnemySkills {
   update(dt) {
     for (const e of this.enemies.list) {
       if (!e.alive) continue;
-      if (e.elite) this.elite(e, dt);
-      else if (e.boss) this.boss(e, dt);
+      if (e.type === 'elite') this.elite(e, dt);
+      else if (e.type === 'boss') this.boss(e, dt);
     }
     this.updateBalls(dt);
     this.updateMarks(dt);

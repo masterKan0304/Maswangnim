@@ -2,8 +2,9 @@ import { ic, hydrateIcons } from './icons.js';
 import { toggleDebug, initDebug } from './debug.js';
 import * as THREE from 'three';
 import { BlobShadows } from './shadows.js';
+import { GergerHunter } from './gergerEnemy.js';
 import { game, isPaused, updateTimers, bump, inventoryAdd, xpNeed } from './state.js';
-import { OVERKILL, STAGE_TIME, WORLD_HALF, MAX_ENEMIES, DROP, ENEMY_TYPES, BOX, START_REROLLS, ELITE_TIMES, xpToNext, hpScale } from './config.js';
+import { nightLevel, isNightTime, DAYNIGHT, OVERKILL, STAGE_TIME, WORLD_HALF, MAX_ENEMIES, DROP, ENEMY_TYPES, BOX, START_REROLLS, ELITE_TIMES, xpToNext, hpScale } from './config.js';
 import { createWorld } from './world.js';
 import { FX } from './effects.js';
 import { EnemyManager } from './enemies.js';
@@ -91,11 +92,17 @@ const player = new Player(scene, fx);
 const skillsRt = new SkillRuntime(scene, fx, enemies, player);
 const enemySkills = new EnemySkills(scene, fx, enemies, player);
 const bloom = new Bloom(scene, fx, enemies, player, skillsRt);   // 마솽 패시브: 개화 / 열매
+// 밤의 사냥꾼: 몬스터 게르게르 (해금하면 더 이상 나타나지 않음)
+const hunter = new GergerHunter({ scene, fx, enemies, player, ui: null,
+  isOwned: () => (profile.ownedChars || []).includes('gerger'),
+});
+window.onGergerNight = () => { if (!game.tutorial && !game.demo) hunter.onNight(); };
 const ui = new UI();
 const labels = new Labels(document.getElementById('label-layer'), camera);
 loadingAt(85);
 
 game.sys = {
+  hunter,
   scene, camera, fx, enemies, pickups, player, skillsRt, ui, world, enemySkills, bloom,
   hpMul: () => hpScale(game.time),
   dropBlocks(blocks, x, z, { requireExit = false, minD = 0.6, maxD = 1.6 } = {}) {
@@ -142,6 +149,13 @@ enemies.onKill = (e, src, st) => {
     fx.explosion(e.x, e.z, 4, 0xb07cff);
     if (!e.debugSpawn) startVictory();   // 디버그로 만든 보스는 처치해도 게임이 끝나지 않음
     return;
+  }
+  // 몬스터 게르게르: 정예 보상 + 처음 처치하면 캐릭터 해금
+  if (e.type === 'gergerE' && !(profile.ownedChars || []).includes('gerger')) {
+    profile.ownedChars = [...new Set([...(profile.ownedChars || ['masang']), 'gerger'])];
+    saveProfile();
+    ui.toast('🐾 게르게르를 처치했습니다! 캐릭터 「게르게르」가 해금되었습니다!', 'boss');
+    sfx('levelup');
   }
   if (e.elite) {
     // 중간 보스: 블록 상자 1개 + 무작위 블록 2~4개 + 경험치 2배
@@ -223,9 +237,19 @@ function updateOverkill(dt) {
   game.timeMul = game.overkill <= 0 ? OVERKILL.mul2 : game.overkill <= OVERKILL.fast ? OVERKILL.mul1 : 1;
 }
 
+function onNightStart() {
+  ui.toast(`${ic('moon')} 밤이 찾아왔습니다! 적이 더 빠르게 몰려옵니다.`, 'warn');
+  if (window.onGergerNight) window.onGergerNight();
+}
+
 function director(dt) {
   const t = game.time;
-  const rate = t < STAGE_TIME ? 0.8 + (t / STAGE_TIME) * 5.4 : 2.2;
+  const rate = (t < STAGE_TIME ? 0.8 + (t / STAGE_TIME) * 5.4 : 2.2) * (isNightTime(t) ? DAYNIGHT.spawnMul : 1);   // 밤: 적 생성 50% 빠름
+  // 밤이 시작되는 순간
+  const nightNow = isNightTime(t);
+  if (nightNow && !game.wasNight) onNightStart();
+  if (!nightNow && game.wasNight) ui.toast(`${ic('sparkle')} 날이 밝았습니다.`, '');
+  game.wasNight = nightNow;
   spawnAcc += rate * dt;
   while (spawnAcc >= 1) {
     spawnAcc -= 1;
@@ -681,6 +705,8 @@ function tick(dt, draw = true) {
     player.update(dt, input, world.obstacles);
     enemies.update(dt, player, world.obstacles);
     enemySkills.update(dt);
+    hunter.sys.ui = ui;
+    hunter.update(dt);
     bloom.update(dt);
     skillsRt.update(dt);
     pickups.update(dt, player, addXp);
@@ -710,9 +736,14 @@ function tick(dt, draw = true) {
   }
 
   if (!draw) return;
-  const night = !!(CHARACTERS[game.charId] && CHARACTERS[game.charId].night) && (game.state !== 'start' || game.demo);   // 메인 화면 · 도감 미리보기에서도
-  world.update(animTime, player.pos, adt, night);
-  if (document.body.classList.contains('night') !== night) document.body.classList.toggle('night', night);   // 보랏빛 밤 색조
+  // 밤의 정도: 스테이지 낮 / 밤 주기 (튜토리얼 제외) + 게르게르는 항상 밤 (메인 화면 · 도감 미리보기에서도)
+  const charNight = !!(CHARACTERS[game.charId] && CHARACTERS[game.charId].night) && (game.state !== 'start' || game.demo);
+  const cycNight = game.state !== 'start' && !game.tutorial ? nightLevel(game.time) : 0;
+  const nightLv = Math.max(cycNight, charNight ? 1 : 0);
+  world.update(animTime, player.pos, adt, nightLv);
+  const night = nightLv > 0.5;
+  if (document.body.classList.contains('night') !== night) document.body.classList.toggle('night', night);   // 미리보기 색조용
+  const nt = $id('night-tint'); if (nt) nt.style.opacity = (0.42 * nightLv).toFixed(3);   // 보랏빛 밤 색조 (서서히)
   // 드리우는 밤: 밤이 짙어짐 (부드럽게)
   game.nightDarkCur = (game.nightDarkCur || 0) + ((game.state === 'start' ? 0 : game.nightDark || 0) - (game.nightDarkCur || 0)) * Math.min(1, adt * 4);
   const nd = $id('night-dark'); if (nd) nd.style.opacity = Math.min(0.85, game.nightDarkCur * 0.55).toFixed(3);

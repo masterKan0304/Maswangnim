@@ -90,6 +90,13 @@ export function renderDebug() {
     b.addEventListener('click', () => spawnNear(type));
     bossRow.appendChild(b);
   }
+  {
+    const b = document.createElement('button');
+    b.className = 'menu-btn';
+    b.innerHTML = '🐾 게르게르 소환';
+    b.addEventListener('click', () => { if (game.sys.hunter) { const e = game.sys.hunter.spawn(); if (e) e.debugSpawn = true; } });
+    bossRow.appendChild(b);
+  }
   s2.appendChild(bossRow);
   body.appendChild(s2);
 

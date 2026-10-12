@@ -53,7 +53,7 @@ export function castClaw(rt, sk, st) {
 }
 
 // 발톱 세 줄기가 앞을 가르는 모습
-function clawFx(fx, x, z, a, R) {
+export function clawFx(fx, x, z, a, R) {
   for (let i = 0; i < 3; i++) {
     const r = R * (1.15 + i * 0.32);
     // 검은 궤적 위에 붉은 날 (붉은색 + 검은색)
@@ -333,7 +333,7 @@ function updateWaves(rt, dt) {
 // 川 자 자국: 나란한 세 줄의 긁힌 자국 (어둡게 패인 자국 + 보랏빛) — growT 동안 파동을 따라 그어짐
 // 1초부터 사라지기 시작해 0.5초 뒤 완전히 사라짐 / size: 투사체 크기 배율 (자국 너비)
 const SCAR_HOLD = 1, SCAR_FADE = 0.5;
-function scarMark(fx, x, z, a, L, growT, size = 1) {
+export function scarMark(fx, x, z, a, L, growT, size = 1) {
   const life = Math.max(growT, SCAR_HOLD) + SCAR_FADE;
   const geo = shared('scarGeo', () => new THREE.PlaneGeometry(1, 1).translate(0.5, 0, 0).rotateX(-Math.PI / 2));
   const darkMat = new THREE.MeshBasicMaterial({ color: 0x12081c, transparent: true, opacity: 0.85, depthWrite: false });
@@ -656,7 +656,7 @@ function startNightWave(rt, sk) {
 }
 
 // 뭉게뭉게 퍼지는 어두운 연기 덩어리
-function smokePuff(fx, x, z, s0, life) {
+export function smokePuff(fx, x, z, s0, life) {
   const mat = new THREE.SpriteMaterial({ map: shared('smokeTex2', () => makeGlowSprite(0x000000, 1, 1).material.map), color: 0x0a0414, transparent: true, opacity: 0, depthWrite: false });
   const sp = new THREE.Sprite(mat);
   const y0 = rnd(0.3, 2.2), vy = rnd(0.3, 1);

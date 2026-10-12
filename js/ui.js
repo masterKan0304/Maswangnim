@@ -981,7 +981,7 @@ export class UI {
       box.innerHTML = '';
       for (const e of list) {
         const d = el('div', 'bb' + (e.elite ? ' elite' : ''));
-        d.innerHTML = `<div class="bb-name">${e.boss ? `${ic('crown')} 킹 슬라임` : `${ic('gem')} 정예 슬라임`} <span class="bb-hp"></span></div>
+        d.innerHTML = `<div class="bb-name">${e.boss ? ic('crown') : e.hunter ? '🐾' : ic('gem')} ${e.T.name}${e.hunter ? ' <span class="bb-timer"></span>' : ''} <span class="bb-hp"></span></div>
           <div class="bb-track"><div class="bb-fill"></div></div><div class="bb-status"></div>`;
         box.appendChild(d);
       }
@@ -989,6 +989,7 @@ export class UI {
     list.forEach((e, i) => {
       const d = box.children[i];
       d.querySelector('.bb-fill').style.width = `${Math.max(0, e.hp / e.maxHp) * 100}%`;
+      if (e.hunter) { const tm = d.querySelector('.bb-timer'); if (tm) tm.textContent = `${Math.ceil(e.hunter.t)}초`; }   // 사라지기까지
       d.querySelector('.bb-hp').textContent = `${Math.floor(Math.max(0, e.hp))} / ${Math.floor(e.maxHp)}`;
       // 걸려 있는 상태이상 아이콘
       const st = [];

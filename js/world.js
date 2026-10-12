@@ -299,8 +299,9 @@ export function createWorld(scene) {
     sun.intensity = DAY.si + (NIGHT.si - DAY.si) * k;
   }
 
-  function update(t, playerPos, dt, night = false) {
-    const target = night ? 1 : 0;
+  // night: 0 ~ 1 (밤의 정도) 또는 true / false
+  function update(t, playerPos, dt, night = 0) {
+    const target = typeof night === 'number' ? night : night ? 1 : 0;
     if (nightK !== target) {
       nightK += Math.sign(target - nightK) * Math.min(Math.abs(target - nightK), Math.max(dt, 1 / 60) * 2.5);
       applyNight(nightK);

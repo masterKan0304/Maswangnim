@@ -93,6 +93,7 @@ export const ENEMY_TYPES = {
   yellow: { name: '옐로 슬라임', hp: 25,   dmg: 4,  speed: 2.1, radius: 0.52, xp: 3, color: 0xf6cf3a, element: 'nature' },
   red:    { name: '레드 슬라임', hp: 50,   dmg: 8,  speed: 1.9, radius: 0.66, xp: 6, color: 0xec4f4a, element: 'nature' },
   elite:  { name: '정예 슬라임', hp: 300,  dmg: 10, speed: 2.0, radius: 1.05, xp: 12, color: 0x3f8cff, res: 40, element: 'nature' },   // 중간 보스 (2/4/6/8분)
+  gergerE: { name: '게르게르', hp: 750, dmg: 12, speed: 3, radius: 0.6, xp: 12, color: 0x6e5c92, res: 60, element: 'dark' },   // 밤에 나타나는 사냥개 (모델 1.2배)
   boss:   { name: '킹 슬라임',   hp: 5000, dmg: 15, speed: 1.7, radius: 2.0,  xp: 0, color: 0x9b5cf0, res: 80, element: 'nature' },   // res: 모든 속성 저항
 };
 
@@ -119,6 +120,16 @@ export const BLOCK_COLORS = {
 
 export const xpToNext = (lv) => 5 + (lv - 1) * 6;
 export const hpScale = (t) => 1 + 0.3 * (t / 60);   // 1분당 +30%, 시간에 따라 균일하게 증가 (Lv.1 스테이지)
+// 낮 / 밤: 3분 낮 + 2분 밤 (5분 주기, 튜토리얼 제외). 바뀌기 30초 전부터 서서히 바뀜. 밤에는 적 생성 50% 빠름 (정예 · 보스 제외)
+export const DAYNIGHT = { cycle: 300, day: 180, fade: 30, spawnMul: 1.5 };
+export const isNightTime = (t) => (t % DAYNIGHT.cycle) >= DAYNIGHT.day;
+export function nightLevel(t) {
+  const p = t % DAYNIGHT.cycle, D = DAYNIGHT;
+  if (p < D.day - D.fade) return 0;
+  if (p < D.day) return (p - (D.day - D.fade)) / D.fade;            // 2분 30초 ~ 3분: 낮 → 밤
+  if (p < D.cycle - D.fade) return 1;
+  return 1 - (p - (D.cycle - D.fade)) / D.fade;                      // 4분 30초 ~ 5분: 밤 → 낮
+}
 export const ELITE_TIMES = [120, 240, 360, 480];  // 중간 보스 등장 시각 (남은 시간 8/6/4/2분)
 
 // 스킬 속성 & 상태이상

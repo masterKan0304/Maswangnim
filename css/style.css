@@ -1220,8 +1220,7 @@ body.in-menu #hud, body.in-menu #label-layer, body.in-menu #vignette { display: 
 .ch-unlock-btn.off { opacity: 0.45; cursor: not-allowed; }
 
 /* 밤 (게르게르): 화면 전체를 보랏빛으로 물들임 (밝기는 그대로, 색채만) */
-#night-tint { position: absolute; inset: 0; pointer-events: none; background: #7448d8; mix-blend-mode: color; opacity: 0; transition: opacity 0.6s; }
-body.night #night-tint { opacity: 0.42; }
+#night-tint { position: absolute; inset: 0; pointer-events: none; background: #7448d8; mix-blend-mode: color; opacity: 0; }
 
 /* 강력한 공격 키워드: 붉은 배경 */
 .kw.power, .cx-tag.power { background: linear-gradient(180deg, #e0303e, #9a1424); color: #fff; border-color: rgba(255,120,130,0.6); box-shadow: 0 0 8px rgba(224,48,62,0.45); }
@@ -1252,3 +1251,5 @@ body.night #night-tint { opacity: 0.42; }
 /* 도감 · 캐릭터 미리보기의 밤 색조 */
 .pv-night { position: absolute; inset: 0; pointer-events: none; background: #7448d8; mix-blend-mode: color; opacity: 0; transition: opacity 0.6s; border-radius: inherit; }
 body.night .pv-night { opacity: 0.42; }
+
+.bb-timer { font-size: 12px; color: #c8a8ff; margin-left: 4px; }

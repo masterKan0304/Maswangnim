@@ -389,7 +389,7 @@ export function createGerger() {
   tail.add(tailTip);
   root.add(tail);
 
-  return { group, root, legs, arms: [], headPivot, tail, tailTip, kind: 'dog', materials: [furMat, bellyMat, darkMat, clawMat, tongueMat] };
+  return { group, root, legs, arms: [], headPivot, tail, tailTip, kind: 'dog', body: { material: furMat }, materials: [furMat, bellyMat, darkMat, clawMat, tongueMat] };
 }
 
 // 부드러운 빛 (꼬리 눈)

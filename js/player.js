@@ -98,6 +98,14 @@ export class Player {
       if (Math.hypot(tx, tz) > 0.3) mv.set(tx, 0, tz);
     }
     if (this.lockMove) mv.set(0, 0, 0);   // 크루엘 버스트 중: 제자리
+    // 공포 (몬스터 게르게르의 드리우는 밤): 조작 불가, 게르게르로부터 도망
+    if (this.fearT > 0) {
+      this.fearT -= dt;
+      const f = this.fearFrom && this.fearFrom.alive ? this.fearFrom : this.fearAt;
+      if (f) { mv.set(this.pos.x - f.x, 0, this.pos.z - f.z); if (mv.lengthSq() < 1e-4) mv.set(1, 0, 0); }
+      this.moveTarget = null;
+      if (Math.random() < dt * 10) this.fx.particles.emit(this.pos.x + (Math.random() - 0.5) * 0.6, 1 + Math.random() * 0.6, this.pos.z + (Math.random() - 0.5) * 0.6, 0, 1, 0, 0.5, 0.09, Math.random() < 0.5 ? 0x5a2a9a : 0x14051f, -0.6);
+    }
     this.moving = mv.lengthSq() > 0;
     if (this.moving) {
       mv.normalize();
@@ -153,12 +161,29 @@ export class Player {
     for (let i = this.gaugeBuffs.length - 1; i >= 0; i--) { this.gaugeBuffs[i].t -= dt; if (this.gaugeBuffs[i].t <= 0) this.gaugeBuffs.splice(i, 1); }
     if (game.mods.regenPerSec && this.hp > 0 && this.hp < this.maxHp) this.hp = Math.min(this.maxHp, this.hp + game.mods.regenPerSec * dt);   // 초당 체력 재생
     if (this.hurtT > 0) this.hurtT -= dt;
+    // 출혈 (몬스터 게르게르): 0.2초마다 고정 피해
+    if (this.bleeds && this.bleeds.length) {
+      for (let i = this.bleeds.length - 1; i >= 0; i--) {
+        const b = this.bleeds[i];
+        b.t -= dt;
+        if (b.t > 0) continue;
+        b.t += 0.2;
+        const v = Math.min(b.per, b.left);
+        b.left -= v;
+        if (b.left <= 1e-6) this.bleeds.splice(i, 1);
+        if (game.state !== 'playing' || game.debug.god || game.tutorial) continue;
+        this.hp -= v;
+        this.fx.numbers.spawn(this.pos.x + 0.3, 1.5, this.pos.z, Math.max(1, Math.round(v)), 'bleed');
+        if (this.hp <= 0) { this.hp = 0; game.sys.onPlayerDeath(); break; }
+      }
+      if (Math.random() < dt * 10) this.fx.particles.emit(this.pos.x, 0.8, this.pos.z, (Math.random() - 0.5) * 2, 1.5, (Math.random() - 0.5) * 2, 0.6, 0.07, 0xd0203a, 14);
+    }
     if (this.castT > 0) this.castT -= dt;
     if (this.moving) this.walk += dt * 11;
   }
 
   tryDash() {
-    if (this.dashCd > 0 || this.dashT > 0) return false;
+    if (this.dashCd > 0 || this.dashT > 0 || this.fearT > 0) return false;   // 공포 중에는 대시 불가
     this.dashDir.copy(this.moving ? this.moveDir : this.aim).setY(0).normalize();
     this.dashT = DASH.duration;
     this.dashCd = this.dashCooldown();
@@ -184,6 +209,19 @@ export class Player {
     this.shield += amount;
     this.shieldT = Math.max(this.shieldT, duration);
     this.shieldMax = Math.max(this.shieldMax, this.shield);
+  }
+
+  // 출혈 (총 피해를 dur 초에 걸쳐)
+  addBleed(total, dur) {
+    if (!(total > 0)) return;
+    (this.bleeds || (this.bleeds = [])).push({ left: total, per: total * 0.2 / dur, t: 0.2 });
+  }
+  // 공포: t 초 동안 조작 불가, from 으로부터 도망
+  setFear(t, from) {
+    this.fearT = Math.max(this.fearT || 0, t);
+    this.fearFrom = from;
+    this.fearAt = from ? { x: from.x, z: from.z } : { x: this.pos.x - this.aim.x, z: this.pos.z - this.aim.z };
+    this.dashT = 0;
   }
 
   // 어둠 게이지
@@ -223,6 +261,7 @@ export class Player {
     if (this.noMana) this.mana = 0;
     this.gauge = 0; this.gaugeBuffs.length = 0;
     this.lift = 0; this.lockMove = false; this.castInvuln = false; this.tailBlades = false;
+    this.bleeds = []; this.fearT = 0;
   }
 
   castPulse(color) { this.castT = 0.25; this.castColor.set(color); }
