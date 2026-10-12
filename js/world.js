@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { WORLD_HALF } from './config.js';
+import { buildBeach } from './beachWorld.js';
 import {
   paint, jitter, merge, pineTreeGeo, roundTreeGeo, bushGeo, rockGeo, mushroomGeo, stumpGeo,
   grassTuftGeo, flowerStemGeo, flowerHeadGeo,
@@ -89,122 +90,171 @@ export function createWorld(scene) {
   scene.add(sun, sun.target);
   const SUN_OFF = new THREE.Vector3(14, 26, 8);
 
-  // 바닥 (정점 노이즈 + 면 단위 색)
-  const SIZE = 240, SEG = 120;
-  const g = new THREE.PlaneGeometry(SIZE, SIZE, SEG, SEG);
-  g.rotateX(-Math.PI / 2);
-  jitter(g, 0.12, 91);
-  const pos = g.attributes.position;
-  for (let i = 0; i < pos.count; i++) pos.setY(i, pos.getY(i) * 0.4 - 0.02);
-  const ground = g.toNonIndexed();
-  ground.deleteAttribute('uv');
-  const gp = ground.attributes.position;
-  const cols = new Float32Array(gp.count * 3);
-  const cA = new THREE.Color(0x6cbf4a), cB = new THREE.Color(0x8fd35c), cC = new THREE.Color(0x5aa83f), cDirt = new THREE.Color(0xb49a66), tmp = new THREE.Color();
-  for (let f = 0; f < gp.count; f += 3) {
-    const cx = (gp.getX(f) + gp.getX(f + 1) + gp.getX(f + 2)) / 3;
-    const cz = (gp.getZ(f) + gp.getZ(f + 1) + gp.getZ(f + 2)) / 3;
-    const n = noise(cx, cz);
-    tmp.copy(cA).lerp(cB, THREE.MathUtils.clamp(n * 0.5 + 0.5, 0, 1));
-    if (n < -0.9) tmp.lerp(cC, 0.6);
-    const dirt = Math.sin(cx * 0.05 + 1.3) * Math.sin(cz * 0.047 - 0.4);
-    if (dirt > 0.82) tmp.lerp(cDirt, 0.55);
-    const v = 1 + (Math.random() - 0.5) * 0.08;
-    for (let k = 0; k < 3; k++) { cols[(f + k) * 3] = tmp.r * v; cols[(f + k) * 3 + 1] = tmp.g * v; cols[(f + k) * 3 + 2] = tmp.b * v; }
-  }
-  ground.setAttribute('color', new THREE.BufferAttribute(cols, 3));
-  ground.computeVertexNormals();
-  const groundMesh = new THREE.Mesh(ground, new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 1 }));
-  groundMesh.receiveShadow = true;
-  scene.add(groundMesh);
-
-  // 경계 표시 (낮은 울타리 대신 꽃길 느낌의 흙 테두리는 생략, 나무 숲으로 감쌈)
-  const leafMat = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 0.9 });
-
-  const rand = (a, b) => a + Math.random() * (b - a);
-  const placed = [];
-  function freeSpot(minCenter, minGap, inner, outer) {
-    for (let tries = 0; tries < 30; tries++) {
-      let x, z;
-      if (outer) {
-        // 경계 바깥 숲 영역
-        const side = Math.floor(Math.random() * 4);
-        const along = rand(-WORLD_HALF - 16, WORLD_HALF + 16);
-        const depth = rand(WORLD_HALF + 1.5, WORLD_HALF + 16);
-        [x, z] = side === 0 ? [along, depth] : side === 1 ? [along, -depth] : side === 2 ? [depth, along] : [-depth, along];
-      } else {
-        x = rand(-inner, inner); z = rand(-inner, inner);
-      }
-      if (Math.hypot(x, z) < minCenter) continue;
-      if (placed.some((p) => (p.x - x) ** 2 + (p.z - z) ** 2 < (minGap + p.gap) ** 2)) continue;
-      return { x, z };
-    }
-    return null;
-  }
-
-  // 나무
-  const treeKinds = [
-    { geo: pineTreeGeo(), list: [] },
-    { geo: roundTreeGeo(), list: [] },
-    { geo: roundTreeGeo(0xe8a23a, 0xd9822f, 0xf0b84a), list: [] },
-    { geo: roundTreeGeo(0x9fcf4f, 0x8cc043, 0xb2da5e, 0xe9e2d2), list: [] },
-  ];
-  const addTree = (outer) => {
-    const spot = freeSpot(outer ? 0 : 8, outer ? 1.2 : 2.2, WORLD_HALF - 2, outer);
-    if (!spot) return;
-    const r = Math.random();
-    const kind = r < 0.42 ? 0 : r < 0.78 ? 1 : r < 0.88 ? 2 : 3;
-    const s = rand(0.85, 1.35) * (outer ? 1.15 : 1);
-    treeKinds[kind].list.push({ x: spot.x, z: spot.z, s, ry: rand(0, Math.PI * 2) });
-    placed.push({ x: spot.x, z: spot.z, gap: 1 });
-    if (!outer) obstacles.add(spot.x, spot.z, 0.35 * s);
+  // 흔들리는 풀 재질 (바람 셰이더)
+  function makeSway() {
+    const swayMat = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 1 });
+    swayMat.onBeforeCompile = (shader) => {
+    shader.uniforms.uTime = timeU;
+    shader.vertexShader = 'uniform float uTime;\n' + shader.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
+      #ifdef USE_INSTANCING
+        vec4 wp = instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0);
+        float h = max(position.y, 0.0);
+        transformed.x += sin(uTime * 1.9 + wp.x * 0.35 + wp.z * 0.21) * 0.22 * h;
+        transformed.z += cos(uTime * 1.4 + wp.x * 0.17) * 0.12 * h;
+      #endif`);
   };
-  for (let i = 0; i < 85; i++) addTree(false);
-  for (let i = 0; i < 520; i++) addTree(true);
-  for (const k of treeKinds) scene.add(instanced(k.geo, leafMat, k.list, { cast: true }));
-
-  // 바위
-  const rockKinds = [rockGeo(3), rockGeo(8), rockGeo(15)];
-  const rockLists = [[], [], []];
-  for (let i = 0; i < 55; i++) {
-    const spot = freeSpot(6, 1.2, WORLD_HALF - 2, false);
-    if (!spot) continue;
-    const s = rand(0.5, 1.6);
-    rockLists[i % 3].push({ x: spot.x, z: spot.z, s, ry: rand(0, 6.28) });
-    placed.push({ x: spot.x, z: spot.z, gap: 0.6 * s });
-    if (s > 0.8) obstacles.add(spot.x, spot.z, 0.5 * s);
+    return swayMat;
   }
-  rockKinds.forEach((geo, i) => scene.add(instanced(geo, leafMat, rockLists[i], { cast: true })));
 
-  // 그루터기
-  const stumps = [];
-  for (let i = 0; i < 16; i++) {
-    const spot = freeSpot(6, 1, WORLD_HALF - 2, false);
-    if (!spot) continue;
-    stumps.push({ x: spot.x, z: spot.z, s: rand(0.8, 1.2), ry: rand(0, 6.28) });
-    placed.push({ x: spot.x, z: spot.z, gap: 0.4 });
-    obstacles.add(spot.x, spot.z, 0.35);
+  // ── 초원 맵 ──
+  function buildMeadow(grp, obstacles) {
+    // 바닥 (정점 노이즈 + 면 단위 색)
+    const SIZE = 240, SEG = 120;
+    const g = new THREE.PlaneGeometry(SIZE, SIZE, SEG, SEG);
+    g.rotateX(-Math.PI / 2);
+    jitter(g, 0.12, 91);
+    const pos = g.attributes.position;
+    for (let i = 0; i < pos.count; i++) pos.setY(i, pos.getY(i) * 0.4 - 0.02);
+    const ground = g.toNonIndexed();
+    ground.deleteAttribute('uv');
+    const gp = ground.attributes.position;
+    const cols = new Float32Array(gp.count * 3);
+    const cA = new THREE.Color(0x6cbf4a), cB = new THREE.Color(0x8fd35c), cC = new THREE.Color(0x5aa83f), cDirt = new THREE.Color(0xb49a66), tmp = new THREE.Color();
+    for (let f = 0; f < gp.count; f += 3) {
+      const cx = (gp.getX(f) + gp.getX(f + 1) + gp.getX(f + 2)) / 3;
+      const cz = (gp.getZ(f) + gp.getZ(f + 1) + gp.getZ(f + 2)) / 3;
+      const n = noise(cx, cz);
+      tmp.copy(cA).lerp(cB, THREE.MathUtils.clamp(n * 0.5 + 0.5, 0, 1));
+      if (n < -0.9) tmp.lerp(cC, 0.6);
+      const dirt = Math.sin(cx * 0.05 + 1.3) * Math.sin(cz * 0.047 - 0.4);
+      if (dirt > 0.82) tmp.lerp(cDirt, 0.55);
+      const v = 1 + (Math.random() - 0.5) * 0.08;
+      for (let k = 0; k < 3; k++) { cols[(f + k) * 3] = tmp.r * v; cols[(f + k) * 3 + 1] = tmp.g * v; cols[(f + k) * 3 + 2] = tmp.b * v; }
+    }
+    ground.setAttribute('color', new THREE.BufferAttribute(cols, 3));
+    ground.computeVertexNormals();
+    const groundMesh = new THREE.Mesh(ground, new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 1 }));
+    groundMesh.receiveShadow = true;
+    grp.add(groundMesh);
+
+    // 경계 표시 (낮은 울타리 대신 꽃길 느낌의 흙 테두리는 생략, 나무 숲으로 감쌈)
+    const leafMat = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 0.9 });
+
+    const rand = (a, b) => a + Math.random() * (b - a);
+    const placed = [];
+    function freeSpot(minCenter, minGap, inner, outer) {
+      for (let tries = 0; tries < 30; tries++) {
+        let x, z;
+        if (outer) {
+          // 경계 바깥 숲 영역
+          const side = Math.floor(Math.random() * 4);
+          const along = rand(-WORLD_HALF - 16, WORLD_HALF + 16);
+          const depth = rand(WORLD_HALF + 1.5, WORLD_HALF + 16);
+          [x, z] = side === 0 ? [along, depth] : side === 1 ? [along, -depth] : side === 2 ? [depth, along] : [-depth, along];
+        } else {
+          x = rand(-inner, inner); z = rand(-inner, inner);
+        }
+        if (Math.hypot(x, z) < minCenter) continue;
+        if (placed.some((p) => (p.x - x) ** 2 + (p.z - z) ** 2 < (minGap + p.gap) ** 2)) continue;
+        return { x, z };
+      }
+      return null;
+    }
+
+    // 나무
+    const treeKinds = [
+      { geo: pineTreeGeo(), list: [] },
+      { geo: roundTreeGeo(), list: [] },
+      { geo: roundTreeGeo(0xe8a23a, 0xd9822f, 0xf0b84a), list: [] },
+      { geo: roundTreeGeo(0x9fcf4f, 0x8cc043, 0xb2da5e, 0xe9e2d2), list: [] },
+    ];
+    const addTree = (outer) => {
+      const spot = freeSpot(outer ? 0 : 8, outer ? 1.2 : 2.2, WORLD_HALF - 2, outer);
+      if (!spot) return;
+      const r = Math.random();
+      const kind = r < 0.42 ? 0 : r < 0.78 ? 1 : r < 0.88 ? 2 : 3;
+      const s = rand(0.85, 1.35) * (outer ? 1.15 : 1);
+      treeKinds[kind].list.push({ x: spot.x, z: spot.z, s, ry: rand(0, Math.PI * 2) });
+      placed.push({ x: spot.x, z: spot.z, gap: 1 });
+      if (!outer) obstacles.add(spot.x, spot.z, 0.35 * s);
+    };
+    for (let i = 0; i < 85; i++) addTree(false);
+    for (let i = 0; i < 520; i++) addTree(true);
+    for (const k of treeKinds) grp.add(instanced(k.geo, leafMat, k.list, { cast: true }));
+
+    // 바위
+    const rockKinds = [rockGeo(3), rockGeo(8), rockGeo(15)];
+    const rockLists = [[], [], []];
+    for (let i = 0; i < 55; i++) {
+      const spot = freeSpot(6, 1.2, WORLD_HALF - 2, false);
+      if (!spot) continue;
+      const s = rand(0.5, 1.6);
+      rockLists[i % 3].push({ x: spot.x, z: spot.z, s, ry: rand(0, 6.28) });
+      placed.push({ x: spot.x, z: spot.z, gap: 0.6 * s });
+      if (s > 0.8) obstacles.add(spot.x, spot.z, 0.5 * s);
+    }
+    rockKinds.forEach((geo, i) => grp.add(instanced(geo, leafMat, rockLists[i], { cast: true })));
+
+    // 그루터기
+    const stumps = [];
+    for (let i = 0; i < 16; i++) {
+      const spot = freeSpot(6, 1, WORLD_HALF - 2, false);
+      if (!spot) continue;
+      stumps.push({ x: spot.x, z: spot.z, s: rand(0.8, 1.2), ry: rand(0, 6.28) });
+      placed.push({ x: spot.x, z: spot.z, gap: 0.4 });
+      obstacles.add(spot.x, spot.z, 0.35);
+    }
+    grp.add(instanced(stumpGeo(), leafMat, stumps, { cast: true }));
+
+    // 덤불 (충돌 없음)
+    const bushes = [];
+    for (let i = 0; i < 110; i++) {
+      const x = rand(-WORLD_HALF - 6, WORLD_HALF + 6), z = rand(-WORLD_HALF - 6, WORLD_HALF + 6);
+      if (Math.hypot(x, z) < 4) continue;
+      bushes.push({ x, z, s: rand(0.7, 1.4), ry: rand(0, 6.28) });
+    }
+    grp.add(instanced(bushGeo(), leafMat, bushes, { cast: true }));
+
+    // 버섯 (군락)
+    const mush = [];
+    for (let c = 0; c < 22; c++) {
+      const cx = rand(-WORLD_HALF, WORLD_HALF), cz = rand(-WORLD_HALF, WORLD_HALF);
+      const n = 2 + Math.floor(Math.random() * 4);
+      for (let i = 0; i < n; i++) mush.push({ x: cx + rand(-0.6, 0.6), z: cz + rand(-0.6, 0.6), s: rand(0.6, 1.3), ry: rand(0, 6.28) });
+    }
+    grp.add(instanced(mushroomGeo(), leafMat, mush, { cast: true }));
+
+    // 흔들리는 풀 / 꽃 (바람 셰이더)
+    const swayMat = makeSway();
+    const grass = [];
+    for (let i = 0; i < 6500; i++) {
+      const x = rand(-WORLD_HALF - 10, WORLD_HALF + 10), z = rand(-WORLD_HALF - 10, WORLD_HALF + 10);
+      const n = noise(x, z);
+      if (n < -0.5 && Math.random() < 0.6) continue;
+      grass.push({ x, z, s: rand(0.7, 1.4), ry: rand(0, 6.28) });
+    }
+    grp.add(instanced(grassTuftGeo(), swayMat, grass));
+
+    const flowers = [], fcolors = [];
+    const palette = [0xff6b8a, 0xffd34f, 0xffffff, 0xb58cff, 0x6fc4ff, 0xff9a4a];
+    for (let c = 0; c < 70; c++) {
+      const cx = rand(-WORLD_HALF, WORLD_HALF), cz = rand(-WORLD_HALF, WORLD_HALF);
+      const col = new THREE.Color(palette[c % palette.length]);
+      const n = 4 + Math.floor(Math.random() * 8);
+      for (let i = 0; i < n; i++) {
+        flowers.push({ x: cx + rand(-1.5, 1.5), z: cz + rand(-1.5, 1.5), s: rand(0.8, 1.3), ry: rand(0, 6.28) });
+        fcolors.push(col);
+      }
+    }
+    grp.add(instanced(flowerStemGeo(), swayMat, flowers));
+    const headMat = swayMat.clone();
+    headMat.onBeforeCompile = swayMat.onBeforeCompile;
+    grp.add(instanced(flowerHeadGeo(), headMat, flowers, { colors: fcolors }));
+
+
   }
-  scene.add(instanced(stumpGeo(), leafMat, stumps, { cast: true }));
 
-  // 덤불 (충돌 없음)
-  const bushes = [];
-  for (let i = 0; i < 110; i++) {
-    const x = rand(-WORLD_HALF - 6, WORLD_HALF + 6), z = rand(-WORLD_HALF - 6, WORLD_HALF + 6);
-    if (Math.hypot(x, z) < 4) continue;
-    bushes.push({ x, z, s: rand(0.7, 1.4), ry: rand(0, 6.28) });
-  }
-  scene.add(instanced(bushGeo(), leafMat, bushes, { cast: true }));
-
-  // 버섯 (군락)
-  const mush = [];
-  for (let c = 0; c < 22; c++) {
-    const cx = rand(-WORLD_HALF, WORLD_HALF), cz = rand(-WORLD_HALF, WORLD_HALF);
-    const n = 2 + Math.floor(Math.random() * 4);
-    for (let i = 0; i < n; i++) mush.push({ x: cx + rand(-0.6, 0.6), z: cz + rand(-0.6, 0.6), s: rand(0.6, 1.3), ry: rand(0, 6.28) });
-  }
-  scene.add(instanced(mushroomGeo(), leafMat, mush, { cast: true }));
-
+  const fenceMat = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 0.9 });
   // 경계 울타리 (플레이 영역 끝)
   {
     const F = WORLD_HALF + 0.55;
@@ -225,45 +275,30 @@ export function createWorld(scene) {
       list.push({ x: -t, z: F, s: 1, ry: Math.PI });      // 남쪽: -x 방향
       list.push({ x: -F, z: -t, s: 1, ry: Math.PI / 2 }); // 서쪽: -z 방향
     }
-    scene.add(instanced(seg, leafMat, list, { cast: true }));
+    scene.add(instanced(seg, fenceMat, list, { cast: true }));
   }
 
-  // 흔들리는 풀 / 꽃 (바람 셰이더)
-  const swayMat = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 1 });
-  swayMat.onBeforeCompile = (shader) => {
-    shader.uniforms.uTime = timeU;
-    shader.vertexShader = 'uniform float uTime;\n' + shader.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
-      #ifdef USE_INSTANCING
-        vec4 wp = instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0);
-        float h = max(position.y, 0.0);
-        transformed.x += sin(uTime * 1.9 + wp.x * 0.35 + wp.z * 0.21) * 0.22 * h;
-        transformed.z += cos(uTime * 1.4 + wp.x * 0.17) * 0.12 * h;
-      #endif`);
-  };
-  const grass = [];
-  for (let i = 0; i < 6500; i++) {
-    const x = rand(-WORLD_HALF - 10, WORLD_HALF + 10), z = rand(-WORLD_HALF - 10, WORLD_HALF + 10);
-    const n = noise(x, z);
-    if (n < -0.5 && Math.random() < 0.6) continue;
-    grass.push({ x, z, s: rand(0.7, 1.4), ry: rand(0, 6.28) });
-  }
-  scene.add(instanced(grassTuftGeo(), swayMat, grass));
 
-  const flowers = [], fcolors = [];
-  const palette = [0xff6b8a, 0xffd34f, 0xffffff, 0xb58cff, 0x6fc4ff, 0xff9a4a];
-  for (let c = 0; c < 70; c++) {
-    const cx = rand(-WORLD_HALF, WORLD_HALF), cz = rand(-WORLD_HALF, WORLD_HALF);
-    const col = new THREE.Color(palette[c % palette.length]);
-    const n = 4 + Math.floor(Math.random() * 8);
-    for (let i = 0; i < n; i++) {
-      flowers.push({ x: cx + rand(-1.5, 1.5), z: cz + rand(-1.5, 1.5), s: rand(0.8, 1.3), ry: rand(0, 6.28) });
-      fcolors.push(col);
+  // ── 맵 전환 (스테이지 / 메인 화면 미리보기) ──
+  const MAP_GROUND = { meadow: 0x5b7d3a, beach: 0xd8c48a };   // 반구광의 바닥 색
+  const mapsBuilt = {};
+  const api = { obstacles: null, update: null, map: null, setMap };
+  function setMap(id) {
+    if (!MAP_GROUND[id]) id = 'meadow';
+    if (api.map === id) return;
+    if (!mapsBuilt[id]) {
+      const grp = new THREE.Group(), obs = new Obstacles();
+      if (id === 'beach') buildBeach(grp, obs, { instanced, makeSway, noise });
+      else buildMeadow(grp, obs);
+      scene.add(grp);
+      mapsBuilt[id] = { grp, obs };
     }
+    for (const [k, m] of Object.entries(mapsBuilt)) m.grp.visible = k === id;
+    api.obstacles = mapsBuilt[id].obs;
+    api.map = id;
+    DAY.gnd.set(MAP_GROUND[id]);
+    applyNight(nightK);
   }
-  scene.add(instanced(flowerStemGeo(), swayMat, flowers));
-  const headMat = swayMat.clone();
-  headMat.onBeforeCompile = swayMat.onBeforeCompile;
-  scene.add(instanced(flowerHeadGeo(), headMat, flowers, { colors: fcolors }));
 
   // 구름: 아이소 시점에선 본체가 바닥 위 바위처럼 보이므로 그림자만 드리움
   const cloudGeo = paint(jitter(new THREE.IcosahedronGeometry(1, 0), 0.3, 5), 0xffffff, 0.04);
@@ -315,5 +350,7 @@ export function createWorld(scene) {
     }
   }
 
-  return { obstacles, update };
+  api.update = update;
+  setMap('meadow');
+  return api;
 }

@@ -93,6 +93,11 @@ export const ENEMY_TYPES = {
   yellow: { name: '옐로 슬라임', hp: 25,   dmg: 4,  speed: 2.1, radius: 0.52, xp: 3, color: 0xf6cf3a, element: 'nature' },
   red:    { name: '레드 슬라임', hp: 50,   dmg: 8,  speed: 1.9, radius: 0.66, xp: 6, color: 0xec4f4a, element: 'nature' },
   elite:  { name: '정예 슬라임', hp: 300,  dmg: 10, speed: 2.0, radius: 1.05, xp: 12, color: 0x3f8cff, res: 40, element: 'nature' },   // 중간 보스 (2/4/6/8분)
+  // 해변 (스테이지 2) — mesh: 인스턴스 모양 / ai: 움직임 방식 / resEl: 속성별 추가 저항
+  crab:   { name: '꽃게',   hp: 30,  dmg: 5,  speed: 2.5, radius: 0.45, xp: 1, color: 0xe8503a, element: 'ocean', mesh: 'crab', ai: 'crab' },
+  hermit: { name: '소라게', hp: 90,  dmg: 8,  speed: 1,   radius: 0.55, xp: 3, color: 0xf0c8a0, element: 'ocean', mesh: 'hermit', ai: 'hermit' },
+  mata:   { name: '마타',   hp: 300, dmg: 10, speed: 2.5, radius: 0.5,  xp: 7, color: 0xf6f9ff, element: 'ocean', model: 'mata', ai: 'walk', res: 40, resEl: { ocean: 250 } },
+  mantan: { name: '만탄',   hp: 25000, dmg: 15, speed: 2.2, radius: 1.5, xp: 0, color: 0xf6f9ff, element: 'ocean', model: 'mantan', ai: 'walk', res: 120, resEl: { ocean: 500 }, boss: true },
   gergerE: { name: '게르게르', hp: 750, dmg: 12, speed: 3, radius: 0.6, xp: 12, color: 0x6e5c92, res: 60, element: 'dark' },   // 밤에 나타나는 사냥개 (모델 1.2배)
   boss:   { name: '킹 슬라임',   hp: 5000, dmg: 15, speed: 1.7, radius: 2.0,  xp: 0, color: 0x9b5cf0, res: 80, element: 'nature' },   // res: 모든 속성 저항
 };

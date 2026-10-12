@@ -6,6 +6,7 @@ import { GergerHunter } from './gergerEnemy.js';
 import { game, isPaused, updateTimers, bump, inventoryAdd, xpNeed } from './state.js';
 import { nightLevel, isNightTime, DAYNIGHT, OVERKILL, STAGE_TIME, WORLD_HALF, MAX_ENEMIES, DROP, ENEMY_TYPES, BOX, START_REROLLS, ELITE_TIMES, xpToNext, hpScale } from './config.js';
 import { createWorld } from './world.js';
+import { stageEnemies } from './stages.js';
 import { FX } from './effects.js';
 import { EnemyManager } from './enemies.js';
 import { Pickups } from './pickups.js';
@@ -125,11 +126,20 @@ game.sys = {
 
 // 적 처치 → 경험치 / 블록 드랍
 enemies.onKill = (e, src, st) => {
+  // 소라게: 소라가 깨지며 꽃게가 나옴 (그 꽃게를 처치해야 소라게의 보상)
+  if (e.type === 'hermit' && !e.noDrop) {
+    fx.particles.burst(e.x, 0.5, e.z, 18, [0xf3d2b0, 0xe6b48a, 0xffffff], { speed: 3, size: 0.12, life: 0.5, up: 3 });
+    sfx('crackle');
+    const c = enemies.spawn('crab', e.x, e.z, e.maxHp / ENEMY_TYPES.hermit.hp);
+    c.carryXp = e.T.xp;   // 소라게의 경험치를 대신 줌
+    if (!game.demo) game.kills++;
+    return;
+  }
   if (game.demo) {   // 메인 화면 미리보기: 경험치 보석만 떨어뜨림 (블록/상자/승리 없음)
     skillsRt.onKill(e, src, st);
     bloom.onKill(e);
     if (e.boss || e.elite) fx.explosion(e.x, e.z, e.boss ? 4 : 2.5, e.boss ? 0xb07cff : 0x3f8cff);
-    if (!game.showcase) pickups.addGem(e.x, e.z, e.T.xp);   // 도감 미리보기에서는 경험치 없음
+    if (!game.showcase) pickups.addGem(e.x, e.z, e.carryXp ?? e.T.xp);   // 도감 미리보기에서는 경험치 없음
     return;
   }
   game.kills++;
@@ -145,6 +155,12 @@ enemies.onKill = (e, src, st) => {
   }
   if (game.tutorial) { game.tutorial.onKill(e); return; }   // 튜토리얼: 드랍 / 경험치는 퀘스트가 정함
   if (e.noDrop) return;   // 보스 기술로 소환된 적: 아이템 / 경험치 없음
+  // 만탄: 처음 처치하면 캐릭터 만탄 해금 (캐릭터는 준비 중)
+  if (e.type === 'mantan' && !(profile.ownedChars || []).includes('mantan')) {
+    profile.ownedChars = [...new Set([...(profile.ownedChars || ['masang']), 'mantan'])];
+    saveProfile();
+    ui.toast('🌊 만탄을 처치했습니다! 캐릭터 「만탄」이 해금되었습니다! (준비 중)', 'boss');
+  }
   if (e.boss) {
     fx.explosion(e.x, e.z, 4, 0xb07cff);
     if (!e.debugSpawn) startVictory();   // 디버그로 만든 보스는 처치해도 게임이 끝나지 않음
@@ -166,7 +182,7 @@ enemies.onKill = (e, src, st) => {
     sfx('bigkill');
     return;
   }
-  pickups.addGem(e.x, e.z, e.T.xp);
+  pickups.addGem(e.x, e.z, e.carryXp ?? e.T.xp);
   // 블록 상자: 1% 에서 시작, 처치할 때마다 (체력 10당 1%) 곱연산으로 증가, 드랍되면 초기화
   if (Math.random() < game.boxChance) {
     pickups.addChest(e.x, e.z);
@@ -211,14 +227,15 @@ function offscreenSpot() {
 }
 
 function pickType(t) {
-  const w = { green: 1 };
-  if (t > 45) w.yellow = Math.min(0.7, (t - 45) / 180);
-  if (t > 150) w.red = Math.min(0.5, (t - 150) / 300);
+  const se = stageEnemies(stageById(game.stage));
+  const w = { [se.early]: 1 };
+  if (t > 45) w[se.mid] = Math.min(0.7, (t - 45) / 180);
+  if (t > 150) w[se.late] = Math.min(0.5, (t - 150) / 300);
   let total = 0;
   for (const k in w) total += w[k];
   let r = Math.random() * total;
   for (const k in w) { r -= w[k]; if (r <= 0) return k; }
-  return 'green';
+  return se.early;
 }
 
 function spawnEnemy(type) {
@@ -259,18 +276,20 @@ function director(dt) {
   if (t >= nextWave && t < STAGE_TIME) {
     nextWave += 60;
     const n = 14 + Math.floor(t / 60) * 3;
-    const type = t < 180 ? 'green' : t < 360 ? 'yellow' : 'red';
+    const se = stageEnemies(stageById(game.stage));
+    const type = t < 180 ? se.early : t < 360 ? se.mid : se.late;
     for (let i = 0; i < n && enemies.list.length < MAX_ENEMIES; i++) {
       const a = (i / n) * Math.PI * 2;
       const x = THREE.MathUtils.clamp(player.pos.x + Math.cos(a) * 17, -WORLD_HALF, WORLD_HALF);
       const z = THREE.MathUtils.clamp(player.pos.z + Math.sin(a) * 17, -WORLD_HALF, WORLD_HALF);
       enemies.spawn(type, x, z, hpScale(t));
     }
-    ui.toast(`${ic('warn')} 슬라임 무리가 몰려옵니다!`, 'warn');
+    ui.toast(`${ic('warn')} ${se.crowd}가 몰려옵니다!`, 'warn');
   }
   // 중간 보스 (2/4/6/8분)
   if (game.eliteIdx < ELITE_TIMES.length && t >= ELITE_TIMES[game.eliteIdx]) {
     game.eliteIdx++;
+    if (!stageEnemies(stageById(game.stage)).elite) return;   // 정예가 없는 스테이지 (해변)
     const a = Math.random() * Math.PI * 2;
     const x = THREE.MathUtils.clamp(player.pos.x + Math.cos(a) * 14, -WORLD_HALF + 2, WORLD_HALF - 2);
     const z = THREE.MathUtils.clamp(player.pos.z + Math.sin(a) * 14, -WORLD_HALF + 2, WORLD_HALF - 2);
@@ -285,9 +304,10 @@ function director(dt) {
     const a = Math.atan2(player.aim.z, player.aim.x);
     const x = THREE.MathUtils.clamp(player.pos.x + Math.cos(a) * 12, -WORLD_HALF + 3, WORLD_HALF - 3);
     const z = THREE.MathUtils.clamp(player.pos.z + Math.sin(a) * 12, -WORLD_HALF + 3, WORLD_HALF - 3);
-    game.boss = enemies.spawn('boss', x, z, 1);
+    const bt = stageEnemies(stageById(game.stage)).boss;
+    game.boss = enemies.spawn(bt, x, z, 1);
     fx.ring(x, z, 6, 0xb07cff, 1.0);
-    ui.toast(`${ic('crown')} 킹 슬라임이 나타났다!`, 'boss');
+    ui.toast(`${ic('crown')} ${ENEMY_TYPES[bt].name}이(가) 나타났다!`, 'boss');
     sfx('boss');
   }
 }
@@ -500,6 +520,7 @@ function startGame(stageId = 1) {
   setSfxMuted(false);
   resize();
   game.stage = stageId;
+  world.setMap(stageById(stageId).map);   // 스테이지 맵
   game.accountLevel = profile.accountLevel;
   const tut = stageById(stageId).tutorial;
   game.overkill = OVERKILL.start;   // 오버킬 시간: 2분에서 시작
@@ -773,6 +794,7 @@ refreshKeyLabels();
 const demo = new Demo({
   player, enemies, pickups, skillsRt, scene, fx, enemySkills, bloom, cutEl: $id('preview-cut'),
   onTeleport: (p) => camTarget.copy(p),
+  setMap: (m) => world.setMap(m),
 });
 initCodex({ demo, scene, ui });
 initMenu({ onStart: requestStart, refreshGold: refreshMenuGold, applySettings: applySettingsToGame, keysChanged: refreshKeyLabels, hideTip: () => ui.hideTip() });

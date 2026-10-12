@@ -6,7 +6,7 @@ import * as THREE from 'three';
 import { game, bump } from './state.js';
 import { WORLD_HALF } from './config.js';
 import { createSkill } from './skills.js';
-import { previewStages } from './stages.js';
+import { previewStages, stageEnemies } from './stages.js';
 import { Showcase } from './showcase.js';
 import { CHARACTERS, CHARACTER_ORDER } from './characters.js';
 import { SKILL_ORDER } from './skills.js';
@@ -70,6 +70,7 @@ export class Demo {
     this.t = 0;
     this.stage = pick(previewStages());   // 맵이 늘어나면 여기서 오가며 보여 줌
     if (this.sys.onCaption) this.sys.onCaption(this.stage);
+    if (this.sys.setMap) this.sys.setMap(this.stage.map);   // 맵을 오가며 보여 줌
     // 이전 장면 정리
     for (const e of enemies.list) {
       if (!e.alive) continue;
@@ -110,8 +111,9 @@ export class Demo {
     const n = 26 + Math.floor(Math.random() * 30);
     for (let i = 0; i < n; i++) this.spawnAround(rand(5, 15));
     const roll = Math.random();
-    if (roll < 0.22) this.spawnAround(rand(7, 10), 'elite');
-    else if (roll < 0.3) this.spawnAround(rand(8, 11), 'boss');
+    const se = stageEnemies(this.stage);
+    if (roll < 0.22 && se.elite) this.spawnAround(rand(7, 10), se.elite);
+    else if (roll < 0.3) this.spawnAround(rand(8, 11), se.boss);
   }
 
   spawnAround(d, type = null) {
@@ -122,7 +124,8 @@ export class Demo {
     const t = game.time;
     if (!type) {
       const r = Math.random();
-      type = t > 200 && r < 0.25 ? 'red' : t > 90 && r < 0.6 ? 'yellow' : 'green';
+      const se = stageEnemies(this.stage);
+      type = t > 200 && r < 0.25 ? se.late : t > 90 && r < 0.6 ? se.mid : se.early;
     }
     const hpMul = type === 'boss' ? 0.3 : type === 'elite' ? 0.5 : 0.8;
     enemies.spawn(type, x, z, hpMul);

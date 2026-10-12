@@ -3,6 +3,7 @@
 //  (맵 가운데의 장애물 없는 공터에서 진행)
 // ─────────────────────────────────────────────
 import { game, bump } from './state.js';
+import { ENEMY_TYPES } from './config.js';
 import { createSkill, getStats, triggerGoal, sample, SKILL_DEFS } from './skills.js';
 import { makeSentence, makeWord, makeFixed } from './blocks.js';
 import { nightStep } from './gerger.js';
@@ -145,7 +146,7 @@ export class Showcase {
   setEnemy(type) {
     const { player, enemies } = this.sys;
     this.enemyType = type;
-    this.lead = type === 'boss' ? 7 : type === 'elite' ? 9 : 3;
+    this.lead = type === 'boss' ? 7 : type === 'elite' ? 9 : Math.max(3, ENEMY_TYPES[type].radius * 4);
     const e = enemies.spawn(type, -28, 0, 1);
     e.skillRate = 2.2;   // 기술을 더 자주 보여 줌
     this.enemy = e;

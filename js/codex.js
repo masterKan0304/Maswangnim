@@ -14,6 +14,7 @@ import { smoothScroll } from './scroll.js';
 import { CHARACTERS, CHARACTER_ORDER, masteryUnlock } from './characters.js';
 import { masteryOf } from './meta.js';
 import { slimeBodyGeometry, slimeFaceGeometry, createKingSlime, createEliteSlime } from './models.js';
+import { crabGeometry, hermitGeometry, createManta } from './beachModels.js';
 
 const $ = (s) => document.querySelector(s);
 const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
@@ -40,9 +41,16 @@ const ENEMIES = [
   { type: 'red', grade: '일반' },
   { type: 'elite', grade: '정예' },
   { type: 'boss', grade: '보스' },
+  { type: 'crab', grade: '일반', stage: '해변' },
+  { type: 'hermit', grade: '일반', stage: '해변' },
+  { type: 'mata', grade: '일반', stage: '해변' },
+  { type: 'mantan', grade: '보스', stage: '해변' },
 ];
 const L = ENEMY_SKILLS;
 const ENEMY_ABILITY = {
+  crab: ['옆으로만 걸으며, 플레이어가 옆에 있지 않으면 공중으로 뛰어 몸을 90도 돌립니다.'],
+  hermit: ['8초마다 몸을 뒤집고 빠르게 회전하며 플레이어 쪽으로 돌진합니다. 이동 속도가 최대 5까지 빨라지며, 돌진 중 부딪히면 공격력의 150% 피해를 줍니다.', '처치되면 소라가 깨지며 꽃게가 나옵니다. 나온 꽃게를 처치해야 소라게의 보상을 얻습니다.'],
+  mantan: ['처음 처치하면 캐릭터 「만탄」이 해금됩니다. (준비 중)'],
   elite: [`${L.eliteLeap.every}초마다 ${L.eliteLeap.charge}초간 힘을 모은 뒤, 플레이어 위치로 최대 ${L.eliteLeap.range} 거리까지 도약합니다. 착지 지점에는 경고 장판이 나타나며, 안에 있으면 공격력의 ${L.eliteLeap.dmgMul * 100}% 피해를 입고 밀려납니다.`],
   boss: [
     `${L.bossSpit.every}초마다 ${L.bossSpit.charge}초간 힘을 모은 뒤, 플레이어 쪽으로 최대 ${L.bossSpit.bounces}번 튕기는 점액을 내보냅니다. 튕길 때마다 주위에 피해를 주고 밀어내며 슬라임을 소환합니다. 마지막에는 3배로 소환합니다.`,
@@ -300,6 +308,7 @@ function detailEnemy(info) {
       <div class="cx-stat"><span>공격력</span><b>${T.dmg}</b></div>
       <div class="cx-stat"><span>이동 속도</span><b>${T.speed}</b></div>
       ${T.res ? `<div class="cx-stat"><span>모든 속성 저항</span><b>${T.res}</b></div>` : ''}
+      ${T.resEl ? Object.entries(T.resEl).map(([k, v]) => `<div class="cx-stat"><span>${ELEMENTS[k].name} 속성 저항</span><b>+${v}</b></div>`).join('') : ''}
     </div>
     ${ab.length ? `<div class="cx-sub">기술</div>${ab.map((a) => `<div class="cx-ability">${a}</div>`).join('')}` : '<div class="cx-note">특별한 기술 없이 플레이어에게 다가와 부딪힙니다.</div>'}`;
   setPreview({ kind: 'enemy', type: en.type });
@@ -329,6 +338,10 @@ function enemyIcon(type) {
     const m = type === 'boss' ? createKingSlime() : createEliteSlime();
     m.body.material.color.set(T.color);
     obj = m.group;
+  } else if (T.model) {
+    obj = createManta(T.model === 'mata').group;
+  } else if (T.mesh) {
+    obj = new THREE.Mesh(T.mesh === 'crab' ? crabGeometry() : hermitGeometry(), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.6, flatShading: true }));
   } else {
     obj = new THREE.Group();
     obj.add(new THREE.Mesh(slimeBodyGeometry(), new THREE.MeshStandardMaterial({ color: T.color, roughness: 0.28, flatShading: true })));

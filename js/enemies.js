@@ -3,6 +3,8 @@ import { ENEMY_TYPES, WORLD_HALF, STATUS, elemMul } from './config.js';
 import { slimeBodyGeometry, slimeFaceGeometry, createKingSlime, createEliteSlime, createGerger } from './models.js';
 import { game } from './state.js';
 import { recordDamage } from './dps.js';
+import { crabGeometry, hermitGeometry, createManta } from './beachModels.js';
+import { beachGait } from './beachAI.js';
 import { sfx } from './audio.js';
 
 const MAX = 460;
@@ -10,6 +12,7 @@ const CELL = 2;
 const _m = new THREE.Matrix4(), _q = new THREE.Quaternion(), _s = new THREE.Vector3(), _p = new THREE.Vector3(), _c = new THREE.Color();
 const UP = new THREE.Vector3(0, 1, 0);
 const WHITE = new THREE.Color(0xffffff);
+const _eu = new THREE.Euler();
 const TINT = {
   burn: new THREE.Color(0xff5a14), chill: new THREE.Color(0x9fe6ff), root: new THREE.Color(0x6a8a2a),
   poison: new THREE.Color(0x5fd34a), exhaust: new THREE.Color(0x4a6a9a), stun: new THREE.Color(0xffe066), fear: new THREE.Color(0x5a2a9a), night: new THREE.Color(0x07020c), cons: new THREE.Color(0xffe680),
@@ -37,6 +40,15 @@ export class EnemyManager {
     this.face.frustumCulled = false;
     this.face.count = 0;
     scene.add(this.body, this.face);
+    // 해변 몬스터 (꽃게 · 소라게): 색이 칠해진 한 덩어리 모양을 인스턴스로
+    this.kinds = {};
+    for (const [k, geo] of [['crab', crabGeometry()], ['hermit', hermitGeometry()]]) {
+      const m = new THREE.InstancedMesh(geo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.55, flatShading: true }), MAX);
+      m.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(MAX * 3), 3);
+      m.castShadow = true; m.frustumCulled = false; m.count = 0;
+      scene.add(m);
+      this.kinds[k] = m;
+    }
   }
 
   spawn(type, x, z, hpMul = 1) {
@@ -46,18 +58,21 @@ export class EnemyManager {
       hp: T.hp * hpMul, maxHp: T.hp * hpMul,
       r: T.radius, speed: T.speed * (0.9 + Math.random() * 0.2), dmg: T.dmg,
       phase: Math.random(), flash: 0, rot: 0, kx: 0, kz: 0,
-      alive: true, boss: type === 'boss', color: new THREE.Color(T.color),
+      alive: true, boss: type === 'boss' || !!T.boss, color: new THREE.Color(T.color),
       y: 0, sy: 1, sxz: 1, spawnT: 0,
       burnT: 0, burnDmg: 0, burnTick: 0, chillT: 0, shockT: 0, rootT: 0,
       poisonT: 0, poisonTick: 0, exhaustT: 0, stunT: 0, fearT: 0, fearImmune: 0, consT: 0, consAcc: 0, resDown: 0, resDownT: 0, fearZone: null, fearZoneT: 0, consZoneT: 0, bleeds: null, malice: null, nightmareT: 0, charmT: 0, element: T.element || null,
     };
     e.elite = type === 'elite' || type === 'gergerE';   // 몬스터 게르게르: 정예와 같은 대우 (보상 · 상태이상 시간)
-    if (type === 'gergerE') {
+    if (T.model === 'mata' || T.model === 'mantan') {
+      e.model = createManta(T.model === 'mata');
+      this.scene.add(e.model.group);
+    } else if (type === 'gergerE') {
       e.model = createGerger();
       e.model.group.traverse((o) => { if (o.isMesh) o.castShadow = true; });
       this.scene.add(e.model.group);
-    } else if (e.boss || e.elite) {
-      e.model = e.boss ? createKingSlime() : createEliteSlime();
+    } else if (type === 'boss' || type === 'elite') {
+      e.model = type === 'boss' ? createKingSlime() : createEliteSlime();
       this.scene.add(e.model.group);
       e.summonT = 5;
     }
@@ -116,7 +131,7 @@ export class EnemyManager {
     if (element && !dot && element !== e.element && Math.random() < status && this.applyStatus(e, element, amount, src, st) !== false) this.statusHit = true;   // 지대 생성 문장용
     // 속성 저항: 피해 × 100 / (100 + 저항). 저항 무시로 음수가 되면 그만큼 더 받음
     if (element) {
-      let res = e.T.res || 0;
+      let res = (e.T.res || 0) + ((e.T.resEl && e.T.resEl[element]) || 0);   // 속성별 추가 저항 (마타 · 만탄: 해양)
       if (e.resDownT > 0) res -= e.resDown || 0;   // 대지 지대: 모든 저항 감소
       if (pen) res = res * (1 - Math.min(1, pen.pct)) - pen.flat;
       amount *= res >= 0 ? 100 / (100 + res) : 2 - 100 / (100 - res);
@@ -352,13 +367,16 @@ export class EnemyManager {
         dx = Math.cos(e.wanderA); dz = Math.sin(e.wanderA);
       } else if ((e.fearT > 0 || e.nightmareT > 0) && !(e.charmT > 0)) { dx = -dx; dz = -dz; }   // 공포: 플레이어에게서 정반대로 달아남 (악몽: 일반은 멈춤, 정예 · 보스는 느리게 달아남)
 
+      // 해변 몬스터: 각자의 걸음 (꽃게 옆걸음 · 소라게 돌진 · 마타/만탄 걷기)
+      const gait = e.T.ai && !(e.fearT > 0 && e.T.ai === 'hermit' && !e.dash) ? beachGait(e, dt, dx, dz, dist) : null;
+      if (gait) { dx = gait.dx; dz = gait.dz; }
       // 통통 튀는 이동
       e.phase += dt * (e.boss ? 0.75 : 1.6);
       const p = e.phase % 1;
       const air = p < 0.6;
       const charmed = e.charmT > 0 && (e.fearT > 0 || e.nightmareT > 0);   // 현혹: 달아나거나 멈추지 않고 플레이어에게 서서히 다가옴
       const nmStop = e.nightmareT > 0 && !e.elite && !e.boss && !charmed;   // 악몽: 제자리에 멈춤
-      const mv = e.rootT > 0 || e.stunT > 0 || nmStop ? 0 : e.speed * (air ? 1.4 : 0.3) * (e.chillT > 0 ? 1 - STATUS.slow : 1) * (charmed ? 0.35 : e.nightmareT > 0 ? 1 - STATUS.nightmareSlow : e.fearT > 0 ? 1 - STATUS.fearSlow : 1);   // 속박 / 기절: 멈춤, 공포: 30% 느림
+      const mv = e.rootT > 0 || e.stunT > 0 || nmStop ? 0 : (gait ? gait.speed : e.speed * (air ? 1.4 : 0.3)) * (e.chillT > 0 ? 1 - STATUS.slow : 1) * (charmed ? 0.35 : e.nightmareT > 0 ? 1 - STATUS.nightmareSlow : e.fearT > 0 ? 1 - STATUS.fearSlow : 1);   // 속박 / 기절: 멈춤, 공포: 30% 느림
       let vx = dx * mv, vz = dz * mv;
 
       // 분리 (겹침 방지)
@@ -391,14 +409,20 @@ export class EnemyManager {
       e.x = Math.max(-lim, Math.min(lim, e.x));
       e.z = Math.max(-lim, Math.min(lim, e.z));
 
-      // 회전 (부드럽게)
-      const target = Math.atan2(dx, dz);
-      let diff = target - e.rot;
-      diff = Math.atan2(Math.sin(diff), Math.cos(diff));
-      e.rot += diff * Math.min(1, dt * 8);
+      // 회전 (부드럽게) — 꽃게 · 돌진 중인 소라게는 스스로 정함
+      if (!(gait && gait.keepRot) && (dx || dz)) {
+        const target = Math.atan2(dx, dz);
+        let diff = target - e.rot;
+        diff = Math.atan2(Math.sin(diff), Math.cos(diff));
+        e.rot += diff * Math.min(1, dt * 8);
+      }
+      e.tilt = gait && gait.tilt ? gait.tilt : 0;
+      e.spinY = gait && gait.spin ? gait.spin : 0;
 
-      // 스쿼시 & 스트레치
-      if (air) {
+      // 스쿼시 & 스트레치 (해변 몬스터는 튀지 않음)
+      if (gait) {
+        e.y = gait.y || 0; e.sy = 1;
+      } else if (air) {
         const k = Math.sin((p / 0.6) * Math.PI);
         e.y = k * (e.boss ? 0.8 : 0.35);
         e.sy = 1 + 0.14 * k;
@@ -415,7 +439,7 @@ export class EnemyManager {
       // 접촉 피해
       if (e.stunT > 0 || charmed) { /* 기절 · 현혹: 부딪혀도 피해 없음 */ }
       else if (lure) { if (Math.hypot(lure.x - e.x, lure.z - e.z) < e.r * 0.9 + lure.radius) lure.hit(e); }   // 인형이 공격을 대신 받음
-      else if (Math.hypot(px - e.x, pz - e.z) < e.r * 0.9 + player.radius) player.takeDamage(e.dmg, e.element);
+      else if (Math.hypot(px - e.x, pz - e.z) < e.r * 0.9 + player.radius) player.takeDamage(e.dmg * (e.dashing ? 1.5 : 1), e.element);   // 소라게 돌진: 150%
 
     }
   }
@@ -437,8 +461,25 @@ export class EnemyManager {
 
   render(t = 0) {
     let n = 0;
+    const kn = { crab: 0, hermit: 0 };
     for (const e of this.list) {
       if (!e.alive) continue;
+      const mk = e.T.mesh;
+      if (mk) {
+        // 꽃게 · 소라게 (색이 칠해진 모양 × 상태이상 색)
+        const grow = Math.min(1, e.spawnT / 0.25) * (e.ttl != null ? Math.min(1, e.ttl / 0.5) : 1);
+        const s = e.r * 2 * grow;
+        _p.set(e.x, e.y, e.z);
+        _q.setFromEuler(_eu.set(e.tilt || 0, e.rot + (e.spinY || 0), 0, 'YXZ'));
+        _s.set(s, s, s);
+        _m.compose(_p, _q, _s);
+        const im = this.kinds[mk], i = kn[mk]++;
+        im.setMatrixAt(i, _m);
+        _c.copy(e.color); const base = e.color; e.color = WHITE; this.tint(e, _c, t); e.color = base;   // 흰색에서 시작한 상태이상 색
+        if (e.flash > 0) _c.lerp(WHITE, 0.6).multiplyScalar(1.6);
+        im.setColorAt(i, _c);
+        continue;
+      }
       const grow = Math.min(1, e.spawnT / 0.25) * (e.ttl != null ? Math.min(1, e.ttl / 0.5) : 1);
       const s = e.r * 2 * grow;
       if (e.model) {
@@ -450,6 +491,12 @@ export class EnemyManager {
         e.model.body.material.color.copy(_c);
         e.model.body.material.emissive.setRGB(e.flash > 0 ? 0.5 : 0, e.flash > 0 ? 0.5 : 0, e.flash > 0 ? 0.5 : 0);
         if (e.redGlow > 0) e.model.body.material.emissive.setRGB(0.55 + 0.25 * Math.sin(t * 30), 0, 0);   // 공격 직전: 붉게 (위험)
+        if (e.model.kind === 'manta') {
+          const w = Math.sin(t * 7 + e.phase * 10);
+          e.model.legs.forEach((l, i) => { l.rotation.x = (i === 0 || i === 3 ? w : -w) * 0.45; });
+          e.model.wings.forEach((wg, i) => { wg.rotation.z = (i ? 1 : -1) * (0.22 + 0.12 * Math.sin(t * 3 + e.phase * 6)); });
+          if (e.model.bulb) e.model.bulb.scale.setScalar(1 + 0.12 * Math.sin(t * 4));
+        }
         continue;
       }
       _p.set(e.x, e.y, e.z);
@@ -463,6 +510,12 @@ export class EnemyManager {
       this.body.setColorAt(n, _c);
       n++;
       if (n >= MAX) break;
+    }
+    for (const k of Object.keys(this.kinds)) {
+      const im = this.kinds[k];
+      im.count = kn[k];
+      im.instanceMatrix.needsUpdate = true;
+      if (im.instanceColor) im.instanceColor.needsUpdate = true;
     }
     this.body.count = n;
     this.face.count = n;
