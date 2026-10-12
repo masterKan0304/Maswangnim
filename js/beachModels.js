@@ -83,106 +83,106 @@ function glow(color, scale) {
   return sp;
 }
 
-// ── 만탄 / 마타: 동글동글한 흰 털 몸통 + 머리를 덮은 파란 가오리 두건 (큰 눈 · 볼 홍조),
-//    뒤로 흘러내리는 가오리 꼬리, 머리 위 더듬이 (만탄: 앞으로 굽어 끝에 빛나는 구근 / 마타: 짧은 뿔) ──
+// ── 만탄 / 마타 (참고 그림): 흰 털 몸통 + 짧고 굵은 흰 다리 4개, 머리부터 등까지 덮은 파란 가오리 망토,
+//    망토는 등 뒤로 길게 이어져 치맛자락처럼 바닥에 끌림. 앞으로 둥글게 내려온 주둥이, 옆의 큰 은빛 눈 · 볼 홍조,
+//    머리 위에서 앞으로 휘어진 더듬이 끝에 늘어진 노란 구근 (마타: 짧은 뿔, 짧은 자락) ──
 export function createManta(baby = false) {
   const group = new THREE.Group();
   const root = new THREE.Group();
   group.add(root);
-  const whiteMat = std({ color: 0xf8fbff, roughness: 0.9, flatShading: false });
-  const blueMat = std({ color: 0x8fd2f2, roughness: 0.4, flatShading: false });
-  const blueDeep = std({ color: 0x6bbde8, roughness: 0.45, flatShading: false });
+  const soft = (o) => new THREE.MeshStandardMaterial({ roughness: 0.55, ...o });
+  const whiteMat = soft({ color: 0xf8fbff, roughness: 0.9 });
+  const blueMat = soft({ color: 0x8fd2f2, roughness: 0.35 });
   const mk = (geo, mat) => { const m = new THREE.Mesh(geo, mat); m.castShadow = true; return m; };
-  // 몸통: 동그란 털 뭉치 (아래쪽에 몽글몽글한 털 + 짧은 발)
-  const body = mk(new THREE.SphereGeometry(0.5, 24, 18).scale(1.05, 0.82, 1), whiteMat);
-  body.position.set(0, 0.45, -0.02);
+  // 몸통 (가슴 쪽이 볼록한 흰 털)
+  const body = mk(new THREE.SphereGeometry(0.5, 28, 20).scale(0.95, 0.8, 1.05), whiteMat);
+  body.position.set(0, 0.42, 0);
   root.add(body);
-  for (let k = 0; k < 9; k++) {
-    const a = (k / 9) * Math.PI * 2;
-    const tuft = mk(new THREE.SphereGeometry(0.15, 12, 9), whiteMat);
-    tuft.position.set(Math.cos(a) * 0.42, 0.16, Math.sin(a) * 0.4);
-    root.add(tuft);
-  }
+  const chest = mk(new THREE.SphereGeometry(0.34, 24, 16).scale(1.1, 0.9, 0.8), whiteMat);
+  chest.position.set(0, 0.32, 0.3);
+  root.add(chest);
+  // 짧고 굵은 다리 4개
   const legs = [];
   for (const [sx, sz] of [[-1, 1], [1, 1], [-1, -1], [1, -1]]) {
     const pivot = new THREE.Group();
-    pivot.position.set(sx * 0.26, 0.14, sz * 0.24);
-    const foot = mk(new THREE.SphereGeometry(0.11, 12, 9).scale(1, 0.75, 1.15).translate(0, -0.06, 0.02), whiteMat);
-    pivot.add(foot);
+    pivot.position.set(sx * 0.27, 0.24, sz * 0.24);
+    const leg = mk(new THREE.CapsuleGeometry(0.1, 0.14, 6, 12).translate(0, -0.12, 0), whiteMat);
+    pivot.add(leg);
     root.add(pivot);
     legs.push(pivot);
   }
-  // 가오리 두건: 몸 위를 둥글게 덮고 앞쪽은 얼굴 위로 살짝 내려옴
-  const hood = mk(new THREE.SphereGeometry(0.53, 26, 16, 0, Math.PI * 2, 0, Math.PI * 0.52).scale(1.1, 0.95, 1.12), blueMat);
-  hood.position.set(0, 0.52, 0.04);
-  hood.rotation.x = 0.22;
-  root.add(hood);
-  // 앞으로 둥글게 나온 가오리 주둥이
-  const snout = mk(new THREE.SphereGeometry(0.3, 20, 14).scale(1.45, 0.62, 0.9), blueMat);
-  snout.position.set(0, 0.64, 0.36);
+  // 가오리 망토: 머리 위를 덮는 둥근 덮개
+  const head = mk(new THREE.SphereGeometry(0.5, 28, 18, 0, Math.PI * 2, 0, Math.PI * 0.55).scale(1, 0.85, 1.15), blueMat);
+  head.position.set(0, 0.6, 0.08);
+  head.rotation.x = 0.25;
+  root.add(head);
+  // 앞으로 둥글게 내려와 얼굴을 덮는 주둥이 (아래로 살짝 처짐)
+  const snout = mk(new THREE.SphereGeometry(0.32, 26, 18).scale(1.25, 0.7, 1), blueMat);
+  snout.position.set(0, 0.6, 0.42);
+  snout.rotation.x = 0.35;
   root.add(snout);
-  // 양옆의 작은 가오리 지느러미
-  const wings = [];
-  for (const s of [-1, 1]) {
-    const fin = mk(new THREE.SphereGeometry(0.3, 16, 10).scale(1, 0.14, 0.7), blueDeep);
-    fin.position.set(s * 0.55, 0.62, -0.02);
-    fin.rotation.z = s * 0.35;
-    root.add(fin);
-    wings.push(fin);
-  }
-  // 큰 눈 (반짝임 두 개) · 작은 입 · 볼 홍조
-  for (const s of [-1, 1]) {
-    const eye = mk(new THREE.SphereGeometry(0.135, 20, 14), std({ color: 0xffffff, roughness: 0.15, flatShading: false }));
-    eye.position.set(s * 0.25, 0.66, 0.5);
-    const iris = mk(new THREE.SphereGeometry(0.1, 18, 12), std({ color: 0x3a4660, roughness: 0.1, flatShading: false }));
-    iris.position.set(s * 0.26, 0.655, 0.57);
-    const hl = new THREE.Mesh(new THREE.SphereGeometry(0.038, 10, 8), new THREE.MeshBasicMaterial({ color: 0xffffff }));
-    hl.position.set(s * 0.23, 0.7, 0.655);
-    const hl2 = new THREE.Mesh(new THREE.SphereGeometry(0.018, 8, 6), new THREE.MeshBasicMaterial({ color: 0xffffff }));
-    hl2.position.set(s * 0.29, 0.63, 0.66);
-    const blush = new THREE.Mesh(new THREE.SphereGeometry(0.075, 12, 8).scale(1.4, 0.65, 0.4), new THREE.MeshBasicMaterial({ color: 0xffa8bf, transparent: true, opacity: 0.85 }));
-    blush.position.set(s * 0.36, 0.5, 0.5);
-    root.add(eye, iris, hl, hl2, blush);
-  }
-  const mouth = new THREE.Mesh(new THREE.TorusGeometry(0.05, 0.012, 6, 12, Math.PI).rotateZ(Math.PI), new THREE.MeshBasicMaterial({ color: 0x4a5a78 }));
-  mouth.position.set(0, 0.5, 0.6);
-  root.add(mouth);
-  // 뒤로 흘러내리는 가오리 꼬리 (끝으로 갈수록 가늘게)
-  const tailPts = baby
-    ? [new THREE.Vector3(0, 0.78, -0.35), new THREE.Vector3(0.08, 0.66, -0.62), new THREE.Vector3(0.2, 0.5, -0.78)]
-    : [new THREE.Vector3(0, 0.82, -0.35), new THREE.Vector3(0.1, 0.72, -0.75), new THREE.Vector3(0.32, 0.52, -1.05), new THREE.Vector3(0.6, 0.38, -1.2)];
-  const tailCurve = new THREE.CatmullRomCurve3(tailPts);
-  const tailGeo = new THREE.TubeGeometry(tailCurve, 20, baby ? 0.09 : 0.12, 10);
-  const tp = tailGeo.attributes.position, radial = 11;
+  // 등 뒤로 길게 이어져 바닥에 끌리는 자락 (넓적하고 끝으로 갈수록 가늘게)
+  const L = baby ? 0.55 : 1;
+  const pts = [
+    new THREE.Vector3(0, 0.86, 0.05), new THREE.Vector3(0, 0.82, -0.3), new THREE.Vector3(0, 0.6, -0.6),
+    new THREE.Vector3(0.02, 0.22, -0.6 - 0.5 * L), new THREE.Vector3(0.1, 0.05, -0.6 - 1.0 * L), new THREE.Vector3(0.28, 0.03, -0.6 - 1.55 * L),
+  ];
+  const curve = new THREE.CatmullRomCurve3(pts);
+  const SEG = 40, RAD = 14;
+  const trainGeo = new THREE.TubeGeometry(curve, SEG, 1, RAD, false);
+  const tp = trainGeo.attributes.position;
   for (let i = 0; i < tp.count; i++) {
-    const seg = Math.floor(i / radial) / 20;
-    const c = tailCurve.getPoint(Math.min(1, seg));
-    const k = 1 - seg * 0.85;
-    tp.setXYZ(i, c.x + (tp.getX(i) - c.x) * k, c.y + (tp.getY(i) - c.y) * k * 0.55, c.z + (tp.getZ(i) - c.z) * k);   // 납작하게
+    const t = Math.floor(i / (RAD + 1)) / SEG;
+    const c = curve.getPoint(t);
+    const w = 0.5 * (1 - t * 0.72);                 // 폭: 머리 쪽 넓게 → 끝 가늘게
+    const th = 0.16 * (1 - t * 0.6);                // 두께
+    const ox = tp.getX(i) - c.x, oy = tp.getY(i) - c.y, oz = tp.getZ(i) - c.z;
+    // 단면을 넓적한 타원으로: 옆(x)은 넓게, 나머지는 얇게
+    tp.setXYZ(i, c.x + ox * w, c.y + oy * th, c.z + oz * th);
   }
-  tailGeo.computeVertexNormals();
-  root.add(mk(tailGeo, blueMat));
+  trainGeo.computeVertexNormals();
+  const train = mk(trainGeo, blueMat);
+  root.add(train);
+  // 큰 은빛 눈 (옆쪽, 망토 가장자리 아래) · 볼 홍조 · 흰 턱
+  for (const s of [-1, 1]) {
+    const eye = mk(new THREE.SphereGeometry(0.13, 22, 16), soft({ color: 0xe9eef5, roughness: 0.12, metalness: 0.2 }));
+    eye.position.set(s * 0.36, 0.56, 0.36);
+    const pupil = mk(new THREE.SphereGeometry(0.075, 18, 12), soft({ color: 0x2e3444, roughness: 0.1 }));
+    pupil.position.set(s * 0.42, 0.56, 0.42);
+    const hl = new THREE.Mesh(new THREE.SphereGeometry(0.03, 10, 8), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+    hl.position.set(s * 0.43, 0.6, 0.47);
+    const blush = new THREE.Mesh(new THREE.SphereGeometry(0.07, 12, 8).scale(1.3, 0.6, 0.5), new THREE.MeshBasicMaterial({ color: 0xffb0c4, transparent: true, opacity: 0.85 }));
+    blush.position.set(s * 0.33, 0.4, 0.46);
+    root.add(eye, pupil, hl, blush);
+  }
   // 더듬이
   let bulb = null;
   if (baby) {
-    for (const s of [-1, 1]) {   // 짧은 뿔처럼 솟은 더듬이
-      const horn = mk(new THREE.ConeGeometry(0.055, 0.18, 10).translate(0, 0.09, 0), blueDeep);
-      horn.position.set(s * 0.12, 0.98, 0.12); horn.rotation.set(0.35, 0, -s * 0.3);
+    for (const s of [-1, 1]) {
+      const horn = mk(new THREE.ConeGeometry(0.06, 0.2, 12).translate(0, 0.1, 0), blueMat);
+      horn.position.set(s * 0.13, 0.98, 0.2); horn.rotation.set(0.4, 0, -s * 0.3);
       root.add(horn);
     }
   } else {
-    const curve = new THREE.CatmullRomCurve3([new THREE.Vector3(0, 0.97, 0.05), new THREE.Vector3(0, 1.32, 0.1), new THREE.Vector3(0, 1.45, 0.38), new THREE.Vector3(0, 1.32, 0.64)]);
-    root.add(mk(new THREE.TubeGeometry(curve, 20, 0.032, 8), blueDeep));
+    const ac = new THREE.CatmullRomCurve3([new THREE.Vector3(0, 0.98, 0.15), new THREE.Vector3(0, 1.32, 0.25), new THREE.Vector3(0, 1.42, 0.62), new THREE.Vector3(0, 1.2, 0.95)]);
+    const ag = new THREE.TubeGeometry(ac, 24, 0.07, 10);
+    const ap = ag.attributes.position;
+    for (let i = 0; i < ap.count; i++) {   // 끝으로 갈수록 가늘게
+      const t = Math.floor(i / 11) / 24, c = ac.getPoint(t), k = 1 - t * 0.6;
+      ap.setXYZ(i, c.x + (ap.getX(i) - c.x) * k, c.y + (ap.getY(i) - c.y) * k, c.z + (ap.getZ(i) - c.z) * k);
+    }
+    ag.computeVertexNormals();
+    root.add(mk(ag, blueMat));
     bulb = new THREE.Group();
-    bulb.position.set(0, 1.26, 0.68);
-    bulb.add(new THREE.Mesh(new THREE.SphereGeometry(0.085, 14, 10).scale(0.9, 1.2, 0.9), new THREE.MeshStandardMaterial({ color: 0xfff6b0, emissive: 0xffd94a, emissiveIntensity: 1.3 })));
-    bulb.add(glow(0xffe680, 0.6));
+    bulb.position.set(0, 1.08, 0.98);
+    // 아래로 늘어진 물방울 모양 구근
+    bulb.add(new THREE.Mesh(new THREE.SphereGeometry(0.1, 16, 12).scale(1, 1.3, 1).translate(0, -0.04, 0), new THREE.MeshStandardMaterial({ color: 0xfff3a8, emissive: 0xffd94a, emissiveIntensity: 1.3 })));
+    bulb.add(glow(0xffe680, 0.65));
     root.add(bulb);
   }
-  // 바닥 y=0, 몸통 폭이 1 이 되도록 (꼬리 · 더듬이 제외)
-  const box = new THREE.Box3().setFromObject(body).union(new THREE.Box3().setFromObject(hood));
+  // 바닥 y=0, 몸통 · 머리 폭이 1 이 되도록 (자락 · 더듬이 제외)
+  const box = new THREE.Box3().setFromObject(body).union(new THREE.Box3().setFromObject(head));
   const w = Math.max(box.max.x - box.min.x, box.max.z - box.min.z);
   root.scale.setScalar(1 / w);
-  root.position.y = 0;
-  return { group, root, legs, wings, bulb, body: { material: whiteMat }, kind: 'manta' };
+  return { group, root, legs, wings: [], train, bulb, body: { material: whiteMat }, kind: 'manta' };
 }

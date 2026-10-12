@@ -47,6 +47,7 @@ export class EnemyManager {
       m.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(MAX * 3), 3);
       m.castShadow = true; m.frustumCulled = false; m.count = 0;
       scene.add(m);
+      geo.computeBoundingBox();
       this.kinds[k] = m;
     }
   }
@@ -469,7 +470,8 @@ export class EnemyManager {
         // 꽃게 · 소라게 (색이 칠해진 모양 × 상태이상 색)
         const grow = Math.min(1, e.spawnT / 0.25) * (e.ttl != null ? Math.min(1, e.ttl / 0.5) : 1);
         const s = e.r * 2 * grow;
-        _p.set(e.x, e.y, e.z);
+        // 뒤집힌 소라게: 소라 끝이 땅에 살짝 파묻히도록 (모양 높이만큼만 띄움)
+        _p.set(e.x, e.tilt ? this.kinds[mk].geometry.boundingBox.max.y * s * 0.86 : e.y, e.z);
         _q.setFromEuler(_eu.set(e.tilt || 0, e.rot + (e.spinY || 0), 0, 'YXZ'));
         _s.set(s, s, s);
         _m.compose(_p, _q, _s);
@@ -496,6 +498,7 @@ export class EnemyManager {
           e.model.legs.forEach((l, i) => { l.rotation.x = (i === 0 || i === 3 ? w : -w) * 0.45; });
           e.model.wings.forEach((wg, i) => { wg.rotation.z = (i ? 1 : -1) * (0.22 + 0.12 * Math.sin(t * 3 + e.phase * 6)); });
           if (e.model.bulb) e.model.bulb.scale.setScalar(1 + 0.12 * Math.sin(t * 4));
+          if (e.model.train) e.model.train.rotation.y = Math.sin(t * 2 + e.phase * 6) * 0.07;   // 끌리는 꼬리 자락이 살랑
         }
         continue;
       }
