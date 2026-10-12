@@ -73,6 +73,7 @@ function instanced(geo, mat, transforms, { cast = false, receive = true, colors 
 export function createWorld(scene) {
   const obstacles = new Obstacles();
   const timeU = { value: 0 };
+  const rand = (a, b) => a + Math.random() * (b - a);
 
   scene.background = new THREE.Color(0xa6dcf5);
   scene.fog = new THREE.Fog(0xa6dcf5, 62, 110);
