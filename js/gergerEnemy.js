@@ -86,21 +86,16 @@ export class GergerHunter {
     }
     // 기술 선택
     if (!low && h.claw <= 0 && dist < HUNT.claw.range) { h.act = 'claw'; h.wind = HUNT.claw.windup; sfx('warn'); return; }
-    if (dist < HUNT.cruel.range) {
-      if (h.cruel <= 0 && (dist > 2.5 || low)) { h.act = 'cruel'; h.wind = 0.5; sfx('boss'); return; }
-      if (h.sab <= 0 && (dist > 2.5 || low)) { h.act = 'sab'; h.wind = 0.4; sfx('frost'); return; }
-    }
-    // 이동: 사냥하듯 (모든 기술이 쿨타임이면 거리를 벌리고, 하나라도 1초 이하가 되면 거리를 좁힘)
+    const rangedOk = dist < HUNT.cruel.range && (dist > 2 || low || h.claw > 0.5);
+    if (rangedOk && h.cruel <= 0) { h.act = 'cruel'; h.wind = 0.5; sfx('boss'); return; }
+    if (rangedOk && h.sab <= 0) { h.act = 'sab'; h.wind = 0.4; sfx('frost'); return; }
+    // 이동: 사냥하듯 — 할퀴기가 곧 준비되면 바짝, 원거리 기술이 곧 준비되면 중간 거리, 모두 쿨타임이면 거리를 벌림
     // 체력 30% 미만: 할퀴기를 쓰지 않고 멀리서 원거리 기술만 (플레이어가 다가오면 피함)
-    let want;
-    if (low) want = dist < 6.5 ? -1 : dist > 9 ? 1 : 0.35;
-    else {
-      const ready = Math.min(h.claw, h.cruel, h.sab) <= 1;
-      want = ready ? 1 : dist < 7.5 ? -1 : 0.3;
-    }
-    const side = want === 0.35 || want === 0.3 ? 1 : 0;   // 거리 유지 중이면 옆으로 맴돎
+    const target = low ? 8 : h.claw <= 1 ? 1.1 : Math.min(h.cruel, h.sab) <= 1 ? 5 : 8;
+    const gap = dist - target;
+    const want = Math.abs(gap) < 0.4 ? 0 : Math.sign(gap);
     let mx = (dx / dist) * want, mz = (dz / dist) * want;
-    if (side) { mx += (-dz / dist) * 0.8; mz += (dx / dist) * 0.8; }
+    if (want === 0 || (want < 0 && dist < 3)) { mx += (-dz / dist) * 0.8; mz += (dx / dist) * 0.8; }   // 거리 유지 중이면 옆으로 맴돎
     const ml = Math.hypot(mx, mz) || 1;
     const sp = e.speed * (e.chillT > 0 ? 0.7 : 1);
     e.x += (mx / ml) * sp * dt; e.z += (mz / ml) * sp * dt;
