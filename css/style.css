@@ -1253,3 +1253,16 @@ body.in-menu #hud, body.in-menu #label-layer, body.in-menu #vignette { display: 
 body.night .pv-night { opacity: 0.42; }
 
 .bb-timer { font-size: 12px; color: #c8a8ff; margin-left: 4px; }
+
+/* 만탄: 수분 바 / 갈증 */
+.hp-label.moist { color: #8fd4ff; font-size: 10px; }
+.hp-track.moist { height: 12px; background: #0f2233; }
+#moistfill { position: absolute; left: 0; top: 0; bottom: 0; background: linear-gradient(180deg, #8fd4ff, #2f8fd0); transition: width 0.12s; }
+#moisttext { position: absolute; inset: 0; display: grid; place-items: center; font-size: 10px; font-weight: 800; color: #fff; text-shadow: 0 1px 2px #000; }
+#moist-row.thirst #moistfill { background: linear-gradient(180deg, #ff6a6a, #a0141e); }
+#moist-row.thirst .hp-label.moist { color: #ff6a6a; }
+#moist-row.hidden { display: none; }
+#thirst-edge { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity 0.5s; background: radial-gradient(ellipse at center, transparent 55%, rgba(220,20,40,0.55) 100%); }
+body.thirst #thirst-edge { opacity: 1; animation: thirst-pulse 1.2s ease-in-out infinite; }
+@keyframes thirst-pulse { 0%, 100% { opacity: 0.75; } 50% { opacity: 1; } }
+.thirst-kw { color: #ff5a6a; }

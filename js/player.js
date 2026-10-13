@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { PLAYER, WORLD_HALF, DASH } from './config.js';
 import { createPlayer, createGerger } from './models.js';
+import { createManta } from './beachModels.js';
+import { mantanSpeedMul, mantanGuard, thirsty, MOIST } from './mantan.js';
 import { game } from './state.js';
 import { CHARACTERS } from './characters.js';
 import { elemMul } from './config.js';
@@ -99,6 +101,17 @@ export class Player {
     }
     if (this.lockMove) mv.set(0, 0, 0);   // 크루엘 버스트 중: 제자리
     // 공포 (몬스터 게르게르의 드리우는 밤): 조작 불가, 게르게르로부터 도망
+    // 만탄 갈증: 조작할 수 없고 제멋대로 돌아다님 (메인 화면 미리보기의 움직임처럼)
+    if (thirsty(this)) {
+      this.twT = (this.twT || 0) - dt;
+      if (this.twT <= 0) { this.twT = 0.6 + Math.random() * 1.4; this.twTarget = (this.twA || 0) + (Math.random() < 0.5 ? -1 : 1) * (0.6 + Math.random() * 2); }
+      const edge = WORLD_HALF - 6;
+      if (Math.abs(this.pos.x) > edge || Math.abs(this.pos.z) > edge) this.twTarget = Math.atan2(-this.pos.z, -this.pos.x);
+      let d = (this.twTarget || 0) - (this.twA || 0); d = Math.atan2(Math.sin(d), Math.cos(d));
+      this.twA = (this.twA || 0) + Math.max(-dt * 4, Math.min(dt * 4, d));
+      mv.set(Math.cos(this.twA), 0, Math.sin(this.twA));
+      this.moveTarget = null;
+    }
     if (this.fearT > 0) {
       this.fearT -= dt;
       const f = this.fearFrom && this.fearFrom.alive ? this.fearFrom : this.fearAt;
@@ -111,7 +124,7 @@ export class Player {
       mv.normalize();
       this.moveDir.copy(mv);
       const ch = CHARACTERS[game.charId];
-      const spd = (ch && ch.speedMul || 1) * (1 + 0.01 * this.gaugeSum());   // 캐릭터 기본 이동 속도 / 어둠 게이지 소모 1당 +1%
+      const spd = (ch && ch.speedMul || 1) * (1 + 0.01 * this.gaugeSum()) * mantanSpeedMul(this) * (1 - (this.cannonSlow || 0));   // 만탄: 수분 · 갈증 / 물대포 머금기   // 캐릭터 기본 이동 속도 / 어둠 게이지 소모 1당 +1%
       mv.multiplyScalar(PLAYER.speed * spd * game.mods.speedMul * (1 - (this.slow || 0)) * dt);   // slow: 꿀열매 폭탄 등
       this.pos.x += mv.x; this.pos.z += mv.z;
     }
@@ -183,7 +196,7 @@ export class Player {
   }
 
   tryDash() {
-    if (this.dashCd > 0 || this.dashT > 0 || this.fearT > 0) return false;   // 공포 중에는 대시 불가
+    if (this.dashCd > 0 || this.dashT > 0 || this.fearT > 0 || thirsty(this)) return false;   // 공포 · 갈증 중에는 대시 불가   // 공포 중에는 대시 불가
     this.dashDir.copy(this.moving ? this.moveDir : this.aim).setY(0).normalize();
     this.dashT = DASH.duration;
     this.dashCd = this.dashCooldown();
@@ -238,7 +251,8 @@ export class Player {
   setModel(id) {
     const g = this.model.group;
     g.remove(this.model.root);
-    const m = id === 'gerger' ? createGerger() : createPlayer();
+    const m = id === 'gerger' ? createGerger() : id === 'mantan' ? createManta(false) : createPlayer();
+    if (id === 'mantan') m.root.scale.multiplyScalar(1.15);
     m.group.remove(m.root);
     g.add(m.root);
     this.model = { ...m, group: g };
@@ -262,6 +276,7 @@ export class Player {
     this.gauge = 0; this.gaugeBuffs.length = 0;
     this.lift = 0; this.lockMove = false; this.castInvuln = false; this.tailBlades = false;
     this.bleeds = []; this.fearT = 0;
+    this.moist = MOIST.max; this.thirst = false; this.cannonSlow = 0;   // 만탄: 수분 100 에서 시작
   }
 
   castPulse(color) { this.castT = 0.25; this.castColor.set(color); }
@@ -293,7 +308,7 @@ export class Player {
       sfx('shield');
       game.sys.skillsRt.frostNova(bar);
     }
-    let dmg = amount * Math.max(0, 1 - game.mods.dmgTakenMinus);   // 업그레이드: 받는 피해 감소
+    let dmg = amount * Math.max(0, 1 - game.mods.dmgTakenMinus) * mantanGuard(this);   // 만탄: 수분 10당 받는 피해 -2%   // 업그레이드: 받는 피해 감소
     if (this.shield > 0) {
       const a = Math.min(this.shield, dmg);
       this.shield -= a;
@@ -312,12 +327,13 @@ export class Player {
   }
 
   render(time) {
-    const want = game.charId === 'gerger' ? 'gerger' : 'masang';
+    const want = game.charId === 'gerger' ? 'gerger' : game.charId === 'mantan' ? 'mantan' : 'masang';
     if (this.modelId !== want) this.setModel(want);
     const m = this.model;
     const g = m.group;
     g.rotation.y = this.facing;
     if (m.kind === 'dog') { this.renderDog(m, time); this.renderCommon(time); return; }
+    if (m.kind === 'manta') { this.renderManta(m, time); this.renderCommon(time); return; }
     // 걷기 애니메이션
     const sw = this.moving ? Math.sin(this.walk) : 0;
     const k = this.moving ? 1 : 0;
@@ -364,6 +380,23 @@ export class Player {
       else if (this.castT > 0) mat.emissive.copy(this.castColor).multiplyScalar(0.15 * (this.castT / 0.25));
       else mat.emissive.setRGB(0, 0, 0);
     }
+  }
+
+  // 만탄: 짧은 다리 걸음, 꼬리 자락 살랑, 구근 깜빡임 / 갈증: 푸른 부분이 붉어지고 눈동자가 사라짐 (백안)
+  renderManta(m, time) {
+    const sw = this.moving ? Math.sin(this.walk * 1.3) : 0;
+    m.legs.forEach((l, i) => { l.rotation.x = (i === 0 || i === 3 ? sw : -sw) * 0.5; });
+    m.root.position.y = (this.moving ? Math.abs(Math.sin(this.walk * 1.3)) * 0.04 : Math.sin(time * 2) * 0.01) + (this.lift || 0);
+    if (m.train) m.train.rotation.y = Math.sin(time * (this.moving ? 5 : 2)) * 0.08;
+    if (m.bulb) m.bulb.scale.setScalar(1 + 0.12 * Math.sin(time * 4));
+    const th = thirsty(this);
+    if (m.thirstShown !== th) {
+      m.thirstShown = th;
+      for (const mat of m.blueMats || []) mat.color.set(th ? 0xd8323e : mat.userData.base);
+      for (const pu of m.pupils || []) pu.visible = !th;
+    }
+    const hurt = this.hurtT > 0 ? this.hurtT / 0.25 : 0;
+    m.body.material.emissive.setRGB(hurt * 0.8, 0, 0);
   }
 
   renderCommon(time) {

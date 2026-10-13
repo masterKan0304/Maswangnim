@@ -367,6 +367,47 @@ Object.assign(SKILL_DEFS, {
   },
 });
 
+// ── 만탄 전용 스킬 ('갈증' 상태일 때의 효과는 붉게 표시) ──
+Object.assign(SKILL_DEFS, {
+  finSwing: {
+    key: 'finSwing', name: '지느러미 휘두르기', icon: ic('fin'), color: '#8fd4ff', element: null, passive: false, castTime: 0.05, owner: 'mantan',
+    short: '가장 가까운 적을 향해 지느러미를 휘둘러 피해를 주고 밀쳐냅니다.',
+    desc: '가장 가까운 적을 향해 지느러미를 휘둘러 피해를 주고 밀쳐냅니다.<br><b class="thirst-kw">\'갈증\'</b> : 더 이상 밀쳐내지 않지만 적중한 적을 출혈시킵니다.',
+    keywords: ['근접', '효과 범위', '밀치기', '갈증', '스킬 쿨타임'],
+    base: { damage: [8, 14], area: 20, knockback: 10, manaCost: 4, cooldown: 2, projSpeed: 8 },
+    relevant: ['damage', 'area', 'knockback', 'projDamage', 'projSize', 'projCount', 'projDuration', 'manaCost', 'cooldown'],
+    levelUp(st, lv) {
+      dmgUp40(st, lv);
+      if (lv >= 3) st.area = { min: 35, max: 35 };
+      if (lv >= 5) { st.projDamage = { min: 6, max: 10 }; st.projSize = { min: 10, max: 10 }; st.projCount = { min: 3, max: 3 }; st.projDuration = { min: 1.5, max: 1.5 }; }
+    },
+    levelText: (lv) => ['피해량이 40% 증가합니다.', lv === 3 && '기본 효과 범위가 35가 됩니다.', lv === 5 && '매 3번째 공격마다 가시 투사체 3개를 발사합니다.<br><b class="thirst-kw">\'갈증\'</b> : 가시도 출혈시킵니다.'],
+    extra: (sk) => [sk.level >= 5 && '매 3번째 공격: 가시 3개 (문장 · 연쇄 · 관통 적용)'],
+  },
+  splash: {
+    key: 'splash', name: '첨벙첨벙', icon: ic('splash'), color: '#46b8e6', element: 'ocean', passive: false, castTime: 0.05, owner: 'mantan',
+    short: '지속 시간 동안 뛰어올라 첨벙거리며 주위에 피해를 주고 밀쳐냅니다.',
+    desc: '지속 시간 동안 1.5초마다 뛰어올라 첨벙거리며 주위에 피해를 주고 밀쳐냅니다. 해양 속성 지대 위에 있었다면 효과 범위와 밀치기 거리가 50% 증가합니다. 스킬이 끝난 뒤 쿨타임이 시작됩니다.<br><b class="thirst-kw">\'갈증\'</b> : 1.5초마다 0.5초간 주위를 칼날 폭풍처럼 재빠르게 베어 0.1초마다 피해량의 30% 피해를 주고 출혈시킵니다. (밀치지 않음)',
+    keywords: ['해양', '효과 범위', '밀치기', '지속 시간', '갈증', '스킬 쿨타임'],
+    base: { damage: [12, 18], area: 25, duration: 6, knockback: 10, manaCost: 8, cooldown: 6, statusChance: 25 },
+    relevant: ['damage', 'area', 'duration', 'knockback', 'manaCost', 'cooldown', 'statusChance'],
+    levelUp: dmgUp40,
+    levelText: (lv) => ['피해량이 40% 증가합니다.', lv === 3 && '첨벙거릴 때마다 효과 범위만큼 해양 속성 지대를 4초간 남깁니다.', lv === 5 && '공격 주기가 1초가 됩니다.'],
+    extra: (sk) => [sk.level >= 3 && '첨벙: 해양 지대 4초', `공격 주기 ${sk.level >= 5 ? 1 : 1.5}초`],
+  },
+  waterCannon: {
+    key: 'waterCannon', name: '물대포', icon: ic('watercannon'), color: '#3fa8ff', element: 'ocean', passive: false, castTime: 0.05, owner: 'mantan', projectile: true, moistCost: 10,
+    short: '입에 물을 머금었다가 소모한 수분에 비례한 크기의 물방울을 발사합니다. 적중하면 폭발합니다.',
+    desc: '입 한가득 물을 머금으며 이동 속도가 20% 감소합니다. 지속 시간(최대 10초) 동안 매초 수분을 10 더 소모한 뒤, 소모한 수분에 비례한 크기의 물방울을 발사해 적중하면 폭발해 주위에 피해를 주고 밀쳐냅니다. 추가로 소모한 수분 1당 피해량 +5%, 투사체 크기 +2%, 효과 범위 +4%, 투사체 속도 -2%(최대 -50%), 이동 속도 -1%(최대 -40%). 관통 · 연쇄할 때마다 피해량 · 크기 · 효과 범위가 20% 감소합니다.',
+    keywords: ['해양', '수분', '투사체', '폭발', '효과 범위', '지속 시간', '스킬 쿨타임'],
+    base: { damage: [21, 28], duration: 3, projSize: 20, projSpeed: 5, projDuration: 3, projCount: 1, area: 30, manaCost: 10, cooldown: 12, statusChance: 25 },
+    relevant: ['damage', 'duration', 'projSize', 'projSpeed', 'projDuration', 'projCount', 'area', 'manaCost', 'cooldown', 'statusChance'],
+    levelUp: dmgUp40,
+    levelText: (lv) => ['피해량이 40% 증가합니다.', lv === 3 && '물을 머금는 동안 이동 속도가 감소하지 않습니다.', lv === 5 && '적중하면 무작위 방향으로 피해량 · 크기 · 효과 범위가 50% 줄어든 물방울 3개로 나뉩니다.'],
+    extra: (sk) => ['수분 10 소모 (머금는 동안 매초 10 추가)', sk.level >= 3 ? '머금는 동안 이동 속도 감소 없음' : '머금는 동안 이동 속도 20% 감소', sk.level >= 5 && '적중 시 작은 물방울 3개로 나뉨'],
+  },
+});
+
 // 어둠 게이지 소모량 (암습 3레벨: 10)
 export const gaugeCostOf = (sk) => (sk.def.gaugeCostLv3 != null && sk.level >= 3 ? sk.def.gaugeCostLv3 : sk.def.gaugeCost || 0);
 

@@ -373,6 +373,7 @@ export class UI {
     let h = `<div class="tip-title">${d.icon} ${d.name} <span class="tip-dim">Lv.${sk.level}</span>${d.element ? ` <span class="elem e-${d.element}">${ELEMENTS[d.element].name}</span>` : ''}</div><div>${d.desc}</div>`;
     if (d.element) h += `<div class="tip-dim">${ELEMENTS[d.element].status}: ${ELEMENTS[d.element].desc}</div>`;
     if (d.gaugeCost) h += `<div class="tip-warn">어둠 게이지 ${gaugeCostOf(sk)} 소모</div>`;
+    if (d.moistCost) h += `<div class="tip-warn">수분 ${d.moistCost} 소모</div>`;
     if (d.powerful) h += '<div><span class="cx-tag power">강력한 공격</span> <span class="tip-dim">사용하면 다른 강력한 공격 스킬의 쿨타임이 최소 1.5초가 됩니다.</span></div>';
     for (const [k, el2] of Object.entries(ELEM_CLASS)) {
       if (el2 !== d.element && stats[k] && stats[k].max > 0) h += `<div class="tip-ok">추가 ${ELEMENTS[el2].name} 피해를 얻었습니다.</div>`;
@@ -427,7 +428,7 @@ export class UI {
     ps.innerHTML = '<span class="sb-icon"></span><span class="sb-stack"></span><span class="sb-ptag">패시브</span>';
     ps._tip = () => {
       const ch = CHARACTERS[game.charId];
-      return ch ? `<div class="tip-title">${ic(ch.passive.icon)} ${ch.passive.name} <span class="tip-dim">고유 패시브</span></div><div>${ch.passive.desc}</div><div class="tip-dim">${ch.id === 'gerger' ? `어둠 게이지 ${Math.floor(game.sys.player.gauge)} / 100${game.sys.player.gaugeSum() ? ` · 소모 효과: 이동 속도 +${game.sys.player.gaugeSum()}%, 스킬 피해 +${game.sys.player.gaugeSum() * 2}%` : ''}` : `양분 ${game.sys.bloom ? game.sys.bloom.nutrients : 0} / 5`}</div>` : '';
+      return ch ? `<div class="tip-title">${ic(ch.passive.icon)} ${ch.passive.name} <span class="tip-dim">고유 패시브</span></div><div>${ch.passive.desc}</div><div class="tip-dim">${ch.id === 'mantan' ? `수분 ${Math.floor(game.sys.player.moist || 0)} / 100${game.sys.player.thirst ? ' · 갈증!' : ''}` : ch.id === 'gerger' ? `어둠 게이지 ${Math.floor(game.sys.player.gauge)} / 100${game.sys.player.gaugeSum() ? ` · 소모 효과: 이동 속도 +${game.sys.player.gaugeSum()}%, 스킬 피해 +${game.sys.player.gaugeSum() * 2}%` : ''}` : `양분 ${game.sys.bloom ? game.sys.bloom.nutrients : 0} / 5`}</div>` : '';
     };
     this.skillbarEl.appendChild(ps);
     this.sbPassive = ps;
@@ -1026,6 +1027,15 @@ export class UI {
       document.querySelector('.hp-label.mp').classList.toggle('gauge', !!pl.noMana);
       document.querySelector('.hp-track.mp').classList.toggle('gauge', !!pl.noMana);
     }
+    // 만탄: 수분 바 (갈증 중에는 붉게)
+    const mr = $('#moist-row');
+    const isM = game.charId === 'mantan';
+    if (mr && mr.classList.contains('hidden') === isM) mr.classList.toggle('hidden', !isM);
+    if (isM) {
+      $('#moistfill').style.width = `${Math.max(0, pl.moist || 0)}%`;
+      $('#moisttext').textContent = pl.thirst ? `갈증 ${Math.floor(pl.moist || 0)} / 100` : `${Math.floor(pl.moist || 0)} / 100`;
+      mr.classList.toggle('thirst', !!pl.thirst);
+    }
     if (pl.noMana) {
       $('#mpfill').style.width = `${pl.gauge}%`;
       $('#mptext').textContent = `${Math.floor(pl.gauge)} / 100`;
@@ -1066,7 +1076,7 @@ export class UI {
       this.sbPassive.classList.toggle('hidden', !ch);
       if (ch) {
         if (this.sbPassive._ch !== ch.id) { this.sbPassive._ch = ch.id; this.sbPassive.querySelector('.sb-icon').innerHTML = ic(ch.passive.icon); }
-        this.sbPassive.querySelector('.sb-stack').textContent = ch.id === 'gerger' ? Math.floor(game.sys.player.gauge) : game.sys.bloom ? game.sys.bloom.nutrients : 0;
+        this.sbPassive.querySelector('.sb-stack').textContent = ch.id === 'gerger' ? Math.floor(game.sys.player.gauge) : ch.id === 'mantan' ? Math.floor(game.sys.player.moist || 0) : game.sys.bloom ? game.sys.bloom.nutrients : 0;
       }
     }
     this.sbSlots.forEach((s, i) => {

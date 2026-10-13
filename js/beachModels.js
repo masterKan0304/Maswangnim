@@ -144,6 +144,7 @@ export function createManta(baby = false) {
   const train = mk(trainGeo, blueMat);
   root.add(train);
   // 큰 은빛 눈 (옆쪽, 망토 가장자리 아래) · 볼 홍조 · 흰 턱
+  const pupils = [];
   for (const s of [-1, 1]) {
     const eye = mk(new THREE.SphereGeometry(0.13, 22, 16), soft({ color: 0xe9eef5, roughness: 0.12, metalness: 0.2 }));
     eye.position.set(s * 0.36, 0.56, 0.36);
@@ -154,6 +155,7 @@ export function createManta(baby = false) {
     const blush = new THREE.Mesh(new THREE.SphereGeometry(0.07, 12, 8).scale(1.3, 0.6, 0.5), new THREE.MeshBasicMaterial({ color: 0xffb0c4, transparent: true, opacity: 0.85 }));
     blush.position.set(s * 0.33, 0.4, 0.46);
     root.add(eye, pupil, hl, blush);
+    pupils.push(pupil);
   }
   // 더듬이
   let bulb = null;
@@ -184,5 +186,6 @@ export function createManta(baby = false) {
   const box = new THREE.Box3().setFromObject(body).union(new THREE.Box3().setFromObject(head));
   const w = Math.max(box.max.x - box.min.x, box.max.z - box.min.z);
   root.scale.setScalar(1 / w);
-  return { group, root, legs, wings: [], train, bulb, body: { material: whiteMat }, kind: 'manta' };
+  blueMat.userData.base = blueMat.color.getHex();
+  return { group, root, legs, wings: [], train, bulb, body: { material: whiteMat }, blueMats: [blueMat], pupils, kind: 'manta' };
 }

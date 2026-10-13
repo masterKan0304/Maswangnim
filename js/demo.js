@@ -180,7 +180,7 @@ export class Demo {
     if (this.mode === 'showcase') { this.showcase.update(dt); return; }
     this.t += dt;
     this.steer(dt);
-    this.sys.player.gauge = 100;   // 미리보기: 어둠 게이지 가득 (게르게르)
+    this.sys.player.gauge = 100; this.sys.player.moist = 100;   // 미리보기: 어둠 게이지 · 수분 가득
     // 적이 계속 몰려옴
     this.spawnAcc += dt * 7;
     while (this.spawnAcc >= 1) {

@@ -159,7 +159,7 @@ enemies.onKill = (e, src, st) => {
   if (e.type === 'mantan' && !(profile.ownedChars || []).includes('mantan')) {
     profile.ownedChars = [...new Set([...(profile.ownedChars || ['masang']), 'mantan'])];
     saveProfile();
-    ui.toast('🌊 만탄을 처치했습니다! 캐릭터 「만탄」이 해금되었습니다! (준비 중)', 'boss');
+    ui.toast('🌊 만탄을 처치했습니다! 캐릭터 「만탄」이 해금되었습니다!', 'boss');
   }
   if (e.boss) {
     fx.explosion(e.x, e.z, 4, 0xb07cff);
@@ -524,7 +524,7 @@ function startGame(stageId = 1) {
   game.accountLevel = profile.accountLevel;
   const tut = stageById(stageId).tutorial;
   game.overkill = OVERKILL.start;   // 오버킬 시간: 2분에서 시작
-  const owned = (id) => CHARACTERS[id] && (!CHARACTERS[id].unlockReq || (profile.ownedChars || []).includes(id));
+  const owned = (id) => CHARACTERS[id] && (!(CHARACTERS[id].unlockReq || CHARACTERS[id].unlockHint) || (profile.ownedChars || []).includes(id));
   game.charId = tut ? 'masang' : (owned(profile.character) ? profile.character : DEFAULT_CHARACTER);   // 튜토리얼은 마솽 / 해금한 캐릭터만
   game.masteryLevel = masteryOf(game.charId).lv;
   game.mods = computeMods(tut);   // 튜토리얼: 업그레이드 효과 없음

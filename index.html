@@ -22,6 +22,7 @@
   <canvas id="c"></canvas>
   <div id="night-tint"></div>
   <div id="night-dark"></div>
+  <div id="thirst-edge"></div>
   <div id="night-eye" class="hidden"><div class="ne-aura"></div><div class="ne-wisps"></div>
     <svg viewBox="0 0 100 100"><defs><clipPath id="ne-clip"><circle cx="50" cy="50" r="44"/></clipPath>
       <radialGradient id="ne-iris"><stop offset="0" stop-color="#f0c8ff"/><stop offset=".5" stop-color="#a040ff"/><stop offset="1" stop-color="#2a0650"/></radialGradient>
@@ -56,6 +57,10 @@
       <div class="bar-row">
         <div class="hp-label mp">MP</div>
         <div class="hp-track mp"><div id="mpfill"></div><span id="mptext"></span></div>
+      </div>
+      <div class="bar-row hidden" id="moist-row">
+        <div class="hp-label moist">H₂O</div>
+        <div class="hp-track moist"><div id="moistfill"></div><span id="moisttext"></span></div>
       </div>
     </div>
     <div id="dashbox"><span class="dk">SPACE</span><i data-ic="wind"></i><span class="dcd"></span></div>

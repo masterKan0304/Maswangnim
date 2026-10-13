@@ -199,8 +199,9 @@ function selectIdx(i) {
 const CHAR_SLOTS = 3;   // 아래 목록 칸 수 (아직 없는 캐릭터는 '준비 중')
 let viewChar = null;    // 보고 있는 캐릭터 (해금 전 캐릭터도 볼 수 있음)
 let unlockArm = false;  // 해금 버튼: 한 번 더 눌러야 확정
-const isOwned = (cid) => !CHARACTERS[cid].unlockReq || (profile.ownedChars || []).includes(cid);
+const isOwned = (cid) => !(CHARACTERS[cid].unlockReq || CHARACTERS[cid].unlockHint) || (profile.ownedChars || []).includes(cid);
 function unlockBox(ch) {
+  if (ch.unlockHint) return `<div class="ch-unlock"><div class="chu-title">${ic('lock')} 잠긴 캐릭터</div><div class="chu-req no">${ch.unlockHint}</div></div>`;
   const r = ch.unlockReq;
   const lvOk = profile.accountLevel >= r.accountLevel, goldOk = profile.gold >= r.gold;
   return `<div class="ch-unlock"><div class="chu-title">${ic('lock')} 잠긴 캐릭터</div>

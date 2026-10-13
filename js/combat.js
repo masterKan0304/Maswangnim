@@ -6,6 +6,7 @@ import { gaugeCostOf, getStats, computeStats, sample, sampleInt, avg, statusProb
 import { makeGlowSprite, RingMesh } from './effects.js';
 import { jitter, createPlayer } from './models.js';
 import { sfx } from './audio.js';
+import { updateMoisture, mantanDmgMul, mantanCdRate, mantanOnHit, thirsty, castFin, startSplash, updateSplashes, startCannon, updateCannons, clearMantan } from './mantan.js';
 import { castClaw, castDreamEat, startCruel, updateCruels, clearCruels, castDarkEye, castAmbush, nightStep, bleedInduce, castSabbath } from './gerger.js';
 const BLEED_SOURCES = new Set(['claw', 'dreamEat', 'cruelBurst', 'ambush']);   // 출혈 유발 대상 (게르게르가 직접 주는 피해)
 
@@ -66,6 +67,7 @@ export class SkillRuntime {
     this.gwaves = [];   // 크루엘 버스트: 땅을 가르는 파동
     this.eyes = [];     // 암흑의 눈
     this.sabbaths = []; // 블랙 사바스 파동
+    this.splashes = []; this.cannons = []; this.bubbles = [];   // 만탄: 첨벙첨벙 · 물대포
 
     // 파이어볼: 울퉁불퉁한 검붉은 돌 + 틈 사이로 비치는 용암 핵 (뜨거운 운석)
     const rockGeo = jitter(new THREE.DodecahedronGeometry(0.5, 0), 0.32, 41);
@@ -155,6 +157,7 @@ export class SkillRuntime {
     let mul = o.mul ?? 1;
     if (m.manaPower) mul *= 1 + m.manaPower * Math.floor(this.player.mana / 5);                    // 마나 비전: 현재 마나 5당
     if (st.manaDmg) mul *= st.manaDmg;
+    mul *= mantanDmgMul(this.player, sk);   // 만탄: 수분 10당 해양 피해 +5% / 갈증 +100%
     if (this.player.gaugeSum) mul *= 1 + 0.02 * this.player.gaugeSum();                              // 어둠 게이지 소모: 1당 스킬 피해 +2% (4초)                                                               // 마나 전환: 이번 시전에 쓴 마나만큼
     const main = (o.base ?? sample(st.damage)) * mul;   // 스킬 피해 업그레이드는 능력치(st.damage)에 이미 들어 있음
     const sp = statusProb(st, o.statusRatio ?? 1);
@@ -180,6 +183,7 @@ export class SkillRuntime {
     }
     // 출혈 유발 (게르게르가 직접 준 피해)
     if (dealt > 0 && BLEED_SOURCES.has(sk.key)) bleedInduce(this, e);
+    mantanOnHit(this, e, sk, dealt);   // 만탄 갈증: 출혈
     return dealt;
   }
 
@@ -188,9 +192,9 @@ export class SkillRuntime {
     this.clock = (this.clock || 0) + dt;   // 지대 생성 문장 (초당 1회) 기준 시간
     for (const sk of game.skills) {
       if (sk.def.passive) { if (sk.key === 'frostBarrier') this.updateBarrier(sk, dt); continue; }
-      if (sk.flame || sk.honey) continue;           // 화염 방사 / 꿀 모으는 중: 끝난 뒤에 쿨타임 시작
-      if (sk.cd > 0) sk.cd -= dt;
-      if (sk.cd <= 0 && sk.auto) this.tryCast(sk, false);
+      if (sk.flame || sk.honey || sk.splash || sk.cannon) continue;   // 화염 방사 / 꿀 · 첨벙 · 물 머금는 중: 끝난 뒤에 쿨타임 시작
+      if (sk.cd > 0) sk.cd -= dt * mantanCdRate(this.player);         // 만탄 갈증: 스킬 가속 +40
+      if (sk.cd <= 0 && (sk.auto || thirsty(this.player))) this.tryCast(sk, false);   // 갈증: 스킬을 저절로 씀
     }
     // 버프 (발동 : 처치)
     for (let i = game.buffs.length - 1; i >= 0; i--) {
@@ -214,6 +218,9 @@ export class SkillRuntime {
     this.updateRootTrail(dt);
     this.updateDolls(dt);
     this.updateHoneys(dt);
+    updateMoisture(this, dt);
+    updateSplashes(this, dt);
+    updateCannons(this, dt);
     updateCruels(this, dt);
   }
 
@@ -230,11 +237,12 @@ export class SkillRuntime {
   }
 
   tryCast(sk, manual) {
-    if (sk.def.passive || sk.flame || sk.honey || sk.cruel) return false;
+    if (sk.def.passive || sk.flame || sk.honey || sk.cruel || sk.splash || sk.cannon) return false;
+    if (manual && thirsty(this.player)) return false;   // 갈증: 직접 쓸 수 없음
     if (sk.cd > 0) return false;
     let st = getStats(sk);
     const p = this.player.pos;
-    const need = { roots: manual ? 0 : 20, strawDoll: manual ? 0 : 10, honeyBomb: 0, claw: manual ? 0 : 2.4, dreamEat: manual ? 0 : 3.4, cruelBurst: manual ? 0 : 12, darkEye: manual ? 0 : 13, blackSabbath: manual ? 0 : 14, ambush: sample(st.range) / U, leafCut: manual ? 0 : 20, pineWind: manual ? 0 : 20, nature: manual ? 0 : sample(st.area) / U / 2, fireball: manual ? 0 : 20, chainLightning: sample(st.range) / U, snowfall: sample(st.range) / U, flamethrower: manual ? 0 : (sample(st.area) / U) * 1.3, lightningBeam: manual ? 0 : 14 }[sk.key];
+    const need = { roots: manual ? 0 : 20, strawDoll: manual ? 0 : 10, honeyBomb: 0, claw: manual ? 0 : 2.4, dreamEat: manual ? 0 : 3.4, cruelBurst: manual ? 0 : 12, darkEye: manual ? 0 : 13, finSwing: manual ? 0 : 3.2, splash: manual ? 0 : 3, waterCannon: manual ? 0 : 12, blackSabbath: manual ? 0 : 14, ambush: sample(st.range) / U, leafCut: manual ? 0 : 20, pineWind: manual ? 0 : 20, nature: manual ? 0 : sample(st.area) / U / 2, fireball: manual ? 0 : 20, chainLightning: sample(st.range) / U, snowfall: sample(st.range) / U, flamethrower: manual ? 0 : (sample(st.area) / U) * 1.3, lightningBeam: manual ? 0 : 14 }[sk.key];
     if (need && !this.enemies.anyInRange(p.x, p.z, need)) {
       if (manual) game.sys.ui.toast('사거리 안에 적이 없습니다', 'warn');
       return false;
@@ -252,6 +260,13 @@ export class SkillRuntime {
       return false;
     }
     if (gc > 0) this.player.spendGauge(gc);
+    // 수분 (만탄)
+    const mc = game.debug.god || thirsty(this.player) || game.charId !== 'mantan' ? 0 : sk.def.moistCost || 0;
+    if (mc > 0 && (this.player.moist || 0) < mc) {
+      if (manual) { game.sys.ui.toast('수분이 부족합니다', 'warn'); sfx('error'); }
+      return false;
+    }
+    if (mc > 0) this.player.moist -= mc;
     this.player.mana -= cost;
     if (cost > 0 && game.mods.manaRefund) this.player.mana = Math.min(this.player.maxMana, this.player.mana + cost * game.mods.manaRefund);   // 마나 효율
     if (cost > 0 && game.mods.manaToDmg) st = { ...st, manaDmg: 1 + game.mods.manaToDmg * cost };    // 마나 전환: 쓴 마나 1당 +3%
@@ -300,6 +315,9 @@ export class SkillRuntime {
     else if (sk.key === 'cruelBurst') startCruel(this, sk, st);
     else if (sk.key === 'darkEye') castDarkEye(this, sk, st);
     else if (sk.key === 'blackSabbath') castSabbath(this, sk, st);
+    else if (sk.key === 'finSwing') castFin(this, sk, st);
+    else if (sk.key === 'splash') startSplash(this, sk, st);
+    else if (sk.key === 'waterCannon') startCannon(this, sk, st);
     else if (sk.key === 'ambush') { if (!castAmbush(this, sk, st)) sk.cd = 0.3; }
   }
 
@@ -888,6 +906,7 @@ export class SkillRuntime {
 
   // 진행 중인 모든 스킬 연출 제거 (도감 미리보기 장면 초기화)
   clearAll() {
+    clearMantan(this);
     clearCruels(this);
     for (const p of this.projs) this.poolOf(p.kind).put(p.mesh);
     while (this.winds.length) this.removeWind(0);

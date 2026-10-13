@@ -49,6 +49,10 @@ const SKILL_SCENES = {
   bleedInduce: () => ({ slots: [[PX + 1.3, 0], [PX + 1.7, 0.7], [PX + 1.7, -0.7]], hp: 6, pullBack: 1.5, companion: 'claw' }),
   blackSabbath: () => ({ slots: [[0, 0], [1.2, 0.5], [1.2, -0.5], [2.4, 0], [3.2, 0.8], [3.2, -0.8]], hp: 3, pullBack: 0.6, status: 'fear' }),
   nightFall: () => ({ slots: [...CLUSTER, ...BEHIND, [0, 1.6], [0, -1.6]], hp: 3, pullBack: 0.8, special: 'nightfall' }),
+  // 만탄 전용
+  finSwing: (lv) => ({ slots: [[PX + 1.5, 0], [PX + 2, 0.8], [PX + 2, -0.8], ...(lv >= 5 ? [[PX + 4, 0.4], [PX + 4.5, -0.6]] : [])], hp: 4, pullBack: 1.2 }),
+  splash: () => ({ slots: RING(7, 1.6, PX, PV), hp: 4, pullBack: 1 }),
+  waterCannon: (lv) => ({ slots: [[0.8, 0], [1.6, 0.8], [1.6, -0.8], [2.6, 0], ...(lv >= 5 ? [[3.4, 1.4], [3.4, -1.4]] : [])], hp: 4, pullBack: 0.8 }),
   // 마솽 전용
   leafCut: (lv) => ({ slots: lv >= 3 ? [...CLUSTER, ...BEHIND] : CLUSTER, hp: 2 }),
   nature: () => ({ slots: RING(6, 1.6, PX, PV), hp: 3, pullBack: 1.2 }),
