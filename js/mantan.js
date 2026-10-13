@@ -111,20 +111,35 @@ export function castFin(rt, sk, st) {
   }
 }
 
+// 꼬리를 휘두르듯: 휘두르는 끝을 따라 초승달 궤적이 차례로 생기고 뒤쪽부터 옅어짐 (바깥 물빛 + 안쪽 흰 줄기 + 물방울)
 function finFx(fx, x, z, a, R, thirst) {
-  const col = thirst ? 0xff3a4a : 0x8fd4ff;
-  const geo = new THREE.RingGeometry(R * 0.55, R * 1.05, 24, 1, -70 * DEG, 140 * DEG).rotateX(-Math.PI / 2);
-  const mat = new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
-  const m = new THREE.Mesh(geo, mat);
-  m.position.set(x, 0.45, z);
-  fx.add([m], 0.3, (k) => {
-    m.rotation.y = -a + (0.8 - k * 1.6) * 0.6;
-    mat.opacity = k < 0.25 ? k / 0.25 * 0.85 : (1 - k) / 0.75 * 0.85;
-    if (k >= 1) geo.dispose();
-  }, [mat]);
-  for (let i = 0; i < 16; i++) {
-    const b = a + rnd(-1.1, 1.1), d = R * rnd(0.6, 1.1);
-    fx.particles.emit(x + Math.cos(b) * d, rnd(0.3, 0.8), z + Math.sin(b) * d, Math.cos(b) * 3, rnd(1, 2.5), Math.sin(b) * 3, rnd(0.3, 0.5), rnd(0.06, 0.11), thirst ? pick([0xff3a4a, 0x8a0a1a]) : pick([0x8fd4ff, 0xe8f8ff, 0x46b8e6]), 10);
+  const outer = thirst ? 0xff3a4a : 0x46b8e6, inner = thirst ? 0xffc0c8 : 0xe8f8ff;
+  const SEG = 14, SWEEP = 150 * DEG, DUR = 0.2;
+  const start = a - SWEEP / 2;
+  for (let i = 0; i < SEG; i++) {
+    const t = i / (SEG - 1);
+    const th = start + SWEEP * t;
+    const w = 0.25 + 0.75 * Math.sin(t * Math.PI);           // 가운데가 가장 두껍게 (초승달)
+    const r0 = R * (0.55 + 0.1 * (1 - w)), r1 = R * (0.75 + 0.3 * w);
+    for (const [col, k0, k1, op, y] of [[outer, 0, 1, 0.75, 0.42], [inner, 0.35, 0.75, 0.9, 0.45]]) {
+      const ra = r0 + (r1 - r0) * k0, rb = r0 + (r1 - r0) * k1;
+      const geo = new THREE.RingGeometry(ra, rb, 3, 1, -(th + (SWEEP / SEG) * 0.6), (SWEEP / SEG) * 1.2).rotateX(-Math.PI / 2);
+      const mat = new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+      const m = new THREE.Mesh(geo, mat);
+      m.position.set(x, y + Math.sin(t * Math.PI) * 0.15, z);
+      const appear = t * DUR, life = 0.32;
+      fx.add([m], appear + life, (k) => {
+        const tt = k * (appear + life) - appear;
+        mat.opacity = tt < 0 ? 0 : op * Math.pow(Math.max(0, 1 - tt / life), 1.5);
+        if (k >= 1) geo.dispose();
+      }, [mat]);
+    }
+  }
+  // 휘두르는 끝을 따라 튀는 물방울
+  for (let i = 0; i < 26; i++) {
+    const t = Math.random(), b2 = start + SWEEP * t, d = R * rnd(0.85, 1.15);
+    const tang = b2 + Math.PI / 2;
+    fx.particles.emit(x + Math.cos(b2) * d, rnd(0.3, 0.7), z + Math.sin(b2) * d, Math.cos(tang) * 3 + Math.cos(b2) * 1.5, rnd(1.5, 3.5), Math.sin(tang) * 3 + Math.sin(b2) * 1.5, rnd(0.35, 0.6), rnd(0.06, 0.12), thirst ? pick([0xff3a4a, 0x8a0a1a, 0xffc0c8]) : pick([0x8fd4ff, 0xe8f8ff, 0x46b8e6, 0xffffff]), 12);
   }
 }
 
@@ -145,7 +160,7 @@ export function updateSplashes(rt, dt) {
     if (s.next <= 0 && s.t < s.dur) {
       s.next += every;
       if (p.thirst) { s.storm = 0.5; s.stormTick = 0; stormFx(rt, s); }
-      else s.hop = 0.35;   // 뛰어오름
+      else { s.hop = 0.35; jumpSplash(rt); }   // 뛰어오름 (물방울이 튐)
     }
     // 첨벙: 착지 순간 피해
     if (s.hop > 0) {
@@ -172,6 +187,12 @@ export function updateSplashes(rt, dt) {
   }
 }
 
+function jumpSplash(rt) {
+  const P = rt.player.pos;
+  rt.fx.particles.burst(P.x, 0.15, P.z, 45, [0x46b8e6, 0x8fd4ff, 0xe8f8ff, 0xffffff], { speed: 3.5, size: 0.1, life: 0.7, up: 5, grav: 14 });
+  for (let i = 0; i < 20; i++) { const a = Math.random() * Math.PI * 2; rt.fx.particles.emit(P.x + Math.cos(a) * 0.4, 0.1, P.z + Math.sin(a) * 0.4, Math.cos(a) * 2.5, rnd(3, 5), Math.sin(a) * 2.5, rnd(0.5, 0.8), rnd(0.07, 0.12), pick([0x8fd4ff, 0xffffff]), 14); }
+}
+
 function splashHit(rt, sk, st) {
   const P = rt.player.pos;
   const ocean = onOcean(rt);
@@ -187,7 +208,8 @@ function splashHit(rt, sk, st) {
   }
   if (sk.level >= 3) rt.addZone(P.x, P.z, 'ocean', 4, R, 0, sk, st);   // 3레벨: 해양 지대 4초
   rt.fx.ring(P.x, P.z, R, 0x46b8e6, 0.5); rt.fx.ring(P.x, P.z, R * 0.6, 0xe8f8ff, 0.4);
-  rt.fx.particles.burst(P.x, 0.2, P.z, 50, [0x46b8e6, 0x8fd4ff, 0xe8f8ff, 0xffffff], { speed: 2 + R * 1.5, size: 0.11, life: 0.8, up: 6, grav: 14 });
+  rt.fx.particles.burst(P.x, 0.2, P.z, 110, [0x46b8e6, 0x8fd4ff, 0xe8f8ff, 0xffffff], { speed: 2 + R * 1.8, size: 0.12, life: 0.9, up: 7, grav: 14 });
+  for (let i = 0; i < 40; i++) { const a = (i / 40) * Math.PI * 2, v = rnd(2.5, 4) + R; rt.fx.particles.emit(P.x + Math.cos(a) * 0.5, 0.15, P.z + Math.sin(a) * 0.5, Math.cos(a) * v, rnd(4, 7), Math.sin(a) * v, rnd(0.6, 0.9), rnd(0.08, 0.14), pick([0x8fd4ff, 0xffffff, 0x46b8e6]), 14); }   // 왕관 모양 물보라
   rt.fx.splat(P.x, P.z, 0x46b8e6, R * 0.6);
   sfx('iceball');
 }

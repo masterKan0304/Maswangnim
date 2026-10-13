@@ -2,7 +2,8 @@
 //  디버그 모드 (전투 중 F8)
 // ─────────────────────────────────────────────
 import { game, bump, inventoryAdd } from './state.js';
-import { SUBJECTS, SUBJECT_ORDER, CHANGES, MAX_SENTENCE_SLOTS, MAX_SKILL_LEVEL, MAX_SKILLS, hpScale, WORLD_HALF } from './config.js';
+import { SUBJECTS, SUBJECT_ORDER, CHANGES, MAX_SENTENCE_SLOTS, MAX_SKILL_LEVEL, MAX_SKILLS, hpScale, WORLD_HALF, ENEMY_TYPES } from './config.js';
+import { stageById, stageEnemies } from './stages.js';
 import { SKILL_DEFS, SKILL_ORDER, createSkill } from './skills.js';
 import { CHARACTERS, CHARACTER_ORDER } from './characters.js';
 import { makeSentence, makeWord, makeFixed, makeRange, makePercent, TEMPLATES, sentenceText, slotAccepts } from './blocks.js';
@@ -53,14 +54,19 @@ function section(title) {
 }
 
 function spawnNear(type) {
+  // 지금 스테이지의 보스 / 정예
+  const se = stageEnemies(stageById(game.stage));
+  if (type === 'boss') type = se.boss;
+  else if (type === 'elite') { if (!se.elite) { game.sys.ui.toast('이 스테이지에는 정예 몬스터가 없습니다', 'warn'); sfx('error'); return; } type = se.elite; }
+  const isBoss = !!ENEMY_TYPES[type].boss || type === 'boss';
   const p = game.sys.player.pos;
   const a = Math.random() * Math.PI * 2;
   const x = Math.max(-WORLD_HALF + 2, Math.min(WORLD_HALF - 2, p.x + Math.cos(a) * 8));
   const z = Math.max(-WORLD_HALF + 2, Math.min(WORLD_HALF - 2, p.z + Math.sin(a) * 8));
-  const e = game.sys.enemies.spawn(type, x, z, type === 'boss' ? 1 : hpScale(game.time));
+  const e = game.sys.enemies.spawn(type, x, z, isBoss ? 1 : hpScale(game.time));
   e.debugSpawn = true;   // 디버그로 만든 최종 보스는 처치해도 게임이 끝나지 않음
-  game.sys.fx.ring(x, z, 3, type === 'boss' ? 0xb07cff : 0x3f8cff, 0.8);
-  sfx(type === 'boss' ? 'boss' : 'elite');
+  game.sys.fx.ring(x, z, 3, isBoss ? 0xb07cff : 0x3f8cff, 0.8);
+  sfx(isBoss ? 'boss' : 'elite');
 }
 
 export function renderDebug() {
@@ -95,6 +101,17 @@ export function renderDebug() {
     b.className = 'menu-btn';
     b.innerHTML = '🐾 게르게르 소환';
     b.addEventListener('click', () => { if (game.sys.hunter) { const e = game.sys.hunter.spawn(); if (e) e.debugSpawn = true; } });
+    bossRow.appendChild(b);
+  }
+  {
+    const b = document.createElement('button');
+    b.className = 'menu-btn';
+    b.innerHTML = '⏩ 1분 스킵';
+    b.addEventListener('click', () => {
+      game.time += 60;   // 타이머가 1분 넘어가고, 적 생성 · 웨이브 · 정예 · 낮밤도 그에 맞춰 바뀜
+      game.sys.ui.toast('[디버그] 1분이 지났습니다', '');
+      sfx('select');
+    });
     bossRow.appendChild(b);
   }
   s2.appendChild(bossRow);

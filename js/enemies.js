@@ -502,6 +502,7 @@ export class EnemyManager {
         e.model.body.material.color.copy(_c);
         e.model.body.material.emissive.setRGB(e.flash > 0 ? 0.5 : 0, e.flash > 0 ? 0.5 : 0, e.flash > 0 ? 0.5 : 0);
         if (e.redGlow > 0) e.model.body.material.emissive.setRGB(0.55 + 0.25 * Math.sin(t * 30), 0, 0);   // 공격 직전: 붉게 (위험)
+        if (e.model.blueMats) for (const bm of e.model.blueMats) bm.color.setHex(bm.userData.base).multiply(_c);   // 파란 망토도 상태이상 색
         if (e.model.kind === 'manta') {
           const w = Math.sin(t * 7 + e.phase * 10);
           e.model.legs.forEach((l, i) => { l.rotation.x = (i === 0 || i === 3 ? w : -w) * 0.45; });

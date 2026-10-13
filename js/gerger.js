@@ -598,7 +598,7 @@ function eyeDom() {
 function setEye(step) {
   const el = eyeDom();
   if (!el) return;
-  el.classList.toggle('hidden', step <= 0);
+  el.classList.toggle('hidden', step <= 0 || game.demo);   // 메인 화면 · 도감 미리보기에서는 보이지 않음
   el.classList.remove('burst');
   el.style.setProperty('--lv', step);
   const o = EYE_OPEN[step] || 0;
