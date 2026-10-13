@@ -29,6 +29,11 @@ export const STAGE_ENEMIES = {
   meadow: { early: 'green', mid: 'yellow', late: 'red', elite: 'elite', boss: 'boss', crowd: '슬라임 무리' },
   beach: { early: 'crab', mid: 'hermit', late: 'mata', elite: null, boss: 'mantan', crowd: '바다 생물 무리' },
 };
+// 이 적이 나오는 맵 (도감 미리보기 배경)
+export function mapOfEnemy(type) {
+  for (const [map, se] of Object.entries(STAGE_ENEMIES)) if ([se.early, se.mid, se.late, se.elite, se.boss].includes(type)) return map;
+  return 'meadow';
+}
 export const stageEnemies = (st) => STAGE_ENEMIES[st && st.map] || STAGE_ENEMIES.meadow;
 
 export const stageById = (id) => STAGES.find((s) => s.id === id) || STAGES[0];

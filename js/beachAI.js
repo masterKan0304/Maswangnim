@@ -38,25 +38,38 @@ function crab(e, dt, dx, dz) {
   return { dx: sx * sg, dz: sz * sg, speed: e.speed, keepRot: true, y: Math.abs(Math.sin(e.walkT)) * 0.03 };
 }
 
+const FLIP = 0.75;
 function hermit(e, dt, dx, dz, dist) {
   const d = e.dash;
   if (d) {
     d.t += dt;
+    if (d.ph === 'flipIn') {   // 몸을 뒤집음 (제자리)
+      const k = Math.min(1, d.t / FLIP);
+      e.spin = (e.spin || 0) + dt * 3 * k;
+      if (k >= 1) { d.ph = 'dash'; d.t = 0; }
+      return { dx: d.dx, dz: d.dz, speed: 0, keepRot: true, tilt: Math.PI * (k * k * (3 - 2 * k)), spin: e.spin };
+    }
+    if (d.ph === 'flipOut') {  // 원래대로 되돌림
+      const k = Math.min(1, d.t / FLIP);
+      e.spin = (e.spin || 0) + dt * 3 * (1 - k);
+      if (k >= 1) { e.dash = null; e.dashCd = 8; e.spin = 0; return { dx, dz, speed: e.speed }; }   // 이때부터 8초 쿨타임
+      return { dx: d.dx, dz: d.dz, speed: 0, keepRot: true, tilt: Math.PI * (1 - k * k * (3 - 2 * k)), spin: e.spin };
+    }
     const ahead = d.dx * dx + d.dz * dz > 0.6;   // 진행 방향 앞에 플레이어가 있는지
     if (d.t > 1.5 && !ahead && !d.brakeT) { d.brakeT = 0.5; d.v0 = d.v; }
+    if (d.t > 4 && !d.brakeT) { d.brakeT = 0.5; d.v0 = d.v; }   // 너무 오래 돌진하면 감속
     if (d.brakeT) {
       d.brakeT = Math.max(0, d.brakeT - dt);
       d.v = 1 + (d.v0 - 1) * (d.brakeT / 0.5);
-      if (d.brakeT <= 0) { e.dash = null; e.dashCd = 8; e.dashing = false; return { dx, dz, speed: e.speed, y: 0 }; }   // 원래대로 → 8초 쿨타임
+      if (d.brakeT <= 0) { d.ph = 'flipOut'; d.t = 0; e.dashing = false; }
     } else d.v = Math.min(5, d.v + dt * 6);   // 최대 5 까지 가속
-    if (d.t > 4 && !d.brakeT) { d.brakeT = 0.5; d.v0 = d.v; }   // 너무 오래 돌진하면 감속
     e.spin = (e.spin || 0) + d.v * dt * 4.5;   // 속도에 비례한 회전
     e.dashing = d.v > 1.5;
-    return { dx: d.dx, dz: d.dz, speed: d.v, keepRot: true, y: e.r * 2.3, tilt: Math.PI, spin: e.spin };   // 뒤집힌 채 (껍데기가 아래)
+    return { dx: d.dx, dz: d.dz, speed: d.v, keepRot: true, tilt: Math.PI, spin: e.spin };
   }
   e.dashCd = (e.dashCd ?? 3 + Math.random() * 5) - dt;
   if (e.dashCd <= 0 && dist < 14) {
-    e.dash = { dx, dz, t: 0, v: 1, brakeT: 0 };
+    e.dash = { ph: 'flipIn', dx, dz, t: 0, v: 1, brakeT: 0 };
     e.rot = Math.atan2(dx, dz);
   }
   return { dx, dz, speed: e.speed, y: 0 };

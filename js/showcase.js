@@ -4,6 +4,7 @@
 // ─────────────────────────────────────────────
 import { game, bump } from './state.js';
 import { ENEMY_TYPES } from './config.js';
+import { mapOfEnemy } from './stages.js';
 import { createSkill, getStats, triggerGoal, sample, SKILL_DEFS } from './skills.js';
 import { makeSentence, makeWord, makeFixed } from './blocks.js';
 import { nightStep } from './gerger.js';
@@ -97,6 +98,8 @@ export class Showcase {
     player.hidden = cfg.kind === 'enemy';   // 적 미리보기에는 플레이어 없음
     // 캐릭터 패시브는 그 캐릭터의 전용 스킬 / 캐릭터 미리보기에서만 (공용 스킬 · 적 미리보기에서는 꺼 둠)
     game.charId = cfg.charId || (cfg.kind === 'skill' && SKILL_DEFS[cfg.key].owner) || null;
+    // 배경 맵: 적은 그 적이 나오는 스테이지, 만탄(캐릭터 · 전용 스킬)은 해변, 나머지는 초원
+    if (this.sys.setMap) this.sys.setMap(cfg.kind === 'enemy' ? mapOfEnemy(cfg.type) : game.charId === 'mantan' ? 'beach' : 'meadow');
     if (cfg.kind === 'skill') this.setSkill(cfg.key, cfg.level);
     else if (cfg.kind === 'character') this.setCharacter(cfg.skills);
     else this.setEnemy(cfg.type);

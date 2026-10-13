@@ -371,6 +371,14 @@ export class EnemyManager {
       // 해변 몬스터: 각자의 걸음 (꽃게 옆걸음 · 소라게 돌진 · 마타/만탄 걷기)
       const gait = e.T.ai && !(e.fearT > 0 && e.T.ai === 'hermit' && !e.dash) ? beachGait(e, dt, dx, dz, dist) : null;
       if (gait) { dx = gait.dx; dz = gait.dz; }
+      // 돌진하는 소라게 주위의 회오리
+      if (e.dash && e.dash.ph === 'dash' && Math.random() < 0.9) {
+        for (let q = 0; q < 2; q++) {
+          const a = Math.random() * Math.PI * 2, rr = e.r * (1 + Math.random() * 0.8), h = Math.random() * e.r * 2;
+          this.fx.particles.emit(e.x + Math.cos(a) * rr, 0.1 + h, e.z + Math.sin(a) * rr, -Math.sin(a) * 5 * rr, 1.2 + Math.random(), Math.cos(a) * 5 * rr, 0.35, 0.06 + Math.random() * 0.05, Math.random() < 0.5 ? 0xf2dca0 : 0xe8f6ff, 0.5);
+        }
+        if (Math.random() < 0.25) this.fx.ring(e.x, e.z, e.r * 1.5, 0xe8f6ff, 0.3, 0.2 + Math.random() * 0.5);
+      }
       // 통통 튀는 이동
       e.phase += dt * (e.boss ? 0.75 : 1.6);
       const p = e.phase % 1;
@@ -471,7 +479,8 @@ export class EnemyManager {
         const grow = Math.min(1, e.spawnT / 0.25) * (e.ttl != null ? Math.min(1, e.ttl / 0.5) : 1);
         const s = e.r * 2 * grow;
         // 뒤집힌 소라게: 소라 끝이 땅에 살짝 파묻히도록 (모양 높이만큼만 띄움)
-        _p.set(e.x, e.tilt ? this.kinds[mk].geometry.boundingBox.max.y * s * 0.86 : e.y, e.z);
+        const full = this.kinds[mk].geometry.boundingBox.max.y * s * 0.86;
+        _p.set(e.x, e.tilt ? full * (1 - Math.cos(e.tilt)) / 2 + Math.sin(e.tilt) * 0.3 * s : e.y, e.z);   // 뒤집는 중: 살짝 튀어 오르며 돌아감
         _q.setFromEuler(_eu.set(e.tilt || 0, e.rot + (e.spinY || 0), 0, 'YXZ'));
         _s.set(s, s, s);
         _m.compose(_p, _q, _s);
